@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classroom</title>
     <style>
-             /* Base Layout */
+        /* Base Layout */
         body {
             margin: 0;
             padding: 0;
@@ -644,44 +644,40 @@ h1, h2, h3 {
     height: 50px;
     object-fit: contain;
 }
-		
-
     </style>
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <!-- Google Sign-In -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-    <!-- Profile Picture -->
+    <!-- Profile Picture Element -->
     <img id="profile-pic" src="" alt="Profile Picture">
 
     <!-- Sidebar -->
     <aside class="sidebar">
-        <div class="sidebar-header">
-            <img src="https://projectspace.nz/ujalvxpj/Main/Official%20Website/Content/Drawing-12.sketchpad%20(1).png" alt="Logo" class="sidebar-logo">
-            <h2 class="sidebar-title">Navigation
-                <button class="add-tab-btn" title="Add New Tab" onclick="openTabEditor()">+</button>
-            </h2>
-        </div>
+     <div class="sidebar-header">
+    <img src="https://projectspace.nz/ujalvxpj/Main/Official%20Website/Content/Drawing-12.sketchpad%20(1).png" alt="Logo" class="sidebar-logo">
+    <h2 class="sidebar-title">Navigation
+        <button class="add-tab-btn" title="Add New Tab" onclick="openTabEditor()">+</button>
+    </h2>
+</div>
         <ul class="sidebar-menu" id="sidebar-menu">
-            <!-- Tabs loaded dynamically -->
+            <!-- Tabs will be added here dynamically -->
         </ul>
     </aside>
 
     <!-- Main Content -->
     <main class="main-content">
         <header class="header-content">
-            <!-- Reminders Panel -->
+			<!-- Reminders Panel -->
             <div class="reminders-container">
                 <div class="reminders-header">
                     <h2>Upcoming Reminders</h2>
                     <button class="button" onclick="openReminderEditor()" id="add-reminder-btn">+ Add Reminder</button>
                 </div>
                 <div class="reminders-list" id="reminders-list">
-                    <!-- Reminders loaded dynamically -->
+                    <!-- Reminders will be added here dynamically -->
                 </div>
             </div>
 
@@ -709,7 +705,7 @@ h1, h2, h3 {
         <!-- Posts Feed -->
         <div class="classroom-info">
             <div class="posts-feed" id="posts-feed">
-                <!-- Announcements loaded dynamically -->
+                <!-- Announcements will be inserted here -->
             </div>
         </div>
     </main>
@@ -749,26 +745,22 @@ h1, h2, h3 {
     </div>
 
     <script>
-        // ====================
         // Firebase Configuration
-        // ====================
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyD4kZJgDq7X9X9X9X9X9X9X9X9X9X9X9X",
+            authDomain: "your-project-id.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project-id.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abc123def456ghi789jkl0"
         };
-        
+
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // ====================
-        // App Configuration
-        // ====================
+        // App State
         const ADMIN_EMAILS = ['fadekeyvids@gmail.com'];
         let isAdmin = false;
         let currentTabId = null;
@@ -776,25 +768,18 @@ h1, h2, h3 {
         let uploadedFiles = [];
         let expandedPost = null;
         let currentReminderBeingEdited = null;
+        let tabs = [];
 
-        // ====================
         // DOM Elements
-        // ====================
         const elements = {
-            // Sidebar and navigation
             sidebarMenu: document.getElementById('sidebar-menu'),
             profilePic: document.getElementById('profile-pic'),
             currentTabTitle: document.getElementById('current-tab-title'),
-            
-            // Content areas
             postsFeed: document.getElementById('posts-feed'),
             remindersList: document.getElementById('reminders-list'),
-            
-            // Modal elements
             tabEditorModal: document.getElementById('tab-editor-modal'),
             tabNameInput: document.getElementById('tab-name-input'),
             saveTabButton: document.getElementById('save-tab-button'),
-            
             announcementEditor: document.getElementById('announcement-editor'),
             announcementTitleInput: document.getElementById('announcement-title'),
             announcementContentInput: document.getElementById('announcement-content'),
@@ -802,7 +787,6 @@ h1, h2, h3 {
             uploadedFilesDiv: document.getElementById('uploaded-files'),
             embedCodeInput: document.getElementById('embed-code'),
             saveAnnouncementButton: document.getElementById('save-announcement-button'),
-            
             reminderEditor: document.getElementById('reminder-editor'),
             reminderTitleInput: document.getElementById('reminder-title'),
             reminderDescriptionInput: document.getElementById('reminder-description'),
@@ -811,9 +795,7 @@ h1, h2, h3 {
             saveReminderButton: document.getElementById('save-reminder-button')
         };
 
-        // ====================
-        // Initialization
-        // ====================
+        // Initialize the app
         document.addEventListener('DOMContentLoaded', () => {
             initAuth();
             setupEventListeners();
@@ -831,9 +813,7 @@ h1, h2, h3 {
             });
         }
 
-        // ====================
         // Authentication
-        // ====================
         function initAuth() {
             const provider = new firebase.auth.GoogleAuthProvider();
             
@@ -870,14 +850,12 @@ h1, h2, h3 {
             loadReminders();
         }
 
-        // ====================
         // Tabs Management
-        // ====================
         async function loadTabs() {
             try {
                 const snapshot = await db.collection("tabs").orderBy("order").get();
-                const tabs = snapshot.docs.map(doc => doc.data());
-                renderTabs(tabs);
+                tabs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderTabs();
                 
                 // Activate first tab if none selected
                 if (tabs.length > 0 && !currentTabId) {
@@ -889,7 +867,7 @@ h1, h2, h3 {
             }
         }
 
-        function renderTabs(tabs) {
+        function renderTabs() {
             elements.sidebarMenu.innerHTML = '';
             
             tabs.forEach(tab => {
@@ -934,7 +912,73 @@ h1, h2, h3 {
             item.addEventListener('dragend', handleDragEnd);
         }
 
-        // [Keep your existing drag and drop handlers]
+        function handleDragStart(e) {
+            if (!isAdmin) return;
+            draggedItem = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        }
+
+        function handleDragOver(e) {
+            if (!isAdmin) return;
+            e.preventDefault();
+            this.classList.add('drop-area');
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDragLeave() {
+            if (!isAdmin) return;
+            this.classList.remove('drop-area');
+        }
+
+        function handleDrop(e) {
+            if (!isAdmin) return;
+            e.preventDefault();
+            this.classList.remove('drop-area');
+            
+            if (draggedItem !== this) {
+                const draggedId = draggedItem.dataset.tabId;
+                const targetId = this.dataset.tabId;
+                
+                const draggedIndex = tabs.findIndex(tab => tab.id === draggedId);
+                const targetIndex = tabs.findIndex(tab => tab.id === targetId);
+                
+                if (draggedIndex !== -1 && targetIndex !== -1) {
+                    const [removed] = tabs.splice(draggedIndex, 1);
+                    tabs.splice(targetIndex, 0, removed);
+                    
+                    // Update order based on new positions
+                    tabs.forEach((tab, index) => {
+                        tab.order = index + 1;
+                    });
+                    
+                    saveTabsOrder();
+                }
+            }
+        }
+
+        async function saveTabsOrder() {
+            try {
+                const batch = db.batch();
+                tabs.forEach(tab => {
+                    const tabRef = db.collection("tabs").doc(tab.id);
+                    batch.update(tabRef, { order: tab.order });
+                });
+                await batch.commit();
+                renderTabs();
+            } catch (error) {
+                console.error("Error saving tab order:", error);
+            }
+        }
+
+        function handleDragEnd() {
+            if (!isAdmin) return;
+            this.classList.remove('dragging');
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('drop-area');
+            });
+        }
 
         function setActiveTab(tabId) {
             currentTabId = tabId;
@@ -957,9 +1001,115 @@ h1, h2, h3 {
             }
         }
 
-        // ====================
-        // Announcements
-        // ====================
+        function openTabEditor(tabId = null) {
+            if (!isAdmin) return;
+            elements.tabEditorModal.style.display = 'flex';
+            elements.tabNameInput.value = '';
+            
+            if (tabId) {
+                currentTabBeingEdited = tabId;
+                const tab = tabs.find(t => t.id === tabId);
+                if (tab) {
+                    elements.tabNameInput.value = tab.name;
+                    document.getElementById('tab-editor-title').textContent = 'Edit Tab';
+                    elements.saveTabButton.textContent = 'Save Changes';
+                }
+            } else {
+                currentTabBeingEdited = null;
+                document.getElementById('tab-editor-title').textContent = 'Add New Tab';
+                elements.saveTabButton.textContent = 'Add Tab';
+            }
+        }
+
+        function closeTabEditor() {
+            elements.tabEditorModal.style.display = 'none';
+            currentTabBeingEdited = null;
+        }
+
+        async function saveTab() {
+            if (!isAdmin) return;
+            const tabName = elements.tabNameInput.value.trim();
+            if (!tabName) {
+                alert('Please enter a tab name');
+                return;
+            }
+            
+            try {
+                if (currentTabBeingEdited) {
+                    // Update existing tab
+                    await db.collection("tabs").doc(currentTabBeingEdited).update({
+                        name: tabName
+                    });
+                } else {
+                    // Create new tab
+                    const newTab = {
+                        name: tabName,
+                        order: tabs.length + 1
+                    };
+                    const docRef = await db.collection("tabs").add(newTab);
+                    newTab.id = docRef.id;
+                    tabs.push(newTab);
+                    
+                    // Set the new tab as active
+                    setActiveTab(newTab.id);
+                }
+                
+                closeTabEditor();
+                loadTabs();
+            } catch (error) {
+                console.error("Error saving tab:", error);
+                alert("Failed to save tab. Check console.");
+            }
+        }
+
+        function editTab(tabId) {
+            if (!isAdmin) return;
+            event.stopPropagation();
+            openTabEditor(tabId);
+        }
+
+        async function deleteTab(tabId) {
+            if (!isAdmin) return;
+            event.stopPropagation();
+            if (confirm('Are you sure you want to delete this tab and all its announcements?')) {
+                try {
+                    // Delete the tab's announcements
+                    const announcementsSnapshot = await db.collection("announcements")
+                        .where("tabId", "==", tabId)
+                        .get();
+                    
+                    const batch = db.batch();
+                    announcementsSnapshot.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+                    
+                    // Delete the tab
+                    await db.collection("tabs").doc(tabId).delete();
+                    
+                    // Update local state
+                    tabs = tabs.filter(t => t.id !== tabId);
+                    
+                    // If we deleted the current tab, switch to the first available tab
+                    if (tabId === currentTabId) {
+                        if (tabs.length > 0) {
+                            setActiveTab(tabs[0].id);
+                        } else {
+                            currentTabId = null;
+                            elements.currentTabTitle.textContent = 'Classroom';
+                            elements.postsFeed.innerHTML = '';
+                        }
+                    }
+                    
+                    loadTabs();
+                } catch (error) {
+                    console.error("Error deleting tab:", error);
+                    alert("Failed to delete tab. Check console.");
+                }
+            }
+        }
+
+        // Announcements Management
         async function loadAnnouncementsForTab(tabId) {
             try {
                 const snapshot = await db.collection("announcements")
@@ -969,7 +1119,7 @@ h1, h2, h3 {
                 
                 elements.postsFeed.innerHTML = '';
                 snapshot.forEach(doc => {
-                    elements.postsFeed.appendChild(createPostElement(doc.data()));
+                    elements.postsFeed.appendChild(createPostElement({ id: doc.id, ...doc.data() }));
                 });
             } catch (error) {
                 console.error("Error loading announcements:", error);
@@ -1016,6 +1166,57 @@ h1, h2, h3 {
             return post;
         }
 
+        function expandPost(postElement) {
+            if (postElement.classList.contains('expanded')) return;
+            
+            if (expandedPost) {
+                expandedPost.classList.remove('expanded');
+                expandedPost.querySelector('.back-button')?.remove();
+            }
+            
+            postElement.classList.add('expanded');
+            expandedPost = postElement;
+            
+            const backButton = document.createElement('button');
+            backButton.className = 'back-button';
+            backButton.textContent = '← Back';
+            backButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                collapsePost(postElement);
+            });
+            
+            postElement.appendChild(backButton);
+        }
+
+        function collapsePost(postElement) {
+            postElement.classList.remove('expanded');
+            postElement.querySelector('.back-button')?.remove();
+            expandedPost = null;
+        }
+
+        function openAnnouncementEditor(announcementId = null) {
+            if (!isAdmin || !currentTabId) return;
+            elements.announcementEditor.style.display = 'flex';
+            elements.announcementTitleInput.value = '';
+            elements.announcementContentInput.value = '';
+            elements.embedCodeInput.value = '';
+            uploadedFiles = [];
+            elements.uploadedFilesDiv.innerHTML = '';
+            
+            if (announcementId) {
+                // In a real app, you would load the announcement from Firestore here
+                elements.saveAnnouncementButton.onclick = () => saveEditedAnnouncement(announcementId);
+                elements.saveAnnouncementButton.textContent = 'Save Changes';
+            } else {
+                elements.saveAnnouncementButton.onclick = postAnnouncement;
+                elements.saveAnnouncementButton.textContent = 'Post Announcement';
+            }
+        }
+
+        function closeAnnouncementEditor() {
+            elements.announcementEditor.style.display = 'none';
+        }
+
         async function postAnnouncement() {
             if (!isAdmin || !currentTabId) return;
             
@@ -1038,11 +1239,45 @@ h1, h2, h3 {
             }
         }
 
-        // [Keep your existing post expansion/collapse functions]
+        async function saveEditedAnnouncement(announcementId) {
+            if (!isAdmin || !currentTabId) return;
+            const announcement = {
+                title: elements.announcementTitleInput.value.trim(),
+                content: elements.announcementContentInput.value.trim(),
+                embedCode: elements.embedCodeInput.value.trim(),
+                files: uploadedFiles
+            };
 
-        // ====================
-        // Reminders
-        // ====================
+            try {
+                await db.collection("announcements").doc(announcementId).update(announcement);
+                closeAnnouncementEditor();
+                loadAnnouncementsForTab(currentTabId);
+            } catch (error) {
+                console.error("Error updating announcement:", error);
+                alert("Failed to update announcement. Check console.");
+            }
+        }
+
+        async function deleteAnnouncement(announcementId) {
+            if (!isAdmin || !currentTabId) return;
+            if (confirm('Are you sure you want to delete this announcement?')) {
+                try {
+                    await db.collection("announcements").doc(announcementId).delete();
+                    loadAnnouncementsForTab(currentTabId);
+                } catch (error) {
+                    console.error("Error deleting announcement:", error);
+                    alert("Failed to delete announcement. Check console.");
+                }
+            }
+        }
+
+        function editAnnouncement(announcementId) {
+            if (!isAdmin || !currentTabId) return;
+            event.stopPropagation();
+            openAnnouncementEditor(announcementId);
+        }
+
+        // Reminders Management
         async function loadReminders() {
             try {
                 const snapshot = await db.collection("reminders")
@@ -1051,7 +1286,7 @@ h1, h2, h3 {
                 
                 elements.remindersList.innerHTML = '';
                 snapshot.forEach(doc => {
-                    elements.remindersList.appendChild(createReminderElement(doc.data()));
+                    elements.remindersList.appendChild(createReminderElement({ id: doc.id, ...doc.data() }));
                 });
             } catch (error) {
                 console.error("Error loading reminders:", error);
@@ -1085,9 +1320,37 @@ h1, h2, h3 {
             return date.toLocaleDateString(undefined, options);
         }
 
+        function openReminderEditor(reminderId = null) {
+            if (!isAdmin) return;
+            elements.reminderEditor.style.display = 'flex';
+            elements.reminderTitleInput.value = '';
+            elements.reminderDescriptionInput.value = '';
+            elements.reminderDateInput.value = '';
+            elements.reminderTypeInput.value = 'trip';
+            
+            if (reminderId) {
+                currentReminderBeingEdited = reminderId;
+                // In a real app, you would load the reminder from Firestore here
+                document.getElementById('reminder-editor-title').textContent = 'Edit Reminder';
+                elements.saveReminderButton.textContent = 'Save Changes';
+            } else {
+                currentReminderBeingEdited = null;
+                document.getElementById('reminder-editor-title').textContent = 'Add New Reminder';
+                elements.saveReminderButton.textContent = 'Add Reminder';
+                // Set default date to tomorrow
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                elements.reminderDateInput.value = tomorrow.toISOString().split('T')[0];
+            }
+        }
+
+        function closeReminderEditor() {
+            elements.reminderEditor.style.display = 'none';
+            currentReminderBeingEdited = null;
+        }
+
         async function saveReminder() {
             if (!isAdmin) return;
-            
             const reminder = {
                 title: elements.reminderTitleInput.value.trim(),
                 description: elements.reminderDescriptionInput.value.trim(),
@@ -1109,39 +1372,26 @@ h1, h2, h3 {
             }
         }
 
-        // ====================
-        // Modal Management
-        // ====================
-        function openTabEditor(tabId = null) {
+        function editReminder(reminderId) {
             if (!isAdmin) return;
-            elements.tabEditorModal.style.display = 'flex';
-            elements.tabNameInput.value = '';
-            
-            if (tabId) {
-                currentTabBeingEdited = tabId;
-                const tab = tabs.find(t => t.id === tabId);
-                if (tab) {
-                    elements.tabNameInput.value = tab.name;
-                    document.getElementById('tab-editor-title').textContent = 'Edit Tab';
-                    elements.saveTabButton.textContent = 'Save Changes';
+            event.stopPropagation();
+            openReminderEditor(reminderId);
+        }
+
+        async function deleteReminder(reminderId) {
+            if (!isAdmin) return;
+            if (confirm('Are you sure you want to delete this reminder?')) {
+                try {
+                    await db.collection("reminders").doc(reminderId).delete();
+                    loadReminders();
+                } catch (error) {
+                    console.error("Error deleting reminder:", error);
+                    alert("Failed to delete reminder. Check console.");
                 }
-            } else {
-                currentTabBeingEdited = null;
-                document.getElementById('tab-editor-title').textContent = 'Add New Tab';
-                elements.saveTabButton.textContent = 'Add Tab';
             }
         }
 
-        function closeTabEditor() {
-            elements.tabEditorModal.style.display = 'none';
-            currentTabBeingEdited = null;
-        }
-
-        // [Keep your other modal open/close functions]
-
-        // ====================
-        // Utility Functions
-        // ====================
+        // File Upload Handling
         function handleFileUpload() {
             if (!isAdmin) return;
             const files = Array.from(elements.fileUploadInput.files);
