@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom</title>
+    <style>
+        /* Base Layout */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: #157F93;
+            color: white;
+            flex-shrink: 0;
+            height: 100vh;
+            overflow-y: auto;
+            position: sticky;
+            top: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            margin: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-item {
+            position: relative;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-link {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-link.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid #3498db;
+        }
+
+        .tab-actions {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+        }
+
+        .sidebar-item:hover .tab-actions {
+            display: block;
+        }
+
+        .tab-action-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            padding: 2px 5px;
+            font-size: 12px;
+            transition: color 0.2s;
+        }
+
+        .tab-action-btn:hover {
+            color: white;
+        }
+
+        .move-handle {
+            cursor: move;
+            margin-right: 5px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .add-tab-btn {
+            background: #3498db;
+            border: none;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .add-tab-btn:hover {
+            background: #2980b9;
+            transform: scale(1.1);
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+            max-width: calc(100% - 250px);
+            box-sizing: border-box;
+        }
+
+        .header-content {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        /* Profile picture styles */
+        #profile-pic {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #007bb5;
+            cursor: pointer;
+            transition: transform 0.2s;
+            z-index: 100;
+            display: none;
+            background-color: white;
+        }
+
+        #profile-pic:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Drag and Drop Styles */
+        .sidebar-item.dragging {
+            opacity: 0.5;
+            background-color: rgba(52, 152, 219, 0.2);
+        }
+
+        .sidebar-item.drop-area {
+            border-top: 2px dashed #3498db;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            width: 400px;
+            max-width: 90%;
+        }
+
+        .close-button {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .modal h2 {
+            margin-top: 0;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .button:hover {
+            background-color: #2980b9;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        /* Post Styles */
+        .post-card {
+            background: white;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .post-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .post-card.expanded {
+            position: fixed;
+            top: 0;
+            left: 250px;
+            right: 0;
+            bottom: 0;
+            z-index: 100;
+            overflow-y: auto;
+            margin: 0;
+            padding: 40px;
+            background: white;
+        }
+
+        .post-card .back-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 101;
+        }
+
+        .post-details {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .embed-container {
+            margin: 15px 0;
+        }
+
+        .post-card .collapsed-content {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 0;
+        }
+
+        .post-card.expanded .post-details {
+            display: block;
+        }
+
+        .post-card:not(.expanded) .delete-button,
+        .post-card:not(.expanded) button[onclick^="editAnnouncement"] {
+            display: none !important;
+        }
+
+        .post-card.expanded .delete-button,
+        .post-card.expanded button[onclick^="editAnnouncement"] {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+        }
+
+        .post-card.expanded button[onclick^="editAnnouncement"] {
+            right: 100px;
+        }
+
+        /* Hide editing controls for non-admins */
+        body.non-admin .add-tab-btn,
+        body.non-admin .button[onclick="openAnnouncementEditor()"],
+        body.non-admin .tab-actions,
+        body.non-admin .post-card .delete-button,
+        body.non-admin .post-card button[onclick^="editAnnouncement"] {
+            display: none !important;
+        }
+
+        body.non-admin .sidebar-title {
+            padding-right: 10px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main-content {
+                max-width: 100%;
+            }
+            
+            .post-card.expanded {
+                left: 0;
+            }
+        }
+		/* Reminders Styles */
+.reminders-container {
+    background: white;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.reminders-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.reminders-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.reminder-card {
+    background: #f9f9f9;
+    border-left: 4px solid #3498db;
+    padding: 12px;
+    border-radius: 4px;
+    position: relative;
+}
+
+.reminder-card.trip {
+    border-left-color: #2ecc71;
+}
+
+.reminder-card.test {
+    border-left-color: #e74c3c;
+}
+
+.reminder-card.event {
+    border-left-color: #f39c12;
+}
+
+.reminder-card.deadline {
+    border-left-color: #9b59b6;
+}
+
+.reminder-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.reminder-date {
+    font-size: 0.9em;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.reminder-description {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.reminder-actions {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    display: none;
+}
+
+.reminder-card:hover .reminder-actions {
+    display: block;
+}
+
+.reminder-action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 5px;
+    font-size: 12px;
+}
+
+/* Hide add reminder button for non-admins */
+body.non-admin #add-reminder-btn {
+    display: none;
+}
+		/* Enhanced Post Card Styles */
+.post-card.expanded {
+    left: 250px;
+    right: 0;
+    bottom: 0;
+    padding: 40px;
+    background: #fff;
+    border-radius: 0;
+    box-shadow: none;
+    z-index: 100;
+    overflow-y: auto;
+    margin: 0;
+}
+
+.post-card.expanded h3 {
+    font-size: 28px;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.post-card.expanded .post-details {
+    display: block;
+    margin-top: 25px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #555;
+}
+
+.post-card.expanded .post-details p {
+    margin-bottom: 20px;
+}
+
+.post-card.expanded .embed-container {
+    margin: 30px 0;
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.post-card.expanded .file-attachment {
+    display: inline-block;
+    background: #f0f7ff;
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    color: #3498db;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.post-card.expanded .file-attachment:hover {
+    background: #e1f0ff;
+}
+
+.post-card.expanded .post-meta {
+    display: flex;
+    align-items: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    color: #777;
+    font-size: 14px;
+}
+
+.post-card.expanded .post-actions {
+    position: absolute;
+    top: 40px;
+    right: 40px;
+    display: flex;
+    gap: 10px;
+}
+
+.post-card.expanded .post-actions button {
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 4px;
+}
+
+.post-card.expanded .post-actions .delete-button {
+    background: #e74c3c;
+}
+
+.post-card.expanded .post-actions .delete-button:hover {
+    background: #c0392b;
+}
+		@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+body {
+    font-family: 'Roboto', sans-serif;
+    line-height: 1.6;
+}
+
+.post-content {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #444;
+}
+
+.post-content p {
+    margin-bottom: 1.5em;
+}
+		.post-card {
+    transition: all 0.3s ease, transform 0.2s ease;
+}
+
+.post-card.expanded {
+    transition: all 0.4s ease;
+}
+		
+		/* Add to your CSS */
+body {
+  background: #f8f9fa; /* Lighter background */
+  font-family: 'Open Sans', sans-serif;
+}
+
+.sidebar {
+  background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+}
+
+h1, h2, h3 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+}
+		/* Add to your CSS */
+.post-card, .reminder-card {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+}
+
+.post-card:hover, .reminder-card:hover {
+  box-shadow: 0 14px 28px rgba(0,0,0,0.12), 0 10px 10px rgba(0,0,0,0.10);
+  transform: translateY(-2px);
+}
+		/* Add to your CSS */
+.input-group {
+  position: relative;
+  margin: 20px 0;
+}
+
+.input-group input, .input-group textarea {
+  padding: 15px 10px 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.input-group label {
+  position: absolute;
+  top: 15px;
+  left: 10px;
+  color: #999;
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+.input-group input:focus + label,
+.input-group input:not(:placeholder-shown) + label,
+.input-group textarea:focus + label,
+.input-group textarea:not(:placeholder-shown) + label {
+  top: 5px;
+  font-size: 12px;
+  color: #3498db;
+}
+		/* Add to your CSS */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.post-card {
+  animation: fadeIn 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+.post-card:nth-child(1) { animation-delay: 0.1s; }
+.post-card:nth-child(2) { animation-delay: 0.2s; }
+/* etc */
+		
+		/* Add to your CSS */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+		.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 20px;
+}
+
+.sidebar-logo {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+}
+		
+    </style>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <!-- Profile Picture Element -->
+    <img id="profile-pic" src="" alt="Profile Picture">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+     <div class="sidebar-header">
+    <img src="https://projectspace.nz/ujalvxpj/Main/Official%20Website/Content/Drawing-12.sketchpad%20(1).png" alt="Logo" class="sidebar-logo">
+    <h2 class="sidebar-title">Navigation
+        <button class="add-tab-btn" title="Add New Tab" onclick="openTabEditor()">+</button>
+    </h2>
+</div>
+        <ul class="sidebar-menu" id="sidebar-menu">
+            <!-- Tabs will be added here dynamically -->
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="header-content">
+			
+			
+			<!-- Reminders Panel -->
+<div class="reminders-container">
+    <div class="reminders-header">
+        <h2>Upcoming Reminders</h2>
+        <button class="button" onclick="openReminderEditor()" id="add-reminder-btn">+ Add Reminder</button>
+    </div>
+    <div class="reminders-list" id="reminders-list">
+        <!-- Reminders will be added here dynamically -->
+    </div>
+</div>
+
+<!-- Reminder Editor Modal -->
+<div id="reminder-editor" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeReminderEditor()">&times;</span>
+        <h2 id="reminder-editor-title">Add New Reminder</h2>
+        <input type="text" id="reminder-title" placeholder="Reminder Title">
+        <textarea id="reminder-description" placeholder="Description (optional)"></textarea>
+        <input type="date" id="reminder-date">
+        <select id="reminder-type">
+            <option value="trip">Field Trip</option>
+            <option value="test">Internal</option>
+            <option value="event">External</option>
+            <option value="deadline">Deadline</option>
+        </select>
+        <div class="modal-buttons">
+            <button class="button" onclick="closeReminderEditor()">Cancel</button>
+            <button class="button" id="save-reminder-button" onclick="saveReminder()">Save</button>
+        </div>
+    </div>
+</div>
+            <h1 id="current-tab-title">Classroom</h1>
+            <button class="button" onclick="openAnnouncementEditor()">Create Announcement</button>
+        </header>
+
+        <!-- Announcement Editor Modal -->
+        <div id="announcement-editor" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeAnnouncementEditor()">&times;</span>
+                <h2>Create New Announcement</h2>
+                <input type="text" id="announcement-title" placeholder="Announcement Title">
+                <textarea id="announcement-content" placeholder="Write your announcement here..."></textarea>
+                <div class="upload-area">
+                    <label for="file-upload" class="upload-button">Upload Files</label>
+                    <input type="file" id="file-upload" multiple style="display:none;">
+                    <div id="uploaded-files"></div>
+                </div>
+                <textarea id="embed-code" placeholder="Paste embed code for Google Slides, Docs, etc. here (optional)"></textarea>
+                <button class="button" id="save-announcement-button">Post Announcement</button>
+            </div>
+        </div>
+
+        <!-- Posts Feed -->
+        <div class="classroom-info">
+            <div class="posts-feed" id="posts-feed">
+                <!-- Announcements will be inserted here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Tab Editor Modal -->
+    <div id="tab-editor-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeTabEditor()">&times;</span>
+            <h2 id="tab-editor-title">Add New Tab</h2>
+            <input type="text" id="tab-name-input" placeholder="Tab Name">
+            <div class="modal-buttons">
+                <button class="button" onclick="closeTabEditor()">Cancel</button>
+                <button class="button" id="save-tab-button" onclick="saveTab()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const sidebarMenu = document.getElementById('sidebar-menu');
+        const tabEditorModal = document.getElementById('tab-editor-modal');
+        const tabNameInput = document.getElementById('tab-name-input');
+        const saveTabButton = document.getElementById('save-tab-button');
+        const profilePicElement = document.getElementById('profile-pic');
+        const currentTabTitleElement = document.getElementById('current-tab-title');
+        
+        // Announcement-related elements
+        const announcementEditor = document.getElementById('announcement-editor');
+        const postsFeed = document.getElementById('posts-feed');
+        const announcementTitleInput = document.getElementById('announcement-title');
+        const announcementContentInput = document.getElementById('announcement-content');
+        const fileUploadInput = document.getElementById('file-upload');
+        const uploadedFilesDiv = document.getElementById('uploaded-files');
+        const embedCodeInput = document.getElementById('embed-code');
+        
+        // Variables
+        let tabs = [];
+        let currentTabId = null;
+        let currentTabBeingEdited = null;
+        let uploadedFiles = [];
+        let expandedPost = null;
+        const TABS_KEY = 'customSidebarTabs';
+        const ANNOUNCEMENTS_KEY_PREFIX = 'classroomAnnouncements_';
+        const USER_INFO_KEY = "googleUserInfo";
+        let draggedItem = null;
+        
+        // Admin configuration
+        const ADMIN_EMAILS = ['fadekeyvids@gmail.com']; // Add more admin emails as needed
+        let isAdmin = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkUserProfile();
+            loadTabs();
+            setupDragAndDrop();
+        });
+
+        // Check and load user profile picture and permissions
+        function checkUserProfile() {
+            const storedUserInfo = localStorage.getItem(USER_INFO_KEY);
+            if (storedUserInfo) {
+                const userInfo = JSON.parse(storedUserInfo);
+                if (userInfo && userInfo.picture) {
+                    profilePicElement.src = userInfo.picture;
+                    profilePicElement.style.display = 'block';
+                    
+                    // Check if user is admin
+                    if (userInfo.email && ADMIN_EMAILS.includes(userInfo.email.toLowerCase())) {
+                        isAdmin = true;
+                        document.body.classList.remove('non-admin');
+                        console.log('Admin user detected');
+                    } else {
+                        isAdmin = false;
+                        document.body.classList.add('non-admin');
+                        console.log('Regular user detected');
+                    }
+                }
+            } else {
+                // No user info - treat as non-admin
+                isAdmin = false;
+                document.body.classList.add('non-admin');
+                console.log('No user info found - treating as non-admin');
+            }
+        }
+
+        function loadTabs() {
+            const storedTabs = localStorage.getItem(TABS_KEY);
+            if (storedTabs) {
+                tabs = JSON.parse(storedTabs);
+            } else {
+                // Default tabs
+                tabs = [
+                    { id: 'term1', name: 'Term 1', order: 1 },
+                    { id: 'term2', name: 'Term 2', order: 2 },
+                    { id: 'term3', name: 'Term 3', order: 3 },
+                    { id: 'term4', name: 'Term 4', order: 4 }
+                ];
+                saveTabs();
+            }
+            renderTabs();
+            
+            // Set first tab as active by default if none is selected
+            if (tabs.length > 0 && !currentTabId) {
+                setActiveTab(tabs[0].id);
+            }
+        }
+
+        function saveTabs() {
+            localStorage.setItem(TABS_KEY, JSON.stringify(tabs));
+        }
+
+        function renderTabs() {
+            sidebarMenu.innerHTML = '';
+            
+            // Sort tabs by order
+            const sortedTabs = [...tabs].sort((a, b) => a.order - b.order);
+            
+            sortedTabs.forEach(tab => {
+                const tabItem = document.createElement('li');
+                tabItem.className = 'sidebar-item';
+                tabItem.dataset.tabId = tab.id;
+                tabItem.draggable = isAdmin; // Only draggable for admins
+                
+                const actionsHtml = isAdmin ? 
+                    `<div class="tab-actions">
+                        <button class="tab-action-btn" title="Edit" onclick="editTab('${tab.id}')">
+                            ✏️
+                        </button>
+                        <button class="tab-action-btn" title="Delete" onclick="deleteTab('${tab.id}')">
+                            🗑️
+                        </button>
+                    </div>` : '';
+                
+                tabItem.innerHTML = `
+                    <a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}">
+                        ${isAdmin ? '<span class="move-handle">☰</span> ' : ''}${tab.name}
+                        ${actionsHtml}
+                    </a>
+                `;
+                
+                tabItem.addEventListener('click', (e) => {
+                    if (!e.target.closest('.tab-action-btn')) {
+                        e.preventDefault();
+                        setActiveTab(tab.id);
+                    }
+                });
+                
+                // Only set up drag and drop for admins
+                if (isAdmin) {
+                    tabItem.addEventListener('dragstart', handleDragStart);
+                    tabItem.addEventListener('dragover', handleDragOver);
+                    tabItem.addEventListener('dragleave', handleDragLeave);
+                    tabItem.addEventListener('drop', handleDrop);
+                    tabItem.addEventListener('dragend', handleDragEnd);
+                }
+                
+                sidebarMenu.appendChild(tabItem);
+            });
+        }
+
+        function setupDragAndDrop() {
+            // These are now handled by individual event listeners on each tab item
+        }
+
+        function handleDragStart(e) {
+            if (!isAdmin) return;
+            draggedItem = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        }
+
+        function handleDragOver(e) {
+            if (!isAdmin) return;
+            e.preventDefault();
+            this.classList.add('drop-area');
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDragLeave() {
+            if (!isAdmin) return;
+            this.classList.remove('drop-area');
+        }
+
+        function handleDrop(e) {
+            if (!isAdmin) return;
+            e.preventDefault();
+            this.classList.remove('drop-area');
+            
+            if (draggedItem !== this) {
+                // Get the IDs of the dragged item and the drop target
+                const draggedId = draggedItem.dataset.tabId;
+                const targetId = this.dataset.tabId;
+                
+                // Find the indexes of these items in the tabs array
+                const draggedIndex = tabs.findIndex(tab => tab.id === draggedId);
+                const targetIndex = tabs.findIndex(tab => tab.id === targetId);
+                
+                if (draggedIndex !== -1 && targetIndex !== -1) {
+                    // Remove the dragged item from its current position
+                    const [removed] = tabs.splice(draggedIndex, 1);
+                    
+                    // Insert it before the target item
+                    tabs.splice(targetIndex, 0, removed);
+                    
+                    // Update the order property based on new positions
+                    tabs.forEach((tab, index) => {
+                        tab.order = index + 1;
+                    });
+                    
+                    saveTabs();
+                    renderTabs();
+                }
+            }
+        }
+
+        function handleDragEnd() {
+            if (!isAdmin) return;
+            this.classList.remove('dragging');
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('drop-area');
+            });
+        }
+
+        function setActiveTab(tabId) {
+            currentTabId = tabId;
+            const tab = tabs.find(t => t.id === tabId);
+            
+            if (tab) {
+                currentTabTitleElement.textContent = tab.name;
+                
+                // Update active state in sidebar
+                document.querySelectorAll('.sidebar-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                
+                const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
+                if (activeLink) {
+                    activeLink.classList.add('active');
+                }
+                
+                // Load announcements for this tab
+                loadAnnouncementsForTab(tabId);
+            }
+        }
+
+        function loadAnnouncementsForTab(tabId) {
+            const storedAnnouncements = localStorage.getItem(`${ANNOUNCEMENTS_KEY_PREFIX}${tabId}`);
+            postsFeed.innerHTML = '';
+            
+            if (storedAnnouncements) {
+                const announcements = JSON.parse(storedAnnouncements);
+                announcements.forEach(announcement => {
+                    postsFeed.appendChild(createPostElement(announcement));
+                });
+            }
+        }
+
+        function saveAnnouncementsForTab(tabId, announcements) {
+            localStorage.setItem(`${ANNOUNCEMENTS_KEY_PREFIX}${tabId}`, JSON.stringify(announcements));
+        }
+
+        function openTabEditor(tabId = null) {
+            if (!isAdmin) return;
+            tabEditorModal.style.display = 'flex';
+            tabNameInput.value = '';
+            
+            if (tabId) {
+                // Editing existing tab
+                currentTabBeingEdited = tabId;
+                const tab = tabs.find(t => t.id === tabId);
+                if (tab) {
+                    tabNameInput.value = tab.name;
+                    document.getElementById('tab-editor-title').textContent = 'Edit Tab';
+                    saveTabButton.textContent = 'Save Changes';
+                }
+            } else {
+                // Adding new tab
+                currentTabBeingEdited = null;
+                document.getElementById('tab-editor-title').textContent = 'Add New Tab';
+                saveTabButton.textContent = 'Add Tab';
+            }
+        }
+
+        function closeTabEditor() {
+            tabEditorModal.style.display = 'none';
+            currentTabBeingEdited = null;
+        }
+
+        function saveTab() {
+            if (!isAdmin) return;
+            const tabName = tabNameInput.value.trim();
+            if (!tabName) {
+                alert('Please enter a tab name');
+                return;
+            }
+            
+            if (currentTabBeingEdited) {
+                // Update existing tab
+                const tabIndex = tabs.findIndex(t => t.id === currentTabBeingEdited);
+                if (tabIndex !== -1) {
+                    tabs[tabIndex].name = tabName;
+                    saveTabs();
+                    renderTabs();
+                    
+                    // Update title if this is the current tab
+                    if (currentTabBeingEdited === currentTabId) {
+                        currentTabTitleElement.textContent = tabName;
+                    }
+                }
+            } else {
+                // Create new tab
+                const newTab = {
+                    id: 'tab-' + Date.now(),
+                    name: tabName,
+                    order: tabs.length + 1
+                };
+                
+                tabs.push(newTab);
+                saveTabs();
+                renderTabs();
+                
+                // Set the new tab as active
+                setActiveTab(newTab.id);
+            }
+            
+            closeTabEditor();
+        }
+
+        function editTab(tabId) {
+            if (!isAdmin) return;
+            event.stopPropagation();
+            openTabEditor(tabId);
+        }
+
+        function deleteTab(tabId) {
+            if (!isAdmin) return;
+            event.stopPropagation();
+            if (confirm('Are you sure you want to delete this tab and all its announcements?')) {
+                // Delete the tab's announcements
+                localStorage.removeItem(`${ANNOUNCEMENTS_KEY_PREFIX}${tabId}`);
+                
+                // Remove the tab
+                tabs = tabs.filter(t => t.id !== tabId);
+                
+                // Reorder remaining tabs
+                tabs.forEach((tab, index) => {
+                    tab.order = index + 1;
+                });
+                
+                saveTabs();
+                
+                // If we deleted the current tab, switch to the first available tab
+                if (tabId === currentTabId) {
+                    if (tabs.length > 0) {
+                        setActiveTab(tabs[0].id);
+                    } else {
+                        currentTabId = null;
+                        currentTabTitleElement.textContent = 'Classroom';
+                        postsFeed.innerHTML = '';
+                    }
+                }
+                
+                renderTabs();
+            }
+        }
+
+        function openAnnouncementEditor(announcementId = null) {
+            if (!isAdmin || !currentTabId) return;
+            announcementEditor.style.display = 'flex';
+            announcementTitleInput.value = '';
+            announcementContentInput.value = '';
+            embedCodeInput.value = '';
+            uploadedFiles = [];
+            uploadedFilesDiv.innerHTML = '';
+            
+            const saveButton = document.getElementById('save-announcement-button');
+            saveButton.onclick = postAnnouncement;
+            saveButton.textContent = 'Post Announcement';
+            
+            if (announcementId) {
+                const storedAnnouncements = JSON.parse(localStorage.getItem(`${ANNOUNCEMENTS_KEY_PREFIX}${currentTabId}`) || '[]');
+                const announcementToEdit = storedAnnouncements.find(a => a.id === announcementId);
+                if (announcementToEdit) {
+                    announcementTitleInput.value = announcementToEdit.title;
+                    announcementContentInput.value = announcementToEdit.content;
+                    embedCodeInput.value = announcementToEdit.embedCode || '';
+                    uploadedFiles = announcementToEdit.files;
+                    uploadedFilesDiv.innerHTML = uploadedFiles.map(file => 
+                        `<span>${file.name} <button class="remove-file" onclick="removeTempFile(this.parentNode, '${file.name}')">×</button></span>`
+                    ).join('');
+                    
+                    saveButton.onclick = () => saveEditedAnnouncement(announcementId);
+                    saveButton.textContent = 'Save Changes';
+                }
+            }
+        }
+
+        function closeAnnouncementEditor() {
+            announcementEditor.style.display = 'none';
+        }
+
+        function postAnnouncement() {
+            if (!isAdmin || !currentTabId) return;
+            const title = announcementTitleInput.value.trim();
+            const content = announcementContentInput.value.trim();
+            const embedCode = embedCodeInput.value.trim();
+            
+            if (title && (content || embedCode)) {
+                const newAnnouncement = {
+                    id: Date.now().toString(),
+                    title,
+                    content,
+                    files: [...uploadedFiles],
+                    embedCode
+                };
+                
+                const storedAnnouncements = JSON.parse(localStorage.getItem(`${ANNOUNCEMENTS_KEY_PREFIX}${currentTabId}`) || '[]');
+                storedAnnouncements.unshift(newAnnouncement);
+                saveAnnouncementsForTab(currentTabId, storedAnnouncements);
+                postsFeed.insertAdjacentElement('afterbegin', createPostElement(newAnnouncement));
+                closeAnnouncementEditor();
+            } else {
+                alert('Please enter a title and either content or embed code for your announcement.');
+            }
+        }
+
+   		function createPostElement(announcement) {
+    const post = document.createElement('div');
+    post.classList.add('post-card');
+    post.setAttribute('data-id', announcement.id);
+    
+    // Format date
+    const postDate = new Date(parseInt(announcement.id)).toLocaleDateString('en-US', {
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    // File attachments HTML
+    const filesHtml = announcement.files.map(file => 
+        `<a href="#" class="file-attachment" target="_blank">
+            <i class="file-icon">📄</i> ${file.name}
+        </a>`
+    ).join('');
+    
+    // Actions HTML (for admins only)
+    const actionsHtml = isAdmin ? 
+        `<div class="post-actions">
+            <button class="button" onclick="event.stopPropagation(); editAnnouncement('${announcement.id}')">
+                Edit
+            </button>
+            <button class="button delete-button" onclick="event.stopPropagation(); deleteAnnouncement('${announcement.id}')">
+                Delete
+            </button>
+        </div>` : '';
+    
+    post.innerHTML = `
+        ${actionsHtml}
+        <h3>${announcement.title}</h3>
+        <div class="collapsed-content">${announcement.content}</div>
+        <div class="post-details">
+            <div class="post-content">${announcement.content}</div>
+            ${announcement.embedCode ? 
+                `<div class="embed-container">${announcement.embedCode}</div>` : ''}
+            ${announcement.files.length > 0 ? 
+                `<div class="file-attachments">${filesHtml}</div>` : ''}
+            <div class="post-meta">
+                Posted on ${postDate}
+            </div>
+        </div>`;
+    
+    post.addEventListener('click', () => expandPost(post));
+    return post;
+}
+        function expandPost(postElement) {
+            if (postElement.classList.contains('expanded')) return;
+            
+            if (expandedPost) {
+                expandedPost.classList.remove('expanded');
+                expandedPost.querySelector('.back-button')?.remove();
+            }
+            
+            postElement.classList.add('expanded');
+            expandedPost = postElement;
+            
+            const backButton = document.createElement('button');
+            backButton.className = 'back-button';
+            backButton.textContent = '← Back';
+            backButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                collapsePost(postElement);
+            });
+            
+            postElement.appendChild(backButton);
+        }
+
+        function collapsePost(postElement) {
+            postElement.classList.remove('expanded');
+            postElement.querySelector('.back-button')?.remove();
+            expandedPost = null;
+        }
+
+        function editAnnouncement(announcementId) {
+            if (!isAdmin || !currentTabId) return;
+            event.stopPropagation();
+            openAnnouncementEditor(announcementId);
+        }
+
+        function saveEditedAnnouncement(announcementId) {
+            if (!isAdmin || !currentTabId) return;
+            const title = announcementTitleInput.value.trim();
+            const content = announcementContentInput.value.trim();
+            const embedCode = embedCodeInput.value.trim();
+            
+            if (title && (content || embedCode)) {
+                let announcements = JSON.parse(localStorage.getItem(`${ANNOUNCEMENTS_KEY_PREFIX}${currentTabId}`) || '[]');
+                announcements = announcements.map(a => 
+                    a.id === announcementId ? 
+                    { ...a, title, content, embedCode, files: [...uploadedFiles] } : 
+                    a
+                );
+                
+                saveAnnouncementsForTab(currentTabId, announcements);
+                loadAnnouncementsForTab(currentTabId);
+                closeAnnouncementEditor();
+            } else {
+                alert('Please enter a title and either content or embed code for your announcement.');
+            }
+        }
+
+        function deleteAnnouncement(announcementId) {
+            if (!isAdmin || !currentTabId) return;
+            if (confirm('Are you sure you want to delete this announcement?')) {
+                let announcements = JSON.parse(localStorage.getItem(`${ANNOUNCEMENTS_KEY_PREFIX}${currentTabId}`) || '[]');
+                announcements = announcements.filter(a => a.id !== announcementId);
+                saveAnnouncementsForTab(currentTabId, announcements);
+                
+                const postToRemove = document.querySelector(`.post-card[data-id="${announcementId}"]`);
+                if (postToRemove) {
+                    postToRemove.remove();
+                }
+            }
+        }
+
+        function removeTempFile(element, fileName) {
+            if (!isAdmin) return;
+            uploadedFiles = uploadedFiles.filter(f => f.name !== fileName);
+            element.remove();
+        }
+
+        // File upload handling
+        fileUploadInput.addEventListener('change', function() {
+            if (!isAdmin) return;
+            const files = Array.from(this.files);
+            files.forEach(file => {
+                uploadedFiles.push({ name: file.name });
+                const fileItem = document.createElement('span');
+                fileItem.innerHTML = `${file.name} <button class="remove-file" onclick="removeTempFile(this.parentNode, '${file.name}')">×</button>`;
+                uploadedFilesDiv.appendChild(fileItem);
+            });
+        });
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target === announcementEditor) {
+                closeAnnouncementEditor();
+            }
+            if (event.target === tabEditorModal) {
+                closeTabEditor();
+            }
+        };
+
+        // Initialize Google Sign-In
+        function handleCredentialResponse(response) {
+            // Decode the JWT response
+            const responsePayload = JSON.parse(atob(response.credential.split('.')[1]));
+            
+            // Store user info
+            const userInfo = {
+                email: responsePayload.email,
+                name: responsePayload.name,
+                picture: responsePayload.picture
+            };
+            localStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo));
+            
+            // Check permissions and reload UI
+            checkUserProfile();
+            loadTabs(); // Re-render tabs with correct permissions
+        }
+
+        // Initialize Google Sign-In when window loads
+        window.onload = function() {
+            google.accounts.id.initialize({
+                client_id: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
+                callback: handleCredentialResponse
+            });
+            
+            // Render the sign-in button on the profile pic
+            google.accounts.id.renderButton(
+                document.getElementById("profile-pic"),
+                { theme: "outline", size: "large" }  // customization attributes
+            );
+            
+            // Also display the One Tap dialog
+            google.accounts.id.prompt();
+        };
+		// Add to your existing variables at the top
+const REMINDERS_KEY = 'classroomReminders';
+let reminders = [];
+let currentReminderBeingEdited = null;
+
+// Add to your DOMContentLoaded event listener
+document.addEventListener('DOMContentLoaded', () => {
+    checkUserProfile();
+    loadTabs();
+    loadReminders(); // Add this line
+    setupDragAndDrop();
+});
+
+// Add these new functions
+function loadReminders() {
+    const storedReminders = localStorage.getItem(REMINDERS_KEY);
+    if (storedReminders) {
+        reminders = JSON.parse(storedReminders);
+        renderReminders();
+    }
+}
+
+function saveReminders() {
+    localStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders));
+}
+
+function renderReminders() {
+    const remindersList = document.getElementById('reminders-list');
+    remindersList.innerHTML = '';
+    
+    // Sort reminders by date (soonest first)
+    const sortedReminders = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    sortedReminders.forEach(reminder => {
+        const reminderElement = document.createElement('div');
+        reminderElement.className = `reminder-card ${reminder.type}`;
+        reminderElement.dataset.id = reminder.id;
+        
+        const actionsHtml = isAdmin ? 
+            `<div class="reminder-actions">
+                <button class="reminder-action-btn" onclick="editReminder('${reminder.id}')">✏️</button>
+                <button class="reminder-action-btn" onclick="deleteReminder('${reminder.id}')">🗑️</button>
+            </div>` : '';
+        
+        reminderElement.innerHTML = `
+            ${actionsHtml}
+            <div class="reminder-title">${reminder.title}</div>
+            <div class="reminder-date">${formatDate(reminder.date)}</div>
+            ${reminder.description ? `<div class="reminder-description">${reminder.description}</div>` : ''}
+        `;
+        
+        remindersList.appendChild(reminderElement);
+    });
+}
+
+function formatDate(dateString) {
+    const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+}
+
+function openReminderEditor(reminderId = null) {
+    if (!isAdmin) return;
+    document.getElementById('reminder-editor').style.display = 'flex';
+    document.getElementById('reminder-title').value = '';
+    document.getElementById('reminder-description').value = '';
+    document.getElementById('reminder-date').value = '';
+    document.getElementById('reminder-type').value = 'trip';
+    
+    if (reminderId) {
+        currentReminderBeingEdited = reminderId;
+        const reminder = reminders.find(r => r.id === reminderId);
+        if (reminder) {
+            document.getElementById('reminder-editor-title').textContent = 'Edit Reminder';
+            document.getElementById('reminder-title').value = reminder.title;
+            document.getElementById('reminder-description').value = reminder.description || '';
+            document.getElementById('reminder-date').value = reminder.date;
+            document.getElementById('reminder-type').value = reminder.type;
+            document.getElementById('save-reminder-button').textContent = 'Save Changes';
+        }
+    } else {
+        currentReminderBeingEdited = null;
+        document.getElementById('reminder-editor-title').textContent = 'Add New Reminder';
+        document.getElementById('save-reminder-button').textContent = 'Add Reminder';
+        // Set default date to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('reminder-date').value = tomorrow.toISOString().split('T')[0];
+    }
+}
+
+function closeReminderEditor() {
+    document.getElementById('reminder-editor').style.display = 'none';
+    currentReminderBeingEdited = null;
+}
+
+function saveReminder() {
+    if (!isAdmin) return;
+    const title = document.getElementById('reminder-title').value.trim();
+    const description = document.getElementById('reminder-description').value.trim();
+    const date = document.getElementById('reminder-date').value;
+    const type = document.getElementById('reminder-type').value;
+    
+    if (!title || !date) {
+        alert('Please enter a title and date for the reminder');
+        return;
+    }
+    
+    if (currentReminderBeingEdited) {
+        // Update existing reminder
+        const index = reminders.findIndex(r => r.id === currentReminderBeingEdited);
+        if (index !== -1) {
+            reminders[index] = {
+                id: currentReminderBeingEdited,
+                title,
+                description,
+                date,
+                type
+            };
+        }
+    } else {
+        // Add new reminder
+        reminders.push({
+            id: Date.now().toString(),
+            title,
+            description,
+            date,
+            type
+        });
+    }
+    
+    saveReminders();
+    renderReminders();
+    closeReminderEditor();
+}
+
+function editReminder(reminderId) {
+    if (!isAdmin) return;
+    event.stopPropagation();
+    openReminderEditor(reminderId);
+}
+
+function deleteReminder(reminderId) {
+    if (!isAdmin) return;
+    if (confirm('Are you sure you want to delete this reminder?')) {
+        reminders = reminders.filter(r => r.id !== reminderId);
+        saveReminders();
+        renderReminders();
+    }
+}
+
+// Add to your window.onclick function to handle clicking outside reminder modal
+window.onclick = function(event) {
+    if (event.target === announcementEditor) {
+        closeAnnouncementEditor();
+    }
+    if (event.target === tabEditorModal) {
+        closeTabEditor();
+    }
+    if (event.target === document.getElementById('reminder-editor')) {
+        closeReminderEditor();
+    }
+};
+		
+
+    </script>
+</body>
+</html>
