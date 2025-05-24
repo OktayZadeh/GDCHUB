@@ -810,28 +810,21 @@ h1, h2, h3 {
                 console.log('No user info found - treating as non-admin');
             }
         }
-
-        function loadTabs() {
-            const storedTabs = localStorage.getItem(TABS_KEY);
-            if (storedTabs) {
-                tabs = JSON.parse(storedTabs);
-            } else {
-                // Default tabs
-                tabs = [
-                    { id: 'term1', name: 'Term 1', order: 1 },
-                    { id: 'term2', name: 'Term 2', order: 2 },
-                    { id: 'term3', name: 'Term 3', order: 3 },
-                    { id: 'term4', name: 'Term 4', order: 4 }
-                ];
-                saveTabs();
-            }
-            renderTabs();
-            
-            // Set first tab as active by default if none is selected
-            if (tabs.length > 0 && !currentTabId) {
-                setActiveTab(tabs[0].id);
-            }
-        }
+async function loadTabs() {
+  try {
+    const snapshot = await db.collection("tabs").orderBy("order").get();
+    tabs = snapshot.docs.map(doc => doc.data());
+    renderTabs();
+    
+    // Activate first tab if none selected
+    if (tabs.length > 0 && !currentTabId) {
+      setActiveTab(tabs[0].id);
+    }
+  } catch (error) {
+    console.error("Error loading tabs:", error);
+    alert("Failed to load tabs. Please refresh.");
+  }
+}
 
         function saveTabs() {
             localStorage.setItem(TABS_KEY, JSON.stringify(tabs));
@@ -972,17 +965,21 @@ h1, h2, h3 {
             }
         }
 
-        function loadAnnouncementsForTab(tabId) {
-            const storedAnnouncements = localStorage.getItem(`${ANNOUNCEMENTS_KEY_PREFIX}${tabId}`);
-            postsFeed.innerHTML = '';
-            
-            if (storedAnnouncements) {
-                const announcements = JSON.parse(storedAnnouncements);
-                announcements.forEach(announcement => {
-                    postsFeed.appendChild(createPostElement(announcement));
-                });
-            }
-        }
+   async function loadAnnouncementsForTab(tabId) {
+  try {
+    const snapshot = await db.collection("announcements")
+      .where("tabId", "==", tabId)
+      orderBy ("createdAt", "desc")
+      .get();
+    
+    postsFeed.innerHTML = '';
+    snapshot.forEach(doc => {
+      postsFeed.appendChild(createPostElement(doc.data()));
+    });
+  } catch (error) {
+    console.error("Error loading announcements:", error);
+  }
+}
 
         function saveAnnouncementsForTab(tabId, announcements) {
             localStorage.setItem(`${ANNOUNCEMENTS_KEY_PREFIX}${tabId}`, JSON.stringify(announcements));
@@ -1015,13 +1012,16 @@ h1, h2, h3 {
             currentTabBeingEdited = null;
         }
 
-        function saveTab() {
-            if (!isAdmin) return;
-            const tabName = tabNameInput.value.trim();
-            if (!tabName) {
-                alert('Please enter a tab name');
-                return;
-            }
+        async function saveTab(tabData) {
+  try {
+    await db.collection("tabs").doc(tabData.id).set(tabData);
+    console.log("Tab saved successfully");
+    loadTabs(); // Refresh the list
+  } catch (error) {
+    console.error("Error saving tab:", error);
+    alert("Failed to save tab. Check console.");
+  }
+}
             
             if (currentTabBeingEdited) {
                 // Update existing tab
@@ -1128,7 +1128,27 @@ h1, h2, h3 {
             announcementEditor.style.display = 'none';
         }
 
-        function postAnnouncement() {
+        async function postAnnouncement() {
+  if (!isAdmin || !currentTabId) return;
+  
+  const announcement = {
+    title: announcementTitleInput.value.trim(),
+    content: announcementContentInput.value.trim(),
+    tabId: currentTabId,
+    files: uploadedFiles,
+    embedCode: embedCodeInput.value.trim(),
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  try {
+    await db.collection("announcements").add(announcement);
+    closeAnnouncementEditor();
+    loadAnnouncementsForTab(currentTabId); // Refresh feed
+  } catch (error) {
+    console.error("Error posting announcement:", error);
+    alert("Failed to post. Check console.");
+  }
+}
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
             const content = announcementContentInput.value.trim();
@@ -1501,4 +1521,50 @@ window.onclick = function(event) {
 
     </script>
 </body>
+<!-- Add these right before your closing </body> tag -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<script>
+  // Replace with your actual Firebase config
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const auth = firebase.auth();
+	// Add this after Firebase initialization
+function initAuth() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  
+  profilePicElement.addEventListener('click', () => {
+    auth.signInWithPopup(provider).then(handleUser).catch(console.error);
+  });
+  
+  auth.onAuthStateChanged(user => user && handleUser(user));
+}
+
+function handleUser(user) {
+  const userInfo = {
+    email: user.email,
+    name: user.displayName,
+    picture: user.photoURL
+  };
+  
+  localStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo));
+  isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase());
+  document.body.classList.toggle('non-admin', !isAdmin);
+  
+  loadTabs(); // Load data after auth
+}
+</script>
+	
 </html>
