@@ -644,6 +644,41 @@ h1, h2, h3 {
     height: 50px;
     object-fit: contain;
 }
+		/* Search Bar Styles */
+.search-container {
+    display: flex;
+    margin: 20px 0;
+    max-width: 500px;
+}
+
+.search-input {
+    flex-grow: 1;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px 0 0 4px;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+}
+
+.search-button {
+    padding: 10px 15px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.search-button:hover {
+    background-color: #2980b9;
+}
 		
     </style>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -702,6 +737,10 @@ h1, h2, h3 {
     </div>
 </div>
             <h1 id="current-tab-title">Classroom</h1>
+			<div class="search-container">
+    <input type="text" id="announcement-search" placeholder="Search announcements..." class="search-input">
+  
+</div>
             <button class="button" onclick="openAnnouncementEditor()">Create Announcement</button>
         </header>
 
@@ -1188,8 +1227,8 @@ h1, h2, h3 {
     post.innerHTML = `
         ${actionsHtml}
         <h3>${announcement.title}</h3>
-        <div class="collapsed-content">${announcement.content}</div>
-        <div class="post-details">
+        <div class="collapsed-content">${announcement.content.substring(0, 150)}${announcement.content.length > 150 ? '...' : ''}</div>
+        <div class="post-details" style="display:none;">
             <div class="post-content">${announcement.content}</div>
             ${announcement.embedCode ? 
                 `<div class="embed-container">${announcement.embedCode}</div>` : ''}
@@ -1203,33 +1242,41 @@ h1, h2, h3 {
     post.addEventListener('click', () => expandPost(post));
     return post;
 }
-        function expandPost(postElement) {
-            if (postElement.classList.contains('expanded')) return;
-            
-            if (expandedPost) {
-                expandedPost.classList.remove('expanded');
-                expandedPost.querySelector('.back-button')?.remove();
-            }
-            
-            postElement.classList.add('expanded');
-            expandedPost = postElement;
-            
-            const backButton = document.createElement('button');
-            backButton.className = 'back-button';
-            backButton.textContent = '← Back';
-            backButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                collapsePost(postElement);
-            });
-            
-            postElement.appendChild(backButton);
-        }
+     function expandPost(postElement) {
+    if (postElement.classList.contains('expanded')) return;
+    
+    if (expandedPost) {
+        collapsePost(expandedPost);
+    }
+    
+    postElement.classList.add('expanded');
+    expandedPost = postElement;
+    
+    // Hide collapsed content and show full details
+    postElement.querySelector('.collapsed-content').style.display = 'none';
+    postElement.querySelector('.post-details').style.display = 'block';
+    
+    const backButton = document.createElement('button');
+    backButton.className = 'back-button';
+    backButton.textContent = '← Back';
+    backButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        collapsePost(postElement);
+    });
+    
+    postElement.appendChild(backButton);
+}
 
-        function collapsePost(postElement) {
-            postElement.classList.remove('expanded');
-            postElement.querySelector('.back-button')?.remove();
-            expandedPost = null;
-        }
+function collapsePost(postElement) {
+    postElement.classList.remove('expanded');
+    postElement.querySelector('.back-button')?.remove();
+    
+    // Show collapsed content and hide full details
+    postElement.querySelector('.collapsed-content').style.display = 'block';
+    postElement.querySelector('.post-details').style.display = 'none';
+    
+    expandedPost = null;
+}
 
         function editAnnouncement(announcementId) {
             if (!isAdmin || !currentTabId) return;
@@ -1498,7 +1545,53 @@ window.onclick = function(event) {
     }
 };
 		
+// Search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('announcement-search');
+    const searchButton = document.querySelector('.search-button');
+    
+    // Search when typing
+    searchInput.addEventListener('input', function() {
+        filterAnnouncements(this.value.trim().toLowerCase());
+    });
+    
+    // Also search when button is clicked
+    searchButton.addEventListener('click', function() {
+        filterAnnouncements(searchInput.value.trim().toLowerCase());
+    });
+    
+    // Clear search when 'Escape' is pressed
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            this.value = '';
+            filterAnnouncements('');
+        }
+    });
+});
 
+function filterAnnouncements(searchTerm) {
+    const posts = document.querySelectorAll('.post-card');
+    let anyMatches = false;
+    
+    posts.forEach(post => {
+        const title = post.querySelector('h3').textContent.toLowerCase();
+        const content = post.querySelector('.collapsed-content').textContent.toLowerCase();
+        const isMatch = title.includes(searchTerm) || content.includes(searchTerm);
+        
+        if (searchTerm === '' || isMatch) {
+            post.style.display = 'block';
+            anyMatches = true;
+        } else {
+            post.style.display = 'none';
+        }
+    });
+    
+    // Optional: Show a "no results" message
+    const noResultsMsg = document.getElementById('no-results-message');
+    if (noResultsMsg) {
+        noResultsMsg.style.display = anyMatches || searchTerm === '' ? 'none' : 'block';
+    }
+}
     </script>
 </body>
 </html>
