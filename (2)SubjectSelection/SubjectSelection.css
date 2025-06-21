@@ -10,6 +10,30 @@ body {
     height: 100vh; 
     font-family: "Open Sans", sans-serif;
 }
+.card p {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 15px;
+    background: linear-gradient(135deg, #00b4db, #0083b0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: floatText 2s ease-in-out infinite;
+    letter-spacing: 1px;
+    transition: transform 0.3s ease;
+}
+
+.card:hover p {
+    transform: scale(1.1);
+}
+
+@keyframes floatText {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
+    100% { transform: translateY(0); }
+}
+
 
 .education {
     --bg-color: #ffd861;
