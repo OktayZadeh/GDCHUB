@@ -16,7 +16,7 @@ body {
     font-weight: bold;
     text-align: center;
     margin-top: 15px;
-    background: linear-gradient(135deg, #00b4db, #0083b0);
+    background: linear-gradient(135deg, #003973, #1a1a80);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     animation: floatText 2s ease-in-out infinite;
