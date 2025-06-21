@@ -1,1 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://www.projectspace.nz/ujalvxpj/Main/Official%20Website/(2)%20SubjectSelection/SubjectSelection.css">
+    <title>Card Layout with Image Button</title>
+    <style>
+        /* Add your existing CSS here */
 
+        #profile-pic {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #007bb5;
+            cursor: pointer;
+            transition: transform 0.2s;
+            z-index: 1000;
+        }
+
+        #profile-pic:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <img id="profile-pic" src="" alt="Profile Picture" style="display: none;">
+
+    <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html" class="card human-resources">
+        <div class="overlay"></div>
+        <div class="circle">
+            <video class="circle video-hover" loop muted playsinline>
+                <source src="https://i.imgur.com/Eaq8046.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <p>Physical Education</p>
+    </a>
+
+    <a href="https://projectspace.nz/ujalvxpj/Main/Official%20Website/(3)%20Years/OutdoorEducation/YearsSelectionOutdoorED.html" class="card human-resources">
+        <div class="overlay"></div>
+        <div class="circle">
+            <video class="circle video-hover" loop muted playsinline>
+                <source src="https://i.imgur.com/DTfsrLj.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <p>Outdoor Education</p>
+    </a>
+
+    <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html" class="card human-resources">
+        <div class="overlay"></div>
+        <div class="circle">
+            <video class="circle video-hover" loop muted playsinline>
+                <source src="https://i.imgur.com/aIXugqM.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <p>Health</p>
+    </a>
+
+    <script>
+        const USER_INFO_KEY = "googleUserInfo";
+        const profilePicElement = document.getElementById('profile-pic');
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const storedUserInfo = localStorage.getItem(USER_INFO_KEY);
+
+            if (storedUserInfo) {
+                const userInfo = JSON.parse(storedUserInfo);
+                if (userInfo && userInfo.picture) {
+                    profilePicElement.src = userInfo.picture;
+                    profilePicElement.style.display = 'block'; // Make it visible
+                } else {
+                    console.log("Profile picture URL not found in localStorage.");
+                    profilePicElement.style.display = 'none';
+                }
+            } else {
+                console.log("No user info found in localStorage.");
+                profilePicElement.style.display = 'none';
+                // Optionally redirect the user back to the login page
+                // window.location.href = "your-login-page.html";
+            }
+
+            // Set up video hover effects (your existing code)
+            document.querySelectorAll('.card').forEach(card => {
+                const video = card.querySelector('.video-hover');
+
+                card.addEventListener('mouseenter', () => {
+                    video.play();
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    video.pause();
+                    video.currentTime = 0;
+                });
+            });
+        });
+		document.addEventListener('DOMContentLoaded', () => {
+    const USER_INFO_KEY = "googleUserInfo";
+    const profilePicElement = document.getElementById('profile-pic');
+    const storedUserInfo = localStorage.getItem(USER_INFO_KEY);
+
+    if (storedUserInfo) {
+        const userInfo = JSON.parse(storedUserInfo);
+        if (userInfo.picture) {
+            profilePicElement.src = userInfo.picture;
+            profilePicElement.style.display = 'block';
+        }
+    } else {
+        profilePicElement.style.display = 'none';
+    }
+});
+
+    </script>
+</body>
+</html>
