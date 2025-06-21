@@ -1,1 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://projectspace.nz/ujalvxpj/Main/Official%20Website/(3)%20Years/PE/YearsSelectionPE.css"> <!-- Link to your CSS file -->
+    <title>Card Layout with Video Background</title>
+</head>
+<body>
+    <video autoplay muted loop id="bg-video">
+        <source src="https://projectspace.nz/ujalvxpj/Main/Official%20Website/(3)%20Years/PE/Media/SportVideoWallpaper.mp4" type="video/mp4"> <!-- Replace with your video URL -->
+        Your browser does not support the video tag.
+    </video>
 
+    <a href="https://projectspace.nz/ujalvxpj/Main/Official%20Website/(2)%20SubjectSelection/SubjectSelection.html" id="top-left-button">
+        <img src="https://i.imgur.com/OmRSkja.png" alt="Go to Another Website" id="image-button"> <!-- Replace with your image URL -->
+   <a href="https://projectspace.nz/ujalvxpj/Main/Official%20Website/(2)%20SubjectSelection/SubjectSelection.html" id="top-left-button">
+        <img src="https://i.imgur.com/OmRSkja.png" alt="Go to Another Website" id="image-button"> <!-- Replace with your image URL -->
+    </a>
+
+    <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html" class="card human-resources">
+        <div class="overlay"></div>
+        <div class="circle">
+            <video class="circle video-hover" loop muted playsinline>
+                <source src="https://i.imgur.com/z1cBYOp.mp4" type="video/mp4"> <!-- Replace with your video URL -->
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <p>Year 9</p>
+    </a>
+  
+    <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html" class="card human-resources">
+        <div class="overlay"></div>
+        <div class="circle">
+            <video class="circle video-hover" loop muted playsinline>
+                <source src="https://i.imgur.com/UDY0VVe.mp4" type="video/mp4"> <!-- Replace with your video URL -->
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <p>Year 10</p>
+    </a>
+  
+    <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html" class="card human-resources">
+        <div class="overlay"></div>
+        <div class="circle">
+            <video class="circle video-hover" loop muted playsinline>
+                <source src="https://i.imgur.com/v3Yf473.mp4" type="video/mp4"> <!-- Replace with your video URL -->
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <p>Year 11</p>
+    </a>
+		  <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html" class="card human-resources">
+        <div class="overlay"></div>
+        <div class="circle">
+            <video class="circle video-hover" loop muted playsinline>
+                <source src="https://i.imgur.com/LWkwtHh.mp4" type="video/mp4"> <!-- Replace with your video URL -->
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <p>Year 12</p>
+    </a>
+  
+    <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html" class="card human-resources">
+        <div class="overlay"></div>
+        <div class="circle">
+            <video class="circle video-hover" loop muted playsinline>
+                <source src="https://i.imgur.com/XHuT2Wv.mp4" type="video/mp4"> <!-- Replace with your video URL -->
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <p>Year 13</p>
+    </a>
+
+    <script>
+        document.querySelectorAll('.card').forEach(card => {
+            const video = card.querySelector('.video-hover');
+
+            card.addEventListener('mouseenter', () => {
+                video.play();
+            });
+
+            card.addEventListener('mouseleave', () => {
+                video.pause();
+                video.currentTime = 0; // Reset video to start if desired
+            });
+        });
+    </script>
+</body>
+</html>
