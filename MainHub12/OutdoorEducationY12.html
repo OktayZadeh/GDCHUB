@@ -141,7 +141,6 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
-const storage = firebase.storage(); // THIS LINE IS CRUCIAL
 
 // DOM Elements
 const sidebarMenu = document.getElementById('sidebar-menu');
@@ -163,8 +162,6 @@ const embedCodeInput = document.getElementById('embed-code');
 // Variables
 let tabs = [];
 let currentTabId = null;
-const YEAR_GROUP = "Year12"; // Change to Year13 for the other file
-let uploadedFiles = []; // Ensure this exists
 let currentTabBeingEdited = null;
 let uploadedFiles = [];
 let expandedPost = null;
@@ -550,32 +547,28 @@ function postAnnouncement() {
     const content = announcementContentInput.value.trim();
     const embedCode = embedCodeInput.value.trim();
     
-    if (title && (content || embedCode || uploadedFiles.length > 0)) {
+    if (title && (content || embedCode)) {
         const newAnnouncement = {
             id: Date.now().toString(),
             title,
             content,
-            files: [...uploadedFiles], // Include uploaded files
+            files: [...uploadedFiles],
             embedCode,
             timestamp: firebase.database.ServerValue.TIMESTAMP
         };
         
-        database.ref(`${YEAR_GROUP}/announcements/${currentTabId}/${newAnnouncement.id}`)
-            .set(newAnnouncement)
+        // Save to Firebase
+        database.ref(`announcements/${currentTabId}/${newAnnouncement.id}`).set(newAnnouncement)
             .then(() => {
-                // Reset form
-                uploadedFiles = [];
-                fileUploadInput.value = '';
-                uploadedFilesDiv.innerHTML = '';
+                postsFeed.insertAdjacentElement('afterbegin', createPostElement(newAnnouncement));
                 closeAnnouncementEditor();
-                loadAnnouncementsForTab(currentTabId);
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to save. Check console.');
+                console.error('Error saving announcement:', error);
+                alert('Failed to save announcement. Please try again.');
             });
     } else {
-        alert('Please add a title and content/files.');
+        alert('Please enter a title and either content or embed code for your announcement.');
     }
 }
 
@@ -729,69 +722,48 @@ function removeTempFile(element, fileName) {
 
 // File upload handling
 // File upload handling - MODIFIED TO USE FIREBASE STORAGE
-// File upload handling
-fileUploadInput.addEventListener('change', async function(e) {
-    if (!isAdmin || !currentTabId) return;
-    const files = Array.from(e.target.files);
-    
-    if (files.length === 0) return;
+fileUploadInput.addEventListener('change', async function() {
+    if (!isAdmin) return;
+    const files = Array.from(this.files);
     
     try {
-        uploadedFilesDiv.innerHTML = '<p>Uploading... <span class="upload-progress">0%</span></p>';
+        // Show loading state
+        uploadedFilesDiv.innerHTML = '<p>Uploading files...</p>';
         
-        for (const file of files) {
-            const filePath = `announcement_files/${YEAR_GROUP}/${currentTabId}/${Date.now()}_${file.name}`;
-            const storageRef = storage.ref(filePath);
+        // Upload each file to Firebase Storage
+        const uploadPromises = files.map(async file => {
+            // Create a storage reference
+            const storageRef = storage.ref().child(`announcement_files/${currentTabId}/${Date.now()}_${file.name}`);
             
-            const uploadTask = storageRef.put(file);
+            // Upload the file
+            const snapshot = await storageRef.put(file);
             
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    document.querySelector('.upload-progress').textContent = `${Math.round(progress)}%`;
-                },
-                (error) => {
-                    console.error('Upload failed:', error);
-                    uploadedFilesDiv.innerHTML = '<p style="color:red;">Upload failed</p>';
-                },
-                async () => {
-                    const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                    uploadedFiles.push({
-                        name: file.name,
-                        url: downloadURL,
-                        path: filePath
-                    });
-                    
-                    updateUploadedFilesUI();
-                }
-            );
-        }
+            // Get the download URL
+            const downloadURL = await snapshot.ref.getDownloadURL();
+            
+            return {
+                name: file.name,
+                url: downloadURL,
+                type: file.type,
+                size: file.size
+            };
+        });
+        
+        // Wait for all uploads to complete
+        const uploadedFileData = await Promise.all(uploadPromises);
+        uploadedFiles = uploadedFileData;
+        
+        // Update the UI
+        uploadedFilesDiv.innerHTML = uploadedFiles.map(file => 
+            `<span>${file.name} <button class="remove-file" onclick="removeTempFile(this.parentNode, '${file.name}')">×</button></span>`
+        ).join('');
     } catch (error) {
-        console.error('Error:', error);
-        uploadedFilesDiv.innerHTML = '<p style="color:red;">Upload error</p>';
+        console.error('Error uploading files:', error);
+        uploadedFilesDiv.innerHTML = '<p style="color:red;">Error uploading files</p>';
     }
 });
+		S
 
-function updateUploadedFilesUI() {
-    uploadedFilesDiv.innerHTML = uploadedFiles.map(file => `
-        <div class="uploaded-file">
-            <span>${file.name}</span>
-            <button class="remove-file" onclick="removeUploadedFile('${file.path}')">×</button>
-        </div>`
-    ).join('');
-}
-
-function removeUploadedFile(filePath) {
-    if (!isAdmin) return;
-    
-    storage.ref(filePath).delete().then(() => {
-        uploadedFiles = uploadedFiles.filter(f => f.path !== filePath);
-        updateUploadedFilesUI();
-    }).catch(error => {
-        console.error('Delete error:', error);
-        alert("Couldn't delete file");
-    });
-}
 // Drag and drop file upload
 const uploadArea = document.querySelector('.upload-area');
 
