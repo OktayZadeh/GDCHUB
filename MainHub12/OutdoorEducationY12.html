@@ -862,12 +862,11 @@ function loadReminders() {
 }
 
 function saveReminderToFirebase(reminder) {
-    if (reminder.id) {
-        return database.ref(`reminders/${reminder.id}`).set(reminder);
+    if (!reminder.id) {
+        reminder.id = Date.now().toString(); // Ensure we always have an ID
     }
-    return Promise.reject('No reminder ID');
+    return database.ref(`reminders/${reminder.id}`).set(reminder);
 }
-
 function deleteReminderFromFirebase(reminderId) {
     return database.ref(`reminders/${reminderId}`).remove();
 }
