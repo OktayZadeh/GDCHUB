@@ -847,24 +847,28 @@ function filterAnnouncements(searchTerm) {
 }
 
 // Reminders functionality - MODIFIED TO USE FIREBASE
-let reminders = [];
-let currentReminderBeingEdited = null;
-
 function loadReminders() {
     database.ref('reminders').orderByChild('date').once('value', (snapshot) => {
         reminders = [];
         snapshot.forEach(childSnapshot => {
-            reminders.push(childSnapshot.val());
+            reminders.push({
+                id: childSnapshot.key,
+                ...childSnapshot.val()
+            });
         });
         renderReminders();
     });
 }
 
 function saveReminderToFirebase(reminder) {
-    if (reminder.id) {
-        return database.ref(`reminders/${reminder.id}`).set(reminder);
-    }
-    return Promise.reject('No reminder ID');
+    const reminderRef = reminder.id ? 
+        database.ref(`reminders/${reminder.id}`) : 
+        database.ref('reminders').push();
+    
+    return reminderRef.set(reminder)
+        .then(() => {
+            return reminderRef.key;
+        });
 }
 
 function deleteReminderFromFirebase(reminderId) {
@@ -875,7 +879,6 @@ function renderReminders() {
     const remindersList = document.getElementById('reminders-list');
     remindersList.innerHTML = '';
     
-    // Sort reminders by date (soonest first)
     const sortedReminders = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date));
     
     sortedReminders.forEach(reminder => {
@@ -885,8 +888,8 @@ function renderReminders() {
         
         const actionsHtml = isAdmin ? 
             `<div class="reminder-actions">
-                <button class="reminder-action-btn" onclick="editReminder('${reminder.id}')">✏️</button>
-                <button class="reminder-action-btn" onclick="deleteReminder('${reminder.id}')">🗑️</button>
+                <button class="reminder-action-btn" onclick="event.stopPropagation(); editReminder('${reminder.id}')">✏️</button>
+                <button class="reminder-action-btn" onclick="event.stopPropagation(); deleteReminder('${reminder.id}')">🗑️</button>
             </div>` : '';
         
         reminderElement.innerHTML = `
@@ -907,7 +910,9 @@ function formatDate(dateString) {
 
 function openReminderEditor(reminderId = null) {
     if (!isAdmin) return;
-    document.getElementById('reminder-editor').style.display = 'flex';
+    const editor = document.getElementById('reminder-editor');
+    editor.style.display = 'flex';
+    
     document.getElementById('reminder-title').value = '';
     document.getElementById('reminder-description').value = '';
     document.getElementById('reminder-date').value = '';
@@ -923,12 +928,14 @@ function openReminderEditor(reminderId = null) {
             document.getElementById('reminder-date').value = reminder.date;
             document.getElementById('reminder-type').value = reminder.type;
             document.getElementById('save-reminder-button').textContent = 'Save Changes';
+            document.getElementById('save-reminder-button').onclick = () => saveReminder();
         }
     } else {
         currentReminderBeingEdited = null;
         document.getElementById('reminder-editor-title').textContent = 'Add New Reminder';
         document.getElementById('save-reminder-button').textContent = 'Add Reminder';
-        // Set default date to tomorrow
+        document.getElementById('save-reminder-button').onclick = () => saveReminder();
+        
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         document.getElementById('reminder-date').value = tomorrow.toISOString().split('T')[0];
@@ -942,6 +949,7 @@ function closeReminderEditor() {
 
 function saveReminder() {
     if (!isAdmin) return;
+    
     const title = document.getElementById('reminder-title').value.trim();
     const description = document.getElementById('reminder-description').value.trim();
     const date = document.getElementById('reminder-date').value;
@@ -953,24 +961,25 @@ function saveReminder() {
     }
     
     const reminderData = {
-        id: currentReminderBeingEdited || Date.now().toString(),
         title,
         description,
         date,
         type
     };
     
+    if (currentReminderBeingEdited) {
+        reminderData.id = currentReminderBeingEdited;
+    }
+    
     saveReminderToFirebase(reminderData)
-        .then(() => {
+        .then((reminderId) => {
             if (currentReminderBeingEdited) {
-                // Update local array
                 const index = reminders.findIndex(r => r.id === currentReminderBeingEdited);
                 if (index !== -1) {
-                    reminders[index] = reminderData;
+                    reminders[index] = {...reminderData, id: reminderId};
                 }
             } else {
-                // Add to local array
-                reminders.push(reminderData);
+                reminders.push({...reminderData, id: reminderId});
             }
             renderReminders();
             closeReminderEditor();
@@ -989,6 +998,8 @@ function editReminder(reminderId) {
 
 function deleteReminder(reminderId) {
     if (!isAdmin) return;
+    event.stopPropagation();
+    
     if (confirm('Are you sure you want to delete this reminder?')) {
         deleteReminderFromFirebase(reminderId)
             .then(() => {
@@ -1001,7 +1012,9 @@ function deleteReminder(reminderId) {
             });
     }
 }
-		
+
+
+
     </script>
 </body>
 </html>
