@@ -860,7 +860,54 @@ function loadReminders() {
         renderReminders();
     });
 }
-
+function saveReminder() {
+    if (!isAdmin) {
+        console.error("User is not admin");
+        return;
+    }
+    
+    const title = document.getElementById('reminder-title').value.trim();
+    const description = document.getElementById('reminder-description').value.trim();
+    const dateInput = document.getElementById('reminder-date').value;
+    const type = document.getElementById('reminder-type').value;
+    
+    if (!title || !dateInput) {
+        alert('Please enter a title and date for the reminder');
+        return;
+    }
+    
+    // Format the date properly for Firebase
+    const date = new Date(dateInput).toISOString();
+    
+    const reminderData = {
+        id: currentReminderBeingEdited || Date.now().toString(),
+        title,
+        description: description || "", // Ensure description exists
+        date,
+        type
+    };
+    
+    // Add error handling
+    saveReminderToFirebase(reminderData)
+        .then(() => {
+            console.log("Reminder saved successfully");
+            // Update local state
+            if (currentReminderBeingEdited) {
+                const index = reminders.findIndex(r => r.id === currentReminderBeingEdited);
+                if (index !== -1) {
+                    reminders[index] = reminderData;
+                }
+            } else {
+                reminders.push(reminderData);
+            }
+            renderReminders();
+            closeReminderEditor();
+        })
+        .catch(error => {
+            console.error("Error saving reminder:", error);
+            alert('Failed to save reminder. Please try again.');
+        });
+}
 function saveReminderToFirebase(reminder) {
     if (!reminder.id) {
         reminder.id = Date.now().toString(); // Ensure we always have an ID
