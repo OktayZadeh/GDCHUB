@@ -100,7 +100,16 @@
     </main>
 
     <!-- Tab Editor Modal -->
-
+	
+    <div id="tab-editor-modal" class="modal">
+		<button onclick="addPollField()">Add Poll</button>
+<div id="poll-container" style="display:none;">
+  <input type="text" placeholder="Poll question" id="poll-question">
+  <div id="poll-options">
+    <input type="text" placeholder="Option 1">
+    <input type="text" placeholder="Option 2">
+  </div>
+  <button onclick="addPollOption()">+ Add Option</button>
 </div>
         <div class="modal-content">
             <span class="close-button" onclick="closeTabEditor()">&times;</span>
@@ -851,53 +860,11 @@ function loadReminders() {
     });
 }
 
-function saveReminder() {
-    if (!isAdmin) {
-        console.error("User is not admin");
-        return;
+function saveReminderToFirebase(reminder) {
+    if (reminder.id) {
+        return database.ref(`reminders/${reminder.id}`).set(reminder);
     }
-    
-    const title = document.getElementById('reminder-title').value.trim();
-    const description = document.getElementById('reminder-description').value.trim();
-    const dateInput = document.getElementById('reminder-date').value;
-    const type = document.getElementById('reminder-type').value;
-    
-    if (!title || !dateInput) {
-        alert('Please enter a title and date for the reminder');
-        return;
-    }
-    
-    // Format the date properly for Firebase
-    const date = new Date(dateInput).toISOString();
-    
-    const reminderData = {
-        id: currentReminderBeingEdited || Date.now().toString(),
-        title,
-        description: description || "", // Ensure description exists
-        date,
-        type
-    };
-    
-    // Add error handling
-    saveReminderToFirebase(reminderData)
-        .then(() => {
-            console.log("Reminder saved successfully");
-            // Update local state
-            if (currentReminderBeingEdited) {
-                const index = reminders.findIndex(r => r.id === currentReminderBeingEdited);
-                if (index !== -1) {
-                    reminders[index] = reminderData;
-                }
-            } else {
-                reminders.push(reminderData);
-            }
-            renderReminders();
-            closeReminderEditor();
-        })
-        .catch(error => {
-            console.error("Error saving reminder:", error);
-            alert('Failed to save reminder. Please try again.');
-        });
+    return Promise.reject('No reminder ID');
 }
 
 function deleteReminderFromFirebase(reminderId) {
@@ -1038,4 +1005,3 @@ function deleteReminder(reminderId) {
     </script>
 </body>
 </html>
-
