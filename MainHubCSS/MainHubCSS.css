@@ -919,4 +919,13 @@ function checkUserProfile() {
     background-color: #4CAF50;
     color: white;
 }
+.embed-options {
+    margin: 10px 0;
+}
+#embed-preview {
+    margin-top: 10px;
+    min-height: 50px;
+    border: 1px dashed #ccc;
+    padding: 10px;
+}
 
