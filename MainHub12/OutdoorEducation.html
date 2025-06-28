@@ -100,30 +100,22 @@
     </main>
 
     <!-- Tab Editor Modal -->
-	
-    <div id="tab-editor-modal" class="modal">
-		<button onclick="addPollField()">Add Poll</button>
-<div id="poll-container" style="display:none;">
-  <input type="text" placeholder="Poll question" id="poll-question">
-  <div id="poll-options">
-    <input type="text" placeholder="Option 1">
-    <input type="text" placeholder="Option 2">
-
-        <div class="modal-content">
-            <span class="close-button" onclick="closeTabEditor()">&times;</span>
-            <h2 id="tab-editor-title">Add New Tab</h2>
-            <input type="text" id="tab-name-input" placeholder="Tab Name">
-            <div class="modal-buttons">
-                <button class="button" onclick="closeTabEditor()">Cancel</button>
-                <button class="button" id="save-tab-button" onclick="saveTab()">Save</button>
-            </div>
+<div id="tab-editor-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeTabEditor()">&times;</span>
+        <h2 id="tab-editor-title">Add New Tab</h2>
+        <input type="text" id="tab-name-input" placeholder="Tab Name">
+        <div class="modal-buttons">
+            <button class="button" onclick="closeTabEditor()">Cancel</button>
+            <button class="button" id="save-tab-button" onclick="saveTab()">Save</button>
         </div>
     </div>
-	<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>S
+</div>
 
-    <script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+<script>
 // Initialize Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyCSTEJ3LevxY2_rlGROzajNnNBrVG3oRR4",
