@@ -162,6 +162,71 @@ const fileUploadInput = document.getElementById('file-upload');
 const uploadedFilesDiv = document.getElementById('uploaded-files');
 const embedCodeInput = document.getElementById('embed-code');
 
+// Add this after your other DOM element declarations
+const embedTypeSelect = document.getElementById('embed-type');
+const embedUrlInput = document.getElementById('embed-url');
+const embedPreview = document.getElementById('embed-preview');
+
+// Add event listeners for the embed system
+embedTypeSelect.addEventListener('change', updateEmbedPreview);
+embedUrlInput.addEventListener('input', updateEmbedPreview);
+
+function updateEmbedPreview() {
+    const type = embedTypeSelect.value;
+    const urlOrCode = embedUrlInput.value.trim();
+    
+    if (!type || !urlOrCode) {
+        embedPreview.innerHTML = '';
+        return;
+    }
+    
+    let embedHtml = '';
+    
+    switch(type) {
+        case 'slides':
+        case 'docs':
+        case 'sheets':
+            embedHtml = `<iframe src="${convertGoogleUrlToEmbed(urlOrCode)}" frameborder="0" allowfullscreen></iframe>`;
+            break;
+        case 'youtube':
+            embedHtml = `<iframe width="560" height="315" src="${convertYoutubeUrlToEmbed(urlOrCode)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+            break;
+        case 'vimeo':
+            embedHtml = `<iframe src="${convertVimeoUrlToEmbed(urlOrCode)}" width="640" height="360" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+            break;
+        case 'iframe':
+            embedHtml = urlOrCode.startsWith('<iframe') ? urlOrCode : '';
+            break;
+        case 'other':
+            embedHtml = urlOrCode;
+            break;
+    }
+    
+    embedPreview.innerHTML = embedHtml || '<p>Invalid embed code/URL for selected type</p>';
+}
+
+function convertGoogleUrlToEmbed(url) {
+    // Convert Google Docs/Slides/Sheets URL to embed format
+    return url.replace(/\/edit.*$/, '/preview')
+             .replace(/\/pub\?/, '/embed?');
+}
+
+function convertYoutubeUrlToEmbed(url) {
+    // Extract video ID and create embed URL
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    const videoId = (match && match[2].length === 11) ? match[2] : null;
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+}
+
+function convertVimeoUrlToEmbed(url) {
+    // Extract video ID and create embed URL
+    const regExp = /^.*(vimeo\.com\/)((channels\/[A-z]+\/)|(groups\/[A-z]+\/videos\/))?([0-9]+)/;
+    const match = url.match(regExp);
+    const videoId = match ? match[5] : null;
+    return videoId ? `https://player.vimeo.com/video/${videoId}` : '';
+}
+	
 // Variables
 let tabs = [];
 let currentTabId = null;
