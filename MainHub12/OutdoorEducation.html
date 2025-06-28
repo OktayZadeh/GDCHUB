@@ -613,7 +613,10 @@ function postAnnouncement() {
     if (!isAdmin || !currentTabId) return;
     const title = announcementTitleInput.value.trim();
     const content = announcementContentInput.value.trim();
-    const embedCode = embedCodeInput.value.trim();
+ const embedType = embedTypeSelect.value;
+const embedContent = embedUrlInput.value.trim();
+const embedCode = embedType && embedContent ? 
+    JSON.stringify({ type: embedType, content: embedContent }) : '';
     
     if (title && (content || embedCode)) {
         const newAnnouncement = {
