@@ -86,7 +86,20 @@
                     <input type="file" id="file-upload" multiple style="display:none;">
                     <div id="uploaded-files"></div>
                 </div>
-                <textarea id="embed-code" placeholder="Paste embed code for Google Slides, Docs, etc. here (optional)"></textarea>
+               <div class="embed-options">
+    <select id="embed-type">
+        <option value="">Select embed type...</option>
+        <option value="slides">Google Slides</option>
+        <option value="docs">Google Docs</option>
+        <option value="sheets">Google Sheets</option>
+        <option value="youtube">YouTube</option>
+        <option value="vimeo">Vimeo</option>
+        <option value="iframe">Generic iFrame</option>
+        <option value="other">Other HTML</option>
+    </select>
+    <input type="text" id="embed-url" placeholder="Enter URL or embed code">
+    <div id="embed-preview"></div>
+</div>
                 <button class="button" id="save-announcement-button">Post Announcement</button>
             </div>
         </div>
