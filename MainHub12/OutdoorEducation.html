@@ -681,8 +681,44 @@ function createPostElement(announcement) {
         <div class="collapsed-content">${announcement.content.substring(0, 150)}${announcement.content.length > 150 ? '...' : ''}</div>
         <div class="post-details" style="display:none;">
             <div class="post-content">${announcement.content}</div>
-            ${announcement.embedCode ? 
-                `<div class="embed-container">${announcement.embedCode}</div>` : ''}
+      let embedHtml = '';
+if (announcement.embedCode) {
+    try {
+        const embedData = JSON.parse(announcement.embedCode);
+        switch(embedData.type) {
+            case 'slides':
+            case 'docs':
+            case 'sheets':
+                embedHtml = `<div class="embed-container">
+                    <iframe src="${convertGoogleUrlToEmbed(embedData.content)}" frameborder="0" allowfullscreen></iframe>
+                </div>`;
+                break;
+            case 'youtube':
+                embedHtml = `<div class="embed-container">
+                    <iframe width="560" height="315" src="${convertYoutubeUrlToEmbed(embedData.content)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>`;
+                break;
+            case 'vimeo':
+                embedHtml = `<div class="embed-container">
+                    <iframe src="${convertVimeoUrlToEmbed(embedData.content)}" width="640" height="360" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+                </div>`;
+                break;
+            case 'iframe':
+                embedHtml = `<div class="embed-container">${embedData.content}</div>`;
+                break;
+            case 'other':
+                embedHtml = `<div class="embed-container">${embedData.content}</div>`;
+                break;
+            default:
+                embedHtml = `<div class="embed-container">${embedData.content}</div>`;
+        }
+    } catch {
+        // Fallback for old format embed codes
+        embedHtml = `<div class="embed-container">${announcement.embedCode}</div>`;
+    }
+}
+
+${embedHtml ? embedHtml : ''}
             ${announcement.files && announcement.files.length > 0 ? 
                 `<div class="file-attachments">${filesHtml}</div>` : ''}
             <div class="post-meta">
