@@ -21,67 +21,124 @@
             background-color: #f0f8ff;
             border-radius: 12px;
         }
+/* Reset some base styling */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
-    margin: 0; /* Prevent unwanted spacing at top */
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', sans-serif;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f5f9ff;
+  color: #222;
 }
 
+/* Aesthetic Top Bar */
 .topbar {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: linear-gradient(135deg, #0055ff, #66ccff);
-    color: white;
-    padding: 15px 30px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: linear-gradient(135deg, #004aad, #00bfff);
+  padding: 12px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
 }
 
+.topbar-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Logo */
 .topbar-logo {
-    font-size: 20px;
-    font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
+.topbar-logo img {
+  height: 36px;
+  width: 36px;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: transform 0.3s ease;
+}
+
+.topbar-logo span {
+  font-size: 20px;
+  font-weight: 600;
+  color: white;
+}
+
+.topbar-logo:hover img {
+  transform: rotate(8deg) scale(1.05);
+}
+
+/* Links */
 .topbar-links a {
-    margin-left: 20px;
-    text-decoration: none;
-    color: white;
-    font-weight: 500;
-    transition: color 0.3s, transform 0.2s;
-    border-bottom: 2px solid transparent;
+  color: white;
+  text-decoration: none;
+  margin-left: 25px;
+  font-weight: 500;
+  font-size: 16px;
+  position: relative;
+  padding: 6px 4px;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+}
+
+.topbar-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background-color: #ffea00;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
 }
 
 .topbar-links a:hover {
-    color: #ffe600;
-    transform: scale(1.05);
-    border-bottom: 2px solid #ffe600;
+  color: #ffea00;
 }
 
-/* Push content down to avoid hiding under the fixed topbar */
+.topbar-links a:hover::after {
+  transform: scaleX(1);
+}
+
+/* Prevent page content from hiding under navbar */
 .container {
-    padding-top: 80px;
+  padding-top: 100px;
 }
 
     </style>
 </head>
 <body>
-    <!-- Top Navigation Bar -->
-<!-- Top Navigation Bar -->
-<div class="topbar">
-    <div class="topbar-logo">🌟 Glendowie Hub</div>
-    <div class="topbar-links">
-        <a href="/">Home</a>
-        <a href="/about">About</a>
-        <a href="/contact">Contact</a>
-        <a href="/help">Help</a>
+<!-- Polished Aesthetic Top Navigation Bar -->
+<nav class="topbar">
+  <div class="topbar-content">
+    <div class="topbar-logo">
+      <img src="https://i.imgur.com/AYocV6k.png" alt="Glendowie Logo">
+      <span>Glendowie Hub</span>
     </div>
-</div>
+    <div class="topbar-links">
+      <a href="/">Home</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/help">Help</a>
+    </div>
+  </div>
+</nav>
+
 
     <div class="container">
         <div class="card">
