@@ -22,195 +22,183 @@
             border-radius: 12px;
         }
 
-        /* Modern Navigation Bar Styles */
-        .navbar {
+        /* Modern Minimalist Navigation */
+        .navigation {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-            padding: 15px 0;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            background-color: #ffffff;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
             z-index: 1000;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            transition: all 0.3s ease;
+            font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+            border-bottom: 1px solid #e0e6ed;
         }
 
-        .navbar-container {
+        .nav-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 30px;
+            padding: 0 20px;
+            height: 70px;
         }
 
-        .navbar-logo {
+        .nav-brand {
             display: flex;
             align-items: center;
-            gap: 12px;
             text-decoration: none;
-            transition: transform 0.3s ease;
         }
 
-        .navbar-logo:hover {
-            transform: scale(1.03);
+        .nav-logo {
+            height: 36px;
+            width: 36px;
+            margin-right: 12px;
         }
 
-        .navbar-logo img {
-            height: 40px;
-            width: 40px;
-            border-radius: 50%;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .navbar-logo:hover img {
-            transform: rotate(10deg);
-        }
-
-        .navbar-logo-text {
-            color: white;
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
-        }
-
-        .navbar-menu {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .navbar-link {
-            color: white;
-            text-decoration: none;
-            font-size: 16px;
+        .nav-title {
+            color: #2c3e50;
+            font-size: 20px;
             font-weight: 600;
-            padding: 10px 15px;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            letter-spacing: 0.3px;
         }
 
-        .navbar-link::before {
+        .nav-menu {
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-item {
+            margin-left: 30px;
+            position: relative;
+        }
+
+        .nav-link {
+            color: #4a5568;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            padding: 8px 0;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            color: #3498db;
+        }
+
+        .nav-link.active {
+            color: #2980b9;
+            font-weight: 600;
+        }
+
+        .nav-link.active:after {
             content: '';
             position: absolute;
-            bottom: 0;
+            bottom: -5px;
             left: 0;
             width: 100%;
             height: 2px;
-            background: white;
-            transform: scaleX(0);
-            transform-origin: right;
-            transition: transform 0.3s ease;
+            background-color: #2980b9;
         }
 
-        .navbar-link:hover {
-            background: rgba(255, 255, 255, 0.1);
+        .nav-link:after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #3498db;
+            transition: width 0.3s ease;
         }
 
-        .navbar-link:hover::before {
-            transform: scaleX(1);
-            transform-origin: left;
+        .nav-link:hover:after {
+            width: 100%;
         }
 
-        .navbar-link.active {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .navbar-link i {
-            margin-right: 8px;
-            font-size: 18px;
-        }
-
-        /* Mobile menu button (hidden by default) */
-        .navbar-toggle {
+        .mobile-menu-btn {
             display: none;
             background: none;
             border: none;
-            color: white;
+            color: #4a5568;
             font-size: 24px;
             cursor: pointer;
         }
 
         /* Responsive styles */
         @media (max-width: 768px) {
-            .navbar-container {
+            .nav-container {
                 padding: 0 15px;
             }
             
-            .navbar-menu {
+            .nav-menu {
                 position: fixed;
                 top: 70px;
                 left: 0;
                 width: 100%;
-                background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+                background-color: white;
                 flex-direction: column;
-                align-items: center;
-                padding: 20px 0;
-                clip-path: circle(0px at 90% -10%);
-                transition: clip-path 0.5s ease;
-                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+                align-items: flex-start;
+                padding: 20px;
+                box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+                transform: translateY(-150%);
+                transition: transform 0.3s ease;
+                z-index: 999;
             }
             
-            .navbar-menu.active {
-                clip-path: circle(1000px at 90% -10%);
+            .nav-menu.active {
+                transform: translateY(0);
             }
             
-            .navbar-link {
-                width: 80%;
-                text-align: center;
-                padding: 15px;
-                margin: 5px 0;
+            .nav-item {
+                margin: 15px 0;
+                width: 100%;
             }
             
-            .navbar-toggle {
+            .nav-link {
+                padding: 10px 0;
+                display: block;
+            }
+            
+            .mobile-menu-btn {
                 display: block;
             }
         }
 
-        /* Main container padding to account for fixed navbar */
+        /* Adjust container padding */
         .container {
             padding-top: 90px;
         }
-
-        /* Card styles (existing) */
-        .card {
-            /* Your existing card styles */
-        }
     </style>
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <!-- Modern Navigation Bar -->
-    <nav class="navbar">
-        <div class="navbar-container">
-            <a href="/" class="navbar-logo">
-                <img src="https://i.imgur.com/AYocV6k.png" alt="Glendowie Logo">
-                <span class="navbar-logo-text">Glendowie Hub</span>
+    <!-- Clean Blue Navigation -->
+    <nav class="navigation">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <img src="https://i.imgur.com/AYocV6k.png" alt="Glendowie Logo" class="nav-logo">
+                <span class="nav-title">Glendowie Hub</span>
             </a>
             
-            <button class="navbar-toggle" id="navbarToggle">
-                <i class="fas fa-bars"></i>
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                ☰
             </button>
             
-            <div class="navbar-menu" id="navbarMenu">
-                <a href="/" class="navbar-link active">
-                    <i class="fas fa-home"></i> Home
-                </a>
-                <a href="/about" class="navbar-link">
-                    <i class="fas fa-info-circle"></i> About
-                </a>
-                <a href="/contact" class="navbar-link">
-                    <i class="fas fa-envelope"></i> Contact
-                </a>
-                <a href="/help" class="navbar-link">
-                    <i class="fas fa-question-circle"></i> Help
-                </a>
+            <div class="nav-menu" id="navMenu">
+                <div class="nav-item">
+                    <a href="/" class="nav-link active">Home</a>
+                </div>
+                <div class="nav-item">
+                    <a href="/about" class="nav-link">About</a>
+                </div>
+                <div class="nav-item">
+                    <a href="/contact" class="nav-link">Contact</a>
+                </div>
+                <div class="nav-item">
+                    <a href="/help" class="nav-link">Help</a>
+                </div>
             </div>
         </div>
     </nav>
@@ -271,19 +259,19 @@
 
             google.accounts.id.prompt();
             
-            // Mobile menu toggle functionality
-            const navbarToggle = document.getElementById('navbarToggle');
-            const navbarMenu = document.getElementById('navbarMenu');
+            // Mobile menu functionality
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const navMenu = document.getElementById('navMenu');
             
-            navbarToggle.addEventListener('click', () => {
-                navbarMenu.classList.toggle('active');
+            mobileMenuBtn.addEventListener('click', () => {
+                navMenu.classList.toggle('active');
             });
             
-            // Close menu when clicking on a link (for mobile)
-            const navbarLinks = document.querySelectorAll('.navbar-link');
-            navbarLinks.forEach(link => {
+            // Close menu when clicking on a link
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
                 link.addEventListener('click', () => {
-                    navbarMenu.classList.remove('active');
+                    navMenu.classList.remove('active');
                 });
             });
         };
