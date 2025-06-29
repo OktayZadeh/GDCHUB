@@ -21,20 +21,26 @@
             background-color: #f0f8ff;
             border-radius: 12px;
         }
+body {
+    margin: 0; /* Prevent unwanted spacing at top */
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
 .topbar {
+    width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: linear-gradient(135deg, #0055ff, #66ccff);
     color: white;
-    padding: 10px 30px;
-    font-family: 'Segoe UI', sans-serif;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    position: sticky;
+    padding: 15px 30px;
+    position: fixed;
     top: 0;
+    left: 0;
     z-index: 1000;
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .topbar-logo {
@@ -47,7 +53,7 @@
     text-decoration: none;
     color: white;
     font-weight: 500;
-    transition: color 0.3s, transform 0.3s;
+    transition: color 0.3s, transform 0.2s;
     border-bottom: 2px solid transparent;
 }
 
@@ -57,10 +63,16 @@
     border-bottom: 2px solid #ffe600;
 }
 
+/* Push content down to avoid hiding under the fixed topbar */
+.container {
+    padding-top: 80px;
+}
+
     </style>
 </head>
 <body>
     <!-- Top Navigation Bar -->
+<!-- Top Navigation Bar -->
 <div class="topbar">
     <div class="topbar-logo">🌟 Glendowie Hub</div>
     <div class="topbar-links">
