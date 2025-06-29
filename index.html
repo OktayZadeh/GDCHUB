@@ -21,124 +21,199 @@
             background-color: #f0f8ff;
             border-radius: 12px;
         }
-/* Reset some base styling */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
 
-body {
-  font-family: 'Segoe UI', sans-serif;
-  background-color: #f5f9ff;
-  color: #222;
-}
+        /* Modern Navigation Bar Styles */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            padding: 15px 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: all 0.3s ease;
+        }
 
-/* Aesthetic Top Bar */
-.topbar {
-  position: fixed;
-  top: 0;
-  width: 100%;
-  background: linear-gradient(135deg, #004aad, #00bfff);
-  padding: 12px 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
-}
+        .navbar-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 30px;
+        }
 
-.topbar-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 30px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+        .navbar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
 
-/* Logo */
-.topbar-logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+        .navbar-logo:hover {
+            transform: scale(1.03);
+        }
 
-.topbar-logo img {
-  height: 36px;
-  width: 36px;
-  border-radius: 50%;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  transition: transform 0.3s ease;
-}
+        .navbar-logo img {
+            height: 40px;
+            width: 40px;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
 
-.topbar-logo span {
-  font-size: 20px;
-  font-weight: 600;
-  color: white;
-}
+        .navbar-logo:hover img {
+            transform: rotate(10deg);
+        }
 
-.topbar-logo:hover img {
-  transform: rotate(8deg) scale(1.05);
-}
+        .navbar-logo-text {
+            color: white;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
 
-/* Links */
-.topbar-links a {
-  color: white;
-  text-decoration: none;
-  margin-left: 25px;
-  font-weight: 500;
-  font-size: 16px;
-  position: relative;
-  padding: 6px 4px;
-  transition: all 0.3s ease;
-  border-radius: 4px;
-}
+        .navbar-menu {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-.topbar-links a::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 2px;
-  width: 100%;
-  background-color: #ffea00;
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.3s ease;
-}
+        .navbar-link {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 10px 15px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
 
-.topbar-links a:hover {
-  color: #ffea00;
-}
+        .navbar-link::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: white;
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.3s ease;
+        }
 
-.topbar-links a:hover::after {
-  transform: scaleX(1);
-}
+        .navbar-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
 
-/* Prevent page content from hiding under navbar */
-.container {
-  padding-top: 100px;
-}
+        .navbar-link:hover::before {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
 
+        .navbar-link.active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .navbar-link i {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        /* Mobile menu button (hidden by default) */
+        .navbar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .navbar-container {
+                padding: 0 15px;
+            }
+            
+            .navbar-menu {
+                position: fixed;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+                flex-direction: column;
+                align-items: center;
+                padding: 20px 0;
+                clip-path: circle(0px at 90% -10%);
+                transition: clip-path 0.5s ease;
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            }
+            
+            .navbar-menu.active {
+                clip-path: circle(1000px at 90% -10%);
+            }
+            
+            .navbar-link {
+                width: 80%;
+                text-align: center;
+                padding: 15px;
+                margin: 5px 0;
+            }
+            
+            .navbar-toggle {
+                display: block;
+            }
+        }
+
+        /* Main container padding to account for fixed navbar */
+        .container {
+            padding-top: 90px;
+        }
+
+        /* Card styles (existing) */
+        .card {
+            /* Your existing card styles */
+        }
     </style>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-<!-- Polished Aesthetic Top Navigation Bar -->
-<nav class="topbar">
-  <div class="topbar-content">
-    <div class="topbar-logo">
-      <img src="https://i.imgur.com/AYocV6k.png" alt="Glendowie Logo">
-      <span>Glendowie Hub</span>
-    </div>
-    <div class="topbar-links">
-      <a href="/">Home</a>
-      <a href="/about">About</a>
-      <a href="/contact">Contact</a>
-      <a href="/help">Help</a>
-    </div>
-  </div>
-</nav>
-
+    <!-- Modern Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-logo">
+                <img src="https://i.imgur.com/AYocV6k.png" alt="Glendowie Logo">
+                <span class="navbar-logo-text">Glendowie Hub</span>
+            </a>
+            
+            <button class="navbar-toggle" id="navbarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div class="navbar-menu" id="navbarMenu">
+                <a href="/" class="navbar-link active">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="/about" class="navbar-link">
+                    <i class="fas fa-info-circle"></i> About
+                </a>
+                <a href="/contact" class="navbar-link">
+                    <i class="fas fa-envelope"></i> Contact
+                </a>
+                <a href="/help" class="navbar-link">
+                    <i class="fas fa-question-circle"></i> Help
+                </a>
+            </div>
+        </div>
+    </nav>
 
     <div class="container">
         <div class="card">
@@ -185,7 +260,7 @@ body {
 
         window.onload = function () {
             google.accounts.id.initialize({
-                client_id: "410647929853-cpc6dkcj5ro6c7d5ombtcgat817nrgia.apps.googleusercontent.com", // Replace with your actual client ID
+                client_id: "410647929853-cpc6dkcj5ro6c7d5ombtcgat817nrgia.apps.googleusercontent.com",
                 callback: handleCredentialResponse
             });
 
@@ -195,6 +270,22 @@ body {
             );
 
             google.accounts.id.prompt();
+            
+            // Mobile menu toggle functionality
+            const navbarToggle = document.getElementById('navbarToggle');
+            const navbarMenu = document.getElementById('navbarMenu');
+            
+            navbarToggle.addEventListener('click', () => {
+                navbarMenu.classList.toggle('active');
+            });
+            
+            // Close menu when clicking on a link (for mobile)
+            const navbarLinks = document.querySelectorAll('.navbar-link');
+            navbarLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    navbarMenu.classList.remove('active');
+                });
+            });
         };
     </script>
 </body>
