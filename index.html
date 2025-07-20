@@ -4,82 +4,340 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Password Protected Page</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://projectspace.nz/ujalvxpj/Main/Official%20Website/(1)%20PasswordEntry%20/Password%20Entery.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        #signInDiv {
-            margin: 20px auto;
-            width: fit-content;
-            padding: 5px;
-            border-radius: 10px;
-            transition: box-shadow 0.3s, transform 0.2s;
+        :root {
+            --primary: #4361ee;
+            --primary-light: #4895ef;
+            --secondary: #3a0ca3;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --accent: #f72585;
+            --text: #2b2d42;
+            --text-light: #8d99ae;
+            --white: #ffffff;
+            --glass: rgba(255, 255, 255, 0.95);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        }
+        
+        /* 🌟 Ultra-Slim Topbar with Blue Gradient Underline */
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 54px;
+            background: var(--glass);
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            padding: 0 24px;
         }
 
-        #signInDiv:hover {
-            box-shadow: 0 0 10px rgba(0, 128, 255, 0.6);
-            transform: scale(1.03);
-            background-color: #f0f8ff;
-            border-radius: 12px;
-        }w
+        .topbar.scrolled {
+            height: 50px;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
+        }
+
+        .topbar-content {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .topbar-logo {
+            height: 32px;
+            transition: all 0.3s ease;
+            filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.08));
+        }
+
+        .topbar-left:hover .topbar-logo {
+            transform: translateY(-1px) rotate(-3deg) scale(1.05);
+            filter: drop-shadow(0 2px 8px rgba(67, 97, 238, 0.15));
+        }
+
+        .topbar-title {
+            font-size: 18px;
+            font-weight: 600;
+            font-family: 'Montserrat', sans-serif;
+            color: var(--dark);
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            padding-bottom: 2px;
+        }
+
+        .topbar-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 30px;
+            height: 2px;
+            background: linear-gradient(90deg, #3a86ff, #4361ee);
+            border-radius: 2px;
+            transition: all 0.3s cubic-bezier(0.68, -0.6, 0.32, 1.6);
+        }
+
+        .topbar-left:hover .topbar-title::after {
+            width: 100%;
+            background: linear-gradient(90deg, #4361ee, #3a0ca3);
+        }
+
+        .topbar-links {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .topbar-button {
+            padding: 6px 14px;
+            background: transparent;
+            color: var(--text);
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 500;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .topbar-button:hover {
+            transform: translateY(-1px);
+            border-color: rgba(67, 97, 238, 0.2);
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(67, 97, 238, 0.1);
+        }
+
+        .topbar-button i {
+            font-size: 13px;
+            transition: transform 0.2s ease;
+        }
+
+        .topbar-button:hover i {
+            transform: scale(1.08);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .topbar {
+                height: 50px;
+                padding: 0 16px;
+            }
+            
+            .topbar-title {
+                font-size: 16px;
+            }
+            
+            .topbar-logo {
+                height: 28px;
+            }
+            
+            .topbar-button {
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+            
+            .topbar-button i {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .topbar-title {
+                display: none;
+            }
+            
+            .topbar-button span {
+                display: none;
+            }
+            
+            .topbar-button {
+                padding: 6px;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                justify-content: center;
+            }
+        }
+
+        /* ============================================= */
+        /* REST OF YOUR ORIGINAL PAGE STYLES WITH BLACK SUBTITLE */
+        /* ============================================= */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
+            background-color: #f5f7ff;
+            padding-top: 54px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            height: 60px;
+            margin: 0 20px;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+      
+
+        #signInDiv {
+            margin: 30px auto;
+            width: fit-content;
+        }
+
+        #error-message {
+            margin-top: 20px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <div class="header">
-                <img src="https://i.imgur.com/AYocV6k.png" alt="Left Logo" class="logo logo-left">
-                <h1>Glendowie College</h1>
-                <img src="https://i.imgur.com/AYocV6k.png" alt="Right Logo" class="logo logo-right">
-            </div>
-            <p class="subtitle">Health & Physical Education</p>
-            <p>Please sign in with your Google account to continue</p>
-            <div id="signInDiv"></div>
-            <p id="error-message" style="color: red;"></p>
-        </div>
+<!-- Ultra-Slim Top Bar with Blue Gradient Underline -->
+<div class="topbar" id="topbar">
+  <div class="topbar-content">
+    <div class="topbar-left">
+      <img src="https://i.imgur.com/AYocV6k.png" alt="Logo" class="topbar-logo" />
+      <span class="topbar-title">Glendowie College HUB</span>
     </div>
+    <div class="topbar-links">
+      <a href="https://www.gdc.school.nz/" target="_blank" class="topbar-button">
+        <i class="fas fa-school"></i> <span>College Site</span>
+      </a>
+      <a href="https://gdc.bridge.school.nz/" target="_blank" class="topbar-button">
+        <i class="fas fa-book-open"></i> <span>School Point</span>
+      </a>
+      <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
+        <i class="fas fa-envelope"></i> <span>Student Portal</span>
+      </a>
+    </div>
+  </div>
+</div>
 
-    <script>
-        const targetPage = "https://projectspace.nz/ujalvxpj/Main/Official%20Website/(2)%20SubjectSelection/SubjectSelection.html";
-        const USER_INFO_KEY = "googleUserInfo";
+<!-- Your Original Page Content with Black Subtitle -->
+<div class="container">
+    <div class="card">
+        <div class="header">
+            <img src="https://i.imgur.com/AYocV6k.png" alt="Left Logo" class="logo logo-left">
+            <h1>Glendowie College</h1>
+            <img src="https://i.imgur.com/AYocV6k.png" alt="Right Logo" class="logo logo-right">
+        </div>
+        <p class="subtitle">Health & Physical Education</p>
+        <p>Please sign in with your Google account to continue</p>
+        <div id="signInDiv"></div>
+        <p id="error-message" style="color: red;"></p>
+    </div>
+</div>
 
-        function decodeJwtResponse(token) {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
+<script>
+    const targetPage = "https://projectspace.nz/ujalvxpj/Main/Official%20Website/(2)%20SubjectSelection/SubjectSelection.html";
+    const USER_INFO_KEY = "googleUserInfo";
 
-            return JSON.parse(jsonPayload);
-        }
+    function decodeJwtResponse(token) {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
 
-        function handleCredentialResponse(response) {
-            const idToken = response.credential;
-            const userInfo = decodeJwtResponse(idToken);
+        return JSON.parse(jsonPayload);
+    }
 
-            // Store relevant user info in localStorage
-            const storedUserInfo = {
-                name: userInfo.name,
-                email: userInfo.email,
-                picture: userInfo.picture
-            };
-            localStorage.setItem(USER_INFO_KEY, JSON.stringify(storedUserInfo));
+    function handleCredentialResponse(response) {
+        const idToken = response.credential;
+        const userInfo = decodeJwtResponse(idToken);
 
-            window.location.href = targetPage;
-        }
-
-        window.onload = function () {
-            google.accounts.id.initialize({
-                client_id: "410647929853-cpc6dkcj5ro6c7d5ombtcgat817nrgia.apps.googleusercontent.com", // Replace with your actual client ID
-                callback: handleCredentialResponse
-            });
-
-            google.accounts.id.renderButton(
-                document.getElementById("signInDiv"),
-                { theme: "outline", size: "large" }
-            );
-
-            google.accounts.id.prompt();
+        // Store relevant user info in localStorage
+        const storedUserInfo = {
+            name: userInfo.name,
+            email: userInfo.email,
+            picture: userInfo.picture
         };
-    </script>
+        localStorage.setItem(USER_INFO_KEY, JSON.stringify(storedUserInfo));
+
+        window.location.href = targetPage;
+    }
+
+    window.onload = function () {
+        // Add scroll effect to topbar
+        const topbar = document.getElementById('topbar');
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 10) {
+                topbar.classList.add('scrolled');
+            } else {
+                topbar.classList.remove('scrolled');
+            }
+        });
+
+        google.accounts.id.initialize({
+            client_id: "410647929853-cpc6dkcj5ro6c7d5ombtcgat817nrgia.apps.googleusercontent.com",
+            callback: handleCredentialResponse
+        });
+
+        google.accounts.id.renderButton(
+            document.getElementById("signInDiv"),
+            { theme: "outline", size: "large" }
+        );
+
+        google.accounts.id.prompt();
+    };
+</script>
 </body>
 </html>
