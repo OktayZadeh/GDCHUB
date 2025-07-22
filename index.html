@@ -37,13 +37,18 @@
             box-sizing: border-box;
         }
         
+        html {
+            background-color: #1d6a76; /* Fallback color */
+            height: 100%;
+        }
+        
         body {
+            height: 100%;
             font-family: 'Poppins', sans-serif;
             color: var(--text);
-            min-height: 100vh;
-            padding-top: 54px;
             line-height: 1.6;
             position: relative;
+            overflow-x: hidden; /* Prevent horizontal scroll */
         }
 
         /* Background with subtle tint overlay */
@@ -58,6 +63,7 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            background-attachment: fixed;
             z-index: -2;
             animation: subtleZoom 30s infinite alternate;
         }
@@ -67,7 +73,7 @@
             100% { transform: scale(1.02); }
         }
 
-        /* Subtle white tint overlay */
+        /* Dark overlay */
         body::after {
             content: '';
             position: fixed;
@@ -77,6 +83,25 @@
             bottom: 0;
             background-color: rgba(0, 0, 0, 0.5);
             z-index: -1;
+        }
+
+        /* Enable scrolling on mobile landscape */
+        @media screen and (max-width: 768px) and (orientation: landscape) {
+            html, body {
+                overflow: auto;
+                height: auto;
+                min-height: 100%;
+            }
+            
+            .login-container {
+                min-height: 100vh;
+                padding: 80px 0 40px;
+            }
+            
+            .login-card {
+                margin: 20px auto;
+                max-width: 420px;
+            }
         }
 
         /* ========== Enhanced Top Navigation ========== */
@@ -114,7 +139,7 @@
         }
 
         .topbar-logo {
-            height: 32px;
+            height: 40px;
             transition: all 0.3s ease;
         }
 
@@ -162,8 +187,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: calc(100vh - 54px);
-            padding: 40px 20px;
+            height: 100vh;
+            padding-top: 54px; /* Account for topbar height */
+            box-sizing: border-box;
+            width: 100%;
         }
 
         .login-card {
@@ -180,6 +207,7 @@
             transform: translateY(20px);
             transition: opacity 0.6s ease-out, transform 0.6s ease-out;
             backdrop-filter: blur(4px);
+            margin: 0 20px;
         }
 
         .login-card.visible {
@@ -198,7 +226,7 @@
         }
 
         .login-header {
-            margin-bottom: 30px;
+            margin-bottom: 24px;
             position: relative;
         }
 
@@ -209,10 +237,10 @@
         }
 
         .login-title {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 700;
-            color: #068ba9;
-            margin-bottom: 8px;
+            color: #036a81;
+            margin-bottom: 4px;
             font-family: 'Montserrat', sans-serif;
         }
 
@@ -220,7 +248,8 @@
             color: #000000;
             font-weight: 500;
             margin-bottom: 0px;
-            font-size: 16px;
+            font-size: 15px;
+            letter-spacing: 0.3px;
             opacity: 0;
             transition: opacity 0.4s ease 0.2s;
         }
@@ -242,15 +271,16 @@
 
         .login-message {
             color: var(--text);
-            margin-bottom: 0px;
+            margin-bottom: 10px;
             font-size: 15px;
+            font-weight: 400;
             max-width: 320px;
             margin-left: auto;
             margin-right: auto;
         }
 
         #signInDiv {
-            margin: 30px auto 15px auto; /* Reduced bottom margin */
+            margin: 20px auto 10px;
             width: fit-content;
             opacity: 0;
             transition: opacity 0.4s ease 0.4s;
@@ -265,7 +295,7 @@
             background-color: #ffffff;
             background-image: none;
             border: 1px solid #dadce0 !important;
-            border-radius: 8px !important;
+            border-radius: 6px !important;
             box-sizing: border-box;
             color: #3c4043;
             cursor: pointer;
@@ -283,7 +313,7 @@
             vertical-align: middle;
             width: 260px;
             z-index: 0;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .gsi-material-button:hover {
@@ -363,14 +393,14 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            font-size: 13px;
-            color: var(--success);
-            margin: 10px 0 20px 0; /* Adjusted margins */
+            font-size: 12px;
+            color: var(--text-light);
+            margin: 6px 0 15px;
         }
 
         /* Error Message */
         #error-message {
-            margin-top: 10px; /* Reduced margin */
+            margin-top: 10px;
             font-size: 14px;
             color: var(--error);
             opacity: 0;
@@ -387,9 +417,10 @@
         }
 
         .login-footer {
-            margin-top: 20px; /* Reduced margin */
-            font-size: 13px;
+            margin-top: 15px;
+            font-size: 12px;
             color: var(--text-light);
+            line-height: 1.5;
         }
 
         /* ========== Responsive Adjustments ========== */
@@ -398,8 +429,14 @@
                 padding: 0 16px;
             }
             
+            .login-container {
+                align-items: flex-start;
+                padding-top: 115px;
+            }
+            
             .login-card {
                 padding: 30px;
+                margin-top: 20px;
             }
             
             .login-title {
@@ -408,6 +445,50 @@
         }
 
         @media (max-width: 480px) {
+            .login-container {
+                align-items: center;
+                padding-top: .1px;
+            }
+
+            .login-card {
+                padding: 20px 15px;
+                margin: 0 12px;
+                max-width: 88%;
+                transform: scale(0.92);
+                margin-top: 0;
+            }
+
+            .login-logo {
+                height: 60px;
+                margin-bottom: 15px;
+            }
+            
+            .login-title {
+                font-size: 20px;
+                margin-bottom: 2px;
+            }
+            
+            .login-subtitle {
+                font-size: 13px;
+            }
+            
+            .login-message {
+                font-size: 13px;
+                margin-bottom: 8px;
+            }
+            
+            .login-divider {
+                margin: 12px auto;
+            }
+            
+            #signInDiv {
+                margin: 15px auto 8px;
+            }
+            
+            .security-badge {
+                margin: 4px 0 10px;
+            }
+            
             .topbar-title {
                 display: none;
             }
@@ -424,32 +505,40 @@
                 justify-content: center;
             }
             
+            .gsi-material-button {
+                width: 210px;
+                height: 44px;
+                font-size: 13px;
+            }
+        }
+
+        /* Additional landscape-specific adjustments */
+        @media screen and (max-width: 768px) and (orientation: landscape) {
             .login-card {
-                padding: 30px 15px;
-                margin: 0 10px;
-                border-radius: 12px;
+                padding: 30px;
+                margin: 20px auto;
+                max-width: 420px;
+                transform: none !important;
             }
             
             .login-logo {
-                height: 70px;
+                height: 80px;
+                margin-bottom: 15px;
             }
             
-            .login-title {
-                font-size: 22px;
+            .topbar-title {
+                display: inline;
             }
             
-            .login-message {
-                font-size: 14px;
+            .topbar-button span {
+                display: inline;
             }
             
-            .gsi-material-button {
-                width: 220px;
-                height: 46px;
-                font-size: 14px;
-            }
-            
-            .security-badge {
-                font-size: 12px;
+            .topbar-button {
+                padding: 6px 12px;
+                width: auto;
+                height: auto;
+                border-radius: 6px;
             }
         }
     </style>
@@ -461,7 +550,7 @@
   <div class="topbar-content">
     <div class="topbar-left">
       <img src="https://i.imgur.com/AYocV6k.png" alt="Glendowie College Logo" class="topbar-logo" />
-      <span class="topbar-title">Glendowie College HUB</span>
+      <span class="topbar-title">Glendowie College</span>
     </div>
     <div class="topbar-links">
       <a href="https://www.gdc.school.nz/" target="_blank" class="topbar-button">
@@ -507,6 +596,31 @@
 <script>
     const targetPage = "https://projectspace.nz/ujalvxpj/Main/Official%20Website/(2)%20SubjectSelection/SubjectSelection.html";
     const USER_INFO_KEY = "googleUserInfo";
+
+    // Function to detect mobile devices
+    function isMobileDevice() {
+        return (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('IEMobile') !== -1);
+    }
+
+    // Function to detect landscape orientation
+    function isLandscape() {
+        return window.matchMedia("(orientation: landscape)").matches;
+    }
+
+    // Set up scrolling behavior based on device and orientation
+    function setupScrollBehavior() {
+        if (isMobileDevice() && isLandscape() && window.innerWidth <= 768) {
+            // Enable scrolling for mobile landscape
+            document.body.style.overflow = 'auto';
+            document.documentElement.style.overflow = 'auto';
+            document.body.style.width = '100%';
+            document.documentElement.style.width = '100%';
+        } else {
+            // Disable scrolling for all other cases
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+        }
+    }
 
     // Decode JWT token to get user information
     function decodeJwtResponse(token) {
@@ -581,6 +695,14 @@
 
     // Initialize page when loaded
     window.onload = function () {
+        // Set up initial scroll behavior
+        setupScrollBehavior();
+        
+        // Add listener for orientation changes
+        window.addEventListener('resize', function() {
+            setupScrollBehavior();
+        });
+
         // Add scroll effect to topbar
         const topbar = document.getElementById('topbar');
         window.addEventListener('scroll', function() {
