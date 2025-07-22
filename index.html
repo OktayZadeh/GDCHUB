@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Password Protected Page</title>
+    <title>Glendowie College HUB - Sign In</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://projectspace.nz/ujalvxpj/Main/Official%20Website/(1)%20PasswordEntry%20/Password%20Entery.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --primary: #4361ee;
@@ -25,9 +26,60 @@
             --glass: rgba(255, 255, 255, 0.95);
             --glass-border: rgba(255, 255, 255, 0.15);
             --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            --success: #4cc9f0;
+            --warning: #f8961e;
+            --error: #f72585;
         }
         
-        /* 🌟 Ultra-Slim Topbar with Blue Gradient Underline */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            padding-top: 54px;
+            line-height: 1.6;
+            position: relative;
+        }
+
+        /* Background with subtle tint overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('https://projectspace.nz/ujalvxpj/Main/Official%20Website/Content/LogInPageWallpaper.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: -2;
+            animation: subtleZoom 30s infinite alternate;
+        }
+
+        @keyframes subtleZoom {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.02); }
+        }
+
+        /* Subtle white tint overlay */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+        }
+
+        /* ========== Enhanced Top Navigation ========== */
         .topbar {
             position: fixed;
             top: 0;
@@ -35,25 +87,20 @@
             right: 0;
             height: 54px;
             background: var(--glass);
-            backdrop-filter: blur(12px) saturate(180%);
-            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
             border-bottom: 1px solid var(--glass-border);
             box-shadow: var(--glass-shadow);
             z-index: 1000;
             display: flex;
             align-items: center;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             padding: 0 24px;
         }
 
-        .topbar.scrolled {
-            height: 50px;
-            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
-        }
-
         .topbar-content {
-            max-width: 1400px;
             width: 100%;
+            max-width: 1400px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
@@ -69,12 +116,6 @@
         .topbar-logo {
             height: 32px;
             transition: all 0.3s ease;
-            filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.08));
-        }
-
-        .topbar-left:hover .topbar-logo {
-            transform: translateY(-1px) rotate(-3deg) scale(1.05);
-            filter: drop-shadow(0 2px 8px rgba(67, 97, 238, 0.15));
         }
 
         .topbar-title {
@@ -82,29 +123,7 @@
             font-weight: 600;
             font-family: 'Montserrat', sans-serif;
             color: var(--dark);
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
             position: relative;
-            padding-bottom: 2px;
-        }
-
-        .topbar-title::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 30px;
-            height: 2px;
-            background: linear-gradient(90deg, #3a86ff, #4361ee);
-            border-radius: 2px;
-            transition: all 0.3s cubic-bezier(0.68, -0.6, 0.32, 1.6);
-        }
-
-        .topbar-left:hover .topbar-title::after {
-            width: 100%;
-            background: linear-gradient(90deg, #4361ee, #3a0ca3);
         }
 
         .topbar-links {
@@ -118,55 +137,273 @@
             background: transparent;
             color: var(--text);
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 6px;
             font-weight: 500;
             font-size: 13px;
             transition: all 0.2s ease;
             border: 1px solid rgba(0, 0, 0, 0.08);
-            cursor: pointer;
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
         .topbar-button:hover {
-            transform: translateY(-1px);
-            border-color: rgba(67, 97, 238, 0.2);
+            background: rgba(67, 97, 238, 0.05);
             color: var(--primary);
-            box-shadow: 0 2px 8px rgba(67, 97, 238, 0.1);
+            border-color: rgba(67, 97, 238, 0.2);
         }
 
         .topbar-button i {
             font-size: 13px;
-            transition: transform 0.2s ease;
         }
 
-        .topbar-button:hover i {
-            transform: scale(1.08);
+        /* ========== Main Login Container ========== */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 54px);
+            padding: 40px 20px;
         }
 
-        /* Responsive adjustments */
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            width: 100%;
+            max-width: 480px;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            backdrop-filter: blur(4px);
+        }
+
+        .login-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .login-header {
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .login-logo {
+            height: 120px;
+            margin-bottom: 20px;
+            transition: transform 0.4s ease;
+        }
+
+        .login-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #068ba9;
+            margin-bottom: 8px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .login-subtitle {
+            color: #000000;
+            font-weight: 500;
+            margin-bottom: 0px;
+            font-size: 16px;
+            opacity: 0;
+            transition: opacity 0.4s ease 0.2s;
+        }
+
+        .login-divider {
+            height: 3px;
+            width: 80px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            margin: 16px auto;
+            border-radius: 3px;
+            opacity: 0;
+            transition: opacity 0.4s ease 0.3s;
+        }
+
+        .login-card.visible .login-subtitle,
+        .login-card.visible .login-divider {
+            opacity: 1;
+        }
+
+        .login-message {
+            color: var(--text);
+            margin-bottom: 0px;
+            font-size: 15px;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #signInDiv {
+            margin: 30px auto 15px auto; /* Reduced bottom margin */
+            width: fit-content;
+            opacity: 0;
+            transition: opacity 0.4s ease 0.4s;
+        }
+
+        /* ========== Clean Modern Google Sign-In Button ========== */
+        .gsi-material-button {
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            -webkit-appearance: none;
+            background-color: #ffffff;
+            background-image: none;
+            border: 1px solid #dadce0 !important;
+            border-radius: 8px !important;
+            box-sizing: border-box;
+            color: #3c4043;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            height: 52px;
+            letter-spacing: 0.25px;
+            outline: none;
+            overflow: hidden;
+            padding: 0 16px;
+            position: relative;
+            text-align: center;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            vertical-align: middle;
+            width: 260px;
+            z-index: 0;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .gsi-material-button:hover {
+            background-color: #f8f9fa;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .gsi-material-button:active {
+            background-color: #f1f3f4;
+            border-color: #d2e3fc !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transform: translateY(0);
+        }
+
+        .gsi-material-button:focus {
+            outline: none;
+            border-color: #4285f4 !important;
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+        }
+
+        .gsi-material-button .gsi-material-button-icon {
+            height: 20px;
+            margin-right: 12px;
+            min-width: 20px;
+            width: 20px;
+        }
+
+        .gsi-material-button .gsi-material-button-content-wrapper {
+            align-items: center;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            height: 100%;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+        }
+
+        .gsi-material-button .gsi-material-button-contents {
+            flex-grow: 1;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: top;
+            white-space: nowrap;
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Remove Google's default outline */
+        .gsi-material-button div[style*="outline"] {
+            outline: none !important;
+        }
+
+        .login-card.visible #signInDiv {
+            opacity: 1;
+        }
+
+        /* Security Badge */
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--success);
+            margin: 10px 0 20px 0; /* Adjusted margins */
+        }
+
+        /* Error Message */
+        #error-message {
+            margin-top: 10px; /* Reduced margin */
+            font-size: 14px;
+            color: var(--error);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .login-card.visible #error-message {
+            opacity: 1;
+        }
+
+        .login-footer {
+            margin-top: 20px; /* Reduced margin */
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        /* ========== Responsive Adjustments ========== */
         @media (max-width: 768px) {
             .topbar {
-                height: 50px;
                 padding: 0 16px;
             }
             
-            .topbar-title {
-                font-size: 16px;
+            .login-card {
+                padding: 30px;
             }
             
-            .topbar-logo {
-                height: 28px;
-            }
-            
-            .topbar-button {
-                padding: 5px 10px;
-                font-size: 12px;
-            }
-            
-            .topbar-button i {
-                font-size: 12px;
+            .login-title {
+                font-size: 24px;
             }
         }
 
@@ -180,81 +417,50 @@
             }
             
             .topbar-button {
-                padding: 6px;
+                padding: 8px;
                 border-radius: 50%;
-                width: 30px;
-                height: 30px;
+                width: 36px;
+                height: 36px;
                 justify-content: center;
             }
-        }
-
-        /* ============================================= */
-        /* REST OF YOUR ORIGINAL PAGE STYLES WITH BLACK SUBTITLE */
-        /* ============================================= */
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Poppins', sans-serif;
-            color: var(--text);
-            background-color: #f5f7ff;
-            padding-top: 54px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 40px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-
-        .header {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .logo {
-            height: 60px;
-            margin: 0 20px;
-        }
-
-        h1 {
-            color: var(--primary);
-            margin-bottom: 10px;
-        }
-
-      
-
-        #signInDiv {
-            margin: 30px auto;
-            width: fit-content;
-        }
-
-        #error-message {
-            margin-top: 20px;
-            font-size: 14px;
+            
+            .login-card {
+                padding: 30px 15px;
+                margin: 0 10px;
+                border-radius: 12px;
+            }
+            
+            .login-logo {
+                height: 70px;
+            }
+            
+            .login-title {
+                font-size: 22px;
+            }
+            
+            .login-message {
+                font-size: 14px;
+            }
+            
+            .gsi-material-button {
+                width: 220px;
+                height: 46px;
+                font-size: 14px;
+            }
+            
+            .security-badge {
+                font-size: 12px;
+            }
         }
     </style>
 </head>
+    
 <body>
-<!-- Ultra-Slim Top Bar with Blue Gradient Underline -->
+<!-- Top Navigation Bar -->
 <div class="topbar" id="topbar">
   <div class="topbar-content">
     <div class="topbar-left">
-      <img src="https://i.imgur.com/AYocV6k.png" alt="Logo" class="topbar-logo" />
+      <img src="https://i.imgur.com/AYocV6k.png" alt="Glendowie College Logo" class="topbar-logo" />
       <span class="topbar-title">Glendowie College HUB</span>
     </div>
     <div class="topbar-links">
@@ -271,18 +477,30 @@
   </div>
 </div>
 
-<!-- Your Original Page Content with Black Subtitle -->
-<div class="container">
-    <div class="card">
-        <div class="header">
-            <img src="https://i.imgur.com/AYocV6k.png" alt="Left Logo" class="logo logo-left">
-            <h1>Glendowie College</h1>
-            <img src="https://i.imgur.com/AYocV6k.png" alt="Right Logo" class="logo logo-right">
+<!-- Main Login Content -->
+<div class="login-container">
+    <div class="login-card" id="loginCard">
+        <div class="login-header">
+            <img src="https://i.imgur.com/AYocV6k.png" alt="Glendowie College Logo" class="login-logo">
+            <h1 class="login-title">Glendowie College</h1>
+            <p class="login-subtitle">Health & Physical Education Portal</p>
+            <div class="login-divider"></div>
         </div>
-        <p class="subtitle">Health & Physical Education</p>
-        <p>Please sign in with your Google account to continue</p>
-        <div id="signInDiv"></div>
-        <p id="error-message" style="color: red;"></p>
+        
+        <p class="login-message">Please sign in with your school Google account to access the HUB portal</p>
+        
+        <div id="signInDiv" aria-label="Sign in with Google"></div>
+        
+        <div class="security-badge">
+            <i class="fas fa-lock"></i>
+            <span>Secure Login</span>
+        </div>
+        
+        <div role="alert" id="error-message" aria-live="polite"></div>
+        
+        <div class="login-footer">
+            <p>Having trouble signing in? Contact the IT department for assistance.</p>
+        </div>
     </div>
 </div>
 
@@ -290,53 +508,138 @@
     const targetPage = "https://projectspace.nz/ujalvxpj/Main/Official%20Website/(2)%20SubjectSelection/SubjectSelection.html";
     const USER_INFO_KEY = "googleUserInfo";
 
+    // Decode JWT token to get user information
     function decodeJwtResponse(token) {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
 
-        return JSON.parse(jsonPayload);
+            return JSON.parse(jsonPayload);
+        } catch (error) {
+            console.error("Error decoding JWT:", error);
+            showError("Authentication error. Please try again.");
+            return null;
+        }
     }
 
+    // Handle Google Sign-In response
     function handleCredentialResponse(response) {
-        const idToken = response.credential;
-        const userInfo = decodeJwtResponse(idToken);
-
-        // Store relevant user info in localStorage
+        const button = document.querySelector('#signInDiv [role="button"]');
+        if (button) {
+            button.innerHTML = '<div class="loading-spinner"></div> Authenticating...';
+            button.style.pointerEvents = 'none';
+        }
+        
+        const userInfo = decodeJwtResponse(response.credential);
+        
+        if (!userInfo) {
+            if (button) {
+                button.innerHTML = 'Sign in with Google';
+                button.style.pointerEvents = 'auto';
+            }
+            return;
+        }
+        
+        // Store user info in localStorage
         const storedUserInfo = {
             name: userInfo.name,
             email: userInfo.email,
             picture: userInfo.picture
         };
-        localStorage.setItem(USER_INFO_KEY, JSON.stringify(storedUserInfo));
-
-        window.location.href = targetPage;
+        
+        try {
+            localStorage.setItem(USER_INFO_KEY, JSON.stringify(storedUserInfo));
+            window.location.href = targetPage;
+        } catch (error) {
+            console.error("Storage error:", error);
+            showError("Could not save your session. Try clearing site data.");
+            if (button) {
+                button.innerHTML = 'Sign in with Google';
+                button.style.pointerEvents = 'auto';
+            }
+        }
     }
 
+    // Show error message to user
+    function showError(message) {
+        const errorElement = document.getElementById('error-message');
+        errorElement.innerHTML = `
+            <i class="fas fa-exclamation-circle"></i>
+            <span>${message}</span>
+        `;
+        errorElement.style.opacity = 1;
+        
+        // Auto-hide after delay
+        setTimeout(() => {
+            errorElement.style.opacity = 0;
+            setTimeout(() => errorElement.innerHTML = '', 300);
+        }, 5000);
+    }
+
+    // Initialize page when loaded
     window.onload = function () {
         // Add scroll effect to topbar
         const topbar = document.getElementById('topbar');
         window.addEventListener('scroll', function() {
-            if (window.scrollY > 10) {
-                topbar.classList.add('scrolled');
-            } else {
-                topbar.classList.remove('scrolled');
-            }
+            topbar.classList.toggle('scrolled', window.scrollY > 10);
         });
 
+        // Trigger the fade-in animation
+        const loginCard = document.getElementById('loginCard');
+        setTimeout(() => {
+            loginCard.classList.add('visible');
+        }, 100);
+
+        // Initialize Google Sign-In with custom configuration
         google.accounts.id.initialize({
             client_id: "410647929853-cpc6dkcj5ro6c7d5ombtcgat817nrgia.apps.googleusercontent.com",
-            callback: handleCredentialResponse
+            callback: handleCredentialResponse,
+            ux_mode: "popup",
+            auto_select: false
         });
 
+        // Render Google Sign-In button with enhanced styling
         google.accounts.id.renderButton(
             document.getElementById("signInDiv"),
-            { theme: "outline", size: "large" }
+            { 
+                type: "standard",
+                theme: "outline",
+                size: "large",
+                width: 260,
+                text: "signin_with",
+                shape: "rectangular",
+                logo_alignment: "left",
+                locale: "en"
+            }
         );
 
-        google.accounts.id.prompt();
+        // Apply additional custom styling after the button is rendered
+        setTimeout(() => {
+            const googleBtn = document.querySelector('#signInDiv [role="button"]');
+            if (googleBtn) {
+                googleBtn.classList.add('gsi-material-button');
+                
+                // Remove any existing hover transforms
+                googleBtn.style.transform = 'none';
+                googleBtn.style.transition = 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)';
+                
+                // Force Google's icon to be properly aligned
+                const icon = googleBtn.querySelector('img');
+                if (icon) {
+                    icon.style.marginRight = '12px';
+                }
+            }
+        }, 500);
+
+        // Show the One Tap prompt (if allowed)
+        google.accounts.id.prompt(notification => {
+            if (notification.isNotDisplayed() || notification.isSkipped()) {
+                // Try again later or proceed without
+            }
+        });
     };
 </script>
 </body>
