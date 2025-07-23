@@ -180,10 +180,30 @@
             display: flex;
             flex-direction: column;
             border: 1px solid rgba(255, 255, 255, 0.2);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s forwards;
+        }
+
+        .subject-card:nth-child(1) {
+            animation-delay: 0.2s;
+        }
+        .subject-card:nth-child(2) {
+            animation-delay: 0.4s;
+        }
+        .subject-card:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .subject-card:hover {
-            transform: translateY(-8px);
+            transform: translateY(-8px) !important;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
         }
 
@@ -301,6 +321,7 @@
             border: 2px solid #007bb5;
             cursor: pointer;
             transition: transform 0.2s;
+            display: none; /* Start hidden by default */
         }
 
         #profile-pic:hover {
@@ -371,15 +392,19 @@
                 flex-direction: row;
                 flex-wrap: wrap;
                 justify-content: center;
-                align-items: flex-start;
+                align-items: center; /* Changed to center to prevent misalignment */
                 padding-top: 80px;
+                height: auto;
+                min-height: calc(100vh - 80px);
             }
             
             .subject-card {
-                width: 30%;
+                width: calc(33.33% - 20px);
                 min-width: 200px;
                 height: 300px;
                 margin: 0 10px;
+                flex: 1 1 auto;
+                max-width: 280px;
             }
             
             .card-media-container {
@@ -398,13 +423,31 @@
         /* Adjustments for very small landscape screens */
         @media screen and (max-width: 640px) and (orientation: landscape) {
             .subject-card {
-                width: 45%;
+                width: calc(50% - 20px);
                 min-width: 180px;
                 height: 280px;
             }
             
             .card-media-container {
                 height: 120px;
+            }
+        }
+
+        /* Extra small landscape screens */
+        @media screen and (max-width: 480px) and (orientation: landscape) {
+            .subject-card {
+                width: calc(50% - 10px);
+                min-width: 160px;
+                height: 260px;
+                margin: 0 5px;
+            }
+            
+            .card-media-container {
+                height: 110px;
+            }
+            
+            .card-content {
+                padding: 15px;
             }
         }
     </style>
@@ -427,7 +470,7 @@
                 <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
                     <i class="fas fa-envelope"></i> <span>Student Portal</span>
                 </a>
-                <img id="profile-pic" src="" alt="Profile Picture" style="display: none;">
+                <img id="profile-pic" src="" alt="Profile Picture">
             </div>
         </div>
     </div>
@@ -508,13 +551,15 @@
                 mainContent.style.flexDirection = 'row';
                 mainContent.style.flexWrap = 'wrap';
                 mainContent.style.justifyContent = 'center';
-                mainContent.style.alignItems = 'flex-start';
+                mainContent.style.alignItems = 'center'; // Ensure all cards align properly
                 
                 subjectCards.forEach(card => {
-                    card.style.width = '30%';
+                    card.style.width = 'calc(33.33% - 20px)';
                     card.style.minWidth = '200px';
                     card.style.height = '300px';
                     card.style.margin = '0 10px';
+                    card.style.flex = '1 1 auto';
+                    card.style.maxWidth = '280px';
                 });
                 
                 document.querySelectorAll('.card-media-container').forEach(container => {
@@ -532,6 +577,8 @@
                     card.style.minWidth = '';
                     card.style.height = '';
                     card.style.margin = '';
+                    card.style.flex = '';
+                    card.style.maxWidth = '';
                 });
                 
                 document.querySelectorAll('.card-media-container').forEach(container => {
@@ -556,22 +603,29 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        function handleProfilePicture() {
             const storedUserInfo = localStorage.getItem(USER_INFO_KEY);
 
             if (storedUserInfo) {
-                const userInfo = JSON.parse(storedUserInfo);
-                if (userInfo && userInfo.picture) {
-                    profilePicElement.src = userInfo.picture;
-                    profilePicElement.style.display = 'block';
-                } else {
-                    console.log("Profile picture URL not found in localStorage.");
-                    profilePicElement.style.display = 'none';
+                try {
+                    const userInfo = JSON.parse(storedUserInfo);
+                    if (userInfo && userInfo.picture) {
+                        profilePicElement.src = userInfo.picture;
+                        profilePicElement.style.display = 'block';
+                        return;
+                    }
+                } catch (e) {
+                    console.error("Error parsing user info:", e);
                 }
-            } else {
-                console.log("No user info found in localStorage.");
-                profilePicElement.style.display = 'none';
             }
+            
+            // If no valid user info or picture
+            profilePicElement.style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle profile picture display
+            handleProfilePicture();
 
             // Set up video behavior based on device type and orientation
             const videos = document.querySelectorAll('.card-media');
@@ -635,6 +689,13 @@
                 document.querySelectorAll('.card-media').forEach(video => {
                     forceVideoPlay(video);
                 });
+            }
+        });
+
+        // Listen for storage changes to update profile picture
+        window.addEventListener('storage', function(e) {
+            if (e.key === USER_INFO_KEY) {
+                handleProfilePicture();
             }
         });
     </script>
