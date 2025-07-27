@@ -4,13 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Glendowie College - Subject Selection</title>
+    
+    <!-- External Resources -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
     <style>
+        /* ========== CSS Variables ========== */
         :root {
+            /* Color Scheme */
             --primary: #4361ee;
             --primary-light: #4895ef;
             --secondary: #3a0ca3;
@@ -20,11 +25,14 @@
             --text: #2b2d42;
             --text-light: #8d99ae;
             --white: #ffffff;
+            
+            /* Glass Effect */
             --glass: rgba(255, 255, 255, 0.95);
             --glass-border: rgba(255, 255, 255, 0.15);
             --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
         }
 
+        /* ========== Base Styles ========== */
         * {
             margin: 0;
             padding: 0;
@@ -34,15 +42,6 @@
         html {
             background-color: #1d6a76;
             height: 100%;
-        }
-        
-        .subject-icon {
-            transition: all 0.5s ease;
-        }
-
-        .subject-card:hover .subject-icon {
-            transform: scale(1.5) rotate(15deg);
-            filter: drop-shadow(0 0 8px var(--subject-color));
         }
 
         body {
@@ -55,26 +54,36 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        body::before {
+        body::before, 
+        body::after {
             content: '';
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
+            z-index: -1;
+            transition: opacity 0.5s ease;
+        }
+
+        body::before {
             background-image: url('https://projectspace.nz/ujalvxpj/Main/Official%20Website/Content/LogInPageWallpaper.png');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
             z-index: -2;
-            transition: opacity 0.5s ease;
         }
 
         body.hover-effect::before {
             opacity: 0;
         }
 
+        body::after {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* ========== Background Video ========== */
         #background-video {
             position: fixed;
             top: 0;
@@ -90,18 +99,6 @@
 
         body.hover-effect #background-video {
             opacity: 1;
-        }
-
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: -1;
-            transition: opacity 0.5s ease;
         }
 
         /* ========== Top Navigation Bar ========== */
@@ -182,6 +179,21 @@
             font-size: 13px;
         }
 
+        #profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #007bb5;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: none;
+        }
+
+        #profile-pic:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
         /* ========== Main Content ========== */
         .main-content {
             display: flex;
@@ -193,7 +205,7 @@
             min-height: calc(100vh - 120px);
         }
 
-        /* ========== Subject Card Styles ========== */
+        /* ========== Subject Cards ========== */
         .subject-card {
             width: 340px;
             background: rgba(255, 255, 255, 0.95);
@@ -211,19 +223,9 @@
             animation: fadeInUp 0.6s forwards;
             height: 580px;
             -webkit-tap-highlight-color: transparent;
-        }
-
-        .subject-card:nth-child(1) {
-            animation-delay: 0.1s;
-        }
-        .subject-card:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        .subject-card:nth-child(3) {
-            animation-delay: 0.3s;
-        }
-        .subject-card:nth-child(4) {
-            animation-delay: 0.4s;
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+            will-change: transform;
         }
 
         @keyframes fadeInUp {
@@ -233,15 +235,22 @@
             }
         }
 
+        .subject-card:nth-child(1) { animation-delay: 0.1s; }
+        .subject-card:nth-child(2) { animation-delay: 0.2s; }
+        .subject-card:nth-child(3) { animation-delay: 0.3s; }
+        .subject-card:nth-child(4) { animation-delay: 0.4s; }
+
         .subject-card:hover {
             transform: translateY(-8px) !important;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
         }
 
+        /* Card Media */
         .card-media-container {
             height: 200px;
             position: relative;
             overflow: hidden;
+            transform: translateZ(0);
         }
 
         .card-media {
@@ -250,12 +259,30 @@
             object-fit: cover;
             object-position: center;
             transition: transform 0.5s ease;
+            transform: translateZ(0);
         }
 
         .subject-card:hover .card-media {
-            transform: scale(1.05);
+            transform: scale(1.05) translateZ(0);
         }
 
+        .card-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+
+        .subject-card:hover .card-overlay {
+            opacity: 1;
+        }
+
+        /* Card Content */
         .card-content {
             padding: 24px;
             display: flex;
@@ -263,6 +290,8 @@
             gap: 20px;
             flex-grow: 1;
             height: calc(100% - 200px);
+            position: relative;
+            z-index: 1;
         }
 
         .subject-header {
@@ -287,6 +316,12 @@
             color: var(--subject-color);
             flex-shrink: 0;
             margin-top: 3px;
+            transition: all 0.5s ease;
+        }
+
+        .subject-card:hover .subject-icon {
+            transform: scale(1.5) rotate(15deg);
+            filter: drop-shadow(0 0 8px var(--subject-color));
         }
 
         .subject-description {
@@ -298,11 +333,14 @@
             min-height: 70px;
         }
 
+        /* Year Selection */
         .year-selection {
             margin-top: auto;
             display: flex;
             flex-direction: column;
             gap: 16px;
+            position: relative;
+            z-index: 2;
         }
 
         .year-selection-title {
@@ -326,8 +364,12 @@
 
         .year-buttons {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
             gap: 10px;
+        }
+
+        /* Default year buttons layout */
+        .year-buttons {
+            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
         }
 
         .year-button {
@@ -350,6 +392,7 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.05);
             position: relative;
             overflow: hidden;
+            transform: translateZ(0);
         }
 
         .year-button::before {
@@ -367,7 +410,7 @@
         .year-button:hover {
             background: var(--subject-color);
             color: white;
-            transform: translateY(-2px);
+            transform: translateY(-2px) translateZ(0);
             box-shadow: 0 6px 12px rgba(0,0,0,0.1);
         }
 
@@ -376,26 +419,11 @@
         }
 
         .year-button:active {
-            transform: translateY(0);
+            transform: translateY(0) translateZ(0);
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .card-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .subject-card:hover .card-overlay {
-            opacity: 1;
-        }
-
-        /* Different subject colors */
+        /* ========== Subject Specific Styles ========== */
         .myp-card {
             --subject-color: #4cc9f0;
             --subject-light: rgba(76, 201, 240, 0.1);
@@ -416,23 +444,20 @@
             --subject-light: rgba(247, 37, 133, 0.1);
         }
 
-        /* Profile Picture */
-        #profile-pic {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid #007bb5;
-            cursor: pointer;
-            transition: transform 0.2s;
-            display: none;
+        /* Health card specific year buttons layout */
+        .health-card .year-buttons {
+            grid-template-columns: repeat(6, 1fr);
         }
 
-        #profile-pic:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        .health-card .year-buttons .year-button:not(:nth-last-child(-n+2)) {
+            grid-column: span 2;
         }
 
-        /* Responsive adjustments */
+        .health-card .year-buttons .year-button:nth-last-child(-n+2) {
+            grid-column: span 3;
+        }
+
+        /* ========== Responsive Styles ========== */
         @media (max-width: 900px) {
             .main-content {
                 padding-top: 120px;
@@ -456,6 +481,15 @@
            
             .year-buttons {
                 grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            }
+
+            /* Health card adjustments for tablet */
+            .health-card .year-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .health-card .year-buttons .year-button {
+                grid-column: span 1 !important;
             }
         }
 
@@ -517,6 +551,16 @@
                 padding: 14px 0;
                 min-height: 44px;
             }
+
+            /* Health card adjustments for mobile */
+            .health-card .year-buttons {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            /* Single button full width */
+            .health-card .year-buttons .year-button:nth-last-child(1):first-child {
+                grid-column: 1 / -1;
+            }
         }
 
         /* Landscape mode for mobile devices */
@@ -553,14 +597,14 @@
     </style>
 </head>
 <body>
-    <!-- Background video element for the hover effect -->
+    <!-- Background Video -->
     <video id="background-video" loop muted playsinline></video>
     
     <!-- Top Navigation Bar -->
     <div class="topbar" id="topbar">
         <div class="topbar-content">
             <div class="topbar-left">
-                <img src="https://i.imgur.com/AYocV6k.png" alt="Glendowie College Logo" class="topbar-logo" />
+                <img src="https://i.imgur.com/AYocV6k.png" alt="Glendowie College Logo" class="topbar-logo">
                 <span class="topbar-title">Glendowie College</span>
             </div>
             <div class="topbar-links">
@@ -578,6 +622,7 @@
         </div>
     </div>
 
+    <!-- Main Content -->
     <div class="main-content">
         <!-- MYP Card -->
         <div class="subject-card myp-card">
@@ -622,7 +667,6 @@
                 <div class="year-selection">
                     <div class="year-selection-title">Select Year Level</div>
                     <div class="year-buttons">
-                       
                         <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html?year=11" class="year-button">Year 11</a>
                         <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html?year=12" class="year-button">Year 12</a>
                         <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html?year=13" class="year-button">Year 13</a>
@@ -687,28 +731,18 @@
     </div>
 
     <script>
+        // Constants
         const USER_INFO_KEY = "googleUserInfo";
         const profilePicElement = document.getElementById('profile-pic');
         const backgroundVideo = document.getElementById('background-video');
-        
-        // Video buffering management
         const videoSources = [
             'https://i.imgur.com/zw3viPp.mp4',
             'https://i.imgur.com/DH39YQe.mp4',
             'https://i.imgur.com/baeEc27.mp4',
             'https://i.imgur.com/1s0hopX.mp4'
         ];
-        
-        // Preload all videos in hidden source elements
-        function preloadVideos() {
-            videoSources.forEach(src => {
-                const source = document.createElement('source');
-                source.src = src;
-                source.type = 'video/mp4';
-                backgroundVideo.appendChild(source);
-            });
-        }
 
+        // Utility Functions
         function isMobileDevice() {
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         }
@@ -717,6 +751,39 @@
             return window.matchMedia("(orientation: landscape)").matches;
         }
 
+        function forceVideoPlay(video) {
+            if (video.paused) {
+                const promise = video.play();
+                if (promise !== undefined) {
+                    promise.catch(error => {
+                        video.muted = true;
+                        video.play().catch(e => console.log("Video play error:", e));
+                    });
+                }
+            }
+        }
+
+        // Profile Picture Handling
+        function handleProfilePicture() {
+            const storedUserInfo = localStorage.getItem(USER_INFO_KEY);
+
+            if (storedUserInfo) {
+                try {
+                    const userInfo = JSON.parse(storedUserInfo);
+                    if (userInfo?.picture) {
+                        profilePicElement.src = userInfo.picture;
+                        profilePicElement.style.display = 'block';
+                        return;
+                    }
+                } catch (e) {
+                    console.error("Error parsing user info:", e);
+                }
+            }
+           
+            profilePicElement.style.display = 'none';
+        }
+
+        // Layout Adjustments
         function handleOrientationChange() {
             const mainContent = document.querySelector('.main-content');
             const subjectCards = document.querySelectorAll('.subject-card');
@@ -764,38 +831,7 @@
             }
         }
 
-        function forceVideoPlay(video) {
-            if (video.paused) {
-                const promise = video.play();
-                if (promise !== undefined) {
-                    promise.catch(error => {
-                        video.muted = true;
-                        video.play().catch(e => console.log("Video play error:", e));
-                    });
-                }
-            }
-        }
-
-        function handleProfilePicture() {
-            const storedUserInfo = localStorage.getItem(USER_INFO_KEY);
-
-            if (storedUserInfo) {
-                try {
-                    const userInfo = JSON.parse(storedUserInfo);
-                    if (userInfo && userInfo.picture) {
-                        profilePicElement.src = userInfo.picture;
-                        profilePicElement.style.display = 'block';
-                        return;
-                    }
-                } catch (e) {
-                    console.error("Error parsing user info:", e);
-                }
-            }
-           
-            profilePicElement.style.display = 'none';
-        }
-
-        // Improved background video transition on card hover
+        // Background Video Transition
         function setupCardHoverEffects() {
             const cards = document.querySelectorAll('.subject-card');
             let currentVideoIndex = -1;
@@ -858,7 +894,7 @@
                             });
                         }, 50);
                     }
-                });
+                }, { passive: true });
             });
             
             // Handle mouse leave from all cards
@@ -870,11 +906,8 @@
             }, true);
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            preloadVideos();
-            handleProfilePicture();
-            setupCardHoverEffects();
-
+        // Initialize Videos
+        function initializeVideos() {
             const videos = document.querySelectorAll('.card-media');
            
             if (isMobileDevice()) {
@@ -891,7 +924,7 @@
                     document.body.addEventListener('touchstart', function once() {
                         videos.forEach(v => forceVideoPlay(v));
                         document.body.removeEventListener('touchstart', once);
-                    }, { once: true });
+                    }, { once: true, passive: true });
                 });
                
                 handleOrientationChange();
@@ -916,38 +949,49 @@
             // Initialize background video
             backgroundVideo.muted = true;
             backgroundVideo.playsInline = true;
-        });
+        }
 
-        window.addEventListener('resize', function() {
-            if (isMobileDevice()) {
-                handleOrientationChange();
-            }
-        });
-
-        window.addEventListener('orientationchange', function() {
-            if (isMobileDevice()) {
-                // Small delay to ensure orientation has changed
-                setTimeout(() => {
+        // Event Listeners
+        function setupEventListeners() {
+            window.addEventListener('resize', function() {
+                if (isMobileDevice()) {
                     handleOrientationChange();
+                }
+            });
+
+            window.addEventListener('orientationchange', function() {
+                if (isMobileDevice()) {
+                    // Small delay to ensure orientation has changed
+                    setTimeout(() => {
+                        handleOrientationChange();
+                        document.querySelectorAll('.card-media').forEach(video => {
+                            forceVideoPlay(video);
+                        });
+                    }, 100);
+                }
+            });
+
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible' && isMobileDevice()) {
                     document.querySelectorAll('.card-media').forEach(video => {
                         forceVideoPlay(video);
                     });
-                }, 100);
-            }
-        });
+                }
+            });
 
-        document.addEventListener('visibilitychange', function() {
-            if (document.visibilityState === 'visible' && isMobileDevice()) {
-                document.querySelectorAll('.card-media').forEach(video => {
-                    forceVideoPlay(video);
-                });
-            }
-        });
+            window.addEventListener('storage', function(e) {
+                if (e.key === USER_INFO_KEY) {
+                    handleProfilePicture();
+                }
+            });
+        }
 
-        window.addEventListener('storage', function(e) {
-            if (e.key === USER_INFO_KEY) {
-                handleProfilePicture();
-            }
+        // Initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeVideos();
+            handleProfilePicture();
+            setupCardHoverEffects();
+            setupEventListeners();
         });
     </script>
 </body>
