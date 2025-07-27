@@ -17,7 +17,6 @@
             --dark: #1a1a2e;
             --light: #f8f9fa;
             --accent: #f72585;
-            --myp-color: #4cc9f0;
             --text: #2b2d42;
             --text-light: #8d99ae;
             --white: #ffffff;
@@ -32,12 +31,25 @@
             box-sizing: border-box;
         }
 
+        html {
+            background-color: #1d6a76;
+            height: 100%;
+        }
+        
+        .subject-icon {
+            transition: all 0.5s ease;
+        }
+
+        .subject-card:hover .subject-icon {
+            transform: scale(1.5) rotate(15deg);
+            filter: drop-shadow(0 0 8px var(--subject-color));
+        }
+
         body {
+            height: 100%;
             font-family: 'Open Sans', sans-serif;
             color: var(--text);
             line-height: 1.6;
-            background-color: #1d6a76;
-            min-height: 100vh;
             position: relative;
             overflow-x: hidden;
         }
@@ -55,12 +67,27 @@
             background-repeat: no-repeat;
             background-attachment: fixed;
             z-index: -2;
-            animation: subtleZoom 30s infinite alternate;
+            transition: opacity 0.5s ease;
         }
 
-        @keyframes subtleZoom {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.02); }
+        body.hover-effect::before {
+            opacity: 0;
+        }
+
+        #background-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -3;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        body.hover-effect #background-video {
+            opacity: 1;
         }
 
         body::after {
@@ -72,6 +99,7 @@
             bottom: 0;
             background-color: rgba(0, 0, 0, 0.5);
             z-index: -1;
+            transition: opacity 0.5s ease;
         }
 
         /* ========== Top Navigation Bar ========== */
@@ -152,6 +180,239 @@
             font-size: 13px;
         }
 
+        /* ========== Main Content ========== */
+        .main-content {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 30px;
+            padding: 185px 20px 20px;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* ========== Subject Card Styles ========== */
+        .subject-card {
+            width: 340px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s forwards;
+            height: 580px;
+        }
+
+        .subject-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+        .subject-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .subject-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+        .subject-card:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .subject-card:hover {
+            transform: translateY(-8px) !important;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-media-container {
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-media {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            transition: transform 0.5s ease;
+        }
+
+        .subject-card:hover .card-media {
+            transform: scale(1.05);
+        }
+
+        .card-content {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex-grow: 1;
+            height: calc(100% - 200px);
+        }
+
+        .subject-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+            min-height: 60px;
+        }
+
+        .subject-name {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 22px;
+            color: var(--dark);
+            line-height: 1.3;
+            margin: 0;
+        }
+
+        .subject-icon {
+            font-size: 24px;
+            color: var(--subject-color);
+            flex-shrink: 0;
+            margin-top: 3px;
+        }
+
+        .subject-description {
+            font-size: 15px;
+            color: var(--text-light);
+            line-height: 1.5;
+            margin: 0 0 8px 0;
+            flex-grow: 1;
+            min-height: 70px;
+        }
+
+        .year-selection {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .year-selection-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .year-selection-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(0,0,0,0.1);
+        }
+
+        .year-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            gap: 10px;
+        }
+
+        .year-button {
+            padding: 12px 0;
+            background: var(--subject-light);
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--subject-color);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            min-height: 44px;
+            text-align: center;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .year-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 60%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .year-button:hover {
+            background: var(--subject-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+
+        .year-button:hover::before {
+            opacity: 1;
+        }
+
+        .year-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .subject-card:hover .card-overlay {
+            opacity: 1;
+        }
+
+        /* Different subject colors */
+        .myp-card {
+            --subject-color: #4cc9f0;
+            --subject-light: rgba(76, 201, 240, 0.1);
+        }
+
+        .pe-card {
+            --subject-color: #4361ee;
+            --subject-light: rgba(67, 97, 238, 0.1);
+        }
+
+        .outdoor-card {
+            --subject-color: #3a0ca3;
+            --subject-light: rgba(58, 12, 163, 0.1);
+        }
+
+        .health-card {
+            --subject-color: #f72585;
+            --subject-light: rgba(247, 37, 133, 0.1);
+        }
+
         /* Profile Picture */
         #profile-pic {
             width: 40px;
@@ -168,218 +429,42 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         }
 
-        /* Main Content */
-        .main-container {
-            display: flex;
-            justify-content: center;
-            padding: 250px 50px 60px;
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 300px));
-            gap: 25px;
-            max-width: 1400px;
-            width: 100%;
-        }
-
-        /* Subject Cards */
-        .subject-card {
-            background: rgba(255, 255, 255, 0.97);
-            border-radius: 18px;
-            overflow: hidden;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            display: flex;
-            flex-direction: column;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            height: 480px;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.6s forwards;
-        }
-
-        @keyframes fadeInUp {
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .subject-card:nth-child(1) { animation-delay: 0.1s; }
-        .subject-card:nth-child(2) { animation-delay: 0.2s; }
-        .subject-card:nth-child(3) { animation-delay: 0.3s; }
-        .subject-card:nth-child(4) { animation-delay: 0.4s; }
-
-        .subject-card:hover {
-            transform: none !important;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-        }
-
-        .card-media-container {
-            height: 180px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .card-media {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.4, 1);
-        }
-
-        .subject-card:hover .card-media {
-            transform: scale(1.08);
-        }
-
-        .card-content {
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            flex: 1;
-        }
-
-        .subject-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-
-        .subject-name {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 700;
-            font-size: 22px;
-            color: var(--dark);
-            line-height: 1.3;
-        }
-
-        .subject-icon {
-            font-size: 26px;
-            color: var(--subject-color);
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
-
-        .subject-description {
-            font-size: 15px;
-            color: var(--text-light);
-            line-height: 1.6;
-        }
-
-        /* Year Selection */
-        .year-selection {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-top: auto;
-        }
-
-        .year-selection-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-light);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .year-pills-container {
-            position: relative;
-            width: 100%;
-        }
-
-        .year-pills-scroll {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding-bottom: 10px;
-            scrollbar-width: thin;
-            scrollbar-color: var(--subject-color) transparent;
-        }
-
-        .year-pills-scroll::-webkit-scrollbar {
-            height: 4px;
-        }
-
-        .year-pills-scroll::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .year-pills-scroll::-webkit-scrollbar-thumb {
-            background-color: var(--subject-color);
-            border-radius: 4px;
-        }
-
-        .year-pill {
-            padding: 8px 18px;
-            background: var(--subject-light);
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--subject-color);
-            text-align: center;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            border: 1px solid rgba(0,0,0,0.05);
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-
-        .year-pill:hover {
-            background: var(--subject-color);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        /* Subject Specific Styles */
-        .pe-card {
-            --subject-color: #4361ee;
-            --subject-light: rgba(67, 97, 238, 0.1);
-        }
-
-        .outdoor-card {
-            --subject-color: #3a0ca3;
-            --subject-light: rgba(58, 12, 163, 0.1);
-        }
-
-        .health-card {
-            --subject-color: #f72585;
-            --subject-light: rgba(247, 37, 133, 0.1);
-        }
-
-        .myp-card {
-            --subject-color: #4cc9f0;
-            --subject-light: rgba(76, 201, 240, 0.1);
-        }
-
-        /* Responsive Design */
-        @media (max-width: 1300px) {
+        /* Responsive adjustments */
+        @media (max-width: 900px) {
             .main-content {
-                grid-template-columns: repeat(2, minmax(0, 300px));
-                justify-content: center;
+                padding-top: 120px;
+            }
+           
+            .subject-card {
+                width: 320px;
+                height: 560px;
             }
         }
 
         @media (max-width: 768px) {
-            .main-container {
-                padding: 100px 20px 40px;
-            }
-            
-            .main-content {
-                grid-template-columns: minmax(0, 400px);
-            }
-            
-            .subject-card {
-                height: auto;
-            }
-            
             .topbar {
                 padding: 0 16px;
             }
-            
+           
+            .subject-card {
+                width: 300px;
+                height: 540px;
+            }
+           
+            .year-buttons {
+                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            }
+        }
+
+        @media (max-width: 480px) {
+            .topbar-title {
+                display: none;
+            }
+           
             .topbar-button span {
                 display: none;
             }
-            
+           
             .topbar-button {
                 padding: 8px;
                 border-radius: 50%;
@@ -387,33 +472,87 @@
                 height: 36px;
                 justify-content: center;
             }
-        }
-
-        @media (max-width: 480px) {
-            .main-container {
+           
+            .main-content {
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
                 padding: 90px 15px 30px;
             }
-            
-            .topbar-title {
-                display: none;
+           
+            .subject-card {
+                width: 100%;
+                max-width: 340px;
+                height: auto;
+                min-height: 500px;
             }
-            
+           
             .subject-name {
                 font-size: 20px;
             }
-            
+           
             .subject-description {
                 font-size: 14px;
+                min-height: 60px;
+            }
+
+            .card-media-container {
+                height: 180px;
+            }
+
+            .card-content {
+                padding: 20px;
+                height: auto;
+            }
+
+            .year-buttons {
+                grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+                gap: 10px;
+            }
+
+            .year-button {
+                padding: 14px 0;
+                min-height: 44px;
+            }
+        }
+
+        /* Landscape mode for mobile devices */
+        @media screen and (max-width: 768px) and (orientation: landscape) {
+            .main-content {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                align-items: flex-start;
+                padding-top: 80px;
+                min-height: calc(100vh - 80px);
+            }
+           
+            .subject-card {
+                width: calc(50% - 20px);
+                min-width: 240px;
+                margin: 0 10px;
+                height: 520px;
+            }
+        }
+
+        /* Adjustments for very small landscape screens */
+        @media screen and (max-width: 640px) and (orientation: landscape) {
+            .subject-card {
+                width: calc(50% - 15px);
+                min-width: 220px;
+                height: 480px;
             }
             
-            .year-pill {
-                padding: 7px 16px;
-                font-size: 13px;
+            .card-media-container {
+                height: 150px;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Background video element for the hover effect -->
+    <video id="background-video" loop muted playsinline></video>
+    
     <!-- Top Navigation Bar -->
     <div class="topbar" id="topbar">
         <div class="topbar-content">
@@ -436,116 +575,108 @@
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="main-container">
-        <div class="main-content">
-            <!-- MYP Card -->
-            <div class="subject-card myp-card">
-                <div class="card-media-container">
-                    <video class="card-media" loop muted playsinline>
-                        <source src="https://i.imgur.com/Eaq8046.mp4" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
+    <div class="main-content">
+        <!-- MYP Card -->
+        <div class="subject-card myp-card">
+            <div class="card-media-container">
+                <video class="card-media" loop muted playsinline>
+                    <source src="https://i.imgur.com/zw3viPp.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="card-overlay"></div>
+            </div>
+            <div class="card-content">
+                <div class="subject-header">
+                    <h3 class="subject-name">Middle Years Programme</h3>
+                    <i class="fas fa-graduation-cap subject-icon"></i>
                 </div>
-                <div class="card-content">
-                    <div class="subject-header">
-                        <h3 class="subject-name">MYP</h3>
-                        <i class="fas fa-graduation-cap subject-icon"></i>
-                    </div>
-                    <p class="subject-description">Middle Years Programme focusing on interdisciplinary learning and skill development for younger students.</p>
-                    <div class="year-selection">
-                        <div class="year-selection-title">Select Year Level</div>
-                        <div class="year-pills-container">
-                            <div class="year-pills-scroll">
-                                <a href="https://oktayzadeh.github.io/GDCHUB/MainHub12/OutdoorEducation.html" class="year-pill">Year 9</a>
-                                <a href="#" class="year-pill">Year 10</a>
-                            </div>
-                        </div>
+                <p class="subject-description">The IB Middle Years Programme (MYP) provides a framework of academic challenge for students aged 11-15.</p>
+                <div class="year-selection">
+                    <div class="year-selection-title">Select Year Level</div>
+                    <div class="year-buttons">
+                        <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html?year=9" class="year-button">Year 9</a>
+                        <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html?year=10" class="year-button">Year 10</a>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Physical Education Card -->
-            <div class="subject-card pe-card">
-                <div class="card-media-container">
-                    <video class="card-media" loop muted playsinline>
-                        <source src="https://i.imgur.com/Eaq8046.mp4" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
+        <!-- Physical Education Card -->
+        <div class="subject-card pe-card">
+            <div class="card-media-container">
+                <video class="card-media" loop muted playsinline>
+                    <source src="https://i.imgur.com/DH39YQe.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="card-overlay"></div>
+            </div>
+            <div class="card-content">
+                <div class="subject-header">
+                    <h3 class="subject-name">Sports Science (Physical Education)</h3>
+                    <i class="fas fa-running subject-icon"></i>
                 </div>
-                <div class="card-content">
-                    <div class="subject-header">
-                        <h3 class="subject-name">Physical Education</h3>
-                        <i class="fas fa-running subject-icon"></i>
-                    </div>
-                    <p class="subject-description">Develop physical skills and knowledge through practical activities and theoretical understanding of human movement.</p>
-                    <div class="year-selection">
-                        <div class="year-selection-title">Select Year Level</div>
-                        <div class="year-pills-container">
-                            <div class="year-pills-scroll">
-                                <a href="#" class="year-pill">Year 9</a>
-                                <a href="#" class="year-pill">Year 10</a>
-                                <a href="#" class="year-pill">Year 11</a>
-                                <a href="#" class="year-pill">Year 12</a>
-                                <a href="#" class="year-pill">Year 13</a>
-                            </div>
-                        </div>
+                <p class="subject-description">Develop physical skills and knowledge through practical activities and theoretical understanding of human movement.</p>
+                <div class="year-selection">
+                    <div class="year-selection-title">Select Year Level</div>
+                    <div class="year-buttons">
+                       
+                        <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html?year=11" class="year-button">Year 11</a>
+                        <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html?year=12" class="year-button">Year 12</a>
+                        <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html?year=13" class="year-button">Year 13</a>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Outdoor Education Card -->
-            <div class="subject-card outdoor-card">
-                <div class="card-media-container">
-                    <video class="card-media" loop muted playsinline>
-                        <source src="https://i.imgur.com/DTfsrLj.mp4" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
+        <!-- Outdoor Education Card -->
+        <div class="subject-card outdoor-card">
+            <div class="card-media-container">
+                <video class="card-media" loop muted playsinline>
+                    <source src="https://i.imgur.com/baeEc27.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="card-overlay"></div>
+            </div>
+            <div class="card-content">
+                <div class="subject-header">
+                    <h3 class="subject-name">Outdoor Education</h3>
+                    <i class="fas fa-mountain subject-icon"></i>
                 </div>
-                <div class="card-content">
-                    <div class="subject-header">
-                        <h3 class="subject-name">Outdoor Education</h3>
-                        <i class="fas fa-mountain subject-icon"></i>
-                    </div>
-                    <p class="subject-description">Explore adventure activities and develop skills in leadership, risk management, and environmental awareness.</p>
-                    <div class="year-selection">
-                        <div class="year-selection-title">Select Year Level</div>
-                        <div class="year-pills-container">
-                            <div class="year-pills-scroll">
-                                <a href="#" class="year-pill">Year 11</a>
-                                <a href="#" class="year-pill">Year 12</a>
-                                <a href="#" class="year-pill">Year 13</a>
-                            </div>
-                        </div>
+                <p class="subject-description">Explore adventure activities and develop skills in leadership, risk management, and environmental awareness.</p>
+                <div class="year-selection">
+                    <div class="year-selection-title">Select Year Level</div>
+                    <div class="year-buttons">
+                        <a href="https://projectspace.nz/ujalvxpj/Main/Official%20Website/(3)%20Years/OutdoorEducation/YearsSelectionOutdoorED.html?year=11" class="year-button">Year 11</a>
+                        <a href="https://projectspace.nz/ujalvxpj/Main/Official%20Website/(3)%20Years/OutdoorEducation/YearsSelectionOutdoorED.html?year=12" class="year-button">Year 12</a>
+                        <a href="https://projectspace.nz/ujalvxpj/Main/Official%20Website/(3)%20Years/OutdoorEducation/YearsSelectionOutdoorED.html?year=13" class="year-button">Year 13</a>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Health Card -->
-            <div class="subject-card health-card">
-                <div class="card-media-container">
-                    <video class="card-media" loop muted playsinline>
-                        <source src="https://i.imgur.com/aIXugqM.mp4" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
+        <!-- Health Card -->
+        <div class="subject-card health-card">
+            <div class="card-media-container">
+                <video class="card-media" loop muted playsinline>
+                    <source src="https://i.imgur.com/1s0hopX.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="card-overlay"></div>
+            </div>
+            <div class="card-content">
+                <div class="subject-header">
+                    <h3 class="subject-name">Health</h3>
+                    <i class="fas fa-heartbeat subject-icon"></i>
                 </div>
-                <div class="card-content">
-                    <div class="subject-header">
-                        <h3 class="subject-name">Health</h3>
-                        <i class="fas fa-heartbeat subject-icon"></i>
-                    </div>
-                    <p class="subject-description">Learn about personal well-being, relationships, and societal health issues to make informed life choices.</p>
-                    <div class="year-selection">
-                        <div class="year-selection-title">Select Year Level</div>
-                        <div class="year-pills-container">
-                            <div class="year-pills-scroll">
-                                <a href="#" class="year-pill">Year 9</a>
-                                <a href="#" class="year-pill">Year 10</a>
-                                <a href="#" class="year-pill">Year 11</a>
-                                <a href="#" class="year-pill">Year 12</a>
-                                <a href="#" class="year-pill">Year 13</a>
-                            </div>
-                        </div>
+                <p class="subject-description">Learn about personal well-being, relationships, and societal health issues to make informed life choices.</p>
+                <div class="year-selection">
+                    <div class="year-selection-title">Select Year Level</div>
+                    <div class="year-buttons">
+                        <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html?year=9" class="year-button">Year 9</a>
+                        <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html?year=10" class="year-button">Year 10</a>
+                        <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html?year=11" class="year-button">Year 11</a>
+                        <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html?year=12" class="year-button">Year 12</a>
+                        <a href="https://projectspace.nz/ujalvxpj/Main/Terms/PETerms.html?year=13" class="year-button">Year 13</a>
                     </div>
                 </div>
             </div>
@@ -555,6 +686,75 @@
     <script>
         const USER_INFO_KEY = "googleUserInfo";
         const profilePicElement = document.getElementById('profile-pic');
+        const backgroundVideo = document.getElementById('background-video');
+
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        function isLandscape() {
+            return window.matchMedia("(orientation: landscape)").matches;
+        }
+
+        function handleOrientationChange() {
+            const mainContent = document.querySelector('.main-content');
+            const subjectCards = document.querySelectorAll('.subject-card');
+           
+            if (isMobileDevice() && isLandscape()) {
+                mainContent.style.flexDirection = 'row';
+                mainContent.style.flexWrap = 'wrap';
+                mainContent.style.justifyContent = 'center';
+                mainContent.style.alignItems = 'flex-start';
+               
+                subjectCards.forEach(card => {
+                    card.style.width = 'calc(50% - 20px)';
+                    card.style.minWidth = '240px';
+                    card.style.margin = '0 10px';
+                    card.style.height = '520px';
+                });
+            } else if (isMobileDevice()) {
+                mainContent.style.flexDirection = 'column';
+                mainContent.style.flexWrap = 'nowrap';
+                mainContent.style.justifyContent = 'flex-start';
+                mainContent.style.alignItems = 'center';
+               
+                subjectCards.forEach(card => {
+                    card.style.width = '100%';
+                    card.style.maxWidth = '340px';
+                    card.style.minWidth = '0';
+                    card.style.margin = '0';
+                    card.style.height = 'auto';
+                    card.style.minHeight = '500px';
+                });
+            } else {
+                // Reset to desktop styles
+                mainContent.style.flexDirection = '';
+                mainContent.style.flexWrap = '';
+                mainContent.style.justifyContent = '';
+                mainContent.style.alignItems = '';
+               
+                subjectCards.forEach(card => {
+                    card.style.width = '';
+                    card.style.minWidth = '';
+                    card.style.margin = '';
+                    card.style.height = '';
+                    card.style.minHeight = '';
+                });
+            }
+        }
+
+        function forceVideoPlay(video) {
+            const promise = video.play();
+            if (promise !== undefined) {
+                promise.catch(error => {
+                    video.setAttribute('muted', '');
+                    video.play().then(() => {
+                    }).catch(error => {
+                        console.log("Still unable to autoplay:", error);
+                    });
+                });
+            }
+        }
 
         function handleProfilePicture() {
             const storedUserInfo = localStorage.getItem(USER_INFO_KEY);
@@ -571,31 +771,73 @@
                     console.error("Error parsing user info:", e);
                 }
             }
-            
+           
             profilePicElement.style.display = 'none';
         }
 
-        // Auto-play videos
+        // Background video transition on card hover
+        function setupCardHoverEffects() {
+            const cards = document.querySelectorAll('.subject-card');
+            
+            cards.forEach(card => {
+                const cardVideo = card.querySelector('.card-media');
+                
+                card.addEventListener('mouseenter', function() {
+                    // Get the video source from the card
+                    const videoSource = cardVideo.querySelector('source').src;
+                    
+                    // Set the background video source
+                    backgroundVideo.innerHTML = `<source src="${videoSource}" type="video/mp4">`;
+                    
+                    // Play the background video
+                    backgroundVideo.load();
+                    backgroundVideo.play().catch(e => console.log("Background video play error:", e));
+                    
+                    // Apply the hover effect
+                    document.body.classList.add('hover-effect');
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    // Pause the background video
+                    backgroundVideo.pause();
+                    
+                    // Remove the hover effect
+                    document.body.classList.remove('hover-effect');
+                });
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             handleProfilePicture();
+            setupCardHoverEffects();
 
             const videos = document.querySelectorAll('.card-media');
-            
-            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+           
+            if (isMobileDevice()) {
                 videos.forEach(video => {
                     video.setAttribute('autoplay', '');
                     video.setAttribute('muted', '');
                     video.setAttribute('playsinline', '');
-                    
-                    video.play().catch(e => {
-                        video.setAttribute('muted', '');
-                        video.play();
+                   
+                    forceVideoPlay(video);
+                   
+                    document.body.addEventListener('touchstart', function once() {
+                        forceVideoPlay(video);
+                        document.body.removeEventListener('touchstart', once);
                     });
                 });
+               
+                handleOrientationChange();
             } else {
                 videos.forEach(video => {
+                    video.removeAttribute('autoplay');
+                    video.pause();
+                   
                     const card = video.closest('.subject-card');
-                    card.addEventListener('mouseenter', () => video.play());
+                    card.addEventListener('mouseenter', () => {
+                        video.play().catch(e => console.log("Video play error:", e));
+                    });
+                   
                     card.addEventListener('mouseleave', () => {
                         video.pause();
                         video.currentTime = 0;
@@ -604,7 +846,29 @@
             }
         });
 
-        // Listen for storage changes to update profile picture
+        window.addEventListener('resize', function() {
+            if (isMobileDevice()) {
+                handleOrientationChange();
+            }
+        });
+
+        window.addEventListener('orientationchange', function() {
+            if (isMobileDevice()) {
+                handleOrientationChange();
+                document.querySelectorAll('.card-media').forEach(video => {
+                    forceVideoPlay(video);
+                });
+            }
+        });
+
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible' && isMobileDevice()) {
+                document.querySelectorAll('.card-media').forEach(video => {
+                    forceVideoPlay(video);
+                });
+            }
+        });
+
         window.addEventListener('storage', function(e) {
             if (e.key === USER_INFO_KEY) {
                 handleProfilePicture();
