@@ -1634,14 +1634,23 @@
         let currentReminderBeingEdited = null;
 
         function loadReminders() {
+            remindersList.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading reminders...</div>';
+            
             database.ref('reminders').orderByChild('date').once('value', (snapshot) => {
                 reminders = [];
                 snapshot.forEach(childSnapshot => {
-                    reminders.push(childSnapshot.val());
+                    const reminder = childSnapshot.val();
+                    // Ensure the reminder has an ID (for backward compatibility)
+                    if (!reminder.id) {
+                        reminder.id = childSnapshot.key;
+                    }
+                    reminders.push(reminder);
                 });
+                
                 renderReminders();
             }).catch(error => {
                 console.error('Error loading reminders:', error);
+                remindersList.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-triangle"></i> Error loading reminders</div>';
                 showToast('Error loading reminders', 'error');
             });
         }
@@ -1649,15 +1658,15 @@
         function renderReminders() {
             remindersList.innerHTML = '';
             
-            // Sort reminders by date (soonest first)
-            const sortedReminders = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            if (sortedReminders.length === 0) {
+            if (reminders.length === 0) {
                 noRemindersElement.style.display = 'block';
                 return;
             }
             
             noRemindersElement.style.display = 'none';
+            
+            // Sort reminders by date (soonest first)
+            const sortedReminders = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date));
             
             sortedReminders.forEach(reminder => {
                 const reminderElement = document.createElement('div');
@@ -1666,10 +1675,10 @@
                 
                 const actionsHtml = isAdmin ? 
                     `<div class="reminder-actions">
-                        <button class="reminder-action-btn" onclick="editReminder('${reminder.id}')">
+                        <button class="reminder-action-btn" onclick="event.stopPropagation(); editReminder('${reminder.id}')">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="reminder-action-btn" onclick="deleteReminder('${reminder.id}')">
+                        <button class="reminder-action-btn" onclick="event.stopPropagation(); deleteReminder('${reminder.id}')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>` : '';
@@ -2112,7 +2121,7 @@
             }
             
             const reminderData = {
-                id: currentReminderBeingEdited || Date.now().toString(),
+                id: currentReminderBeingEdited || 'reminder-' + Date.now().toString(),
                 title,
                 description,
                 date,
@@ -2120,7 +2129,10 @@
             };
             
             // Save to Firebase
-            database.ref(`reminders/${reminderData.id}`).set(reminderData)
+            const updates = {};
+            updates[`/reminders/${reminderData.id}`] = reminderData;
+            
+            database.ref().update(updates)
                 .then(() => {
                     if (currentReminderBeingEdited) {
                         // Update local array
