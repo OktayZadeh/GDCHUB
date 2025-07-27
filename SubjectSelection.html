@@ -52,6 +52,7 @@
             line-height: 1.6;
             position: relative;
             overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body::before {
@@ -84,6 +85,7 @@
             z-index: -3;
             opacity: 0;
             transition: opacity 0.5s ease;
+            background-color: var(--dark);
         }
 
         body.hover-effect #background-video {
@@ -208,6 +210,7 @@
             transform: translateY(20px);
             animation: fadeInUp 0.6s forwards;
             height: 580px;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .subject-card:nth-child(1) {
@@ -579,7 +582,7 @@
         <!-- MYP Card -->
         <div class="subject-card myp-card">
             <div class="card-media-container">
-                <video class="card-media" loop muted playsinline>
+                <video class="card-media" loop muted playsinline preload="auto">
                     <source src="https://i.imgur.com/zw3viPp.mp4" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
@@ -604,7 +607,7 @@
         <!-- Physical Education Card -->
         <div class="subject-card pe-card">
             <div class="card-media-container">
-                <video class="card-media" loop muted playsinline>
+                <video class="card-media" loop muted playsinline preload="auto">
                     <source src="https://i.imgur.com/DH39YQe.mp4" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
@@ -631,7 +634,7 @@
         <!-- Outdoor Education Card -->
         <div class="subject-card outdoor-card">
             <div class="card-media-container">
-                <video class="card-media" loop muted playsinline>
+                <video class="card-media" loop muted playsinline preload="auto">
                     <source src="https://i.imgur.com/baeEc27.mp4" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
@@ -657,7 +660,7 @@
         <!-- Health Card -->
         <div class="subject-card health-card">
             <div class="card-media-container">
-                <video class="card-media" loop muted playsinline>
+                <video class="card-media" loop muted playsinline preload="auto">
                     <source src="https://i.imgur.com/1s0hopX.mp4" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
@@ -687,6 +690,24 @@
         const USER_INFO_KEY = "googleUserInfo";
         const profilePicElement = document.getElementById('profile-pic');
         const backgroundVideo = document.getElementById('background-video');
+        
+        // Video buffering management
+        const videoSources = [
+            'https://i.imgur.com/zw3viPp.mp4',
+            'https://i.imgur.com/DH39YQe.mp4',
+            'https://i.imgur.com/baeEc27.mp4',
+            'https://i.imgur.com/1s0hopX.mp4'
+        ];
+        
+        // Preload all videos in hidden source elements
+        function preloadVideos() {
+            videoSources.forEach(src => {
+                const source = document.createElement('source');
+                source.src = src;
+                source.type = 'video/mp4';
+                backgroundVideo.appendChild(source);
+            });
+        }
 
         function isMobileDevice() {
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -744,15 +765,14 @@
         }
 
         function forceVideoPlay(video) {
-            const promise = video.play();
-            if (promise !== undefined) {
-                promise.catch(error => {
-                    video.setAttribute('muted', '');
-                    video.play().then(() => {
-                    }).catch(error => {
-                        console.log("Still unable to autoplay:", error);
+            if (video.paused) {
+                const promise = video.play();
+                if (promise !== undefined) {
+                    promise.catch(error => {
+                        video.muted = true;
+                        video.play().catch(e => console.log("Video play error:", e));
                     });
-                });
+                }
             }
         }
 
@@ -775,67 +795,115 @@
             profilePicElement.style.display = 'none';
         }
 
-        // Background video transition on card hover
+        // Improved background video transition on card hover
         function setupCardHoverEffects() {
             const cards = document.querySelectorAll('.subject-card');
+            let currentVideoIndex = -1;
+            let isTransitioning = false;
             
-            cards.forEach(card => {
+            // Pre-select the first video source
+            backgroundVideo.innerHTML = `<source src="${videoSources[0]}" type="video/mp4">`;
+            backgroundVideo.load();
+            
+            cards.forEach((card, index) => {
                 const cardVideo = card.querySelector('.card-media');
                 
                 card.addEventListener('mouseenter', function() {
-                    // Get the video source from the card
-                    const videoSource = cardVideo.querySelector('source').src;
+                    if (isTransitioning || currentVideoIndex === index) return;
                     
-                    // Set the background video source
-                    backgroundVideo.innerHTML = `<source src="${videoSource}" type="video/mp4">`;
+                    isTransitioning = true;
+                    currentVideoIndex = index;
                     
-                    // Play the background video
-                    backgroundVideo.load();
-                    backgroundVideo.play().catch(e => console.log("Background video play error:", e));
+                    // Fade out current video
+                    document.body.classList.remove('hover-effect');
                     
-                    // Apply the hover effect
-                    document.body.classList.add('hover-effect');
+                    // Small delay to ensure fade out starts
+                    setTimeout(() => {
+                        // Change video source
+                        backgroundVideo.innerHTML = `<source src="${videoSources[index]}" type="video/mp4">`;
+                        backgroundVideo.load();
+                        
+                        // Play the new video
+                        backgroundVideo.play().then(() => {
+                            // Fade in the new video
+                            document.body.classList.add('hover-effect');
+                            isTransitioning = false;
+                        }).catch(e => {
+                            console.log("Background video play error:", e);
+                            isTransitioning = false;
+                        });
+                    }, 50);
                 });
                 
-                card.addEventListener('mouseleave', function() {
-                    // Pause the background video
-                    backgroundVideo.pause();
-                    
-                    // Remove the hover effect
-                    document.body.classList.remove('hover-effect');
+                // For mobile touch devices
+                card.addEventListener('touchstart', function() {
+                    if (isMobileDevice()) {
+                        if (isTransitioning || currentVideoIndex === index) return;
+                        
+                        isTransitioning = true;
+                        currentVideoIndex = index;
+                        
+                        document.body.classList.remove('hover-effect');
+                        
+                        setTimeout(() => {
+                            backgroundVideo.innerHTML = `<source src="${videoSources[index]}" type="video/mp4">`;
+                            backgroundVideo.load();
+                            
+                            backgroundVideo.play().then(() => {
+                                document.body.classList.add('hover-effect');
+                                isTransitioning = false;
+                            }).catch(e => {
+                                console.log("Background video play error:", e);
+                                isTransitioning = false;
+                            });
+                        }, 50);
+                    }
                 });
             });
+            
+            // Handle mouse leave from all cards
+            document.addEventListener('mouseleave', function(e) {
+                if (!e.relatedTarget || !Array.from(cards).some(card => card.contains(e.relatedTarget))) {
+                    document.body.classList.remove('hover-effect');
+                    currentVideoIndex = -1;
+                }
+            }, true);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            preloadVideos();
             handleProfilePicture();
             setupCardHoverEffects();
 
             const videos = document.querySelectorAll('.card-media');
            
             if (isMobileDevice()) {
+                // On mobile, autoplay all card videos muted
                 videos.forEach(video => {
                     video.setAttribute('autoplay', '');
                     video.setAttribute('muted', '');
                     video.setAttribute('playsinline', '');
+                    video.setAttribute('preload', 'auto');
                    
                     forceVideoPlay(video);
                    
+                    // Ensure videos play after user interaction
                     document.body.addEventListener('touchstart', function once() {
-                        forceVideoPlay(video);
+                        videos.forEach(v => forceVideoPlay(v));
                         document.body.removeEventListener('touchstart', once);
-                    });
+                    }, { once: true });
                 });
                
                 handleOrientationChange();
             } else {
+                // On desktop, pause all card videos initially
                 videos.forEach(video => {
-                    video.removeAttribute('autoplay');
                     video.pause();
+                    video.currentTime = 0;
                    
                     const card = video.closest('.subject-card');
                     card.addEventListener('mouseenter', () => {
-                        video.play().catch(e => console.log("Video play error:", e));
+                        forceVideoPlay(video);
                     });
                    
                     card.addEventListener('mouseleave', () => {
@@ -844,6 +912,10 @@
                     });
                 });
             }
+            
+            // Initialize background video
+            backgroundVideo.muted = true;
+            backgroundVideo.playsInline = true;
         });
 
         window.addEventListener('resize', function() {
@@ -854,10 +926,13 @@
 
         window.addEventListener('orientationchange', function() {
             if (isMobileDevice()) {
-                handleOrientationChange();
-                document.querySelectorAll('.card-media').forEach(video => {
-                    forceVideoPlay(video);
-                });
+                // Small delay to ensure orientation has changed
+                setTimeout(() => {
+                    handleOrientationChange();
+                    document.querySelectorAll('.card-media').forEach(video => {
+                        forceVideoPlay(video);
+                    });
+                }, 100);
             }
         });
 
