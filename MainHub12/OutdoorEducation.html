@@ -21,7 +21,7 @@
             --danger: #f72585;
             --success: #4cc9f0;
             --warning: #f8961e;
-            --dark: #99316E;
+            --dark: #212529;
             --light: #f8f9fa;
             --gray: #6c757d;
             --gray-light: #e9ecef;
@@ -563,12 +563,14 @@
 
         .announcement-detail-content {
             max-width: 800px;
-            margin: 0 auto;
+            margin: 0;
+            padding: 0 20px;
         }
 
         .announcement-detail-content .card {
             border: none;
             box-shadow: none;
+            background: transparent;
         }
 
         .announcement-detail-content .card-header {
@@ -585,6 +587,8 @@
             font-size: 1.1rem;
             line-height: 1.8;
             margin-bottom: 30px;
+            color: var(--dark);
+            white-space: pre-wrap;
         }
 
         .announcement-detail-content .file-attachments {
@@ -594,6 +598,7 @@
         .announcement-detail-content .announcement-meta {
             margin-top: 30px;
             font-size: 0.9rem;
+            color: var(--gray);
         }
 
         .announcement-detail-content .announcement-actions {
