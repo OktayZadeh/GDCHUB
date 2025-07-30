@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            /* Light Theme */
+            /* Color Scheme */
             --primary: #4361ee;
             --primary-light: #e0e7ff;
             --primary-dark: #3a56d4;
@@ -28,6 +28,7 @@
             --gray-lighter: #f5f7fa;
             --white: #ffffff;
             
+            /* Layout */
             --sidebar-width: 280px;
             --header-height: 70px;
             --radius: 12px;
@@ -37,24 +38,6 @@
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             --transition: all 0.3s ease;
             --transition-fast: all 0.15s ease;
-        }
-
-        /* Dark Theme Variables */
-        [data-theme="dark"] {
-            --primary: #5a72e9;
-            --primary-light: #2d3a6b;
-            --primary-dark: #4a63d6;
-            --secondary: #4f47d1;
-            --accent: #5ca3f1;
-            --danger: #ff3b8b;
-            --success: #5dd9f9;
-            --warning: #ffa726;
-            --dark: #e0e0e0;
-            --light: #2d2d2d;
-            --gray: #9e9e9e;
-            --gray-light: #444;
-            --gray-lighter: #333;
-            --white: #1a1a1a;
         }
 
         * {
@@ -414,77 +397,167 @@
             color: var(--primary);
         }
 
-        /* Cards Layout */
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        /* Announcements Feed - Roblox Dev Forum Style */
+        .announcements-feed {
+            display: flex;
+            flex-direction: column;
             gap: 20px;
         }
 
-        .card {
+        .announcement-card {
             background: var(--white);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
             overflow: hidden;
             transition: var(--transition);
             border: 1px solid var(--gray-light);
+            cursor: pointer;
         }
 
-        .card:hover {
-            transform: translateY(-5px);
+        .announcement-card:hover {
+            transform: translateY(-3px);
             box-shadow: var(--shadow-lg);
         }
 
-        .card-header {
+        .announcement-header {
+            background-color: var(--primary);
+            color: white;
             padding: 15px 20px;
-            border-bottom: 1px solid var(--gray-light);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .card-title {
+        .announcement-title {
+            font-size: 1.3rem;
             font-weight: 600;
-            color: var(--dark);
             margin: 0;
-        }
-
-        .card-body {
-            padding: 20px;
-        }
-
-        .card-footer {
-            padding: 15px 20px;
-            border-top: 1px solid var(--gray-light);
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-
-        /* Announcements */
-        .announcement-card {
-            margin-bottom: 20px;
-            cursor: pointer;
-        }
-
-        .announcement-content {
-            line-height: 1.6;
-            color: var(--dark);
+            color: white;
         }
 
         .announcement-meta {
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin-top: 15px;
-            color: var(--gray);
+            gap: 10px;
             font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .announcement-meta i {
+            margin-right: 5px;
+        }
+
+        .announcement-body {
+            padding: 20px;
+        }
+
+        .announcement-content {
+            line-height: 1.6;
+            color: var(--dark);
+            font-size: 1rem;
+        }
+
+        /* Rich Text Content Styling */
+        .announcement-content h1,
+        .announcement-content h2,
+        .announcement-content h3,
+        .announcement-content h4 {
+            margin: 1.5em 0 0.8em;
+            color: var(--dark);
+        }
+
+        .announcement-content h1 {
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 0.3em;
+        }
+
+        .announcement-content h2 {
+            font-size: 1.5rem;
+            border-bottom: 1px solid var(--gray-light);
+            padding-bottom: 0.3em;
+        }
+
+        .announcement-content h3 {
+            font-size: 1.3rem;
+        }
+
+        .announcement-content h4 {
+            font-size: 1.1rem;
+        }
+
+        .announcement-content p {
+            margin-bottom: 1.2em;
+            line-height: 1.7;
+        }
+
+        .announcement-content a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .announcement-content a:hover {
+            text-decoration: underline;
+            color: var(--primary-dark);
+        }
+
+        .announcement-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-sm);
+            margin: 1em 0;
+            box-shadow: var(--shadow);
+        }
+
+        .announcement-content blockquote {
+            border-left: 4px solid var(--primary);
+            background-color: var(--primary-light);
+            padding: 1em;
+            margin: 1em 0;
+            border-radius: 0 var(--radius) var(--radius) 0;
+            font-style: italic;
+        }
+
+        .announcement-content pre {
+            background-color: var(--gray-lighter);
+            padding: 1em;
+            border-radius: var(--radius-sm);
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 1em 0;
+        }
+
+        .announcement-content code {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--gray-lighter);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .announcement-content ul,
+        .announcement-content ol {
+            margin: 1em 0;
+            padding-left: 2em;
+        }
+
+        .announcement-content li {
+            margin-bottom: 0.5em;
+            line-height: 1.6;
+        }
+
+        .announcement-footer {
+            padding: 15px 20px;
+            border-top: 1px solid var(--gray-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .announcement-actions {
             display: flex;
             gap: 10px;
-            margin-top: 15px;
         }
 
         .file-attachments {
@@ -563,46 +636,27 @@
 
         .announcement-detail-content {
             max-width: 800px;
-            margin: 0;
+            margin: 0 auto;
             padding: 0 20px;
         }
 
-        .announcement-detail-content .card {
+        .announcement-detail-content .announcement-card {
             border: none;
             box-shadow: none;
             background: transparent;
         }
 
-        .announcement-detail-content .card-header {
-            padding: 0;
-            border-bottom: none;
-            margin-bottom: 20px;
-        }
-
-        .announcement-detail-content .card-body {
-            padding: 0;
+        .announcement-detail-content .announcement-header {
+            border-radius: var(--radius) var(--radius) 0 0;
         }
 
         .announcement-detail-content .announcement-content {
             font-size: 1.1rem;
             line-height: 1.8;
-            margin-bottom: 30px;
-            color: var(--dark);
-            white-space: pre-wrap;
         }
 
         .announcement-detail-content .file-attachments {
             margin: 30px 0;
-        }
-
-        .announcement-detail-content .announcement-meta {
-            margin-top: 30px;
-            font-size: 0.9rem;
-            color: var(--gray);
-        }
-
-        .announcement-detail-content .announcement-actions {
-            margin-top: 30px;
         }
 
         /* Reminders Grid */
@@ -712,7 +766,7 @@
             border-radius: var(--radius);
             box-shadow: var(--shadow-lg);
             width: 90%;
-            max-width: 600px;
+            max-width: 800px;
             max-height: 90vh;
             overflow-y: auto;
             animation: modalFadeIn 0.3s ease;
@@ -794,6 +848,58 @@
             resize: vertical;
         }
 
+        /* Rich Text Editor Styles */
+        .editor-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: var(--gray-lighter);
+            border-radius: var(--radius-sm);
+        }
+
+        .editor-button {
+            background: none;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--dark);
+            transition: var(--transition);
+        }
+
+        .editor-button:hover {
+            background-color: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .editor-button.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .editor-content {
+            min-height: 300px;
+            padding: 15px;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--radius);
+            background-color: var(--white);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .editor-content:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+
+        /* Upload Area */
         .upload-area {
             border: 2px dashed var(--gray-light);
             border-radius: var(--radius);
@@ -976,10 +1082,6 @@
                 font-size: 1.2rem;
             }
 
-            .cards-grid {
-                grid-template-columns: 1fr;
-            }
-
             .reminders-grid {
                 grid-template-columns: 1fr;
             }
@@ -1014,31 +1116,6 @@
         .mobile-menu-toggle:hover {
             background-color: rgba(255, 255, 255, 0.1);
             color: var(--primary-light);
-        }
-
-        /* Theme Toggle */
-        .theme-toggle {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: var(--primary);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: var(--shadow-lg);
-            z-index: 90;
-            border: none;
-            transition: var(--transition);
-        }
-
-        .theme-toggle:hover {
-            transform: scale(1.1);
-            background-color: var(--secondary);
         }
     </style>
 </head>
@@ -1122,7 +1199,7 @@
                 Announcements
             </div>
             
-            <div class="cards-grid" id="posts-feed">
+            <div class="announcements-feed" id="posts-feed">
                 <!-- Announcements will be inserted here -->
             </div>
             
@@ -1164,8 +1241,20 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="announcement-content" class="form-label">Content</label>
-                    <textarea id="announcement-content" class="form-control" placeholder="Write your announcement here..."></textarea>
+                    <label class="form-label">Content</label>
+                    <div class="editor-toolbar" id="editor-toolbar">
+                        <button class="editor-button" data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
+                        <button class="editor-button" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
+                        <button class="editor-button" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
+                        <button class="editor-button" data-command="heading" title="Heading"><i class="fas fa-heading"></i></button>
+                        <button class="editor-button" data-command="quote" title="Quote"><i class="fas fa-quote-right"></i></button>
+                        <button class="editor-button" data-command="ul" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                        <button class="editor-button" data-command="ol" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                        <button class="editor-button" data-command="link" title="Link"><i class="fas fa-link"></i></button>
+                        <button class="editor-button" data-command="image" title="Image"><i class="fas fa-image"></i></button>
+                        <button class="editor-button" data-command="code" title="Code"><i class="fas fa-code"></i></button>
+                    </div>
+                    <div id="announcement-content" class="editor-content" contenteditable="true" placeholder="Write your announcement here..."></div>
                 </div>
                 
                 <div class="form-group">
@@ -1250,11 +1339,6 @@
         </div>
     </div>
 
-    <!-- Theme Toggle -->
-    <button class="theme-toggle" onclick="toggleDarkMode()">
-        <i class="fas fa-moon"></i>
-    </button>
-
     <script>
         // Initialize Firebase
         const firebaseConfig = {
@@ -1315,16 +1399,59 @@
             loadTabs();
             setupDragAndDrop();
             loadReminders();
-            checkDarkModePreference();
             
             // Set up file upload drag and drop
             setupFileUpload();
             
             // Initialize announcement editor button
             document.getElementById('save-announcement-button').addEventListener('click', postAnnouncement);
+            
+            // Initialize rich text editor
+            setupRichTextEditor();
         });
 
-        // Check and load user profile picture and permissions
+        // Rich Text Editor Setup
+        function setupRichTextEditor() {
+            const editor = document.getElementById('announcement-content');
+            const toolbar = document.getElementById('editor-toolbar');
+            
+            toolbar.addEventListener('click', function(e) {
+                if (e.target.tagName === 'BUTTON' || e.target.parentElement.tagName === 'BUTTON') {
+                    e.preventDefault();
+                    const button = e.target.tagName === 'BUTTON' ? e.target : e.target.parentElement;
+                    const command = button.getAttribute('data-command');
+                    
+                    // Toggle active state
+                    if (button.classList.contains('active')) {
+                        button.classList.remove('active');
+                    } else {
+                        button.classList.add('active');
+                    }
+                    
+                    // Execute command
+                    execCommand(command);
+                }
+            });
+            
+            function execCommand(command) {
+                document.execCommand(command, false, null);
+                editor.focus();
+            }
+            
+            // Add placeholder behavior
+            editor.addEventListener('focus', function() {
+                if (this.textContent === '') {
+                    this.innerHTML = '';
+                }
+            });
+            
+            editor.addEventListener('blur', function() {
+                if (this.textContent === '') {
+                    this.innerHTML = '';
+                }
+            });
+        }
+
         function checkUserProfile() {
             const storedUserInfo = localStorage.getItem(USER_INFO_KEY);
             if (storedUserInfo) {
@@ -1519,7 +1646,7 @@
 
         function createPostElement(announcement) {
             const post = document.createElement('div');
-            post.classList.add('card', 'announcement-card');
+            post.classList.add('announcement-card');
             post.setAttribute('data-id', announcement.id);
             
             // Format date
@@ -1540,28 +1667,35 @@
             
             // Actions HTML (for admins only)
             const actionsHtml = isAdmin ? 
-                `<div class="card-footer">
-                    <button class="button button-outline button-sm" onclick="event.stopPropagation(); editAnnouncement('${announcement.id}')">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="button button-danger button-sm" onclick="event.stopPropagation(); deleteAnnouncement('${announcement.id}')">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </div>` : '';
-            
-            post.innerHTML = `
-                <div class="card-header">
-                    <h3 class="card-title">${announcement.title}</h3>
-                </div>
-                <div class="card-body">
-                    <div class="announcement-content">
-                        ${announcement.content.substring(0, 150)}${announcement.content.length > 150 ? '...' : ''}
-                    </div>
-                    ${announcement.files && announcement.files.length > 0 ? 
-                        `<div class="file-attachments">${filesHtml}</div>` : ''}
+                `<div class="announcement-footer">
                     <div class="announcement-meta">
                         <span><i class="far fa-clock"></i> Posted on ${postDate}</span>
                     </div>
+                    <div class="announcement-actions">
+                        <button class="button button-outline button-sm" onclick="event.stopPropagation(); editAnnouncement('${announcement.id}')">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="button button-danger button-sm" onclick="event.stopPropagation(); deleteAnnouncement('${announcement.id}')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>` : 
+                `<div class="announcement-footer">
+                    <div class="announcement-meta">
+                        <span><i class="far fa-clock"></i> Posted on ${postDate}</span>
+                    </div>
+                </div>`;
+            
+            post.innerHTML = `
+                <div class="announcement-header">
+                    <h3 class="announcement-title">${announcement.title}</h3>
+                </div>
+                <div class="announcement-body">
+                    <div class="announcement-content">
+                        ${announcement.content.substring(0, 200)}${announcement.content.length > 200 ? '...' : ''}
+                    </div>
+                    ${announcement.files && announcement.files.length > 0 ? 
+                        `<div class="file-attachments">${filesHtml}</div>` : ''}
                 </div>
                 ${actionsHtml}`;
             
@@ -1592,31 +1726,38 @@
             
             // Actions HTML (for admins only)
             const actionsHtml = isAdmin ? 
-                `<div class="announcement-actions">
-                    <button class="button button-outline" onclick="event.stopPropagation(); editAnnouncement('${announcement.id}')">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="button button-danger" onclick="event.stopPropagation(); deleteAnnouncement('${announcement.id}')">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </div>` : '';
+                `<div class="announcement-footer">
+                    <div class="announcement-meta">
+                        <span><i class="far fa-clock"></i> Posted on ${postDate}</span>
+                    </div>
+                    <div class="announcement-actions">
+                        <button class="button button-outline" onclick="event.stopPropagation(); editAnnouncement('${announcement.id}')">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="button button-danger" onclick="event.stopPropagation(); deleteAnnouncement('${announcement.id}')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>` : 
+                `<div class="announcement-footer">
+                    <div class="announcement-meta">
+                        <span><i class="far fa-clock"></i> Posted on ${postDate}</span>
+                    </div>
+                </div>`;
             
             announcementDetailContent.innerHTML = `
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">${announcement.title}</h3>
+                <div class="announcement-card">
+                    <div class="announcement-header">
+                        <h3 class="announcement-title">${announcement.title}</h3>
                     </div>
-                    <div class="card-body">
+                    <div class="announcement-body">
                         <div class="announcement-content">${announcement.content}</div>
                         ${announcement.embedCode ? 
                             `<div class="embed-container">${announcement.embedCode}</div>` : ''}
                         ${announcement.files && announcement.files.length > 0 ? 
                             `<div class="file-attachments">${filesHtml}</div>` : ''}
-                        <div class="announcement-meta">
-                            <span><i class="far fa-clock"></i> Posted on ${postDate}</span>
-                        </div>
-                        ${actionsHtml}
                     </div>
+                    ${actionsHtml}
                 </div>
             `;
             
@@ -1732,38 +1873,6 @@
         function formatDate(dateString) {
             const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
             return new Date(dateString).toLocaleDateString(undefined, options);
-        }
-
-        // Dark mode functionality
-        function checkDarkModePreference() {
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const savedMode = localStorage.getItem('darkMode');
-            
-            if (savedMode === 'enabled' || (savedMode === null && prefersDark)) {
-                enableDarkMode();
-            } else {
-                disableDarkMode();
-            }
-        }
-
-        function toggleDarkMode() {
-            if (document.body.getAttribute('data-theme') === 'dark') {
-                disableDarkMode();
-            } else {
-                enableDarkMode();
-            }
-        }
-
-        function enableDarkMode() {
-            document.body.setAttribute('data-theme', 'dark');
-            localStorage.setItem('darkMode', 'enabled');
-            document.querySelector('.theme-toggle i').className = 'fas fa-sun';
-        }
-
-        function disableDarkMode() {
-            document.body.removeAttribute('data-theme');
-            localStorage.setItem('darkMode', 'disabled');
-            document.querySelector('.theme-toggle i').className = 'fas fa-moon';
         }
 
         // Toast notifications
@@ -1937,7 +2046,7 @@
             if (!isAdmin || !currentTabId) return;
             announcementEditor.style.display = 'flex';
             announcementTitleInput.value = '';
-            announcementContentInput.value = '';
+            document.getElementById('announcement-content').innerHTML = '';
             embedCodeInput.value = '';
             uploadedFiles = [];
             uploadedFilesDiv.innerHTML = '';
@@ -1952,7 +2061,7 @@
                     const announcementToEdit = snapshot.val();
                     if (announcementToEdit) {
                         announcementTitleInput.value = announcementToEdit.title;
-                        announcementContentInput.value = announcementToEdit.content;
+                        document.getElementById('announcement-content').innerHTML = announcementToEdit.content;
                         embedCodeInput.value = announcementToEdit.embedCode || '';
                         uploadedFiles = announcementToEdit.files || [];
                         uploadedFilesDiv.innerHTML = uploadedFiles.map(file => 
@@ -1973,7 +2082,7 @@
         function postAnnouncement() {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
-            const content = announcementContentInput.value.trim();
+            const content = document.getElementById('announcement-content').innerHTML;
             const embedCode = embedCodeInput.value.trim();
             
             if (title && (content || embedCode)) {
@@ -2006,7 +2115,7 @@
         function saveEditedAnnouncement(announcementId) {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
-            const content = announcementContentInput.value.trim();
+            const content = document.getElementById('announcement-content').innerHTML;
             const embedCode = embedCodeInput.value.trim();
             
             if (title && (content || embedCode)) {
