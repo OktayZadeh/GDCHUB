@@ -1475,16 +1475,7 @@ function checkAdminStatus(email) {
     }
 }
 
-// Sign out function
-function signOut() {
-    auth.signOut().then(() => {
-        localStorage.removeItem(USER_INFO_KEY);
-        window.location.href = '/signin';
-    }).catch(error => {
-        console.error('Sign out error:', error);
-        showNotification('Error signing out', true);
-    });
-}
+
 
 // Load posts from Firebase
 function loadPosts() {
