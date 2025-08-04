@@ -1362,7 +1362,7 @@
     </div>
 
     <script>
-       // Firebase configuration
+       // Initialize Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyCSTEJ3LevxY2_rlGROzajNnNBrVG3oRR4",
     authDomain: "gdchub-3b40a.firebaseapp.com",
@@ -1380,13 +1380,7 @@ const database = firebase.database();
 const storage = firebase.storage();
 const auth = firebase.auth();
 
-// Admin configuration
-const ADMIN_EMAILS = ['fadekeyvids@gmail.com'];
-let isAdmin = false;
-let currentUser = null;
-let uploadedFiles = [];
-
-// DOM elements
+// DOM Elements
 const postsContainer = document.getElementById('postsContainer');
 const createPostBtn = document.getElementById('createPostBtn');
 const postEditor = document.getElementById('postEditor');
@@ -1394,8 +1388,10 @@ const postForm = document.getElementById('postForm');
 const cancelPostBtn = document.getElementById('cancelPost');
 const postTitleInput = document.getElementById('postTitle');
 const postAuthorInput = document.getElementById('postAuthor');
+const postTagsInput = document.getElementById('postTags');
 const contentEditable = document.getElementById('contentEditable');
 const postContentInput = document.getElementById('postContent');
+const tagPreview = document.getElementById('tagPreview');
 const notification = document.getElementById('notification');
 const editorTabs = document.querySelectorAll('.editor-tab');
 const editorTabContents = document.querySelectorAll('.editor-content');
@@ -1403,85 +1399,194 @@ const previewTitle = document.getElementById('previewTitle');
 const previewAuthor = document.getElementById('previewAuthor');
 const previewAvatar = document.getElementById('previewAvatar');
 const previewContent = document.getElementById('previewContent');
+const previewTags = document.getElementById('previewTags');
+const shortcutHelper = document.getElementById('shortcutHelper');
+const toolbar = document.getElementById('toolbar');
+const formatBlockSelect = document.getElementById('formatBlock');
+const fontSizeSelect = document.getElementById('fontSize');
+const fontColorSelect = document.getElementById('fontColor');
+const customColorPicker = document.getElementById('customColor');
+const textAlignSelect = document.getElementById('textAlign');
 const userAvatar = document.querySelector('.user-avatar');
-const uploadArea = document.getElementById('uploadArea');
-const fileUpload = document.getElementById('fileUpload');
-const uploadedFilesDiv = document.getElementById('uploadedFiles');
+
+// Variables
+let posts = [];
+let nextId = 0;
+let currentUser = null;
+let isAdmin = false;
+const ADMIN_EMAILS = ['fadekeyvids@gmail.com']; // Add more admin emails as needed
+const USER_INFO_KEY = "googleUserInfo";
 
 // Initialize the app
 function init() {
-    checkAuth();
+    checkAuthState();
     setupEventListeners();
+    setupPreviewUpdaters();
     setupRichTextEditor();
-    setupFileUpload();
+    loadPosts();
 }
 
-// Check user authentication
-function checkAuth() {
+// Check authentication state
+function checkAuthState() {
     auth.onAuthStateChanged(user => {
         if (user) {
             currentUser = user;
-            updateUserUI();
+            updateUserProfile(user);
+            checkAdminStatus(user.email);
             loadPosts();
         } else {
-            // No user signed in, redirect to sign-in
+            // User is signed out - redirect to login
             window.location.href = '/signin';
         }
     });
 }
 
-// Update UI based on user
-function updateUserUI() {
-    if (currentUser) {
-        // Set user avatar
-        if (currentUser.photoURL) {
-            userAvatar.style.backgroundImage = `url(${currentUser.photoURL})`;
-            userAvatar.textContent = '';
-        } else {
-            userAvatar.textContent = currentUser.displayName ? 
-                currentUser.displayName.charAt(0).toUpperCase() : 'U';
-        }
-        
-        // Set author name in form
-        postAuthorInput.value = currentUser.displayName || '';
-        
-        // Check admin status
-        isAdmin = ADMIN_EMAILS.includes(currentUser.email.toLowerCase());
-        
-        // Show/hide admin controls
+// Update user profile in UI
+function updateUserProfile(user) {
+    if (user.photoURL) {
+        userAvatar.style.backgroundImage = `url(${user.photoURL})`;
+        userAvatar.textContent = '';
+    } else {
+        // Use initials if no photo
+        const displayName = user.displayName || 'User';
+        userAvatar.textContent = displayName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    }
+    
+    // Store user info in localStorage
+    localStorage.setItem(USER_INFO_KEY, JSON.stringify({
+        name: user.displayName,
+        email: user.email,
+        picture: user.photoURL
+    }));
+}
+
+// Check if user is admin
+function checkAdminStatus(email) {
+    isAdmin = ADMIN_EMAILS.includes(email.toLowerCase());
+    
+    // Show/hide admin features
+    if (isAdmin) {
+        createPostBtn.style.display = 'flex';
         document.querySelectorAll('.admin-only').forEach(el => {
-            el.style.display = isAdmin ? '' : 'none';
+            el.style.display = '';
+        });
+    } else {
+        createPostBtn.style.display = 'none';
+        document.querySelectorAll('.admin-only').forEach(el => {
+            el.style.display = 'none';
         });
     }
 }
 
-// Load posts from Firebase
-function loadPosts() {
-    postsContainer.innerHTML = '<div class="loading">Loading announcements...</div>';
-    
-    database.ref('announcements').orderByChild('timestamp').once('value').then(snapshot => {
-        postsContainer.innerHTML = '';
-        
-        snapshot.forEach(childSnapshot => {
-            const post = childSnapshot.val();
-            post.id = childSnapshot.key;
-            renderPost(post);
-        });
-        
-        if (snapshot.numChildren() === 0) {
-            postsContainer.innerHTML = '<div class="empty-state">No announcements yet</div>';
-        }
+// Sign out function
+function signOut() {
+    auth.signOut().then(() => {
+        localStorage.removeItem(USER_INFO_KEY);
+        window.location.href = '/signin';
     }).catch(error => {
-        console.error('Error loading posts:', error);
-        postsContainer.innerHTML = '<div class="error">Error loading announcements</div>';
+        console.error('Sign out error:', error);
+        showNotification('Error signing out', true);
     });
 }
 
-// Render a single post
-function renderPost(post) {
-    const postElement = document.createElement('article');
-    postElement.className = 'post-card fade-in';
-    postElement.setAttribute('data-post-id', post.id);
+// Load posts from Firebase
+function loadPosts() {
+    postsContainer.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading announcements...</div>';
+    
+    database.ref('announcements').orderByChild('timestamp').once('value').then(snapshot => {
+        posts = [];
+        snapshot.forEach(childSnapshot => {
+            const post = childSnapshot.val();
+            posts.unshift(post); // Newest first
+        });
+        
+        renderPosts();
+    }).catch(error => {
+        console.error('Error loading posts:', error);
+        postsContainer.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-triangle"></i> Error loading announcements</div>';
+        showNotification('Error loading announcements', true);
+    });
+}
+
+// Render all posts
+function renderPosts() {
+    postsContainer.innerHTML = '';
+    
+    if (posts.length === 0) {
+        postsContainer.innerHTML = '<div class="empty-state"><i class="far fa-comment-dots"></i><h3>No Announcements Yet</h3><p>There are no announcements to display.</p></div>';
+        return;
+    }
+    
+    posts.forEach(post => {
+        const postElement = document.createElement('article');
+        postElement.className = 'post-card fade-in';
+        postElement.setAttribute('data-post-id', post.id);
+        
+        // Format date
+        const postDate = new Date(post.timestamp).toLocaleDateString('en-US', {
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric'
+        });
+        
+        // Get author initials
+        const authorInitials = post.author ? post.author.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'AU';
+        
+        postElement.innerHTML = `
+            <div class="post-card-header">
+                <h3 class="post-card-title">${post.title}</h3>
+                <div class="post-card-meta">
+                    <span class="post-card-author">
+                        <span class="post-card-avatar">${authorInitials}</span>
+                        ${post.author || 'Anonymous'}
+                    </span>
+                    <span>${postDate}</span>
+                </div>
+            </div>
+            <p class="post-card-excerpt">${post.excerpt || ''}</p>
+            <div class="post-card-footer">
+                ${post.tags && post.tags.length > 0 ? `
+                <div class="post-card-tags">
+                    ${post.tags.slice(0, 2).map(tag => `<span class="post-card-tag">${tag}</span>`).join('')}
+                </div>` : ''}
+                ${isAdmin ? `
+                <div class="post-actions">
+                    <button class="button button-sm button-outline" onclick="editPost('${post.id}')">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="button button-sm button-danger" onclick="deletePost('${post.id}')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>` : ''}
+            </div>
+        `;
+        
+        postsContainer.appendChild(postElement);
+        
+        // Create detail view for this post
+        createDetailView(post);
+    });
+    
+    // Add fade-in animation to cards as they come into view
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.post-card:not(.fade-in)').forEach(card => {
+        observer.observe(card);
+    });
+}
+
+// Create detail view for a post
+function createDetailView(post) {
+    const detailView = document.createElement('div');
+    detailView.className = 'post-detail';
+    detailView.id = `post-${post.id}`;
     
     // Format date
     const postDate = new Date(post.timestamp).toLocaleDateString('en-US', {
@@ -1492,190 +1597,58 @@ function renderPost(post) {
         minute: '2-digit'
     });
     
-    // Create excerpt from content
-    let excerpt = '';
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = post.content;
-    const firstParagraph = tempDiv.querySelector('p');
+    // Get author initials
+    const authorInitials = post.author ? post.author.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'AU';
     
-    if (firstParagraph && firstParagraph.textContent.length > 0) {
-        excerpt = firstParagraph.textContent.length > 200 
-            ? firstParagraph.textContent.substring(0, 200) + '...' 
-            : firstParagraph.textContent;
-    } else {
-        const textContent = tempDiv.textContent;
-        excerpt = textContent.length > 200 
-            ? textContent.substring(0, 200) + '...' 
-            : textContent;
-    }
-    
-    // Admin actions HTML
+    // Admin actions
     const adminActions = isAdmin ? `
-        <div class="post-admin-actions">
-            <button class="btn btn-sm" onclick="editPost('${post.id}')">Edit</button>
-            <button class="btn btn-sm btn-danger" onclick="deletePost('${post.id}')">Delete</button>
+        <div class="post-detail-actions">
+            <button class="button button-outline" onclick="editPost('${post.id}')">
+                <i class="fas fa-edit"></i> Edit
+            </button>
+            <button class="button button-danger" onclick="deletePost('${post.id}')">
+                <i class="fas fa-trash"></i> Delete
+            </button>
         </div>
     ` : '';
     
-    postElement.innerHTML = `
-        <div class="post-card-header">
-            <h3 class="post-card-title">${post.title}</h3>
-            <div class="post-card-meta">
-                <span class="post-card-author">
-                    <span class="post-card-avatar">${post.authorInitials || 'AU'}</span>
-                    ${post.author || 'Anonymous'}
-                </span>
-                <span>${postDate}</span>
-            </div>
+    detailView.innerHTML = `
+        <div class="post-detail-header">
+            <h1 class="post-detail-title">${post.title}</h1>
+            <button class="post-detail-close">&times;</button>
         </div>
-        <p class="post-card-excerpt">${excerpt}</p>
-        <div class="post-card-footer">
+        <div class="post-detail-meta">
+            <span class="post-detail-author">
+                <span class="post-detail-avatar">${authorInitials}</span>
+                ${post.author || 'Anonymous'}
+            </span>
+            <span>Posted ${postDate}</span>
+        </div>
+        <div class="post-detail-content">
+            ${post.content || ''}
+        </div>
+        <div class="post-detail-footer">
+            ${post.tags && post.tags.length > 0 ? `
+            <div class="post-detail-tags">
+                ${post.tags.map(tag => `<span class="post-detail-tag">${tag}</span>`).join('')}
+            </div>` : ''}
             ${adminActions}
         </div>
     `;
     
-    postElement.addEventListener('click', () => showPostDetail(post.id));
-    postsContainer.appendChild(postElement);
+    document.body.appendChild(detailView);
 }
 
-// Show post detail view
-function showPostDetail(postId) {
-    database.ref(`announcements/${postId}`).once('value').then(snapshot => {
-        const post = snapshot.val();
-        const detailView = document.createElement('div');
-        detailView.className = 'post-detail';
-        detailView.id = `post-${postId}`;
-        
-        // Format date
-        const postDate = new Date(post.timestamp).toLocaleDateString('en-US', {
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        
-        // Admin actions HTML
-        const adminActions = isAdmin ? `
-            <div class="post-detail-actions">
-                <button class="btn" onclick="editPost('${postId}')">Edit</button>
-                <button class="btn btn-danger" onclick="deletePost('${postId}')">Delete</button>
-            </div>
-        ` : '';
-        
-        detailView.innerHTML = `
-            <div class="post-detail-header">
-                <h1 class="post-detail-title">${post.title}</h1>
-                <button class="post-detail-close">&times;</button>
-            </div>
-            <div class="post-detail-meta">
-                <span class="post-detail-author">
-                    <span class="post-detail-avatar">${post.authorInitials || 'AU'}</span>
-                    ${post.author || 'Anonymous'}
-                </span>
-                <span>Posted ${postDate}</span>
-            </div>
-            <div class="post-detail-content">
-                ${post.content}
-            </div>
-            ${adminActions}
-        `;
-        
-        document.body.appendChild(detailView);
-        detailView.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        
-        // Close button handler
-        detailView.querySelector('.post-detail-close').addEventListener('click', () => {
-            detailView.remove();
-            document.body.style.overflow = 'auto';
-        });
-    });
-}
-
-// Edit post
-function editPost(postId) {
-    database.ref(`announcements/${postId}`).once('value').then(snapshot => {
-        const post = snapshot.val();
-        
-        // Fill the editor with post data
-        postTitleInput.value = post.title;
-        postAuthorInput.value = post.author;
-        contentEditable.innerHTML = post.content;
-        
-        // Update preview
-        updatePreview();
-        
-        // Show editor
-        postEditor.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        
-        // Change form to update mode
-        postForm.onsubmit = (e) => {
-            e.preventDefault();
-            updatePost(postId);
-        };
-        
-        // Change button text
-        postForm.querySelector('button[type="submit"]').textContent = 'Update Announcement';
-    });
-}
-
-// Update post in Firebase
-function updatePost(postId) {
-    const title = postTitleInput.value.trim();
-    const author = postAuthorInput.value.trim();
-    const content = contentEditable.innerHTML;
-    
-    if (!title || !author || !content) {
-        showNotification('Please fill in all required fields', true);
-        return;
-    }
-    
-    const updates = {
-        title,
-        author,
-        content,
-        authorInitials: author.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2),
-        lastUpdated: firebase.database.ServerValue.TIMESTAMP
-    };
-    
-    database.ref(`announcements/${postId}`).update(updates)
-        .then(() => {
-            showNotification('Announcement updated successfully!');
-            closeEditor();
-            loadPosts();
-        })
-        .catch(error => {
-            showNotification('Error updating announcement', true);
-            console.error(error);
-        });
-}
-
-// Delete post
-function deletePost(postId) {
-    if (confirm('Are you sure you want to delete this announcement?')) {
-        database.ref(`announcements/${postId}`).remove()
-            .then(() => {
-                showNotification('Announcement deleted successfully');
-                loadPosts();
-            })
-            .catch(error => {
-                showNotification('Error deleting announcement', true);
-                console.error(error);
-            });
-    }
-}
-
-// Setup rich text editor
+// Setup rich text editor functionality
 function setupRichTextEditor() {
-    // Toolbar button handlers
+    // Set up execCommand handlers
     document.querySelectorAll('[data-command]').forEach(button => {
         button.addEventListener('click', (e) => {
             e.preventDefault();
             const command = button.getAttribute('data-command');
             let value = null;
             
+            // Special cases for commands that need prompts
             if (command === 'createLink') {
                 value = prompt('Enter the URL:');
                 if (!value) return;
@@ -1689,11 +1662,47 @@ function setupRichTextEditor() {
         });
     });
     
-    // Update toolbar on selection changes
+    // Format block selection
+    formatBlockSelect.addEventListener('change', () => {
+        document.execCommand('formatBlock', false, formatBlockSelect.value);
+        contentEditable.focus();
+    });
+    
+    // Font size selection
+    fontSizeSelect.addEventListener('change', () => {
+        if (fontSizeSelect.value) {
+            document.execCommand('fontSize', false, fontSizeSelect.value);
+        }
+        contentEditable.focus();
+    });
+    
+    // Font color selection
+    fontColorSelect.addEventListener('change', () => {
+        if (fontColorSelect.value) {
+            document.execCommand('foreColor', false, getComputedColor(fontColorSelect.value));
+        }
+        contentEditable.focus();
+    });
+    
+    // Custom color picker
+    customColorPicker.addEventListener('input', () => {
+        document.execCommand('foreColor', false, customColorPicker.value);
+        contentEditable.focus();
+    });
+    
+    // Text alignment
+    textAlignSelect.addEventListener('change', () => {
+        if (textAlignSelect.value) {
+            document.execCommand(textAlignSelect.value === 'justify' ? 'justifyFull' : 'justify' + textAlignSelect.value.charAt(0).toUpperCase() + textAlignSelect.value.slice(1), false, null);
+        }
+        contentEditable.focus();
+    });
+    
+    // Update toolbar buttons based on selection
     contentEditable.addEventListener('mouseup', updateToolbar);
     contentEditable.addEventListener('keyup', updateToolbar);
     
-    // Clean up pasted content
+    // Handle paste events to clean up formatting
     contentEditable.addEventListener('paste', (e) => {
         e.preventDefault();
         const text = (e.clipboardData || window.clipboardData).getData('text/plain');
@@ -1701,94 +1710,610 @@ function setupRichTextEditor() {
     });
 }
 
-// Update toolbar button states
+// Get computed color value for color names
+function getComputedColor(colorName) {
+    const colors = {
+        red: '#e74c3c',
+        blue: '#3498db',
+        green: '#2ecc71',
+        purple: '#9b59b6',
+        orange: '#e67e22',
+        gray: '#95a5a6',
+        yellow: '#f1c40f',
+        pink: '#e84393'
+    };
+    return colors[colorName] || colorName;
+}
+
+// Update toolbar button states based on current selection
 function updateToolbar() {
-    document.querySelectorAll('[data-command]').forEach(button => {
-        const command = button.getAttribute('data-command');
-        if (command === 'bold' || command === 'italic' || command === 'underline') {
-            button.classList.toggle('active', document.queryCommandState(command));
+    // Update format block
+    const formatBlock = document.queryCommandValue('formatBlock') || 'p';
+    formatBlockSelect.value = ['h1', 'h2', 'h3', 'h4', 'p', 'pre', 'blockquote'].includes(formatBlock.toLowerCase()) ? formatBlock.toLowerCase() : 'p';
+    
+    // Update bold/italic/underline buttons
+    document.querySelectorAll('[data-command="bold"]').forEach(btn => {
+        btn.classList.toggle('active', document.queryCommandState('bold'));
+    });
+    
+    document.querySelectorAll('[data-command="italic"]').forEach(btn => {
+        btn.classList.toggle('active', document.queryCommandState('italic'));
+    });
+    
+    document.querySelectorAll('[data-command="underline"]').forEach(btn => {
+        btn.classList.toggle('active', document.queryCommandState('underline'));
+    });
+    
+    // Update list buttons
+    document.querySelectorAll('[data-command="insertUnorderedList"]').forEach(btn => {
+        btn.classList.toggle('active', document.queryCommandState('insertUnorderedList'));
+    });
+    
+    document.querySelectorAll('[data-command="insertOrderedList"]').forEach(btn => {
+        btn.classList.toggle('active', document.queryCommandState('insertOrderedList'));
+    });
+    
+    // Update alignment
+    const align = document.queryCommandValue('justifyLeft') ? 'left' : 
+                  document.queryCommandValue('justifyCenter') ? 'center' : 
+                  document.queryCommandValue('justifyRight') ? 'right' : 
+                  document.queryCommandValue('justifyFull') ? 'justify' : '';
+    textAlignSelect.value = align;
+}
+
+// Setup event listeners
+function setupEventListeners() {
+    // Post card click handler
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.post-card')) {
+            const card = e.target.closest('.post-card');
+            // Don't trigger if clicking on a link or button
+            if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
+            
+            const postId = card.getAttribute('data-post-id');
+            const postDetail = document.getElementById(`post-${postId}`);
+            
+            // Show the selected post
+            postDetail.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    });
+
+    // Close button handler for detail views
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('post-detail-close')) {
+            document.querySelectorAll('.post-detail').forEach(post => {
+                post.classList.remove('active');
+            });
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close when clicking outside content
+        if (e.target.classList.contains('post-detail')) {
+            e.target.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+    });
+
+    // Create post button
+    createPostBtn.addEventListener('click', () => {
+        if (!isAdmin) return;
+        
+        postEditor.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        // Reset form
+        postForm.reset();
+        contentEditable.innerHTML = '';
+        tagPreview.innerHTML = '';
+        previewTags.innerHTML = '';
+        
+        // Set author to current user's name
+        if (currentUser && currentUser.displayName) {
+            postAuthorInput.value = currentUser.displayName;
+        }
+        
+        // Update preview with empty values
+        updatePreview();
+        // Switch to editor tab
+        switchTab('editor');
+        // Focus on title field
+        postTitleInput.focus();
+    });
+
+    // Toggle shortcut helper
+    createPostBtn.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        shortcutHelper.classList.toggle('active');
+    });
+
+    // Close shortcut helper
+    document.querySelector('.shortcut-helper-close').addEventListener('click', () => {
+        shortcutHelper.classList.remove('active');
+    });
+
+    // Close editor
+    cancelPostBtn.addEventListener('click', () => {
+        closeEditor();
+    });
+
+    // Close when clicking outside editor content
+    postEditor.addEventListener('click', (e) => {
+        if (e.target === postEditor) {
+            closeEditor();
+        }
+    });
+
+    // Handle tag input
+    postTagsInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            addTag();
+        }
+    });
+
+    // Handle tag removal
+    tagPreview.addEventListener('click', (e) => {
+        if (e.target.classList.contains('tag-remove')) {
+            const tagItem = e.target.closest('.tag-item');
+            tagItem.remove();
+            updatePreviewTags();
+        }
+    });
+
+    // Handle form submission
+    postForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        createNewPost();
+    });
+
+    // Tab switching
+    editorTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabName = tab.getAttribute('data-tab');
+            switchTab(tabName);
+        });
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        // Only handle shortcuts when editor is open and not in an input field
+        if (!postEditor.classList.contains('active') || 
+            ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+            return;
+        }
+        
+        // Check for Ctrl/Cmd key
+        const ctrlKey = e.ctrlKey || e.metaKey;
+        
+        // Bold (Ctrl+B)
+        if (ctrlKey && e.key === 'b') {
+            e.preventDefault();
+            document.execCommand('bold');
+            updateToolbar();
+        }
+        
+        // Italic (Ctrl+I)
+        if (ctrlKey && e.key === 'i') {
+            e.preventDefault();
+            document.execCommand('italic');
+            updateToolbar();
+        }
+        
+        // Underline (Ctrl+U)
+        if (ctrlKey && e.key === 'u') {
+            e.preventDefault();
+            document.execCommand('underline');
+            updateToolbar();
+        }
+        
+        // Link (Ctrl+K)
+        if (ctrlKey && e.key === 'k') {
+            e.preventDefault();
+            const url = prompt('Enter the URL:');
+            if (url) {
+                document.execCommand('createLink', false, url);
+            }
+        }
+        
+        // Insert Image (Ctrl+Shift+I)
+        if (ctrlKey && e.shiftKey && e.key === 'I') {
+            e.preventDefault();
+            const url = prompt('Enter the image URL:');
+            if (url) {
+                document.execCommand('insertImage', false, url);
+            }
+        }
+        
+        // Bullet List (Ctrl+Shift+U)
+        if (ctrlKey && e.shiftKey && e.key === 'U') {
+            e.preventDefault();
+            document.execCommand('insertUnorderedList');
+            updateToolbar();
+        }
+        
+        // Numbered List (Ctrl+Shift+O)
+        if (ctrlKey && e.shiftKey && e.key === 'O') {
+            e.preventDefault();
+            document.execCommand('insertOrderedList');
+            updateToolbar();
+        }
+        
+        // Strikethrough (Ctrl+Shift+S)
+        if (ctrlKey && e.shiftKey && e.key === 'S') {
+            e.preventDefault();
+            document.execCommand('strikeThrough');
+            updateToolbar();
+        }
+        
+        // Undo (Ctrl+Z)
+        if (ctrlKey && !e.shiftKey && e.key === 'z') {
+            e.preventDefault();
+            document.execCommand('undo');
+        }
+        
+        // Redo (Ctrl+Y or Ctrl+Shift+Z)
+        if ((ctrlKey && e.key === 'y') || (ctrlKey && e.shiftKey && e.key === 'Z')) {
+            e.preventDefault();
+            document.execCommand('redo');
+        }
+        
+        // Clear Formatting (Ctrl+Space)
+        if (ctrlKey && e.key === ' ') {
+            e.preventDefault();
+            document.execCommand('removeFormat');
+        }
+        
+        // Align Left (Ctrl+Shift+L)
+        if (ctrlKey && e.shiftKey && e.key === 'L') {
+            e.preventDefault();
+            document.execCommand('justifyLeft');
+            updateToolbar();
+        }
+        
+        // Align Center (Ctrl+Shift+E)
+        if (ctrlKey && e.shiftKey && e.key === 'E') {
+            e.preventDefault();
+            document.execCommand('justifyCenter');
+            updateToolbar();
+        }
+        
+        // Align Right (Ctrl+Shift+R)
+        if (ctrlKey && e.shiftKey && e.key === 'R') {
+            e.preventDefault();
+            document.execCommand('justifyRight');
+            updateToolbar();
+        }
+        
+        // Justify (Ctrl+Shift+J)
+        if (ctrlKey && e.shiftKey && e.key === 'J') {
+            e.preventDefault();
+            document.execCommand('justifyFull');
+            updateToolbar();
         }
     });
 }
 
-// Setup file upload
-function setupFileUpload() {
-    uploadArea.addEventListener('click', () => fileUpload.click());
-    
-    uploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadArea.classList.add('drag-over');
+// Setup preview updaters
+function setupPreviewUpdaters() {
+    postTitleInput.addEventListener('input', () => {
+        previewTitle.textContent = postTitleInput.value || 'Your Announcement Title';
     });
-    
-    uploadArea.addEventListener('dragleave', () => {
-        uploadArea.classList.remove('drag-over');
+
+    postAuthorInput.addEventListener('input', () => {
+        const author = postAuthorInput.value || 'Author Name';
+        previewAuthor.textContent = author;
+        // Update avatar initials
+        previewAvatar.textContent = author.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
     });
-    
-    uploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove('drag-over');
-        handleFileUpload(e.dataTransfer.files);
-    });
-    
-    fileUpload.addEventListener('change', (e) => {
-        handleFileUpload(e.target.files);
+
+    contentEditable.addEventListener('input', () => {
+        // Update hidden textarea with HTML content
+        postContentInput.value = contentEditable.innerHTML;
+        // Update preview
+        previewContent.innerHTML = contentEditable.innerHTML || 
+            '<p>Your formatted content will appear here exactly as it will look when published.</p>' +
+            '<p>Use the editor tab to write your announcement with rich text formatting.</p>';
     });
 }
 
-// Handle file upload
-async function handleFileUpload(files) {
-    if (!files || files.length === 0) return;
-    
-    try {
-        uploadedFilesDiv.innerHTML = '<div class="uploading">Uploading files...</div>';
-        
-        const uploadPromises = Array.from(files).map(file => {
-            const storageRef = storage.ref().child(`announcement_files/${Date.now()}_${file.name}`);
-            return storageRef.put(file).then(snapshot => {
-                return snapshot.ref.getDownloadURL().then(url => {
-                    return {
-                        name: file.name,
-                        url: url,
-                        type: file.type,
-                        size: file.size
-                    };
-                });
-            });
-        });
-        
-        uploadedFiles = await Promise.all(uploadPromises);
-        
-        // Display uploaded files
-        uploadedFilesDiv.innerHTML = uploadedFiles.map(file => `
-            <div class="uploaded-file">
-                <a href="${file.url}" target="_blank">${file.name}</a>
-                <button onclick="removeUploadedFile('${file.name}')">&times;</button>
-            </div>
-        `).join('');
-        
-        showNotification('Files uploaded successfully');
-    } catch (error) {
-        console.error('Error uploading files:', error);
-        uploadedFilesDiv.innerHTML = '<div class="error">Error uploading files</div>';
-        showNotification('Error uploading files', true);
+// Switch between editor and preview tabs
+function switchTab(tabName) {
+    editorTabs.forEach(tab => {
+        tab.classList.toggle('active', tab.getAttribute('data-tab') === tabName);
+    });
+
+    editorTabContents.forEach(content => {
+        content.classList.toggle('active', content.id === `${tabName}Tab`);
+    });
+
+    // When switching to preview, make sure it's up to date
+    if (tabName === 'preview') {
+        updatePreview();
     }
 }
 
-// Remove uploaded file
-function removeUploadedFile(fileName) {
-    uploadedFiles = uploadedFiles.filter(file => file.name !== fileName);
-    uploadedFilesDiv.innerHTML = uploadedFiles.map(file => `
-        <div class="uploaded-file">
-            <a href="${file.url}" target="_blank">${file.name}</a>
-            <button onclick="removeUploadedFile('${file.name}')">&times;</button>
-        </div>
-    `).join('');
+// Update all preview elements
+function updatePreview() {
+    previewTitle.textContent = postTitleInput.value || 'Your Announcement Title';
+    
+    const author = postAuthorInput.value || 'Author Name';
+    previewAuthor.textContent = author;
+    previewAvatar.textContent = author.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    
+    previewContent.innerHTML = contentEditable.innerHTML || 
+        '<p>Your formatted content will appear here exactly as it will look when published.</p>' +
+        '<p>Use the editor tab to write your announcement with rich text formatting.</p>';
+    
+    updatePreviewTags();
+}
+
+// Update preview tags
+function updatePreviewTags() {
+    previewTags.innerHTML = '';
+    document.querySelectorAll('.tag-item').forEach(tag => {
+        const tagText = tag.textContent.replace('×', '').trim();
+        const tagElement = document.createElement('span');
+        tagElement.className = 'preview-tag';
+        tagElement.textContent = tagText;
+        previewTags.appendChild(tagElement);
+    });
+}
+
+// Add tag from input
+function addTag() {
+    const tagValue = postTagsInput.value.trim();
+    if (tagValue && tagValue !== ',') {
+        const tag = tagValue.replace(',', '');
+        const tagElement = document.createElement('div');
+        tagElement.className = 'tag-item';
+        tagElement.innerHTML = `
+            ${tag}
+            <button class="tag-remove">&times;</button>
+        `;
+        tagPreview.appendChild(tagElement);
+        postTagsInput.value = '';
+        updatePreviewTags();
+    }
+}
+
+// Create a new post
+function createNewPost() {
+    if (!isAdmin) return;
+    
+    // Get form values
+    const title = postTitleInput.value.trim();
+    const author = postAuthorInput.value.trim() || currentUser.displayName || 'Anonymous';
+    const content = contentEditable.innerHTML;
+    
+    // Get tags
+    const tags = [];
+    document.querySelectorAll('.tag-item').forEach(tag => {
+        tags.push(tag.textContent.replace('×', '').trim());
+    });
+    
+    // Basic validation
+    if (!title || !content) {
+        showNotification('Please fill in all required fields', true);
+        return;
+    }
+    
+    // Create excerpt (first paragraph or first 200 chars)
+    let excerpt = '';
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    const firstParagraph = tempDiv.querySelector('p');
+    
+    if (firstParagraph && firstParagraph.textContent.length > 0) {
+        excerpt = firstParagraph.textContent.length > 200 
+            ? firstParagraph.textContent.substring(0, 200) + '...' 
+            : firstParagraph.textContent;
+    } else {
+        const textContent = tempDiv.textContent;
+        excerpt = textContent.length > 200 
+            ? textContent.substring(0, 200) + '...' 
+            : textContent;
+    }
+    
+    // Create new post object
+    const newPost = {
+        id: Date.now().toString(),
+        title,
+        author,
+        excerpt,
+        tags,
+        content,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
+    
+    // Save to Firebase
+    database.ref(`announcements/${newPost.id}`).set(newPost)
+        .then(() => {
+            // Reset form
+            postForm.reset();
+            contentEditable.innerHTML = '';
+            tagPreview.innerHTML = '';
+            
+            // Close editor
+            closeEditor();
+            
+            // Show success notification
+            showNotification('Announcement published successfully!');
+            
+            // Reload posts
+            loadPosts();
+        })
+        .catch(error => {
+            console.error('Error saving post:', error);
+            showNotification('Error saving announcement', true);
+        });
+}
+
+// Edit an existing post
+function editPost(postId) {
+    if (!isAdmin) return;
+    
+    database.ref(`announcements/${postId}`).once('value').then(snapshot => {
+        const post = snapshot.val();
+        if (!post) return;
+        
+        postEditor.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // Fill form with post data
+        postTitleInput.value = post.title;
+        postAuthorInput.value = post.author || '';
+        contentEditable.innerHTML = post.content || '';
+        postContentInput.value = post.content || '';
+        
+        // Clear and add tags
+        tagPreview.innerHTML = '';
+        if (post.tags && post.tags.length > 0) {
+            post.tags.forEach(tag => {
+                const tagElement = document.createElement('div');
+                tagElement.className = 'tag-item';
+                tagElement.innerHTML = `
+                    ${tag}
+                    <button class="tag-remove">&times;</button>
+                `;
+                tagPreview.appendChild(tagElement);
+            });
+        }
+        
+        // Update preview
+        updatePreview();
+        
+        // Switch to editor tab
+        switchTab('editor');
+        
+        // Focus on title field
+        postTitleInput.focus();
+        
+        // Update form submit handler to save changes
+        postForm.onsubmit = (e) => {
+            e.preventDefault();
+            savePostChanges(postId);
+        };
+    }).catch(error => {
+        console.error('Error loading post:', error);
+        showNotification('Error loading announcement', true);
+    });
+}
+
+// Save changes to an existing post
+function savePostChanges(postId) {
+    if (!isAdmin) return;
+    
+    // Get form values
+    const title = postTitleInput.value.trim();
+    const author = postAuthorInput.value.trim() || currentUser.displayName || 'Anonymous';
+    const content = contentEditable.innerHTML;
+    
+    // Get tags
+    const tags = [];
+    document.querySelectorAll('.tag-item').forEach(tag => {
+        tags.push(tag.textContent.replace('×', '').trim());
+    });
+    
+    // Basic validation
+    if (!title || !content) {
+        showNotification('Please fill in all required fields', true);
+        return;
+    }
+    
+    // Create excerpt (first paragraph or first 200 chars)
+    let excerpt = '';
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    const firstParagraph = tempDiv.querySelector('p');
+    
+    if (firstParagraph && firstParagraph.textContent.length > 0) {
+        excerpt = firstParagraph.textContent.length > 200 
+            ? firstParagraph.textContent.substring(0, 200) + '...' 
+            : firstParagraph.textContent;
+    } else {
+        const textContent = tempDiv.textContent;
+        excerpt = textContent.length > 200 
+            ? textContent.substring(0, 200) + '...' 
+            : textContent;
+    }
+    
+    // Create updated post object
+    const updatedPost = {
+        id: postId,
+        title,
+        author,
+        excerpt,
+        tags,
+        content,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
+    
+    // Update in Firebase
+    database.ref(`announcements/${postId}`).set(updatedPost)
+        .then(() => {
+            // Reset form
+            postForm.reset();
+            contentEditable.innerHTML = '';
+            tagPreview.innerHTML = '';
+            
+            // Close editor
+            closeEditor();
+            
+            // Show success notification
+            showNotification('Announcement updated successfully!');
+            
+            // Reload posts
+            loadPosts();
+        })
+        .catch(error => {
+            console.error('Error updating post:', error);
+            showNotification('Error updating announcement', true);
+        });
+}
+
+// Delete a post
+function deletePost(postId) {
+    if (!isAdmin) return;
+    
+    if (confirm('Are you sure you want to delete this announcement?')) {
+        database.ref(`announcements/${postId}`).remove()
+            .then(() => {
+                // Remove post from UI
+                document.querySelector(`.post-card[data-post-id="${postId}"]`)?.remove();
+                document.getElementById(`post-${postId}`)?.remove();
+                
+                // Show success notification
+                showNotification('Announcement deleted successfully!');
+                
+                // Reload posts if we deleted the last one
+                if (document.querySelectorAll('.post-card').length === 0) {
+                    loadPosts();
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting post:', error);
+                showNotification('Error deleting announcement', true);
+            });
+    }
+}
+
+// Close editor
+function closeEditor() {
+    postEditor.classList.remove('active');
+    document.body.style.overflow = 'auto';
+    shortcutHelper.classList.remove('active');
+    
+    // Reset form submit handler
+    postForm.onsubmit = (e) => {
+        e.preventDefault();
+        createNewPost();
+    };
 }
 
 // Show notification
 function showNotification(message, isError = false) {
     notification.textContent = message;
-    notification.className = `notification ${isError ? 'error' : ''}`;
+    notification.classList.toggle('error', isError);
     notification.classList.add('active');
     
     setTimeout(() => {
@@ -1796,29 +2321,8 @@ function showNotification(message, isError = false) {
     }, 3000);
 }
 
-// Close editor
-function closeEditor() {
-    postEditor.classList.remove('active');
-    document.body.style.overflow = 'auto';
-    
-    // Reset form
-    postForm.reset();
-    contentEditable.innerHTML = '';
-    uploadedFiles = [];
-    uploadedFilesDiv.innerHTML = '';
-    
-    // Reset form handler
-    postForm.onsubmit = (e) => {
-        e.preventDefault();
-        createNewPost();
-    };
-    
-    // Reset button text
-    postForm.querySelector('button[type="submit"]').textContent = 'Publish Announcement';
-}
-
-// Initialize the app when DOM is loaded
-document.addEventListener('DOMContentLoaded', init);
+// Initialize the app
+init();
     </script>
 </body>
 </html>
