@@ -1434,9 +1434,6 @@ function checkAuthState() {
             updateUserProfile(user);
             checkAdminStatus(user.email);
             loadPosts();
-        } else {
-            // User is signed out - redirect to login
-            window.location.href = '/signin';
         }
     });
 }
