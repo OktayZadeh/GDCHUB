@@ -2,6 +2,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classroom</title>
+    <!-- Add Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <style>
 /* Base Layout */
 body {
@@ -602,10 +606,9 @@ h1, h2, h3 {
         right: 15px;
     }
 }
-		
     </style>
     <script src="https://accounts.google.com/gsi/client" async="" defer=""></script>
-<style id="googleidentityservice_button_styles">.qJTHM{-webkit-user-select:none;color:#202124;direction:ltr;-webkit-touch-callout:none;font-family:"Roboto-Regular",arial,sans-serif;-webkit-font-smoothing:antialiased;font-weight:400;margin:0;overflow:hidden;-webkit-text-size-adjust:100%}.ynRLnc{left:-9999px;position:absolute;top:-9999px}.L6cTce{display:none}.bltWBb{word-break:break-all}.hSRGPd{color:#1a73e8;cursor:pointer;font-weight:500;text-decoration:none}.Bz112c-W3lGp{height:16px;width:16px}.Bz112c-E3DyYd{height:20px;width:20px}.Bz112c-r9oPif{height:24px;width:24px}.Bz112c-u2z5K{height:36px;width:36px}.Bz112c-uaxL4e{-webkit-border-radius:10px;border-radius:10px}.LgbsSe-Bz112c{display:block}.S9gUrf-YoZ4jf,.S9gUrf-YoZ4jf *{border:none;margin:0;padding:0}.fFW7wc-ibnC6b>.aZ2wEe>div{border-color:#4285f4}.P1ekSe-ZMv3u>div:nth-child(1){background-color:#1a73e8!important}.P1ekSe-ZMv3u>div:nth-child(2),.P1ekSe-ZMv3u>div:nth-child(3){background-image:linear-gradient(to right,rgba(255,255,255,.7),rgba(255,255,255,.7)),linear-gradient(to right,#1a73e8,#1a73e8)!important}.haAclf{display:inline-block}.nsm7Bb-HzV7m-LgbsSe{-webkit-border-radius:4px;border-radius:4px;-webkit-box-sizing:border-box;box-sizing:border-box;-webkit-transition:background-color .218s,border-color .218s;transition:background-color .218s,border-color .218s;-webkit-user-select:none;-webkit-appearance:none;background-color:#fff;background-image:none;border:1px solid #dadce0;color:#3c4043;cursor:pointer;font-family:"Google Sans",arial,sans-serif;font-size:14px;height:40px;letter-spacing:0.25px;outline:none;overflow:hidden;padding:0 12px;position:relative;text-align:center;vertical-align:middle;white-space:nowrap;width:auto}@media screen and (-ms-high-contrast:active){.nsm7Bb-HzV7m-LgbsSe{border:2px solid windowText;color:windowText}}@media screen and (preferes-contrast:more){.nsm7Bb-HzV7m-LgbsSe{color:#000}}.nsm7Bb-HzV7m-LgbsSe.pSzOP-SxQuSe{font-size:14px;height:32px;letter-spacing:0.25px;padding:0 10px}.nsm7Bb-HzV7m-LgbsSe.purZT-SxQuSe{font-size:11px;height:20px;letter-spacing:0.3px;padding:0 8px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe{padding:0;width:40px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe.pSzOP-SxQuSe{width:32px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe.purZT-SxQuSe{width:20px}.nsm7Bb-HzV7m-LgbsSe.JGcpL-RbRzK{-webkit-border-radius:20px;border-radius:20px}.nsm7Bb-HzV7m-LgbsSe.JGcpL-RbRzK.pSzOP-SxQuSe{-webkit-border-radius:16px;border-radius:16px}.nsm7Bb-HzV7m-LgbsSe.JGcpL-RbRzK.purZT-SxQuSe{-webkit-border-radius:10px;border-radius:10px}.nsm7Bb-HzV7m-LgbsSe.MFS4be-Ia7Qfc{border:none;color:#fff}.nsm7Bb-HzV7m-LgbsSe.MFS4be-v3pZbf-Ia7Qfc{background-color:#1a73e8}.nsm7Bb-HzV7m-LgbsSe.MFS4be-JaPV2b-Ia7Qfc{background-color:#202124;color:#e8eaed}@media screen and (prefers-contrast:more){.nsm7Bb-HzV7m-LgbsSe.MFS4be-JaPV2b-Ia7Qfc{color:#fff}}.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-Bz112c{height:18px;margin-right:8px;min-width:18px;width:18px}.nsm7Bb-HzV7m-LgbsSe.pSzOP-SxQuSe .nsm7Bb-HzV7m-LgbsSe-Bz112c{height:14px;min-width:14px;width:14px}.nsm7Bb-HzV7m-LgbsSe.purZT-SxQuSe .nsm7Bb-HzV7m-LgbsSe-Bz112c{height:10px;min-width:10px;width:10px}.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-Bz112c{margin-left:8px;margin-right:-4px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe .nsm7Bb-HzV7m-LgbsSe-Bz112c{margin:0;padding:10px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe.pSzOP-SxQuSe .nsm7Bb-HzV7m-LgbsSe-Bz112c{padding:8px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe.purZT-SxQuSe .nsm7Bb-HzV7m-LgbsSe-Bz112c{padding:4px}.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{-webkit-border-top-left-radius:3px;border-top-left-radius:3px;-webkit-border-bottom-left-radius:3px;border-bottom-left-radius:3px;display:-webkit-box;display:-webkit-flex;display:flex;justify-content:center;-webkit-align-items:center;align-items:center;background-color:#fff;height:36px;margin-left:-10px;margin-right:12px;min-width:36px;width:36px}.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf .nsm7Bb-HzV7m-LgbsSe-Bz112c,.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf .nsm7Bb-HzV7m-LgbsSe-Bz112c{margin:0;padding:0}.nsm7Bb-HzV7m-LgbsSe.pSzOP-SxQuSe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{height:28px;margin-left:-8px;margin-right:10px;min-width:28px;width:28px}.nsm7Bb-HzV7m-LgbsSe.purZT-SxQuSe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{height:16px;margin-left:-6px;margin-right:8px;min-width:16px;width:16px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{-webkit-border-radius:3px;border-radius:3px;margin-left:2px;margin-right:0;padding:0}.nsm7Bb-HzV7m-LgbsSe.JGcpL-RbRzK .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{-webkit-border-radius:18px;border-radius:18px}.nsm7Bb-HzV7m-LgbsSe.pSzOP-SxQuSe.JGcpL-RbRzK .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{-webkit-border-radius:14px;border-radius:14px}.nsm7Bb-HzV7m-LgbsSe.purZT-SxQuSe.JGcpL-RbRzK .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{-webkit-border-radius:8px;border-radius:8px}.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-bN97Pc-sM5MNb{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-flex-direction:row;flex-direction:row;justify-content:space-between;-webkit-flex-wrap:nowrap;flex-wrap:nowrap;height:100%;position:relative;width:100%}.nsm7Bb-HzV7m-LgbsSe .oXtfBe-l4eHX{justify-content:center}.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-BPrWId{-webkit-flex-grow:1;flex-grow:1;font-family:"Google Sans",arial,sans-serif;font-weight:500;overflow:hidden;text-overflow:ellipsis;vertical-align:top}.nsm7Bb-HzV7m-LgbsSe.purZT-SxQuSe .nsm7Bb-HzV7m-LgbsSe-BPrWId{font-weight:300}.nsm7Bb-HzV7m-LgbsSe .oXtfBe-l4eHX .nsm7Bb-HzV7m-LgbsSe-BPrWId{-webkit-flex-grow:0;flex-grow:0}.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-MJoBVe{-webkit-transition:background-color .218s;transition:background-color .218s;bottom:0;left:0;position:absolute;right:0;top:0}.nsm7Bb-HzV7m-LgbsSe:hover,.nsm7Bb-HzV7m-LgbsSe:focus{-webkit-box-shadow:none;box-shadow:none;border-color:rgb(210,227,252);outline:none}.nsm7Bb-HzV7m-LgbsSe:focus-within{outline:2px solid #00639b;border-color:transparent}.nsm7Bb-HzV7m-LgbsSe:hover .nsm7Bb-HzV7m-LgbsSe-MJoBVe{background:rgba(66,133,244,.08)}.nsm7Bb-HzV7m-LgbsSe:active .nsm7Bb-HzV7m-LgbsSe-MJoBVe,.nsm7Bb-HzV7m-LgbsSe:focus .nsm7Bb-HzV7m-LgbsSe-MJoBVe{background:rgba(66,133,244,.1)}.nsm7Bb-HzV7m-LgbsSe.MFS4be-Ia7Qfc:hover .nsm7Bb-HzV7m-LgbsSe-MJoBVe{background:rgba(255,255,255,.24)}.nsm7Bb-HzV7m-LgbsSe.MFS4be-Ia7Qfc:active .nsm7Bb-HzV7m-LgbsSe-MJoBVe,.nsm7Bb-HzV7m-LgbsSe.MFS4be-Ia7Qfc:focus .nsm7Bb-HzV7m-LgbsSe-MJoBVe{background:rgba(255,255,255,.32)}.nsm7Bb-HzV7m-LgbsSe .n1UuX-DkfjY{-webkit-border-radius:50%;border-radius:50%;display:-webkit-box;display:-webkit-flex;display:flex;height:20px;margin-left:-4px;margin-right:8px;min-width:20px;width:20px}.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-BPrWId{font-family:"Roboto";font-size:12px;text-align:left}.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-BPrWId .ssJRIf,.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-BPrWId .K4efff .fmcmS{overflow:hidden;text-overflow:ellipsis}.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-BPrWId .K4efff{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;color:#5f6368;fill:#5f6368;font-size:11px;font-weight:400}.nsm7Bb-HzV7m-LgbsSe.jVeSEe.MFS4be-Ia7Qfc .nsm7Bb-HzV7m-LgbsSe-BPrWId .K4efff{color:#e8eaed;fill:#e8eaed}@media screen and (prefers-contrast:more){.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-BPrWId .K4efff,.nsm7Bb-HzV7m-LgbsSe.jVeSEe.MFS4be-Ia7Qfc .nsm7Bb-HzV7m-LgbsSe-BPrWId .K4efff{color:#000;fill:#000}}.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-BPrWId .K4efff .Bz112c{height:18px;margin:-3px -3px -3px 2px;min-width:18px;width:18px}.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{-webkit-border-top-left-radius:0;border-top-left-radius:0;-webkit-border-bottom-left-radius:0;border-bottom-left-radius:0;-webkit-border-top-right-radius:3px;border-top-right-radius:3px;-webkit-border-bottom-right-radius:3px;border-bottom-right-radius:3px;margin-left:12px;margin-right:-10px}.nsm7Bb-HzV7m-LgbsSe.jVeSEe.JGcpL-RbRzK .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{-webkit-border-radius:18px;border-radius:18px}.L5Fo6c-sM5MNb{border:0;display:block;left:0;position:relative;top:0}.L5Fo6c-bF1uUb{-webkit-border-radius:4px;border-radius:4px;bottom:0;cursor:pointer;left:0;position:absolute;right:0;top:0}.L5Fo6c-bF1uUb:focus{border:none;outline:none}sentinel{}</style><link id="googleidentityservice" type="text/css" media="all" href="https://accounts.google.com/gsi/style" rel="stylesheet"><meta http-equiv="origin-trial" content="A8o5T4MyEkRZqLA9WeG2XTFdV5tsX2Prg85xyQ+RL1btVuybB1K/EQ+7JUsPK+J32oBMTnsoF9B4A+qTlL6efgQAAABweyJvcmlnaW4iOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb206NDQzIiwiZmVhdHVyZSI6IkZlZENtQnV0dG9uTW9kZSIsImV4cGlyeSI6MTc0NDY3NTIwMCwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ=="><meta http-equiv="origin-trial" content="A0bwwYX3EzD2AQ197RMA+kffyE2vepCTH00bYuzg+GBcNrCLbr5oXzOvpk5eehvvaGr9Mu+/rH9pKPJXR76MngoAAAB2eyJvcmlnaW4iOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb206NDQzIiwiZmVhdHVyZSI6IkZlZENtQ29udGludWVPbkJ1bmRsZSIsImV4cGlyeSI6MTc0NDY3NTIwMCwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ=="></head>
+</head>
 <body class="non-admin">
     <!-- Profile Picture Element -->
     <img id="profile-pic" src="" alt="Profile Picture">
@@ -644,39 +647,37 @@ h1, h2, h3 {
     <!-- Main Content -->
     <main class="main-content">
         <header class="header-content">
-			
-			
-			<!-- Reminders Panel -->
-<div class="reminders-container">
-    <div class="reminders-header">
-        <h2>Upcoming Reminders</h2>
-        <button class="button" onclick="openReminderEditor()" id="add-reminder-btn">+ Add Reminder</button>
-    </div>
-    <div class="reminders-list" id="reminders-list">
-        <!-- Reminders will be added here dynamically -->
-    </div>
-</div>
+            <!-- Reminders Panel -->
+            <div class="reminders-container">
+                <div class="reminders-header">
+                    <h2>Upcoming Reminders</h2>
+                    <button class="button" onclick="openReminderEditor()" id="add-reminder-btn">+ Add Reminder</button>
+                </div>
+                <div class="reminders-list" id="reminders-list">
+                    <!-- Reminders will be added here dynamically -->
+                </div>
+            </div>
 
-<!-- Reminder Editor Modal -->
-<div id="reminder-editor" class="modal">
-    <div class="modal-content">
-        <span class="close-button" onclick="closeReminderEditor()">×</span>
-        <h2 id="reminder-editor-title">Add New Reminder</h2>
-        <input type="text" id="reminder-title" placeholder="Reminder Title">
-        <textarea id="reminder-description" placeholder="Description (optional)"></textarea>
-        <input type="date" id="reminder-date">
-        <select id="reminder-type">
-            <option value="trip">Field Trip</option>
-            <option value="test">Internal</option>
-            <option value="event">External</option>
-            <option value="deadline">Deadline</option>
-        </select>
-        <div class="modal-buttons">
-            <button class="button" onclick="closeReminderEditor()">Cancel</button>
-            <button class="button" id="save-reminder-button" onclick="saveReminder()">Save</button>
-        </div>
-    </div>
-</div>
+            <!-- Reminder Editor Modal -->
+            <div id="reminder-editor" class="modal">
+                <div class="modal-content">
+                    <span class="close-button" onclick="closeReminderEditor()">×</span>
+                    <h2 id="reminder-editor-title">Add New Reminder</h2>
+                    <input type="text" id="reminder-title" placeholder="Reminder Title">
+                    <textarea id="reminder-description" placeholder="Description (optional)"></textarea>
+                    <input type="date" id="reminder-date">
+                    <select id="reminder-type">
+                        <option value="trip">Field Trip</option>
+                        <option value="test">Internal</option>
+                        <option value="event">External</option>
+                        <option value="deadline">Deadline</option>
+                    </select>
+                    <div class="modal-buttons">
+                        <button class="button" onclick="closeReminderEditor()">Cancel</button>
+                        <button class="button" id="save-reminder-button" onclick="saveReminder()">Save</button>
+                    </div>
+                </div>
+            </div>
             <h1 id="current-tab-title">Term 1</h1>
             <button class="button" onclick="openAnnouncementEditor()">Create Announcement</button>
         </header>
@@ -718,6 +719,22 @@ h1, h2, h3 {
     </div>
 
     <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD3cXh1K6k7QZ6Q6Q6Q6Q6Q6Q6Q6Q6Q6Q6",
+            authDomain: "your-project-id.firebaseapp.com",
+            databaseURL: "https://your-project-id.firebaseio.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project-id.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef1234567890abcdef"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+
         // DOM Elements
         const sidebarMenu = document.getElementById('sidebar-menu');
         const tabEditorModal = document.getElementById('tab-editor-modal');
@@ -741,25 +758,46 @@ h1, h2, h3 {
         let currentTabBeingEdited = null;
         let uploadedFiles = [];
         let expandedPost = null;
-        const TABS_KEY = 'customSidebarTabs';
-        const ANNOUNCEMENTS_KEY_PREFIX = 'classroomAnnouncements_';
-        const USER_INFO_KEY = "googleUserInfo";
+        let reminders = [];
+        let currentReminderBeingEdited = null;
         let draggedItem = null;
         
         // Admin configuration
-       const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com']; // Add more admin emails as needed
+        const ADMIN_EMAILS = ['fadekeyvids@gmail.com']; // Add more admin emails as needed
         let isAdmin = false;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             checkUserProfile();
             loadTabs();
+            loadReminders();
             setupDragAndDrop();
+            
+            // Initialize Firebase auth state listener
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    // User is signed in
+                    const userInfo = {
+                        email: user.email,
+                        name: user.displayName,
+                        picture: user.photoURL
+                    };
+                    localStorage.setItem('googleUserInfo', JSON.stringify(userInfo));
+                    
+                    // Check permissions and reload UI
+                    checkUserProfile();
+                    loadTabs(); // Re-render tabs with correct permissions
+                } else {
+                    // User is signed out
+                    localStorage.removeItem('googleUserInfo');
+                    document.body.classList.add('non-admin');
+                }
+            });
         });
 
         // Check and load user profile picture and permissions
         function checkUserProfile() {
-            const storedUserInfo = localStorage.getItem(USER_INFO_KEY);
+            const storedUserInfo = localStorage.getItem('googleUserInfo');
             if (storedUserInfo) {
                 const userInfo = JSON.parse(storedUserInfo);
                 if (userInfo && userInfo.picture) {
@@ -786,7 +824,8 @@ h1, h2, h3 {
         }
 
         function loadTabs() {
-            const storedTabs = localStorage.getItem(TABS_KEY);
+            // For tabs, we'll still use localStorage since they're not shared between users
+            const storedTabs = localStorage.getItem('customSidebarTabs_v2');
             if (storedTabs) {
                 tabs = JSON.parse(storedTabs);
             } else {
@@ -808,7 +847,7 @@ h1, h2, h3 {
         }
 
         function saveTabs() {
-            localStorage.setItem(TABS_KEY, JSON.stringify(tabs));
+            localStorage.setItem('customSidebarTabs_v2', JSON.stringify(tabs));
         }
 
         function renderTabs() {
@@ -941,25 +980,30 @@ h1, h2, h3 {
                     activeLink.classList.add('active');
                 }
                 
-                // Load announcements for this tab
+                // Load announcements for this tab from Firebase
                 loadAnnouncementsForTab(tabId);
             }
         }
 
         function loadAnnouncementsForTab(tabId) {
-            const storedAnnouncements = localStorage.getItem(`${ANNOUNCEMENTS_KEY_PREFIX}${tabId}`);
             postsFeed.innerHTML = '';
             
-            if (storedAnnouncements) {
-                const announcements = JSON.parse(storedAnnouncements);
-                announcements.forEach(announcement => {
-                    postsFeed.appendChild(createPostElement(announcement));
+            // Get announcements from Firebase
+            database.ref(`announcements/${tabId}`).orderByChild('timestamp').once('value')
+                .then(snapshot => {
+                    const announcements = [];
+                    snapshot.forEach(childSnapshot => {
+                        announcements.unshift(childSnapshot.val()); // Add to beginning to show newest first
+                    });
+                    
+                    // Render announcements
+                    announcements.forEach(announcement => {
+                        postsFeed.appendChild(createPostElement(announcement));
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading announcements:', error);
                 });
-            }
-        }
-
-        function saveAnnouncementsForTab(tabId, announcements) {
-            localStorage.setItem(`${ANNOUNCEMENTS_KEY_PREFIX}${tabId}`, JSON.stringify(announcements));
         }
 
         function openTabEditor(tabId = null) {
@@ -1039,31 +1083,36 @@ h1, h2, h3 {
             if (!isAdmin) return;
             event.stopPropagation();
             if (confirm('Are you sure you want to delete this tab and all its announcements?')) {
-                // Delete the tab's announcements
-                localStorage.removeItem(`${ANNOUNCEMENTS_KEY_PREFIX}${tabId}`);
-                
-                // Remove the tab
-                tabs = tabs.filter(t => t.id !== tabId);
-                
-                // Reorder remaining tabs
-                tabs.forEach((tab, index) => {
-                    tab.order = index + 1;
-                });
-                
-                saveTabs();
-                
-                // If we deleted the current tab, switch to the first available tab
-                if (tabId === currentTabId) {
-                    if (tabs.length > 0) {
-                        setActiveTab(tabs[0].id);
-                    } else {
-                        currentTabId = null;
-                        currentTabTitleElement.textContent = 'Classroom';
-                        postsFeed.innerHTML = '';
-                    }
-                }
-                
-                renderTabs();
+                // Delete the tab's announcements from Firebase
+                database.ref(`announcements/${tabId}`).remove()
+                    .then(() => {
+                        // Remove the tab from local storage
+                        tabs = tabs.filter(t => t.id !== tabId);
+                        
+                        // Reorder remaining tabs
+                        tabs.forEach((tab, index) => {
+                            tab.order = index + 1;
+                        });
+                        
+                        saveTabs();
+                        
+                        // If we deleted the current tab, switch to the first available tab
+                        if (tabId === currentTabId) {
+                            if (tabs.length > 0) {
+                                setActiveTab(tabs[0].id);
+                            } else {
+                                currentTabId = null;
+                                currentTabTitleElement.textContent = 'Classroom';
+                                postsFeed.innerHTML = '';
+                            }
+                        }
+                        
+                        renderTabs();
+                    })
+                    .catch(error => {
+                        console.error('Error deleting tab announcements:', error);
+                        alert('Error deleting tab announcements');
+                    });
             }
         }
 
@@ -1081,20 +1130,27 @@ h1, h2, h3 {
             saveButton.textContent = 'Post Announcement';
             
             if (announcementId) {
-                const storedAnnouncements = JSON.parse(localStorage.getItem(`${ANNOUNCEMENTS_KEY_PREFIX}${currentTabId}`) || '[]');
-                const announcementToEdit = storedAnnouncements.find(a => a.id === announcementId);
-                if (announcementToEdit) {
-                    announcementTitleInput.value = announcementToEdit.title;
-                    announcementContentInput.value = announcementToEdit.content;
-                    embedCodeInput.value = announcementToEdit.embedCode || '';
-                    uploadedFiles = announcementToEdit.files;
-                    uploadedFilesDiv.innerHTML = uploadedFiles.map(file => 
-                        `<span>${file.name} <button class="remove-file" onclick="removeTempFile(this.parentNode, '${file.name}')">×</button></span>`
-                    ).join('');
-                    
-                    saveButton.onclick = () => saveEditedAnnouncement(announcementId);
-                    saveButton.textContent = 'Save Changes';
-                }
+                // Load announcement data from Firebase to edit
+                database.ref(`announcements/${currentTabId}/${announcementId}`).once('value')
+                    .then(snapshot => {
+                        const announcementToEdit = snapshot.val();
+                        if (announcementToEdit) {
+                            announcementTitleInput.value = announcementToEdit.title;
+                            announcementContentInput.value = announcementToEdit.content;
+                            embedCodeInput.value = announcementToEdit.embedCode || '';
+                            uploadedFiles = announcementToEdit.files || [];
+                            uploadedFilesDiv.innerHTML = uploadedFiles.map(file => 
+                                `<span>${file.name} <button class="remove-file" onclick="removeTempFile(this.parentNode, '${file.name}')">×</button></span>`
+                            ).join('');
+                            
+                            saveButton.onclick = () => saveEditedAnnouncement(announcementId);
+                            saveButton.textContent = 'Save Changes';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading announcement:', error);
+                        alert('Error loading announcement');
+                    });
             }
         }
 
@@ -1114,69 +1170,77 @@ h1, h2, h3 {
                     title,
                     content,
                     files: [...uploadedFiles],
-                    embedCode
+                    embedCode,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
                 };
                 
-                const storedAnnouncements = JSON.parse(localStorage.getItem(`${ANNOUNCEMENTS_KEY_PREFIX}${currentTabId}`) || '[]');
-                storedAnnouncements.unshift(newAnnouncement);
-                saveAnnouncementsForTab(currentTabId, storedAnnouncements);
-                postsFeed.insertAdjacentElement('afterbegin', createPostElement(newAnnouncement));
-                closeAnnouncementEditor();
+                // Save to Firebase
+                database.ref(`announcements/${currentTabId}/${newAnnouncement.id}`).set(newAnnouncement)
+                    .then(() => {
+                        // Add to the UI
+                        postsFeed.insertAdjacentElement('afterbegin', createPostElement(newAnnouncement));
+                        closeAnnouncementEditor();
+                    })
+                    .catch(error => {
+                        console.error('Error saving announcement:', error);
+                        alert('Error saving announcement');
+                    });
             } else {
                 alert('Please enter a title and either content or embed code for your announcement.');
             }
         }
 
-   		function createPostElement(announcement) {
-    const post = document.createElement('div');
-    post.classList.add('post-card');
-    post.setAttribute('data-id', announcement.id);
-    
-    // Format date
-    const postDate = new Date(parseInt(announcement.id)).toLocaleDateString('en-US', {
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-    
-    // File attachments HTML
-    const filesHtml = announcement.files.map(file => 
-        `<a href="#" class="file-attachment" target="_blank">
-            <i class="file-icon">📄</i> ${file.name}
-        </a>`
-    ).join('');
-    
-    // Actions HTML (for admins only)
-    const actionsHtml = isAdmin ? 
-        `<div class="post-actions">
-            <button class="button" onclick="event.stopPropagation(); editAnnouncement('${announcement.id}')">
-                Edit
-            </button>
-            <button class="button delete-button" onclick="event.stopPropagation(); deleteAnnouncement('${announcement.id}')">
-                Delete
-            </button>
-        </div>` : '';
-    
-    post.innerHTML = `
-        ${actionsHtml}
-        <h3>${announcement.title}</h3>
-        <div class="collapsed-content">${announcement.content}</div>
-        <div class="post-details">
-            <div class="post-content">${announcement.content}</div>
-            ${announcement.embedCode ? 
-                `<div class="embed-container">${announcement.embedCode}</div>` : ''}
-            ${announcement.files.length > 0 ? 
-                `<div class="file-attachments">${filesHtml}</div>` : ''}
-            <div class="post-meta">
-                Posted on ${postDate}
-            </div>
-        </div>`;
-    
-    post.addEventListener('click', () => expandPost(post));
-    return post;
-}
+        function createPostElement(announcement) {
+            const post = document.createElement('div');
+            post.classList.add('post-card');
+            post.setAttribute('data-id', announcement.id);
+            
+            // Format date
+            const postDate = new Date(parseInt(announcement.id)).toLocaleDateString('en-US', {
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            // File attachments HTML
+            const filesHtml = announcement.files ? announcement.files.map(file => 
+                `<a href="#" class="file-attachment" target="_blank">
+                    <i class="file-icon">📄</i> ${file.name}
+                </a>`
+            ).join('') : '';
+            
+            // Actions HTML (for admins only)
+            const actionsHtml = isAdmin ? 
+                `<div class="post-actions">
+                    <button class="button" onclick="event.stopPropagation(); editAnnouncement('${announcement.id}')">
+                        Edit
+                    </button>
+                    <button class="button delete-button" onclick="event.stopPropagation(); deleteAnnouncement('${announcement.id}')">
+                        Delete
+                    </button>
+                </div>` : '';
+            
+            post.innerHTML = `
+                ${actionsHtml}
+                <h3>${announcement.title}</h3>
+                <div class="collapsed-content">${announcement.content}</div>
+                <div class="post-details">
+                    <div class="post-content">${announcement.content}</div>
+                    ${announcement.embedCode ? 
+                        `<div class="embed-container">${announcement.embedCode}</div>` : ''}
+                    ${announcement.files && announcement.files.length > 0 ? 
+                        `<div class="file-attachments">${filesHtml}</div>` : ''}
+                    <div class="post-meta">
+                        Posted on ${postDate}
+                    </div>
+                </div>`;
+            
+            post.addEventListener('click', () => expandPost(post));
+            return post;
+        }
+
         function expandPost(postElement) {
             if (postElement.classList.contains('expanded')) return;
             
@@ -1218,16 +1282,26 @@ h1, h2, h3 {
             const embedCode = embedCodeInput.value.trim();
             
             if (title && (content || embedCode)) {
-                let announcements = JSON.parse(localStorage.getItem(`${ANNOUNCEMENTS_KEY_PREFIX}${currentTabId}`) || '[]');
-                announcements = announcements.map(a => 
-                    a.id === announcementId ? 
-                    { ...a, title, content, embedCode, files: [...uploadedFiles] } : 
-                    a
-                );
+                const updatedAnnouncement = {
+                    id: announcementId,
+                    title,
+                    content,
+                    embedCode,
+                    files: [...uploadedFiles],
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                };
                 
-                saveAnnouncementsForTab(currentTabId, announcements);
-                loadAnnouncementsForTab(currentTabId);
-                closeAnnouncementEditor();
+                // Update in Firebase
+                database.ref(`announcements/${currentTabId}/${announcementId}`).update(updatedAnnouncement)
+                    .then(() => {
+                        // Reload announcements for this tab
+                        loadAnnouncementsForTab(currentTabId);
+                        closeAnnouncementEditor();
+                    })
+                    .catch(error => {
+                        console.error('Error updating announcement:', error);
+                        alert('Error updating announcement');
+                    });
             } else {
                 alert('Please enter a title and either content or embed code for your announcement.');
             }
@@ -1236,14 +1310,19 @@ h1, h2, h3 {
         function deleteAnnouncement(announcementId) {
             if (!isAdmin || !currentTabId) return;
             if (confirm('Are you sure you want to delete this announcement?')) {
-                let announcements = JSON.parse(localStorage.getItem(`${ANNOUNCEMENTS_KEY_PREFIX}${currentTabId}`) || '[]');
-                announcements = announcements.filter(a => a.id !== announcementId);
-                saveAnnouncementsForTab(currentTabId, announcements);
-                
-                const postToRemove = document.querySelector(`.post-card[data-id="${announcementId}"]`);
-                if (postToRemove) {
-                    postToRemove.remove();
-                }
+                // Delete from Firebase
+                database.ref(`announcements/${currentTabId}/${announcementId}`).remove()
+                    .then(() => {
+                        // Remove from UI
+                        const postToRemove = document.querySelector(`.post-card[data-id="${announcementId}"]`);
+                        if (postToRemove) {
+                            postToRemove.remove();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting announcement:', error);
+                        alert('Error deleting announcement');
+                    });
             }
         }
 
@@ -1273,24 +1352,22 @@ h1, h2, h3 {
             if (event.target === tabEditorModal) {
                 closeTabEditor();
             }
+            if (event.target === document.getElementById('reminder-editor')) {
+                closeReminderEditor();
+            }
         };
 
         // Initialize Google Sign-In
         function handleCredentialResponse(response) {
-            // Decode the JWT response
-            const responsePayload = JSON.parse(atob(response.credential.split('.')[1]));
-            
-            // Store user info
-            const userInfo = {
-                email: responsePayload.email,
-                name: responsePayload.name,
-                picture: responsePayload.picture
-            };
-            localStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo));
-            
-            // Check permissions and reload UI
-            checkUserProfile();
-            loadTabs(); // Re-render tabs with correct permissions
+            // Sign in with Firebase using the Google credential
+            const credential = firebase.auth.GoogleAuthProvider.credential(response.credential);
+            auth.signInWithCredential(credential)
+                .then((userCredential) => {
+                    console.log('User signed in:', userCredential.user);
+                })
+                .catch((error) => {
+                    console.error('Error signing in:', error);
+                });
         }
 
         // Initialize Google Sign-In when window loads
@@ -1309,170 +1386,143 @@ h1, h2, h3 {
             // Also display the One Tap dialog
             google.accounts.id.prompt();
         };
-		// Add to your existing variables at the top
-const REMINDERS_KEY = 'classroomReminders';
-let reminders = [];
-let currentReminderBeingEdited = null;
 
-// Add to your DOMContentLoaded event listener
-document.addEventListener('DOMContentLoaded', () => {
-    checkUserProfile();
-    loadTabs();
-    loadReminders(); // Add this line
-    setupDragAndDrop();
-});
-
-// Add these new functions
-function loadReminders() {
-    const storedReminders = localStorage.getItem(REMINDERS_KEY);
-    if (storedReminders) {
-        reminders = JSON.parse(storedReminders);
-        renderReminders();
-    }
-}
-
-function saveReminders() {
-    localStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders));
-}
-
-function renderReminders() {
-    const remindersList = document.getElementById('reminders-list');
-    remindersList.innerHTML = '';
-    
-    // Sort reminders by date (soonest first)
-    const sortedReminders = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date));
-    
-    sortedReminders.forEach(reminder => {
-        const reminderElement = document.createElement('div');
-        reminderElement.className = `reminder-card ${reminder.type}`;
-        reminderElement.dataset.id = reminder.id;
-        
-        const actionsHtml = isAdmin ? 
-            `<div class="reminder-actions">
-                <button class="reminder-action-btn" onclick="editReminder('${reminder.id}')">✏️</button>
-                <button class="reminder-action-btn" onclick="deleteReminder('${reminder.id}')">🗑️</button>
-            </div>` : '';
-        
-        reminderElement.innerHTML = `
-            ${actionsHtml}
-            <div class="reminder-title">${reminder.title}</div>
-            <div class="reminder-date">${formatDate(reminder.date)}</div>
-            ${reminder.description ? `<div class="reminder-description">${reminder.description}</div>` : ''}
-        `;
-        
-        remindersList.appendChild(reminderElement);
-    });
-}
-
-function formatDate(dateString) {
-    const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-}
-
-function openReminderEditor(reminderId = null) {
-    if (!isAdmin) return;
-    document.getElementById('reminder-editor').style.display = 'flex';
-    document.getElementById('reminder-title').value = '';
-    document.getElementById('reminder-description').value = '';
-    document.getElementById('reminder-date').value = '';
-    document.getElementById('reminder-type').value = 'trip';
-    
-    if (reminderId) {
-        currentReminderBeingEdited = reminderId;
-        const reminder = reminders.find(r => r.id === reminderId);
-        if (reminder) {
-            document.getElementById('reminder-editor-title').textContent = 'Edit Reminder';
-            document.getElementById('reminder-title').value = reminder.title;
-            document.getElementById('reminder-description').value = reminder.description || '';
-            document.getElementById('reminder-date').value = reminder.date;
-            document.getElementById('reminder-type').value = reminder.type;
-            document.getElementById('save-reminder-button').textContent = 'Save Changes';
+        // Reminder functions (still using localStorage)
+        function loadReminders() {
+            const storedReminders = localStorage.getItem('classroomReminders_v2');
+            if (storedReminders) {
+                reminders = JSON.parse(storedReminders);
+                renderReminders();
+            }
         }
-    } else {
-        currentReminderBeingEdited = null;
-        document.getElementById('reminder-editor-title').textContent = 'Add New Reminder';
-        document.getElementById('save-reminder-button').textContent = 'Add Reminder';
-        // Set default date to tomorrow
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        document.getElementById('reminder-date').value = tomorrow.toISOString().split('T')[0];
-    }
-}
 
-function closeReminderEditor() {
-    document.getElementById('reminder-editor').style.display = 'none';
-    currentReminderBeingEdited = null;
-}
-
-function saveReminder() {
-    if (!isAdmin) return;
-    const title = document.getElementById('reminder-title').value.trim();
-    const description = document.getElementById('reminder-description').value.trim();
-    const date = document.getElementById('reminder-date').value;
-    const type = document.getElementById('reminder-type').value;
-    
-    if (!title || !date) {
-        alert('Please enter a title and date for the reminder');
-        return;
-    }
-    
-    if (currentReminderBeingEdited) {
-        // Update existing reminder
-        const index = reminders.findIndex(r => r.id === currentReminderBeingEdited);
-        if (index !== -1) {
-            reminders[index] = {
-                id: currentReminderBeingEdited,
-                title,
-                description,
-                date,
-                type
-            };
+        function saveReminders() {
+            localStorage.setItem('classroomReminders_v2', JSON.stringify(reminders));
         }
-    } else {
-        // Add new reminder
-        reminders.push({
-            id: Date.now().toString(),
-            title,
-            description,
-            date,
-            type
-        });
-    }
-    
-    saveReminders();
-    renderReminders();
-    closeReminderEditor();
-}
 
-function editReminder(reminderId) {
-    if (!isAdmin) return;
-    event.stopPropagation();
-    openReminderEditor(reminderId);
-}
+        function renderReminders() {
+            const remindersList = document.getElementById('reminders-list');
+            remindersList.innerHTML = '';
+            
+            // Sort reminders by date (soonest first)
+            const sortedReminders = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            sortedReminders.forEach(reminder => {
+                const reminderElement = document.createElement('div');
+                reminderElement.className = `reminder-card ${reminder.type}`;
+                reminderElement.dataset.id = reminder.id;
+                
+                const actionsHtml = isAdmin ? 
+                    `<div class="reminder-actions">
+                        <button class="reminder-action-btn" onclick="editReminder('${reminder.id}')">✏️</button>
+                        <button class="reminder-action-btn" onclick="deleteReminder('${reminder.id}')">🗑️</button>
+                    </div>` : '';
+                
+                reminderElement.innerHTML = `
+                    ${actionsHtml}
+                    <div class="reminder-title">${reminder.title}</div>
+                    <div class="reminder-date">${formatDate(reminder.date)}</div>
+                    ${reminder.description ? `<div class="reminder-description">${reminder.description}</div>` : ''}
+                `;
+                
+                remindersList.appendChild(reminderElement);
+            });
+        }
 
-function deleteReminder(reminderId) {
-    if (!isAdmin) return;
-    if (confirm('Are you sure you want to delete this reminder?')) {
-        reminders = reminders.filter(r => r.id !== reminderId);
-        saveReminders();
-        renderReminders();
-    }
-}
+        function formatDate(dateString) {
+            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
 
-// Add to your window.onclick function to handle clicking outside reminder modal
-window.onclick = function(event) {
-    if (event.target === announcementEditor) {
-        closeAnnouncementEditor();
-    }
-    if (event.target === tabEditorModal) {
-        closeTabEditor();
-    }
-    if (event.target === document.getElementById('reminder-editor')) {
-        closeReminderEditor();
-    }
-};
-		
+        function openReminderEditor(reminderId = null) {
+            if (!isAdmin) return;
+            document.getElementById('reminder-editor').style.display = 'flex';
+            document.getElementById('reminder-title').value = '';
+            document.getElementById('reminder-description').value = '';
+            document.getElementById('reminder-date').value = '';
+            document.getElementById('reminder-type').value = 'trip';
+            
+            if (reminderId) {
+                currentReminderBeingEdited = reminderId;
+                const reminder = reminders.find(r => r.id === reminderId);
+                if (reminder) {
+                    document.getElementById('reminder-editor-title').textContent = 'Edit Reminder';
+                    document.getElementById('reminder-title').value = reminder.title;
+                    document.getElementById('reminder-description').value = reminder.description || '';
+                    document.getElementById('reminder-date').value = reminder.date;
+                    document.getElementById('reminder-type').value = reminder.type;
+                    document.getElementById('save-reminder-button').textContent = 'Save Changes';
+                }
+            } else {
+                currentReminderBeingEdited = null;
+                document.getElementById('reminder-editor-title').textContent = 'Add New Reminder';
+                document.getElementById('save-reminder-button').textContent = 'Add Reminder';
+                // Set default date to tomorrow
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                document.getElementById('reminder-date').value = tomorrow.toISOString().split('T')[0];
+            }
+        }
 
+        function closeReminderEditor() {
+            document.getElementById('reminder-editor').style.display = 'none';
+            currentReminderBeingEdited = null;
+        }
+
+        function saveReminder() {
+            if (!isAdmin) return;
+            const title = document.getElementById('reminder-title').value.trim();
+            const description = document.getElementById('reminder-description').value.trim();
+            const date = document.getElementById('reminder-date').value;
+            const type = document.getElementById('reminder-type').value;
+            
+            if (!title || !date) {
+                alert('Please enter a title and date for the reminder');
+                return;
+            }
+            
+            if (currentReminderBeingEdited) {
+                // Update existing reminder
+                const index = reminders.findIndex(r => r.id === currentReminderBeingEdited);
+                if (index !== -1) {
+                    reminders[index] = {
+                        id: currentReminderBeingEdited,
+                        title,
+                        description,
+                        date,
+                        type
+                    };
+                }
+            } else {
+                // Add new reminder
+                reminders.push({
+                    id: Date.now().toString(),
+                    title,
+                    description,
+                    date,
+                    type
+                });
+            }
+            
+            saveReminders();
+            renderReminders();
+            closeReminderEditor();
+        }
+
+        function editReminder(reminderId) {
+            if (!isAdmin) return;
+            event.stopPropagation();
+            openReminderEditor(reminderId);
+        }
+
+        function deleteReminder(reminderId) {
+            if (!isAdmin) return;
+            if (confirm('Are you sure you want to delete this reminder?')) {
+                reminders = reminders.filter(r => r.id !== reminderId);
+                saveReminders();
+                renderReminders();
+            }
+        }
     </script>
 
 </body></html>
