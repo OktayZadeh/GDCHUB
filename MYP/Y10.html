@@ -604,15 +604,18 @@ h1, h2, h3 {
     }
 }
     </style>
-    <!-- Firebase SDK -->
+  <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="non-admin">
-    <!-- Profile Picture Element -->
-    <img id="profile-pic" src="" alt="Profile Picture">
+    <!-- Auth Container -->
+    <div id="auth-container" style="position: fixed; top: 20px; right: 20px; z-index: 100;">
+        <img id="profile-pic" src="" alt="Profile Picture" style="display: none; width: 50px; height: 50px; border-radius: 50%; border: 2px solid #007bb5; cursor: pointer;">
+        <div id="google-signin-button" style="display: none;"></div>
+    </div>
 
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -731,6 +734,7 @@ h1, h2, h3 {
         const tabNameInput = document.getElementById('tab-name-input');
         const saveTabButton = document.getElementById('save-tab-button');
         const profilePicElement = document.getElementById('profile-pic');
+        const googleSignInButton = document.getElementById('google-signin-button');
         const currentTabTitleElement = document.getElementById('current-tab-title');
         const announcementEditor = document.getElementById('announcement-editor');
         const postsFeed = document.getElementById('posts-feed');
@@ -757,11 +761,78 @@ h1, h2, h3 {
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            initializeAuth();
             setupFirebaseListeners();
             setupDragAndDrop();
             setupFileUpload();
             setupModalCloseHandlers();
         });
+
+        function initializeAuth() {
+            auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+                .then(() => {
+                    // Initialize Google Sign-In
+                    google.accounts.id.initialize({
+                        client_id: '410647929853-cpc6dkcj5ro6c7d5ombtcgat817nrgia.apps.googleusercontent.com',
+                        callback: handleCredentialResponse
+                    });
+
+                    // Check current auth state
+                    auth.onAuthStateChanged((user) => {
+                        if (user) {
+                            handleSignedInUser(user);
+                        } else {
+                            handleSignedOutUser();
+                        }
+                    });
+                })
+                .catch((error) => {
+                    console.error("Error setting auth persistence:", error);
+                });
+        }
+
+        function handleCredentialResponse(response) {
+            const credential = firebase.auth.GoogleAuthProvider.credential(response.credential);
+            
+            auth.signInWithCredential(credential)
+                .then((userCredential) => {
+                    // User signed in - handled by auth state listener
+                })
+                .catch((error) => {
+                    console.error("Sign in error:", error);
+                    alert("Error signing in. Please try again.");
+                });
+        }
+
+        function handleSignedInUser(user) {
+            profilePicElement.src = user.photoURL || '';
+            profilePicElement.style.display = 'block';
+            googleSignInButton.style.display = 'none';
+            
+            // Check if user is admin
+            if (user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+                isAdmin = true;
+                document.body.classList.remove('non-admin');
+            } else {
+                isAdmin = false;
+                document.body.classList.add('non-admin');
+            }
+        }
+
+        function handleSignedOutUser() {
+            isAdmin = false;
+            document.body.classList.add('non-admin');
+            profilePicElement.style.display = 'none';
+            googleSignInButton.style.display = 'block';
+            
+            // Render the Google Sign-In button
+            google.accounts.id.renderButton(
+                googleSignInButton,
+                { theme: "outline", size: "large" }
+            );
+            
+            google.accounts.id.prompt();
+        }
 
         // Firebase Listeners
         function setupFirebaseListeners() {
@@ -797,34 +868,8 @@ h1, h2, h3 {
             });
         }
 
-        // Check and load user profile picture and permissions
-        function checkUserProfile() {
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    // User is signed in
-                    profilePicElement.src = user.photoURL || '';
-                    profilePicElement.style.display = 'block';
-                    
-                    // Check if user is admin
-                    if (user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())) {
-                        isAdmin = true;
-                        document.body.classList.remove('non-admin');
-                    } else {
-                        isAdmin = false;
-                        document.body.classList.add('non-admin');
-                    }
-                } else {
-                    // No user is signed in
-                    isAdmin = false;
-                    document.body.classList.add('non-admin');
-                    profilePicElement.style.display = 'none';
-                }
-            });
-        }
-
         // Save tabs to Firebase
         function saveTabs() {
-            // Convert array to object with ids as keys
             const tabsObject = {};
             tabs.forEach(tab => {
                 tabsObject[tab.id] = tab;
@@ -841,7 +886,6 @@ h1, h2, h3 {
         function renderAnnouncements(announcements) {
             postsFeed.innerHTML = '';
             
-            // Sort announcements by date (newest first)
             announcements.sort((a, b) => parseInt(b.id) - parseInt(a.id));
             
             announcements.forEach(announcement => {
@@ -851,7 +895,6 @@ h1, h2, h3 {
 
         // Save announcements for specific tab to Firebase
         function saveAnnouncementsForTab(tabId, announcements) {
-            // Convert array to object with ids as keys
             const announcementsObject = {};
             announcements.forEach(announcement => {
                 announcementsObject[announcement.id] = announcement;
@@ -866,7 +909,6 @@ h1, h2, h3 {
 
         // Save reminders to Firebase
         function saveReminders() {
-            // Convert array to object with ids as keys
             const remindersObject = {};
             reminders.forEach(reminder => {
                 remindersObject[reminder.id] = reminder;
@@ -885,7 +927,6 @@ h1, h2, h3 {
             post.classList.add('post-card');
             post.setAttribute('data-id', announcement.id);
             
-            // Format date
             const postDate = new Date(parseInt(announcement.id)).toLocaleDateString('en-US', {
                 year: 'numeric', 
                 month: 'long', 
@@ -894,7 +935,6 @@ h1, h2, h3 {
                 minute: '2-digit'
             });
             
-            // File attachments HTML
             const filesHtml = announcement.files && announcement.files.length > 0 ? 
                 announcement.files.map(file => 
                     `<a href="#" class="file-attachment" target="_blank">
@@ -902,7 +942,6 @@ h1, h2, h3 {
                     </a>`
                 ).join('') : '';
             
-            // Actions HTML (for admins only)
             const actionsHtml = isAdmin ? 
                 `<div class="post-actions">
                     <button class="button" onclick="event.stopPropagation(); editAnnouncement('${announcement.id}')">
@@ -936,7 +975,6 @@ h1, h2, h3 {
         function renderTabs() {
             sidebarMenu.innerHTML = '';
             
-            // Sort tabs by order
             const sortedTabs = [...tabs].sort((a, b) => a.order - b.order);
             
             sortedTabs.forEach(tab => {
@@ -989,7 +1027,6 @@ h1, h2, h3 {
             if (tab) {
                 currentTabTitleElement.textContent = tab.name;
                 
-                // Update active state in sidebar
                 document.querySelectorAll('.sidebar-link').forEach(link => {
                     link.classList.remove('active');
                 });
@@ -999,7 +1036,6 @@ h1, h2, h3 {
                     activeLink.classList.add('active');
                 }
                 
-                // Load announcements for this tab
                 announcementsRef.child(tabId).once('value')
                     .then((snapshot) => {
                         const data = snapshot.val();
@@ -1040,22 +1076,16 @@ h1, h2, h3 {
             this.classList.remove('drop-area');
             
             if (draggedItem !== this) {
-                // Get the IDs of the dragged item and the drop target
                 const draggedId = draggedItem.dataset.tabId;
                 const targetId = this.dataset.tabId;
                 
-                // Find the indexes of these items in the tabs array
                 const draggedIndex = tabs.findIndex(tab => tab.id === draggedId);
                 const targetIndex = tabs.findIndex(tab => tab.id === targetId);
                 
                 if (draggedIndex !== -1 && targetIndex !== -1) {
-                    // Remove the dragged item from its current position
                     const [removed] = tabs.splice(draggedIndex, 1);
-                    
-                    // Insert it before the target item
                     tabs.splice(targetIndex, 0, removed);
                     
-                    // Update the order property based on new positions
                     tabs.forEach((tab, index) => {
                         tab.order = index + 1;
                     });
@@ -1080,7 +1110,6 @@ h1, h2, h3 {
             tabNameInput.value = '';
             
             if (tabId) {
-                // Editing existing tab
                 currentTabBeingEdited = tabId;
                 const tab = tabs.find(t => t.id === tabId);
                 if (tab) {
@@ -1089,7 +1118,6 @@ h1, h2, h3 {
                     saveTabButton.textContent = 'Save Changes';
                 }
             } else {
-                // Adding new tab
                 currentTabBeingEdited = null;
                 document.getElementById('tab-editor-title').textContent = 'Add New Tab';
                 saveTabButton.textContent = 'Add Tab';
@@ -1110,19 +1138,16 @@ h1, h2, h3 {
             }
             
             if (currentTabBeingEdited) {
-                // Update existing tab
                 const tabIndex = tabs.findIndex(t => t.id === currentTabBeingEdited);
                 if (tabIndex !== -1) {
                     tabs[tabIndex].name = tabName;
                     saveTabs();
                     
-                    // Update title if this is the current tab
                     if (currentTabBeingEdited === currentTabId) {
                         currentTabTitleElement.textContent = tabName;
                     }
                 }
             } else {
-                // Create new tab
                 const newTab = {
                     id: 'tab-' + Date.now(),
                     name: tabName,
@@ -1131,8 +1156,6 @@ h1, h2, h3 {
                 
                 tabs.push(newTab);
                 saveTabs();
-                
-                // Set the new tab as active
                 setActiveTab(newTab.id);
             }
             
@@ -1149,20 +1172,16 @@ h1, h2, h3 {
             if (!isAdmin) return;
             event.stopPropagation();
             if (confirm('Are you sure you want to delete this tab and all its announcements?')) {
-                // Delete the tab's announcements
                 announcementsRef.child(tabId).remove();
                 
-                // Remove the tab
                 tabs = tabs.filter(t => t.id !== tabId);
                 
-                // Reorder remaining tabs
                 tabs.forEach((tab, index) => {
                     tab.order = index + 1;
                 });
                 
                 saveTabs();
                 
-                // If we deleted the current tab, switch to the first available tab
                 if (tabId === currentTabId) {
                     if (tabs.length > 0) {
                         setActiveTab(tabs[0].id);
@@ -1338,7 +1357,6 @@ h1, h2, h3 {
         function renderReminders() {
             remindersList.innerHTML = '';
             
-            // Sort reminders by date (soonest first)
             const sortedReminders = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date));
             
             sortedReminders.forEach(reminder => {
@@ -1391,7 +1409,6 @@ h1, h2, h3 {
                 currentReminderBeingEdited = null;
                 document.getElementById('reminder-editor-title').textContent = 'Add New Reminder';
                 document.getElementById('save-reminder-button').textContent = 'Add Reminder';
-                // Set default date to tomorrow
                 const tomorrow = new Date();
                 tomorrow.setDate(tomorrow.getDate() + 1);
                 document.getElementById('reminder-date').value = tomorrow.toISOString().split('T')[0];
@@ -1416,7 +1433,6 @@ h1, h2, h3 {
             }
             
             if (currentReminderBeingEdited) {
-                // Update existing reminder
                 const index = reminders.findIndex(r => r.id === currentReminderBeingEdited);
                 if (index !== -1) {
                     reminders[index] = {
@@ -1428,7 +1444,6 @@ h1, h2, h3 {
                     };
                 }
             } else {
-                // Add new reminder
                 reminders.push({
                     id: Date.now().toString(),
                     title,
@@ -1470,37 +1485,6 @@ h1, h2, h3 {
                 }
             };
         }
-
-        // Initialize Google Sign-In with Firebase
-        function handleCredentialResponse(response) {
-            const credential = firebase.auth.GoogleAuthProvider.credential(response.credential);
-            
-            auth.signInWithCredential(credential)
-                .then((userCredential) => {
-                    // User signed in
-                    checkUserProfile();
-                })
-                .catch((error) => {
-                    console.error("Sign in error:", error);
-                    alert("Error signing in. Please try again.");
-                });
-        }
-
-        // Initialize Google Sign-In when window loads
-        window.onload = function() {
-            google.accounts.id.initialize({
-                client_id: '410647929853-cpc6dkcj5ro6c7d5ombtcgat817nrgia.apps.googleusercontent.com',
-                callback: handleCredentialResponse
-            });
-            
-            google.accounts.id.renderButton(
-                document.getElementById("profile-pic"),
-                { theme: "outline", size: "large" }
-            );
-            
-            google.accounts.id.prompt();
-        };
     </script>
 </body>
 </html>
-
