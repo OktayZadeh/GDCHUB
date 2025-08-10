@@ -604,18 +604,14 @@ h1, h2, h3 {
     }
 }
     </style>
-  <!-- Firebase SDK -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="non-admin">
-    <!-- Auth Container -->
-    <div id="auth-container" style="position: fixed; top: 20px; right: 20px; z-index: 100;">
-        <img id="profile-pic" src="" alt="Profile Picture" style="display: none; width: 50px; height: 50px; border-radius: 50%; border: 2px solid #007bb5; cursor: pointer;">
-        <div id="google-signin-button" style="display: none;"></div>
-    </div>
+    <!-- Profile Picture Element -->
+    <img id="profile-pic" src="" alt="Profile Picture">
 
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -734,7 +730,6 @@ h1, h2, h3 {
         const tabNameInput = document.getElementById('tab-name-input');
         const saveTabButton = document.getElementById('save-tab-button');
         const profilePicElement = document.getElementById('profile-pic');
-        const googleSignInButton = document.getElementById('google-signin-button');
         const currentTabTitleElement = document.getElementById('current-tab-title');
         const announcementEditor = document.getElementById('announcement-editor');
         const postsFeed = document.getElementById('posts-feed');
@@ -761,77 +756,37 @@ h1, h2, h3 {
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            initializeAuth();
+            checkUserProfile();
             setupFirebaseListeners();
             setupDragAndDrop();
             setupFileUpload();
             setupModalCloseHandlers();
         });
 
-        function initializeAuth() {
-            auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-                .then(() => {
-                    // Initialize Google Sign-In
-                    google.accounts.id.initialize({
-                        client_id: '410647929853-cpc6dkcj5ro6c7d5ombtcgat817nrgia.apps.googleusercontent.com',
-                        callback: handleCredentialResponse
-                    });
-
-                    // Check current auth state
-                    auth.onAuthStateChanged((user) => {
-                        if (user) {
-                            handleSignedInUser(user);
-                        } else {
-                            handleSignedOutUser();
-                        }
-                    });
-                })
-                .catch((error) => {
-                    console.error("Error setting auth persistence:", error);
-                });
-        }
-
-        function handleCredentialResponse(response) {
-            const credential = firebase.auth.GoogleAuthProvider.credential(response.credential);
+        // Check and load user profile picture and permissions from localStorage
+        function checkUserProfile() {
+            // Try to get user info from localStorage (set by previous page)
+            const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
             
-            auth.signInWithCredential(credential)
-                .then((userCredential) => {
-                    // User signed in - handled by auth state listener
-                })
-                .catch((error) => {
-                    console.error("Sign in error:", error);
-                    alert("Error signing in. Please try again.");
-                });
-        }
-
-        function handleSignedInUser(user) {
-            profilePicElement.src = user.photoURL || '';
-            profilePicElement.style.display = 'block';
-            googleSignInButton.style.display = 'none';
-            
-            // Check if user is admin
-            if (user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())) {
-                isAdmin = true;
-                document.body.classList.remove('non-admin');
+            if (userInfo && userInfo.picture) {
+                // User is signed in (from previous page)
+                profilePicElement.src = userInfo.picture;
+                profilePicElement.style.display = 'block';
+                
+                // Check if user is admin
+                if (userInfo.email && ADMIN_EMAILS.includes(userInfo.email.toLowerCase())) {
+                    isAdmin = true;
+                    document.body.classList.remove('non-admin');
+                } else {
+                    isAdmin = false;
+                    document.body.classList.add('non-admin');
+                }
             } else {
+                // No user is signed in
                 isAdmin = false;
                 document.body.classList.add('non-admin');
+                profilePicElement.style.display = 'none';
             }
-        }
-
-        function handleSignedOutUser() {
-            isAdmin = false;
-            document.body.classList.add('non-admin');
-            profilePicElement.style.display = 'none';
-            googleSignInButton.style.display = 'block';
-            
-            // Render the Google Sign-In button
-            google.accounts.id.renderButton(
-                googleSignInButton,
-                { theme: "outline", size: "large" }
-            );
-            
-            google.accounts.id.prompt();
         }
 
         // Firebase Listeners
@@ -868,6 +823,46 @@ h1, h2, h3 {
             });
         }
 
+        /* 
+        ALL OTHER FUNCTIONS REMAIN EXACTLY THE SAME AS IN YOUR ORIGINAL CODE:
+        - saveTabs()
+        - renderAnnouncements()
+        - saveAnnouncementsForTab()
+        - saveReminders()
+        - createPostElement()
+        - renderTabs()
+        - setActiveTab()
+        - setupDragAndDrop()
+        - handleDragStart()
+        - handleDragOver()
+        - handleDragLeave()
+        - handleDrop()
+        - handleDragEnd()
+        - openTabEditor()
+        - closeTabEditor()
+        - saveTab()
+        - editTab()
+        - deleteTab()
+        - openAnnouncementEditor()
+        - closeAnnouncementEditor()
+        - postAnnouncement()
+        - expandPost()
+        - collapsePost()
+        - editAnnouncement()
+        - saveEditedAnnouncement()
+        - deleteAnnouncement()
+        - setupFileUpload()
+        - removeTempFile()
+        - renderReminders()
+        - formatDate()
+        - openReminderEditor()
+        - closeReminderEditor()
+        - saveReminder()
+        - editReminder()
+        - deleteReminder()
+        - setupModalCloseHandlers()
+        */
+        
         // Save tabs to Firebase
         function saveTabs() {
             const tabsObject = {};
