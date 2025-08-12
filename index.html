@@ -657,6 +657,24 @@
             return;
         }
         
+        // Check if email is allowed
+        const allowedDomain = "@gdc.school.nz";
+        const allowedExceptions = ["rwt1972@gmail.com", "fadekeyvids@gmail.com"];
+        const userEmail = userInfo.email.toLowerCase();
+        
+        // Check if email is in exceptions or ends with allowed domain
+        const isAllowed = allowedExceptions.includes(userEmail) || 
+                         userEmail.endsWith(allowedDomain);
+        
+        if (!isAllowed) {
+            showError("Access restricted to Glendowie College accounts only");
+            if (button) {
+                button.innerHTML = 'Sign in with Google';
+                button.style.pointerEvents = 'auto';
+            }
+            return;
+        }
+        
         // Store user info in localStorage
         const storedUserInfo = {
             name: userInfo.name,
