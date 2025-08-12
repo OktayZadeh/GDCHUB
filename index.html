@@ -38,7 +38,7 @@
         }
         
         html {
-            background-color: #1d6a76; /* Fallback color */
+            background-color: #1d6a76;
             height: 100%;
         }
         
@@ -48,10 +48,9 @@
             color: var(--text);
             line-height: 1.6;
             position: relative;
-            overflow-x: hidden; /* Prevent horizontal scroll */
+            overflow-x: hidden;
         }
 
-        /* Background with subtle tint overlay */
         body::before {
             content: '';
             position: fixed;
@@ -73,7 +72,6 @@
             100% { transform: scale(1.02); }
         }
 
-        /* Dark overlay */
         body::after {
             content: '';
             position: fixed;
@@ -85,7 +83,6 @@
             z-index: -1;
         }
 
-        /* Enable scrolling on mobile landscape */
         @media screen and (max-width: 768px) and (orientation: landscape) {
             html, body {
                 overflow: auto;
@@ -104,7 +101,6 @@
             }
         }
 
-        /* ========== Enhanced Top Navigation ========== */
         .topbar {
             position: fixed;
             top: 0;
@@ -182,13 +178,12 @@
             font-size: 13px;
         }
 
-        /* ========== Main Login Container ========== */
         .login-container {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            padding-top: 54px; /* Account for topbar height */
+            padding-top: 54px;
             box-sizing: border-box;
             width: 100%;
         }
@@ -286,7 +281,6 @@
             transition: opacity 0.4s ease 0.4s;
         }
 
-        /* ========== Clean Modern Google Sign-In Button ========== */
         .gsi-material-button {
             -moz-user-select: none;
             -webkit-user-select: none;
@@ -363,7 +357,6 @@
             white-space: nowrap;
         }
 
-        /* Loading spinner */
         .loading-spinner {
             display: inline-block;
             width: 16px;
@@ -379,7 +372,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Remove Google's default outline */
         .gsi-material-button div[style*="outline"] {
             outline: none !important;
         }
@@ -388,7 +380,6 @@
             opacity: 1;
         }
 
-        /* Security Badge */
         .security-badge {
             display: inline-flex;
             align-items: center;
@@ -398,7 +389,6 @@
             margin: 6px 0 15px;
         }
 
-        /* Error Message */
         #error-message {
             margin-top: 10px;
             font-size: 14px;
@@ -423,7 +413,6 @@
             line-height: 1.5;
         }
 
-        /* ========== Responsive Adjustments ========== */
         @media (max-width: 768px) {
             .topbar {
                 padding: 0 16px;
@@ -512,7 +501,6 @@
             }
         }
 
-        /* Additional landscape-specific adjustments */
         @media screen and (max-width: 768px) and (orientation: landscape) {
             .login-card {
                 padding: 30px;
@@ -596,6 +584,8 @@
 <script>
     const targetPage = "https://oktayzadeh.github.io/GDCHUB/SubjectSelection.html";
     const USER_INFO_KEY = "googleUserInfo";
+    const AUTH_TOKEN_KEY = "gdcAuthToken";
+    const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
 
     // Function to detect mobile devices
     function isMobileDevice() {
@@ -610,13 +600,11 @@
     // Set up scrolling behavior based on device and orientation
     function setupScrollBehavior() {
         if (isMobileDevice() && isLandscape() && window.innerWidth <= 768) {
-            // Enable scrolling for mobile landscape
             document.body.style.overflow = 'auto';
             document.documentElement.style.overflow = 'auto';
             document.body.style.width = '100%';
             document.documentElement.style.width = '100%';
         } else {
-            // Disable scrolling for all other cases
             document.body.style.overflow = 'hidden';
             document.documentElement.style.overflow = 'hidden';
         }
@@ -683,7 +671,24 @@
         };
         
         try {
+            // Generate a secure auth token with timestamp
+            const authToken = Date.now() + '-' + Math.random().toString(36).substr(2, 16);
+            
+            // Store data
             localStorage.setItem(USER_INFO_KEY, JSON.stringify(storedUserInfo));
+            localStorage.setItem(AUTH_TOKEN_KEY, authToken);
+            
+            // Set secure cookie
+            const cookieOptions = [
+                `gdcAuth=${authToken}`,
+                'path=/',
+                `max-age=${60*60*24*7}`, // 1 week
+                'secure',
+                'samesite=strict'
+            ];
+            document.cookie = cookieOptions.join('; ');
+            
+            // Redirect to target page
             window.location.href = targetPage;
         } catch (error) {
             console.error("Storage error:", error);
@@ -711,8 +716,46 @@
         }, 5000);
     }
 
+    // Check if user is already authenticated
+    function checkExistingAuth() {
+        const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+        if (!authToken) return false;
+        
+        // Verify cookie exists
+        const cookieToken = document.cookie.split('; ')
+            .find(row => row.startsWith('gdcAuth='))
+            ?.split('=')[1];
+        
+        if (!cookieToken || cookieToken !== authToken) {
+            clearAuthData();
+            return false;
+        }
+        
+        // Check session timeout
+        const tokenTimestamp = parseInt(authToken.split('-')[0]);
+        if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) {
+            clearAuthData();
+            return false;
+        }
+        
+        return true;
+    }
+
+    // Clear authentication data
+    function clearAuthData() {
+        localStorage.removeItem(USER_INFO_KEY);
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    }
+
     // Initialize page when loaded
     window.onload = function () {
+        // Redirect if already authenticated
+        if (checkExistingAuth()) {
+            window.location.href = targetPage;
+            return;
+        }
+
         // Set up initial scroll behavior
         setupScrollBehavior();
         
@@ -761,12 +804,9 @@
             const googleBtn = document.querySelector('#signInDiv [role="button"]');
             if (googleBtn) {
                 googleBtn.classList.add('gsi-material-button');
-                
-                // Remove any existing hover transforms
                 googleBtn.style.transform = 'none';
                 googleBtn.style.transition = 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)';
                 
-                // Force Google's icon to be properly aligned
                 const icon = googleBtn.querySelector('img');
                 if (icon) {
                     icon.style.marginRight = '12px';
