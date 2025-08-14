@@ -146,6 +146,47 @@ body {
     border-bottom: 1px solid #ddd;
 }
 
+/* Search Bar Styles */
+.search-container {
+    margin: 15px 0;
+    position: relative;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 15px 10px 40px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: white;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
+    background-repeat: no-repeat;
+    background-position: 15px center;
+    transition: all 0.3s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.search-clear {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #777;
+    cursor: pointer;
+    display: none;
+}
+
+.search-input:not(:placeholder-shown) + .search-clear {
+    display: block;
+}
+
 /* Profile picture styles */
 #profile-pic {
     position: fixed;
@@ -718,6 +759,12 @@ h1, h2, h3 {
             <button class="button" onclick="openAnnouncementEditor()">Create Announcement</button>
         </header>
 
+        <!-- Search Bar -->
+        <div class="search-container">
+            <input type="text" class="search-input" id="announcement-search" placeholder="Search announcements...">
+            <button class="search-clear" onclick="clearSearch()">×</button>
+        </div>
+
         <!-- Announcement Editor Modal -->
         <div id="announcement-editor" class="modal">
             <div class="modal-content">
@@ -938,6 +985,8 @@ h1, h2, h3 {
         const embedInputsContainer = document.getElementById('embed-inputs');
         const saveAnnouncementButton = document.getElementById('save-announcement-button');
         const remindersList = document.getElementById('reminders-list');
+        const announcementSearchInput = document.getElementById('announcement-search');
+        const searchClearButton = document.querySelector('.search-clear');
 
         // Variables
         let tabs = [];
@@ -950,6 +999,7 @@ h1, h2, h3 {
         let draggedItem = null;
         let isAdmin = false;
         let currentAnnouncementBeingEdited = null;
+        let allAnnouncements = []; // Store all announcements for search functionality
 
         // Admin configuration
         const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz' ];
@@ -961,6 +1011,7 @@ h1, h2, h3 {
             setupDragAndDrop();
             setupFileUpload();
             setupModalCloseHandlers();
+            setupSearch();
         });
 
         // Check and load user profile picture and permissions from localStorage
@@ -989,6 +1040,35 @@ h1, h2, h3 {
             }
         }
 
+        // Setup search functionality
+        function setupSearch() {
+            announcementSearchInput.addEventListener('input', filterAnnouncements);
+            searchClearButton.addEventListener('click', clearSearch);
+        }
+
+        function filterAnnouncements() {
+            const searchTerm = announcementSearchInput.value.toLowerCase();
+            
+            if (searchTerm === '') {
+                // If search is empty, show all announcements
+                renderAnnouncements(allAnnouncements);
+                return;
+            }
+            
+            const filtered = allAnnouncements.filter(announcement => {
+                return announcement.title.toLowerCase().includes(searchTerm) || 
+                       announcement.content.toLowerCase().includes(searchTerm);
+            });
+            
+            renderAnnouncements(filtered);
+        }
+
+        function clearSearch() {
+            announcementSearchInput.value = '';
+            renderAnnouncements(allAnnouncements);
+            searchClearButton.style.display = 'none';
+        }
+
         // Firebase Listeners
         function setupFirebaseListeners() {
             // Listen for tabs changes
@@ -1005,9 +1085,21 @@ h1, h2, h3 {
 
             // Listen for announcements changes
             announcementsRef.on('value', (snapshot) => {
-                const allAnnouncements = snapshot.val() || {};
-                if (currentTabId && allAnnouncements[currentTabId]) {
-                    const tabAnnouncements = allAnnouncements[currentTabId];
+                const allAnnouncementsData = snapshot.val() || {};
+                allAnnouncements = [];
+                
+                // Flatten all announcements into a single array for search
+                Object.keys(allAnnouncementsData).forEach(tabId => {
+                    const tabAnnouncements = allAnnouncementsData[tabId];
+                    if (tabAnnouncements) {
+                        Object.values(tabAnnouncements).forEach(announcement => {
+                            allAnnouncements.push(announcement);
+                        });
+                    }
+                });
+                
+                if (currentTabId && allAnnouncementsData[currentTabId]) {
+                    const tabAnnouncements = allAnnouncementsData[currentTabId];
                     const announcementsArray = tabAnnouncements ? Object.values(tabAnnouncements) : [];
                     renderAnnouncements(announcementsArray);
                 } else {
