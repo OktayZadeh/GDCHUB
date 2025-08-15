@@ -464,19 +464,14 @@ textarea {
 
 /* Reminders Styles */
 .reminders-container {
-    position: fixed;
-    top: 0;
-    left: 0;
+    position: sticky; /* or 'fixed' if you want it always visible */
+    top: 10px; /* adjust as needed */
     width: 100%;
-    z-index: 999; /* ensures it stays on top */
-    background: #fff; /* optional, to overlay background if needed */
-    border-radius: 0; /* remove border-radius if you want flush edges */
-    margin-bottom: 0; /* no bottom margin if fixed at top */
-    /* Keep existing styles if needed */
+    z-index: 999;
+    background: #fff;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     padding: 15px;
 }
-
 .reminders-header {
     display: flex;
     justify-content: space-between;
