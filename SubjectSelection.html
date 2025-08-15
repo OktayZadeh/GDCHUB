@@ -247,6 +247,15 @@
             font-weight: 500;
             transition: all 0.2s ease;
         }
+        .dropdown-content {
+    transform: translateY(-5px);
+    opacity: 0;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.dropdown-content.show {
+    transform: translateY(0);
+    opacity: 1;
+}
 
         .dropdown-item:hover {
             background-color: rgba(67, 97, 238, 0.1);
