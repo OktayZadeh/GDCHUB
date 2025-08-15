@@ -27,9 +27,9 @@
             --white: #ffffff;
             
             /* Glass Effect */
-            --glass: rgba(255, 255, 255, 0.98);
+            --glass: rgba(255, 255, 255, 0.95);
             --glass-border: rgba(255, 255, 255, 0.15);
-            --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
             
             /* Card Colors */
             --myp-color: #4cc9f0;
@@ -38,7 +38,7 @@
             --health-color: #f72585;
             
             /* Card Dimensions */
-            --card-width: 300px;
+            --card-width: 280px;
             --card-height: 480px;
             --card-media-height: 160px;
         }
@@ -117,7 +117,7 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 60px;
+            height: 54px;
             background: var(--glass);
             backdrop-filter: blur(16px) saturate(180%);
             -webkit-backdrop-filter: blur(16px) saturate(180%);
@@ -160,23 +160,23 @@
 
         .topbar-links {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
         }
 
         .topbar-button {
-            padding: 8px 16px;
+            padding: 6px 14px;
             background: transparent;
             color: var(--text);
             text-decoration: none;
-            border-radius: 8px;
+            border-radius: 6px;
             font-weight: 500;
-            font-size: 14px;
+            font-size: 13px;
             transition: all 0.2s ease;
             border: 1px solid rgba(0, 0, 0, 0.08);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .topbar-button:hover {
@@ -186,7 +186,7 @@
         }
 
         .topbar-button i {
-            font-size: 14px;
+            font-size: 13px;
         }
 
         /* Profile Dropdown Styles */
@@ -207,7 +207,7 @@
 
         #profile-pic:hover {
             transform: scale(1.1);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         }
 
         .dropdown-content {
@@ -256,13 +256,18 @@
         .dropdown-item i {
             width: 18px;
             text-align: center;
-            color: var(--primary);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: rgba(0, 0, 0, 0.1);
+            margin: 4px 0;
         }
 
         /* ========== Main Content ========== */
         .main-content-container {
             position: fixed;
-            top: 60px;
+            top: 54px;
             bottom: 10px;
             left: 0;
             right: 0;
@@ -276,7 +281,7 @@
 
         .main-content {
             display: flex;
-            gap: 24px;
+            gap: 20px;
             padding: 20px;
             width: max-content;
             max-width: 100%;
@@ -307,8 +312,8 @@
         .subject-card {
             width: var(--card-width);
             min-width: var(--card-width);
-            background: rgba(255, 255, 255, 0.98);
-            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 14px;
             overflow: hidden;
             position: relative;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
@@ -341,7 +346,7 @@
         .subject-card:nth-child(4) { animation-delay: 0.4s; }
 
         .subject-card:hover {
-            transform: translateY(-8px) !important;
+            transform: translateY(-6px) !important;
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
         }
 
@@ -384,7 +389,7 @@
 
         /* Card Content */
         .card-content {
-            padding: 20px;
+            padding: 18px;
             display: flex;
             flex-direction: column;
             gap: 16px;
@@ -405,14 +410,14 @@
         .subject-name {
             font-family: 'Montserrat', sans-serif;
             font-weight: 700;
-            font-size: 20px;
+            font-size: 19px;
             color: var(--dark);
             line-height: 1.3;
             margin: 0;
         }
 
         .subject-icon {
-            font-size: 24px;
+            font-size: 22px;
             color: var(--subject-color);
             flex-shrink: 0;
             margin-top: 3px;
@@ -575,7 +580,6 @@
         @media (max-width: 768px) {
             .topbar {
                 padding: 0 16px;
-                height: 56px;
             }
            
             .topbar-title {
@@ -589,8 +593,8 @@
             .topbar-button {
                 padding: 8px;
                 border-radius: 50%;
-                width: 40px;
-                height: 40px;
+                width: 36px;
+                height: 36px;
                 justify-content: center;
             }
            
@@ -663,6 +667,8 @@
                 <div class="profile-dropdown">
                     <img id="profile-pic" src="" alt="Profile Picture">
                     <div class="dropdown-content" id="dropdown-content">
+                     
+                     
                         <div class="dropdown-item" id="logout-button">
                             <i class="fas fa-sign-out-alt"></i>
                             <span>Log Out</span>
@@ -790,75 +796,75 @@
 
     <script>
         // AUTH CHECK - MUST BE AT TOP OF EVERY PROTECTED PAGE
-        (function() {
-            const USER_INFO_KEY = "googleUserInfo";
-            const AUTH_TOKEN_KEY = "gdcAuthToken";
-            const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
-            const SESSION_TIMEOUT = 30 * 60 * 1000;
+(function() {
+    const USER_INFO_KEY = "googleUserInfo";
+    const AUTH_TOKEN_KEY = "gdcAuthToken";
+    const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
+    const SESSION_TIMEOUT = 30 * 60 * 1000;
+    
+    function checkAuth() {
+        try {
+            const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+            const cookieToken = document.cookie.split('; ')
+                .find(row => row.startsWith('gdcAuth='))
+                ?.split('=')[1];
             
-            function checkAuth() {
-                try {
-                    const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-                    const cookieToken = document.cookie.split('; ')
-                        .find(row => row.startsWith('gdcAuth='))
-                        ?.split('=')[1];
-                    
-                    if (!authToken || !cookieToken || authToken !== cookieToken) {
-                        clearAuthData();
-                        return false;
-                    }
-                    
-                    const tokenTimestamp = parseInt(authToken.split('-')[0]);
-                    if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) {
-                        clearAuthData();
-                        return false;
-                    }
-                    
-                    return true;
-                } catch (error) {
-                    clearAuthData();
-                    return false;
-                }
+            if (!authToken || !cookieToken || authToken !== cookieToken) {
+                clearAuthData();
+                return false;
             }
             
-            function clearAuthData() {
-                localStorage.removeItem(USER_INFO_KEY);
-                localStorage.removeItem(AUTH_TOKEN_KEY);
-                document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+            const tokenTimestamp = parseInt(authToken.split('-')[0]);
+            if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) {
+                clearAuthData();
+                return false;
             }
             
-            if (!checkAuth()) {
-                document.body.innerHTML = `
-                    <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Poppins',sans-serif;z-index:9999;">
-                        <div style="text-align:center;padding:30px;max-width:400px;">
-                            <h2 style="color:#2b2d42;margin-bottom:20px;">Session Expired</h2>
-                            <p style="color:#5f6a7d;margin-bottom:25px;">
-                                Please sign in again. Redirecting to login page...
-                            </p>
-                            <div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;">
-                                <div style="width:100%;height:100%;background:#4361ee;border-radius:2px;animation:progress 2s ease-in-out infinite;"></div>
-                            </div>
-                        </div>
+            return true;
+        } catch (error) {
+            clearAuthData();
+            return false;
+        }
+    }
+    
+    function clearAuthData() {
+        localStorage.removeItem(USER_INFO_KEY);
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    }
+    
+    if (!checkAuth()) {
+        document.body.innerHTML = `
+            <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Poppins',sans-serif;z-index:9999;">
+                <div style="text-align:center;padding:30px;max-width:400px;">
+                    <h2 style="color:#2b2d42;margin-bottom:20px;">Session Expired</h2>
+                    <p style="color:#5f6a7d;margin-bottom:25px;">
+                        Please sign in again. Redirecting to login page...
+                    </p>
+                    <div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;">
+                        <div style="width:100%;height:100%;background:#4361ee;border-radius:2px;animation:progress 2s ease-in-out infinite;"></div>
                     </div>
-                    <style>@keyframes progress {0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}</style>
-                `;
-                setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
-                throw new Error("Authentication required"); // Stop other scripts from executing
+                </div>
+            </div>
+            <style>@keyframes progress {0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}</style>
+        `;
+        setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
+        throw new Error("Authentication required"); // Stop other scripts from executing
+    }
+    
+    // Setup logout buttons if they exist
+    document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.logout-btn')) {
+                e.preventDefault();
+                clearAuthData();
+                window.location.href = LOGIN_PAGE;
             }
-            
-            // Setup logout buttons if they exist
-            document.addEventListener('DOMContentLoaded', function() {
-                document.addEventListener('click', function(e) {
-                    if (e.target.closest('.logout-btn')) {
-                        e.preventDefault();
-                        clearAuthData();
-                        window.location.href = LOGIN_PAGE;
-                    }
-                });
-            });
-        })();
+        });
+    });
+})();
 
-        // REST OF YOUR PAGE'S JAVASCRIPT GOES BELOW THIS LINE
+// REST OF YOUR PAGE'S JAVASCRIPT GOES BELOW THIS LINE
         // Constants
         const USER_INFO_KEY = "googleUserInfo";
         const profilePicElement = document.getElementById('profile-pic');
