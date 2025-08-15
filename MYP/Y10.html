@@ -144,18 +144,13 @@ body {
     margin-bottom: 20px;
     padding-bottom: 20px;
     border-bottom: 1px solid #ddd;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 15px;
 }
 
 /* Search Bar Styles */
 .search-container {
     position: relative;
     width: 300px;
-    margin-left: auto;
+    margin: 15px 0;
 }
 
 .search-input {
@@ -168,8 +163,14 @@ body {
     background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
     background-repeat: no-repeat;
     background-position: 15px center;
+    background-size: 16px 16px;
     transition: all 0.3s;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.search-input::placeholder {
+    color: #999;
+    opacity: 1;
 }
 
 .search-input:focus {
@@ -705,14 +706,8 @@ h1, h2, h3 {
         right: 15px;
     }
     
-    .header-content {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
     .search-container {
         width: 100%;
-        margin-left: 0;
     }
 }
     </style>
@@ -741,17 +736,15 @@ h1, h2, h3 {
     <!-- Main Content -->
     <main class="main-content">
         <header class="header-content">
-            <div>
-                <h1 id="current-tab-title">Classroom</h1>
-                <button class="button" onclick="openAnnouncementEditor()">Create Announcement</button>
-            </div>
-            
-            <!-- Search Bar -->
-            <div class="search-container">
-                <input type="text" class="search-input" id="announcement-search" placeholder="Search announcements...">
-                <button class="search-clear" onclick="clearSearch()">×</button>
-            </div>
+            <h1 id="current-tab-title">Classroom</h1>
+            <button class="button" onclick="openAnnouncementEditor()">Create Announcement</button>
         </header>
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <input type="text" class="search-input" id="announcement-search" placeholder="Search announcements...">
+            <button class="search-clear" onclick="clearSearch()">×</button>
+        </div>
 
         <!-- Reminders Panel -->
         <div class="reminders-container">
@@ -784,7 +777,7 @@ h1, h2, h3 {
                 </div>
             </div>
         </div>
-
+        
         <!-- Announcement Editor Modal -->
         <div id="announcement-editor" class="modal">
             <div class="modal-content">
