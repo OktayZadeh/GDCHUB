@@ -201,13 +201,37 @@
             border-radius: 50%;
             border: 2px solid #007bb5;
             cursor: pointer;
-            transition: transform 0.2s;
-            display: none;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background-color: #f0f0f0;
+        }
+
+        #profile-pic::after {
+            content: '▼';
+            position: absolute;
+            bottom: -12px;
+            font-size: 10px;
+            color: var(--primary);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        #profile-pic:hover::after,
+        #profile-pic[aria-expanded="true"]::after {
+            opacity: 1;
         }
 
         #profile-pic:hover {
-            transform: scale(1.1);
+            transform: scale(1.05);
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #profile-pic[aria-expanded="true"] {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 2px var(--primary);
         }
 
         .dropdown-content {
@@ -224,15 +248,14 @@
             border: 1px solid var(--glass-border);
             z-index: 1001;
             overflow: hidden;
-            transform-origin: top right;
-            transform: scale(0.95);
+            transform: translateY(-5px);
             opacity: 0;
-            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: transform 0.2s ease, opacity 0.2s ease;
         }
 
         .dropdown-content.show {
             display: block;
-            transform: scale(1);
+            transform: translateY(0);
             opacity: 1;
         }
 
@@ -246,20 +269,18 @@
             font-size: 14px;
             font-weight: 500;
             transition: all 0.2s ease;
+            width: 100%;
+            background: none;
+            border: none;
+            text-align: left;
+            cursor: pointer;
         }
-        .dropdown-content {
-    transform: translateY(-5px);
-    opacity: 0;
-    transition: transform 0.2s ease, opacity 0.2s ease;
-}
-.dropdown-content.show {
-    transform: translateY(0);
-    opacity: 1;
-}
 
-        .dropdown-item:hover {
+        .dropdown-item:hover,
+        .dropdown-item:focus {
             background-color: rgba(67, 97, 238, 0.1);
             color: var(--primary);
+            outline: none;
         }
 
         .dropdown-item i {
@@ -632,6 +653,10 @@
             .dropdown-content {
                 min-width: 140px;
             }
+
+            #profile-pic::after {
+                display: none;
+            }
         }
 
         /* Landscape mode for mobile devices */
@@ -670,12 +695,12 @@
                     <i class="fas fa-envelope"></i> <span>Student Portal</span>
                 </a>
                 <div class="profile-dropdown">
-                    <img id="profile-pic" src="" alt="Profile Picture">
+                    <img id="profile-pic" src="" alt="Profile Picture" aria-haspopup="true" aria-expanded="false">
                     <div class="dropdown-content" id="dropdown-content">
-                        <div class="dropdown-item" id="logout-button">
+                        <button class="dropdown-item" id="logout-button">
                             <i class="fas fa-sign-out-alt"></i>
                             <span>Log Out</span>
-                        </div>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -919,21 +944,41 @@
                 }
             }
            
-            profilePicElement.style.display = 'none';
+            // Show a default avatar if no profile picture
+            profilePicElement.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234361ee'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
+            profilePicElement.style.display = 'block';
         }
 
         // Dropdown Menu Handling
         function setupDropdownMenu() {
-            // Toggle dropdown when clicking profile picture
+            // Toggle dropdown on click
             profilePicElement.addEventListener('click', function(e) {
                 e.stopPropagation();
-                dropdownContent.classList.toggle('show');
+                const isExpanded = dropdownContent.classList.toggle('show');
+                profilePicElement.setAttribute('aria-expanded', isExpanded);
             });
 
-            // Close dropdown when clicking anywhere else
+            // Close when clicking outside
             document.addEventListener('click', function(e) {
                 if (!e.target.closest('.profile-dropdown')) {
                     dropdownContent.classList.remove('show');
+                    profilePicElement.setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            // Close on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    dropdownContent.classList.remove('show');
+                    profilePicElement.setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            // Keyboard navigation for dropdown
+            logoutButton.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    logoutButton.click();
                 }
             });
 
