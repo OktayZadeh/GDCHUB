@@ -158,19 +158,18 @@ body {
 
 .search-input {
     width: 100%;
-    padding: 10px 15px 10px 40px;
+    padding: 10px 15px 10px 40px; /* already has left padding for icon */
     border: 1px solid #ddd;
     border-radius: 20px;
     font-size: 14px;
     background-color: white;
     background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
     background-repeat: no-repeat;
-    background-position: 15px center;
+    background-position: 15px center; /* icon positioned at 15px from the left */
     background-size: 16px 16px;
     transition: all 0.3s;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
-
 .search-input::placeholder {
     color: #999;
     opacity: 1;
