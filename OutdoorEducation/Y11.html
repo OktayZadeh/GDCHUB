@@ -738,7 +738,15 @@ h1, h2, h3 {
 
    <!-- Main Content -->
 
-   <div class="reminders-container">
+
+
+<main class="main-content">
+    <header class="header-content">
+        <h1 id="current-tab-title">Classroom</h1>
+        <button class="button" onclick="openAnnouncementEditor()">Create Announcement</button>
+    </header>
+
+        <div class="reminders-container">
         <div class="reminders-header">
             <h2>Upcoming Reminders</h2>
             <button class="button" onclick="openReminderEditor()" id="add-reminder-btn">+ Add Reminder</button>
@@ -747,14 +755,6 @@ h1, h2, h3 {
             <!-- Reminders will be added here dynamically -->
         </div>
     </div>
-
-<main class="main-content">
-    <header class="header-content">
-        <h1 id="current-tab-title">Classroom</h1>
-        <button class="button" onclick="openAnnouncementEditor()">Create Announcement</button>
-    </header>
-
-     
     <!-- Search Bar -->
     <div class="search-container">
         <input type="text" class="search-input" id="announcement-search" placeholder="Search announcements...">
