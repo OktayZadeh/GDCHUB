@@ -648,20 +648,27 @@ function checkAuthStatus() {
             .find(row => row.startsWith('gdcAuth='))
             ?.split('=')[1];
         
-        // If no tokens exist
-        if (!authToken || !cookieToken) {
-            clearAuthData();
-            return false;
+        // 1. Check if tokens exist and match
+        if (!authToken || !cookieToken || authToken !== cookieToken) {
+            return false; // No need to clear data on login page
         }
         
-        // If tokens don't match
-        if (authToken !== cookieToken) {
-            clearAuthData();
-            return false;
-        }
+        // 2. (Optional) Validate token format
+        const isValidToken = (token) => 
+            token && token.startsWith('auth-') && token.length > 20;
         
-        return true;
+        return isValidToken(authToken); // Return true only if valid format
     } catch (error) {
+        console.error("Auth check error:", error);
+        return false;
+    }
+}
+
+// Usage in index.html - redirect if already logged in
+if (checkAuthStatus()) {
+    window.location.href = "https://oktayzadeh.github.io/GDCHUB/SubjectSelection.html";
+}
+ catch (error) {
         console.error("Auth check error:", error);
         clearAuthData();
         return false;
