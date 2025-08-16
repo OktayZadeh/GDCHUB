@@ -585,7 +585,6 @@
 const targetPage = "https://oktayzadeh.github.io/GDCHUB/SubjectSelection.html";
 const USER_INFO_KEY = "googleUserInfo";
 const AUTH_TOKEN_KEY = "gdcAuthToken";
-const SESSION_TIMEOUT = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 // Handle Google Sign-In response
 function handleCredentialResponse(response) {
@@ -624,13 +623,12 @@ function handleCredentialResponse(response) {
         // Generate persistent auth token
         const authToken = `auth-${Date.now()}-${crypto.randomUUID()}`;
         
-        // Store data with 30 day expiration
+        // Store data with no expiration
         localStorage.setItem(USER_INFO_KEY, JSON.stringify(storedUserInfo));
         localStorage.setItem(AUTH_TOKEN_KEY, authToken);
         
-        // Set secure cookie with 30 day expiration
-        const expirationDate = new Date(Date.now() + SESSION_TIMEOUT).toUTCString();
-        document.cookie = `gdcAuth=${authToken}; expires=${expirationDate}; path=/; secure; samesite=strict`;
+        // Set secure cookie with far-future expiration
+        document.cookie = `gdcAuth=${authToken}; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/; secure; samesite=strict`;
         
         // Redirect to target page
         window.location.href = targetPage;
@@ -658,25 +656,6 @@ function checkAuthStatus() {
         
         // If tokens don't match
         if (authToken !== cookieToken) {
-            clearAuthData();
-            return false;
-        }
-        
-        // Check token age
-        const tokenParts = authToken.split('-');
-        if (tokenParts.length < 3) {
-            clearAuthData();
-            return false;
-        }
-        
-        const tokenTimestamp = parseInt(tokenParts[1]);
-        if (isNaN(tokenTimestamp)) {
-            clearAuthData();
-            return false;
-        }
-        
-        // If token is expired
-        if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) {
             clearAuthData();
             return false;
         }
