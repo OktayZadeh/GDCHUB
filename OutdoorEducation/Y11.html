@@ -3,22 +3,209 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classroom</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <style>
-/* Base Layout */
+:root {
+    /* Color palette */
+    --primary: #4361ee;
+    --primary-dark: #3a56d4;
+    --secondary: #3f37c9;
+    --accent: #4895ef;
+    --light-accent: #f0f7ff;
+    --success: #4cc9f0;
+    --warning: #f8961e;
+    --danger: #f72585;
+    --dark: #2b2d42;
+    --medium: #5f6a7d;
+    --light: #f8f9fa;
+    --lighter: #ffffff;
+    --border: #e9ecef;
+    
+    /* Typography */
+    --font-main: 'Inter', sans-serif;
+    --font-secondary: 'Roboto', sans-serif;
+    --text-base: 1rem;
+    --text-sm: 0.875rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    
+    /* Spacing */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-2xl: 3rem;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+    --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
+    
+    /* Border radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-full: 9999px;
+    
+    /* Transitions */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.45s ease;
+}
+
+/* Base Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     margin: 0;
     padding: 0;
-    font-family: 'Roboto', sans-serif;
+    font-family: var(--font-main);
     display: flex;
     min-height: 100vh;
-    background: #f8f9fa;
+    background: var(--light);
     line-height: 1.6;
+    color: var(--dark);
+}
+
+h1, h2, h3, h4 {
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: var(--space-md);
+}
+
+h1 { font-size: var(--text-3xl); }
+h2 { font-size: var(--text-2xl); }
+h3 { font-size: var(--text-xl); }
+h4 { font-size: var(--text-lg); }
+
+p {
+    margin-bottom: var(--space-md);
+    color: var(--medium);
+    line-height: 1.6;
+}
+
+a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+a:hover {
+    color: var(--primary-dark);
+}
+
+/* Button Styles */
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    font-size: var(--text-sm);
+    line-height: 1;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: none;
+    background-color: var(--primary);
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.button:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.button:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
+
+.button.secondary {
+    background-color: white;
+    color: var(--primary);
+    border: 1px solid var(--border);
+}
+
+.button.secondary:hover {
+    background-color: var(--light);
+    border-color: var(--primary);
+}
+
+.button.danger {
+    background-color: var(--danger);
+}
+
+.button.danger:hover {
+    background-color: #e5177b;
+}
+
+.button.small {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--text-sm);
+}
+
+/* Input Styles */
+input[type="text"],
+input[type="date"],
+input[type="file"],
+textarea,
+select {
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: var(--text-base);
+    font-family: var(--font-main);
+    transition: all var(--transition-fast);
+    margin-bottom: var(--space-md);
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+
+textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235f6a7d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--space-md) center;
+    background-size: 16px;
+    padding-right: var(--space-xl);
+}
+
+/* Layout */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-md);
 }
 
 /* Sidebar Styles */
 .sidebar {
-    width: 250px;
-    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    width: 280px;
+    background: linear-gradient(135deg, var(--dark) 0%, var(--secondary) 100%);
     color: white;
     flex-shrink: 0;
     min-height: 100vh;
@@ -26,69 +213,85 @@ body {
     position: fixed;
     top: 0;
     bottom: 0;
+    z-index: 100;
 }
 
 .sidebar-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 15px 20px;
+    gap: var(--space-md);
+    padding: var(--space-lg) var(--space-xl);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: sticky;
+    top: 0;
+    background: inherit;
+    z-index: 10;
 }
 
 .sidebar-logo {
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     object-fit: contain;
+    border-radius: var(--radius-sm);
 }
 
 .sidebar-title {
-    font-size: 18px;
+    font-size: var(--text-lg);
     margin: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-grow: 1;
 }
 
 .sidebar-menu {
     list-style: none;
-    padding: 0;
+    padding: var(--space-md) 0;
     margin: 0;
 }
 
 .sidebar-item {
     position: relative;
-    margin-bottom: 5px;
+    margin-bottom: var(--space-xs);
 }
 
 .sidebar-link {
-    display: block;
-    color: white;
+    display: flex;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.9);
     text-decoration: none;
-    padding: 10px 20px;
-    transition: all 0.3s;
+    padding: var(--space-sm) var(--space-xl);
+    transition: all var(--transition-fast);
     border-left: 3px solid transparent;
+    font-size: var(--text-sm);
 }
 
 .sidebar-link:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.08);
+    color: white;
 }
 
 .sidebar-link.active {
-    background-color: rgba(255, 255, 255, 0.2);
-    border-left: 3px solid #3498db;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-left: 3px solid var(--accent);
+    color: white;
 }
 
 .tab-actions {
     position: absolute;
-    right: 10px;
+    right: var(--space-md);
     top: 50%;
     transform: translateY(-50%);
     display: none;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: var(--radius-md);
+    padding: var(--space-xs);
+    backdrop-filter: blur(4px);
 }
 
 .sidebar-item:hover .tab-actions {
-    display: block;
+    display: flex;
+    gap: var(--space-xs);
 }
 
 .tab-action-btn {
@@ -96,138 +299,162 @@ body {
     border: none;
     color: rgba(255, 255, 255, 0.7);
     cursor: pointer;
-    padding: 2px 5px;
-    font-size: 12px;
-    transition: color 0.2s;
+    padding: var(--space-xs);
+    font-size: var(--text-sm);
+    transition: color var(--transition-fast);
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
 }
 
 .tab-action-btn:hover {
     color: white;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .move-handle {
     cursor: move;
-    margin-right: 5px;
+    margin-right: var(--space-sm);
     color: rgba(255, 255, 255, 0.5);
 }
 
 .add-tab-btn {
-    background: #3498db;
+    background: var(--accent);
     border: none;
     color: white;
-    width: 25px;
-    height: 25px;
-    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-full);
     cursor: pointer;
-    font-size: 16px;
+    font-size: var(--text-lg);
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
 }
 
 .add-tab-btn:hover {
-    background: #2980b9;
+    background: var(--primary);
     transform: scale(1.1);
 }
 
 /* Main Content Styles */
 .main-content {
     flex-grow: 1;
-    padding: 20px;
-    max-width: calc(100% - 250px);
+    padding: var(--space-xl);
+    max-width: calc(100% - 280px);
     box-sizing: border-box;
-    margin-left: 250px;
+    margin-left: 280px;
     display: flex;
     flex-direction: column;
-    gap: 20px; /* Adds consistent spacing between sections */
+    gap: var(--space-xl);
 }
 
 .header-content {
-    margin-bottom: 20px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--border);
 }
 
 /* Search Bar Styles */
 .search-container {
     position: relative;
-    width: 300px;
-    margin: 15px 0;
+    width: 100%;
+    max-width: 400px;
 }
 
 .search-input {
     width: 100%;
-    padding: 10px 15px 10px 40px;
-    border: 1px solid #ddd;
-    border-radius: 20px;
-    font-size: 14px;
+    padding: var(--space-sm) var(--space-md) var(--space-sm) var(--space-xl);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
     background-color: white;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%235f6a7d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
     background-repeat: no-repeat;
-    background-position: 15px center;
+    background-position: var(--space-md) center;
     background-size: 16px 16px;
-    transition: all 0.3s;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-sm);
 }
 
 .search-input::placeholder {
-    color: #999;
+    color: var(--medium);
     opacity: 1;
 }
 
 .search-input:focus {
     outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
 }
 
 .search-clear {
     position: absolute;
-    right: 15px;
+    right: var(--space-md);
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: #777;
+    color: var(--medium);
     cursor: pointer;
     display: none;
-    font-size: 16px;
+    font-size: var(--text-lg);
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+}
+
+.search-clear:hover {
+    background: var(--light);
+    color: var(--danger);
 }
 
 .search-input:not(:placeholder-shown) + .search-clear {
-    display: block;
+    display: flex;
 }
 
 /* Profile picture styles */
 #profile-pic {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    border: 2px solid #007bb5;
+    top: var(--space-md);
+    right: var(--space-md);
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    border: 2px solid var(--accent);
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform var(--transition-fast);
     z-index: 100;
     display: none;
     background-color: white;
+    object-fit: cover;
+    box-shadow: var(--shadow-sm);
 }
 
 #profile-pic:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
 }
 
 /* Drag and Drop Styles */
 .sidebar-item.dragging {
     opacity: 0.5;
-    background-color: rgba(52, 152, 219, 0.2);
+    background-color: rgba(67, 97, 238, 0.2);
 }
 
 .sidebar-item.drop-area {
-    border-top: 2px dashed #3498db;
+    border-top: 2px dashed var(--primary);
 }
 
 /* Modal Styles */
@@ -242,122 +469,122 @@ body {
     z-index: 1000;
     justify-content: center;
     align-items: center;
+    backdrop-filter: blur(4px);
 }
 
 .modal-content {
     background-color: white;
-    padding: 20px;
-    border-radius: 5px;
-    width: 400px;
-    max-width: 90%;
+    padding: var(--space-xl);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 500px;
     max-height: 90vh;
     overflow-y: auto;
+    box-shadow: var(--shadow-xl);
+    animation: modalFadeIn var(--transition-normal) forwards;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .close-button {
-    float: right;
-    font-size: 24px;
+    position: absolute;
+    top: var(--space-md);
+    right: var(--space-md);
+    font-size: var(--text-xl);
     cursor: pointer;
+    color: var(--medium);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    transition: all var(--transition-fast);
+}
+
+.close-button:hover {
+    color: var(--danger);
+    background: var(--light);
 }
 
 .modal h2 {
     margin-top: 0;
-}
-
-input[type="text"], textarea {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-textarea {
-    min-height: 100px;
-    resize: vertical;
-}
-
-.button {
-    background-color: #3498db;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.button:hover {
-    background-color: #2980b9;
+    padding-right: var(--space-lg);
 }
 
 .modal-buttons {
     display: flex;
     justify-content: flex-end;
-    margin-top: 20px;
-    gap: 10px;
+    margin-top: var(--space-lg);
+    gap: var(--space-sm);
 }
 
 /* Post Styles */
 .post-card {
     background: white;
-    border-radius: 5px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+    box-shadow: var(--shadow-sm);
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: all var(--transition-normal) cubic-bezier(0.25, 0.8, 0.25, 1);
     position: relative;
-    animation: fadeIn 0.3s ease-out forwards;
+    animation: fadeIn var(--transition-normal) forwards;
     opacity: 0;
+    border: 1px solid var(--border);
 }
 
 .post-card:hover {
-    box-shadow: 0 14px 28px rgba(0,0,0,0.12), 0 10px 10px rgba(0,0,0,0.10);
+    box-shadow: var(--shadow-md);
     transform: translateY(-2px);
+    border-color: var(--primary);
 }
 
 .post-card.expanded {
     position: fixed;
     top: 0;
-    left: 250px;
+    left: 280px;
     right: 0;
     bottom: 0;
     z-index: 100;
     overflow-y: auto;
     margin: 0;
-    padding: 40px;
+    padding: var(--space-xl);
     background: white;
     border-radius: 0;
     box-shadow: none;
-    transition: all 0.4s ease;
+    transition: all var(--transition-normal) ease;
+    border: none;
 }
 
 .post-card .back-button {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #3498db;
+    top: var(--space-md);
+    right: var(--space-md);
+    background: var(--primary);
     color: white;
     border: none;
-    padding: 10px 15px;
-    border-radius: 4px;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
     cursor: pointer;
     z-index: 101;
+    box-shadow: var(--shadow-sm);
 }
 
 .post-details {
     display: none;
-    margin-top: 15px;
+    margin-top: var(--space-lg);
 }
 
 .embed-container {
-    margin: 15px 0;
-    background: #f9f9f9;
-    padding: 20px;
-    border-radius: 8px;
-    border: 1px solid #eee;
+    margin: var(--space-lg) 0;
+    background: var(--light);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
     width: 100%;
     overflow: hidden;
 }
@@ -366,6 +593,7 @@ textarea {
     width: 100%;
     min-height: 400px;
     border: none;
+    border-radius: var(--radius-sm);
 }
 
 .post-card .collapsed-content {
@@ -375,26 +603,27 @@ textarea {
     overflow: hidden;
     text-overflow: ellipsis;
     margin-bottom: 0;
+    color: var(--medium);
 }
 
 .post-card.expanded .post-details {
     display: block;
-    margin-top: 25px;
-    font-size: 16px;
+    margin-top: var(--space-xl);
+    font-size: var(--text-base);
     line-height: 1.6;
-    color: #555;
+    color: var(--medium);
 }
 
 .post-card.expanded .post-details p {
-    margin-bottom: 20px;
+    margin-bottom: var(--space-lg);
 }
 
 .post-card.expanded h3 {
-    font-size: 28px;
-    color: #2c3e50;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #eee;
+    font-size: var(--text-2xl);
+    color: var(--dark);
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--border);
 }
 
 .post-card:not(.expanded) .delete-button,
@@ -405,97 +634,104 @@ textarea {
 .post-card.expanded .delete-button,
 .post-card.expanded button[onclick^="editAnnouncement"] {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: var(--space-lg);
+    right: var(--space-lg);
     z-index: 10;
 }
 
 .post-card.expanded button[onclick^="editAnnouncement"] {
-    right: 100px;
+    right: 120px;
 }
 
 .file-attachment {
-    display: inline-block;
-    background: #f0f7ff;
-    padding: 10px 15px;
-    border-radius: 6px;
-    margin-right: 10px;
-    margin-bottom: 10px;
-    color: #3498db;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    background: var(--light-accent);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    margin-right: var(--space-sm);
+    margin-bottom: var(--space-sm);
+    color: var(--primary);
     text-decoration: none;
-    transition: all 0.2s;
+    transition: all var(--transition-fast);
+    font-size: var(--text-sm);
+    border: 1px solid rgba(67, 97, 238, 0.1);
 }
 
 .file-attachment:hover {
     background: #e1f0ff;
+    border-color: rgba(67, 97, 238, 0.3);
 }
 
 .post-meta {
     display: flex;
     align-items: center;
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 1px solid #eee;
-    color: #777;
-    font-size: 14px;
+    margin-top: var(--space-xl);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border);
+    color: var(--medium);
+    font-size: var(--text-sm);
 }
 
 .post-actions {
     position: absolute;
-    top: 40px;
-    right: 40px;
+    top: var(--space-lg);
+    right: var(--space-lg);
     display: flex;
-    gap: 10px;
+    gap: var(--space-sm);
 }
 
 .post-actions button {
-    padding: 8px 12px;
-    font-size: 13px;
-    border-radius: 4px;
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--text-sm);
+    border-radius: var(--radius-sm);
 }
 
 .post-actions .delete-button {
-    background: #e74c3c;
+    background: var(--danger);
 }
 
 .post-actions .delete-button:hover {
-    background: #c0392b;
+    background: #e5177b;
 }
 
 /* Reminders Styles */
 .reminders-container {
     background: white;
-    border-radius: 5px;
-    padding: 15px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
 }
 
 .reminders-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: var(--space-lg);
 }
 
 .reminders-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-md);
 }
 
 .reminder-card {
-    background: #f9f9f9;
-    border-left: 4px solid #3498db;
-    padding: 12px;
-    border-radius: 4px;
+    background: white;
+    border-left: 4px solid var(--primary);
+    padding: var(--space-md);
+    border-radius: var(--radius-sm);
     position: relative;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    transition: all var(--transition-normal) cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
 }
 
 .reminder-card:hover {
-    box-shadow: 0 14px 28px rgba(0,0,0,0.12), 0 10px 10px rgba(0,0,0,0.10);
+    box-shadow: var(--shadow-md);
     transform: translateY(-2px);
 }
 
@@ -504,11 +740,11 @@ textarea {
 }
 
 .reminder-card.test {
-    border-left-color: #e74c3c;
+    border-left-color: var(--danger);
 }
 
 .reminder-card.event {
-    border-left-color: #f39c12;
+    border-left-color: var(--warning);
 }
 
 .reminder-card.deadline {
@@ -516,38 +752,51 @@ textarea {
 }
 
 .reminder-title {
-    font-weight: bold;
-    margin-bottom: 5px;
+    font-weight: 600;
+    margin-bottom: var(--space-xs);
+    color: var(--dark);
 }
 
 .reminder-date {
-    font-size: 0.9em;
-    color: #555;
-    margin-bottom: 5px;
+    font-size: var(--text-sm);
+    color: var(--medium);
+    margin-bottom: var(--space-sm);
 }
 
 .reminder-description {
-    font-size: 0.9em;
-    color: #666;
+    font-size: var(--text-sm);
+    color: var(--medium);
+    line-height: 1.5;
 }
 
 .reminder-actions {
     position: absolute;
-    top: 5px;
-    right: 5px;
+    top: var(--space-sm);
+    right: var(--space-sm);
     display: none;
+    background: white;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
 }
 
 .reminder-card:hover .reminder-actions {
-    display: block;
+    display: flex;
 }
 
 .reminder-action-btn {
     background: none;
     border: none;
     cursor: pointer;
-    padding: 2px 5px;
-    font-size: 12px;
+    padding: var(--space-xs);
+    font-size: var(--text-sm);
+    color: var(--medium);
+    transition: all var(--transition-fast);
+}
+
+.reminder-action-btn:hover {
+    color: var(--primary);
+    background: var(--light);
 }
 
 /* Hide editing controls for non-admins */
@@ -561,97 +810,147 @@ body.non-admin #add-reminder-btn {
 }
 
 body.non-admin .sidebar-title {
-    padding-right: 10px;
+    padding-right: var(--space-sm);
 }
 
 /* Typography */
-h1, h2, h3 {
-    font-family: 'Poppins', sans-serif;
-    font-weight: 600;
-}
-
 .post-content {
-    font-size: 16px;
-    line-height: 1.8;
-    color: #444;
+    font-size: var(--text-base);
+    line-height: 1.7;
+    color: var(--medium);
 }
 
 .post-content p {
-    margin-bottom: 1.5em;
+    margin-bottom: var(--space-lg);
 }
 
 /* Input Styles */
 .input-group {
     position: relative;
-    margin: 20px 0;
-}
-
-.input-group input, .input-group textarea {
-    padding: 15px 10px 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
+    margin: var(--space-lg) 0;
 }
 
 .input-group label {
     position: absolute;
-    top: 15px;
-    left: 10px;
-    color: #999;
+    top: var(--space-sm);
+    left: var(--space-md);
+    color: var(--medium);
     pointer-events: none;
-    transition: all 0.2s ease;
+    transition: all var(--transition-fast);
+    font-size: var(--text-sm);
+    background: white;
+    padding: 0 var(--space-xs);
 }
 
 .input-group input:focus + label,
 .input-group input:not(:placeholder-shown) + label,
 .input-group textarea:focus + label,
 .input-group textarea:not(:placeholder-shown) + label {
-    top: 5px;
-    font-size: 12px;
-    color: #3498db;
+    top: -8px;
+    font-size: var(--text-xs);
+    color: var(--primary);
 }
 
 /* Embed Input Styles */
 .embed-input-container {
-    margin: 10px 0;
+    margin: var(--space-md) 0;
 }
 
 .embed-input-group {
-    margin-bottom: 10px;
+    margin-bottom: var(--space-md);
     position: relative;
 }
 
 .embed-code-input {
     width: 100%;
     min-height: 100px;
-    padding: 10px;
-    margin-bottom: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    padding: var(--space-md);
+    margin-bottom: var(--space-sm);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
     resize: vertical;
+    font-family: monospace;
+    font-size: var(--text-sm);
 }
 
 .small-button {
-    padding: 5px 10px;
-    font-size: 12px;
-    margin-left: 5px;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--text-sm);
+    margin-left: var(--space-sm);
 }
 
 .remove-embed-btn {
     position: absolute;
-    right: 5px;
-    top: 5px;
-    background: #e74c3c;
+    right: var(--space-sm);
+    top: var(--space-sm);
+    background: var(--danger);
     color: white;
     border: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-full);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 10px;
+    font-size: var(--text-sm);
+    transition: all var(--transition-fast);
+}
+
+.remove-embed-btn:hover {
+    transform: scale(1.1);
+}
+
+/* Upload area */
+.upload-area {
+    margin: var(--space-md) 0;
+}
+
+.upload-button {
+    display: inline-block;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--light);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-size: var(--text-sm);
+    color: var(--medium);
+}
+
+.upload-button:hover {
+    background: var(--light-accent);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+#uploaded-files {
+    margin-top: var(--space-sm);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+}
+
+#uploaded-files span {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    background: var(--light);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+}
+
+.remove-file {
+    background: none;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    font-size: var(--text-sm);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Animations */
@@ -670,19 +969,34 @@ h1, h2, h3 {
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: var(--light);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 4px;
+    background: var(--medium);
+    border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: var(--dark);
 }
 
 /* Responsive adjustments */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 240px;
+    }
+    
+    .main-content {
+        max-width: calc(100% - 240px);
+        margin-left: 240px;
+    }
+    
+    .post-card.expanded {
+        left: 240px;
+    }
+}
+
 @media (max-width: 768px) {
     body {
         flex-direction: column;
@@ -692,25 +1006,54 @@ h1, h2, h3 {
         width: 100%;
         position: relative;
         min-height: auto;
+        max-height: 60vh;
     }
     
     .main-content {
         max-width: 100%;
         margin-left: 0;
+        padding: var(--space-lg);
     }
     
     .post-card.expanded {
         left: 0;
+        padding: var(--space-lg);
     }
     
     #profile-pic {
         position: absolute;
-        top: 15px;
-        right: 15px;
+        top: var(--space-sm);
+        right: var(--space-sm);
+    }
+    
+    .reminders-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-md);
     }
     
     .search-container {
-        width: 100%;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-content {
+        padding: var(--space-lg);
+    }
+    
+    .post-actions {
+        position: static;
+        margin-top: var(--space-md);
+        justify-content: flex-end;
+    }
+    
+    .post-card.expanded .post-actions {
+        position: absolute;
     }
 }
     </style>
@@ -736,93 +1079,110 @@ h1, h2, h3 {
         </ul>
     </aside>
 
-   <!-- Main Content -->
-
-
-
-<main class="main-content">
-         <div class="reminders-container">
-        <div class="reminders-header">
-            <h2>Upcoming Reminders</h2>
-            <button class="button" onclick="openReminderEditor()" id="add-reminder-btn">+ Add Reminder</button>
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="reminders-container">
+            <div class="reminders-header">
+                <h2>Upcoming Reminders</h2>
+                <button class="button" onclick="openReminderEditor()" id="add-reminder-btn">+ Add Reminder</button>
+            </div>
+            <div class="reminders-list" id="reminders-list">
+                <!-- Reminders will be added here dynamically -->
+            </div>
         </div>
-        <div class="reminders-list" id="reminders-list">
-            <!-- Reminders will be added here dynamically -->
+        
+        <header class="header-content">
+            <h1 id="current-tab-title">Classroom</h1>
+            <button class="button" onclick="openAnnouncementEditor()">Create Announcement</button>
+        </header>
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <input type="text" class="search-input" id="announcement-search" placeholder="Search announcements...">
+            <button class="search-clear" onclick="clearSearch()">×</button>
         </div>
-    </div>
-    <header class="header-content">
-        <h1 id="current-tab-title">Classroom</h1>
-        <button class="button" onclick="openAnnouncementEditor()">Create Announcement</button>
-    </header>
 
-   
-    <!-- Search Bar -->
-    <div class="search-container">
-        <input type="text" class="search-input" id="announcement-search" placeholder="Search announcements...">
-        <button class="search-clear" onclick="clearSearch()">×</button>
-    </div>
-        <!-- Reminders Panel - MOVED TO TOP -->
+        <!-- Posts Feed -->
+        <div class="classroom-info">
+            <div class="posts-feed" id="posts-feed"></div>
+        </div>
+    </main>
 
-
-
-    <!-- Posts Feed -->
-    <div class="classroom-info">
-        <div class="posts-feed" id="posts-feed"></div>
-    </div>
-</main>
-
-        <!-- Reminder Editor Modal -->
-        <div id="reminder-editor" class="modal">
-            <div class="modal-content">
-                <span class="close-button" onclick="closeReminderEditor()">×</span>
-                <h2 id="reminder-editor-title">Add New Reminder</h2>
-                <input type="text" id="reminder-title" placeholder="Reminder Title">
-                <textarea id="reminder-description" placeholder="Description (optional)"></textarea>
+    <!-- Reminder Editor Modal -->
+    <div id="reminder-editor" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeReminderEditor()">×</span>
+            <h2 id="reminder-editor-title">Add New Reminder</h2>
+            <div class="input-group">
+                <input type="text" id="reminder-title" placeholder=" ">
+                <label>Reminder Title</label>
+            </div>
+            <div class="input-group">
+                <textarea id="reminder-description" placeholder=" "></textarea>
+                <label>Description (optional)</label>
+            </div>
+            <div class="input-group">
                 <input type="date" id="reminder-date">
+                <label>Date</label>
+            </div>
+            <div class="input-group">
                 <select id="reminder-type">
                     <option value="trip">Field Trip</option>
                     <option value="test">Internal</option>
                     <option value="event">External</option>
                     <option value="deadline">Deadline</option>
                 </select>
-                <div class="modal-buttons">
-                    <button class="button" onclick="closeReminderEditor()">Cancel</button>
-                    <button class="button" id="save-reminder-button" onclick="saveReminder()">Save</button>
-                </div>
+                <label>Type</label>
+            </div>
+            <div class="modal-buttons">
+                <button class="button secondary" onclick="closeReminderEditor()">Cancel</button>
+                <button class="button" id="save-reminder-button" onclick="saveReminder()">Save</button>
             </div>
         </div>
-        
-        <!-- Announcement Editor Modal -->
-        <div id="announcement-editor" class="modal">
-            <div class="modal-content">
-                <span class="close-button" onclick="closeAnnouncementEditor()">×</span>
-                <h2>Create New Announcement</h2>
-                <input type="text" id="announcement-title" placeholder="Announcement Title">
-                <textarea id="announcement-content" placeholder="Write your announcement here..."></textarea>
-                <div class="upload-area">
-                    <label for="file-upload" class="upload-button">Upload Files</label>
-                    <input type="file" id="file-upload" multiple style="display:none;">
-                    <div id="uploaded-files"></div>
+    </div>
+    
+    <!-- Announcement Editor Modal -->
+    <div id="announcement-editor" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeAnnouncementEditor()">×</span>
+            <h2>Create New Announcement</h2>
+            <div class="input-group">
+                <input type="text" id="announcement-title" placeholder=" ">
+                <label>Announcement Title</label>
+            </div>
+            <div class="input-group">
+                <textarea id="announcement-content" placeholder=" "></textarea>
+                <label>Write your announcement here...</label>
+            </div>
+            <div class="upload-area">
+                <label for="file-upload" class="upload-button">Upload Files</label>
+                <input type="file" id="file-upload" multiple style="display:none;">
+                <div id="uploaded-files"></div>
+            </div>
+            <div class="embed-input-container" id="embed-inputs">
+                <div class="embed-input-group">
+                    <textarea class="embed-code-input" placeholder="Paste embed code for Google Slides, Docs, etc. here (optional)"></textarea>
+                    <button class="button small-button" onclick="addEmbedInput()">+ Add Another</button>
                 </div>
-                <div class="embed-input-container" id="embed-inputs">
-                    <div class="embed-input-group">
-                        <textarea class="embed-code-input" placeholder="Paste embed code for Google Slides, Docs, etc. here (optional)"></textarea>
-                        <button class="button small-button" onclick="addEmbedInput()">+ Add Another</button>
-                    </div>
-                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="button secondary" onclick="closeAnnouncementEditor()">Cancel</button>
                 <button class="button" id="save-announcement-button">Post Announcement</button>
             </div>
         </div>
-
+    </div>
 
     <!-- Tab Editor Modal -->
     <div id="tab-editor-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeTabEditor()">×</span>
             <h2 id="tab-editor-title">Add New Tab</h2>
-            <input type="text" id="tab-name-input" placeholder="Tab Name">
+            <div class="input-group">
+                <input type="text" id="tab-name-input" placeholder=" ">
+                <label>Tab Name</label>
+            </div>
             <div class="modal-buttons">
-                <button class="button" onclick="closeTabEditor()">Cancel</button>
+                <button class="button secondary" onclick="closeTabEditor()">Cancel</button>
                 <button class="button" id="save-tab-button" onclick="saveTab()">Save</button>
             </div>
         </div>
@@ -869,7 +1229,7 @@ h1, h2, h3 {
     
     if (!checkAuth()) {
         document.body.innerHTML = `
-            <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Poppins',sans-serif;z-index:9999;">
+            <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Inter',sans-serif;z-index:9999;">
                 <div style="text-align:center;padding:30px;max-width:400px;">
                     <h2 style="color:#2b2d42;margin-bottom:20px;">Session Expired</h2>
                     <p style="color:#5f6a7d;margin-bottom:25px;">
@@ -899,76 +1259,6 @@ h1, h2, h3 {
 })();
 
 // REST OF YOUR PAGE'S JAVASCRIPT GOES BELOW THIS LINE
-        // AUTH CHECK - MUST BE AT TOP OF EVERY PROTECTED PAGE
-(function() {
-    const USER_INFO_KEY = "googleUserInfo";
-    const AUTH_TOKEN_KEY = "gdcAuthToken";
-    const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
-    const SESSION_TIMEOUT = 30 * 60 * 1000;
-    
-    function checkAuth() {
-        try {
-            const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-            const cookieToken = document.cookie.split('; ')
-                .find(row => row.startsWith('gdcAuth='))
-                ?.split('=')[1];
-            
-            if (!authToken || !cookieToken || authToken !== cookieToken) {
-                clearAuthData();
-                return false;
-            }
-            
-            const tokenTimestamp = parseInt(authToken.split('-')[0]);
-            if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) {
-                clearAuthData();
-                return false;
-            }
-            
-            return true;
-        } catch (error) {
-            clearAuthData();
-            return false;
-        }
-    }
-    
-    function clearAuthData() {
-        localStorage.removeItem(USER_INFO_KEY);
-        localStorage.removeItem(AUTH_TOKEN_KEY);
-        document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    }
-    
-    if (!checkAuth()) {
-        document.body.innerHTML = `
-            <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Poppins',sans-serif;z-index:9999;">
-                <div style="text-align:center;padding:30px;max-width:400px;">
-                    <h2 style="color:#2b2d42;margin-bottom:20px;">Session Expired</h2>
-                    <p style="color:#5f6a7d;margin-bottom:25px;">
-                        Please sign in again. Redirecting to login page...
-                    </p>
-                    <div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;">
-                        <div style="width:100%;height:100%;background:#4361ee;border-radius:2px;animation:progress 2s ease-in-out infinite;"></div>
-                    </div>
-                </div>
-            </div>
-            <style>@keyframes progress {0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}</style>
-        `;
-        setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
-        throw new Error("Authentication required"); // Stop other scripts from executing
-    }
-    
-    // Setup logout buttons if they exist
-    document.addEventListener('DOMContentLoaded', function() {
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('.logout-btn')) {
-                e.preventDefault();
-                clearAuthData();
-                window.location.href = LOGIN_PAGE;
-            }
-        });
-    });
-})();
-
-
         // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCSTEJ3LevxY2_rlGROzajNnNBrVG3oRR4",
@@ -1024,7 +1314,7 @@ h1, h2, h3 {
         let currentTabAnnouncements = []; // Store announcements for current tab
 
         // Admin configuration
-        const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz' ];
+        const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
