@@ -823,30 +823,7 @@
     </div>
 
 <script>
-    // TEMPORARY DEBUGGER - REMOVE AFTER TESTING
-console.log("=== AUTH DEBUGGER ACTIVATED ===");
-const debugAuthCheck = () => {
-  const authToken = localStorage.getItem('gdcAuthToken');
-  const cookieToken = document.cookie.match(/gdcAuth=([^;]+)/)?.[1];
-  
-  console.group("[Auth Check]");
-  console.log("LocalStorage Token:", authToken);
-  console.log("Cookie Token:", cookieToken);
-  console.log("Tokens Match:", authToken === cookieToken);
-  console.groupEnd();
-
-  if (!authToken || !cookieToken || authToken !== cookieToken) {
-    console.error("AUTH FAILED! Redirecting to login...");
-    localStorage.clear();
-    document.cookie = 'gdcAuth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
-    window.location.href = "https://oktayzadeh.github.io/GDCHUB/";
-    return false;
-  }
-  return true;
-};
-
-// Force check immediately
-debugAuthCheck();
+ 
 // ========== PERSISTENT AUTHENTICATION SYSTEM ==========
 (function() {
     // Configuration constants
@@ -868,24 +845,29 @@ debugAuthCheck();
     }
 
     function checkAuthStatus() {
-        try {
-            const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-            const cookieToken = getCookieToken();
-            
-            // If no tokens exist
-            if (!authToken || !cookieToken) {
-                clearAuthData();
-                return false;
-            }
-            
-            // If tokens don't match
-            if (authToken !== cookieToken) {
-                clearAuthData();
-                return false;
-            }
-            
-            return true;
-        } catch (error) {
+  const authToken = localStorage.getItem('gdcAuthToken');
+  const cookieToken = document.cookie.match(/gdcAuth=([^;]+)/)?.[1];
+
+  // 1. Check if tokens exist and match
+  if (!authToken || !cookieToken || authToken !== cookieToken) {
+    clearAuthData();
+    window.location.href = "https://oktayzadeh.github.io/GDCHUB/";
+    return false;
+  }
+
+  // 2. Validate token format (e.g., "auth-1234567890-abc123")
+  const isValidFormat = (token) => 
+    token && token.startsWith('auth-') && token.length > 20;
+
+  if (!isValidFormat(authToken)) {
+    clearAuthData();
+    window.location.href = "https://oktayzadeh.github.io/GDCHUB/";
+    return false;
+  }
+
+  return true; // All checks passed
+}
+catch (error) {
             console.error("Auth check error:", error);
             clearAuthData();
             return false;
