@@ -6,20 +6,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <style>
 :root {
-    /* Original blue color scheme */
-    --primary: #3498db;
-    --primary-dark: #2980b9;
-    --secondary: #2c3e50;
-    --accent: #3498db;
+    /* Color palette */
+    --primary: #4361ee;
+    --primary-dark: #3a56d4;
+    --secondary: #3f37c9;
+    --accent: #4895ef;
     --light-accent: #f0f7ff;
-    --success: #2ecc71;
-    --warning: #f39c12;
-    --danger: #e74c3c;
-    --dark: #2c3e50;
-    --medium: #7f8c8d;
+    --success: #4cc9f0;
+    --warning: #f8961e;
+    --danger: #f72585;
+    --dark: #2b2d42;
+    --medium: #5f6a7d;
     --light: #f8f9fa;
     --lighter: #ffffff;
-    --border: #ecf0f1;
+    --border: #e9ecef;
     
     /* Typography */
     --font-main: 'Inter', sans-serif;
@@ -147,7 +147,7 @@ a:hover {
 }
 
 .button.danger:hover {
-    background-color: #c0392b;
+    background-color: #e5177b;
 }
 
 .button.small {
@@ -177,7 +177,7 @@ textarea:focus,
 select:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
 }
 
 textarea {
@@ -187,7 +187,7 @@ textarea {
 
 select {
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237f8c8d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235f6a7d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right var(--space-md) center;
     background-size: 16px;
@@ -205,7 +205,7 @@ select {
 /* Sidebar Styles */
 .sidebar {
     width: 280px;
-    background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+    background: linear-gradient(135deg, var(--dark) 0%, var(--secondary) 100%);
     color: white;
     flex-shrink: 0;
     min-height: 100vh;
@@ -338,7 +338,7 @@ select {
 }
 
 .add-tab-btn:hover {
-    background: var(--primary-dark);
+    background: var(--primary);
     transform: scale(1.1);
 }
 
@@ -377,7 +377,7 @@ select {
     border-radius: var(--radius-full);
     font-size: var(--text-sm);
     background-color: white;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%237f8c8d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%235f6a7d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
     background-repeat: no-repeat;
     background-position: var(--space-md) center;
     background-size: 16px 16px;
@@ -393,7 +393,7 @@ select {
 .search-input:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
 }
 
 .search-clear {
@@ -450,7 +450,7 @@ select {
 /* Drag and Drop Styles */
 .sidebar-item.dragging {
     opacity: 0.5;
-    background-color: rgba(52, 152, 219, 0.2);
+    background-color: rgba(67, 97, 238, 0.2);
 }
 
 .sidebar-item.drop-area {
@@ -614,9 +614,8 @@ select {
     color: var(--medium);
 }
 
-.post-card.expanded .post-content {
+.post-card.expanded .post-details p {
     margin-bottom: var(--space-lg);
-    white-space: pre-wrap;
 }
 
 .post-card.expanded h3 {
@@ -632,17 +631,16 @@ select {
     display: none !important;
 }
 
-.post-card.expanded .post-actions {
-    position: fixed;
-    top: var(--space-md);
-    right: 120px;
-    z-index: 101;
-    display: flex;
-    gap: var(--space-sm);
+.post-card.expanded .delete-button,
+.post-card.expanded button[onclick^="editAnnouncement"] {
+    position: absolute;
+    top: var(--space-lg);
+    right: var(--space-lg);
+    z-index: 10;
 }
 
-.post-card.expanded .delete-button {
-    right: var(--space-md);
+.post-card.expanded button[onclick^="editAnnouncement"] {
+    right: 120px;
 }
 
 .file-attachment {
@@ -658,12 +656,12 @@ select {
     text-decoration: none;
     transition: all var(--transition-fast);
     font-size: var(--text-sm);
-    border: 1px solid rgba(52, 152, 219, 0.1);
+    border: 1px solid rgba(67, 97, 238, 0.1);
 }
 
 .file-attachment:hover {
     background: #e1f0ff;
-    border-color: rgba(52, 152, 219, 0.3);
+    border-color: rgba(67, 97, 238, 0.3);
 }
 
 .post-meta {
@@ -674,6 +672,28 @@ select {
     border-top: 1px solid var(--border);
     color: var(--medium);
     font-size: var(--text-sm);
+}
+
+.post-actions {
+    position: absolute;
+    top: var(--space-lg);
+    right: var(--space-lg);
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.post-actions button {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--text-sm);
+    border-radius: var(--radius-sm);
+}
+
+.post-actions .delete-button {
+    background: var(--danger);
+}
+
+.post-actions .delete-button:hover {
+    background: #e5177b;
 }
 
 /* Reminders Styles */
@@ -716,7 +736,7 @@ select {
 }
 
 .reminder-card.trip {
-    border-left-color: var(--success);
+    border-left-color: #2ecc71;
 }
 
 .reminder-card.test {
@@ -798,7 +818,10 @@ body.non-admin .sidebar-title {
     font-size: var(--text-base);
     line-height: 1.7;
     color: var(--medium);
-    white-space: pre-wrap;
+}
+
+.post-content p {
+    margin-bottom: var(--space-lg);
 }
 
 /* Input Styles */
@@ -1016,10 +1039,6 @@ body.non-admin .sidebar-title {
     .search-container {
         max-width: 100%;
     }
-    
-    .post-card.expanded .post-actions {
-        right: var(--space-md);
-    }
 }
 
 @media (max-width: 480px) {
@@ -1027,13 +1046,14 @@ body.non-admin .sidebar-title {
         padding: var(--space-lg);
     }
     
-    .post-card.expanded .post-actions {
-        top: 70px;
-        right: var(--space-md);
+    .post-actions {
+        position: static;
+        margin-top: var(--space-md);
+        justify-content: flex-end;
     }
     
-    .post-card.expanded .back-button {
-        top: 70px;
+    .post-card.expanded .post-actions {
+        position: absolute;
     }
 }
     </style>
@@ -1516,6 +1536,7 @@ body.non-admin .sidebar-title {
                 <h3>${announcement.title}</h3>
                 <div class="collapsed-content">${announcement.content}</div>
                 <div class="post-details">
+                    <div class="post-content">${announcement.content}</div>
                     ${embedHtml}
                     ${filesHtml ? 
                         `<div class="file-attachments">${filesHtml}</div>` : ''}
@@ -1871,13 +1892,11 @@ body.non-admin .sidebar-title {
             if (expandedPost) {
                 expandedPost.classList.remove('expanded');
                 expandedPost.querySelector('.back-button')?.remove();
-                document.querySelector('.post-actions')?.remove();
             }
             
             postElement.classList.add('expanded');
             expandedPost = postElement;
             
-            // Create back button
             const backButton = document.createElement('button');
             backButton.className = 'back-button';
             backButton.textContent = '← Back';
@@ -1885,32 +1904,13 @@ body.non-admin .sidebar-title {
                 e.stopPropagation();
                 collapsePost(postElement);
             });
-            document.body.appendChild(backButton);
             
-            // Move admin buttons if admin
-            if (isAdmin) {
-                const announcementId = postElement.getAttribute('data-id');
-                const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'post-actions';
-                actionsDiv.innerHTML = `
-                    <button class="button" onclick="event.stopPropagation(); editAnnouncement('${announcementId}')">
-                        Edit
-                    </button>
-                    <button class="button delete-button" onclick="event.stopPropagation(); deleteAnnouncement('${announcementId}')">
-                        Delete
-                    </button>
-                `;
-                document.body.appendChild(actionsDiv);
-            }
-            
-            // Scroll to top
-            window.scrollTo(0, 0);
+            postElement.appendChild(backButton);
         }
 
         function collapsePost(postElement) {
             postElement.classList.remove('expanded');
-            document.querySelector('.back-button')?.remove();
-            document.querySelector('.post-actions')?.remove();
+            postElement.querySelector('.back-button')?.remove();
             expandedPost = null;
         }
 
