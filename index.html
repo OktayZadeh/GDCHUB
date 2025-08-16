@@ -582,245 +582,332 @@
 </div>
 
 <script>
-    const targetPage = "https://oktayzadeh.github.io/GDCHUB/SubjectSelection.html";
-    const USER_INFO_KEY = "googleUserInfo";
-    const AUTH_TOKEN_KEY = "gdcAuthToken";
-    const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
+  const targetPage = "https://oktayzadeh.github.io/GDCHUB/SubjectSelection.html";
+const USER_INFO_KEY = "googleUserInfo";
+const AUTH_TOKEN_KEY = "gdcAuthToken";
+const REFRESH_TOKEN_KEY = "gdcRefreshToken";
+const REMEMBER_ME_KEY = "gdcRememberMe";
+const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+const REMEMBER_ME_TIMEOUT = 30 * 24 * 60 * 60 * 1000; // 30 days
 
-    // Function to detect mobile devices
-    function isMobileDevice() {
-        return (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('IEMobile') !== -1);
+// Function to detect mobile devices
+function isMobileDevice() {
+    return (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('IEMobile') !== -1);
+}
+
+// Function to detect landscape orientation
+function isLandscape() {
+    return window.matchMedia("(orientation: landscape)").matches;
+}
+
+// Set up scrolling behavior based on device and orientation
+function setupScrollBehavior() {
+    if (isMobileDevice() && isLandscape() && window.innerWidth <= 768) {
+        document.body.style.overflow = 'auto';
+        document.documentElement.style.overflow = 'auto';
+        document.body.style.width = '100%';
+        document.documentElement.style.width = '100%';
+    } else {
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
     }
+}
 
-    // Function to detect landscape orientation
-    function isLandscape() {
-        return window.matchMedia("(orientation: landscape)").matches;
+// Decode JWT token to get user information
+function decodeJwtResponse(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        return JSON.parse(jsonPayload);
+    } catch (error) {
+        console.error("Error decoding JWT:", error);
+        showError("Authentication error. Please try again.");
+        return null;
     }
+}
 
-    // Set up scrolling behavior based on device and orientation
-    function setupScrollBehavior() {
-        if (isMobileDevice() && isLandscape() && window.innerWidth <= 768) {
-            document.body.style.overflow = 'auto';
-            document.documentElement.style.overflow = 'auto';
-            document.body.style.width = '100%';
-            document.documentElement.style.width = '100%';
-        } else {
-            document.body.style.overflow = 'hidden';
-            document.documentElement.style.overflow = 'hidden';
-        }
+// Generate secure token
+function generateToken(type = 'auth') {
+    return `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 16)}`;
+}
+
+// Handle Google Sign-In response
+function handleCredentialResponse(response) {
+    const button = document.querySelector('#signInDiv [role="button"]');
+    if (button) {
+        button.innerHTML = '<div class="loading-spinner"></div> Authenticating...';
+        button.style.pointerEvents = 'none';
     }
-
-    // Decode JWT token to get user information
-    function decodeJwtResponse(token) {
-        try {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-
-            return JSON.parse(jsonPayload);
-        } catch (error) {
-            console.error("Error decoding JWT:", error);
-            showError("Authentication error. Please try again.");
-            return null;
-        }
-    }
-
-    // Handle Google Sign-In response
-    function handleCredentialResponse(response) {
-        const button = document.querySelector('#signInDiv [role="button"]');
+    
+    const userInfo = decodeJwtResponse(response.credential);
+    
+    if (!userInfo) {
         if (button) {
-            button.innerHTML = '<div class="loading-spinner"></div> Authenticating...';
-            button.style.pointerEvents = 'none';
+            button.innerHTML = 'Sign in with Google';
+            button.style.pointerEvents = 'auto';
+        }
+        return;
+    }
+    
+    // Check if email is allowed
+    const allowedDomain = "@gdc.school.nz";
+    const allowedExceptions = ["rwt1972@gmail.com", "fadekeyvids@gmail.com"];
+    const userEmail = userInfo.email.toLowerCase();
+    
+    // Check if email is in exceptions or ends with allowed domain
+    const isAllowed = allowedExceptions.includes(userEmail) || 
+                     userEmail.endsWith(allowedDomain);
+    
+    if (!isAllowed) {
+        showError("Access restricted to Glendowie College accounts only");
+        if (button) {
+            button.innerHTML = 'Sign in with Google';
+            button.style.pointerEvents = 'auto';
+        }
+        return;
+    }
+    
+    // Store user info in localStorage
+    const storedUserInfo = {
+        name: userInfo.name,
+        email: userInfo.email,
+        picture: userInfo.picture
+    };
+    
+    try {
+        // Check if "Remember Me" was selected
+        const rememberMe = document.getElementById('rememberMe')?.checked || false;
+        
+        // Generate tokens
+        const authToken = generateToken('auth');
+        const refreshToken = rememberMe ? generateToken('refresh') : null;
+        
+        // Store data
+        localStorage.setItem(USER_INFO_KEY, JSON.stringify(storedUserInfo));
+        localStorage.setItem(AUTH_TOKEN_KEY, authToken);
+        localStorage.setItem(REMEMBER_ME_KEY, rememberMe.toString());
+        
+        if (rememberMe) {
+            localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
         }
         
-        const userInfo = decodeJwtResponse(response.credential);
+        // Set secure cookie with appropriate expiration
+        const maxAge = rememberMe ? REMEMBER_ME_TIMEOUT/1000 : SESSION_TIMEOUT/1000;
+        const cookieOptions = [
+            `gdcAuth=${authToken}`,
+            'path=/',
+            `max-age=${maxAge}`,
+            'secure',
+            'samesite=strict'
+        ];
+        document.cookie = cookieOptions.join('; ');
         
-        if (!userInfo) {
-            if (button) {
-                button.innerHTML = 'Sign in with Google';
-                button.style.pointerEvents = 'auto';
-            }
-            return;
-        }
-        
-        // Check if email is allowed
-        const allowedDomain = "@gdc.school.nz";
-        const allowedExceptions = ["rwt1972@gmail.com", "fadekeyvids@gmail.com"];
-        const userEmail = userInfo.email.toLowerCase();
-        
-        // Check if email is in exceptions or ends with allowed domain
-        const isAllowed = allowedExceptions.includes(userEmail) || 
-                         userEmail.endsWith(allowedDomain);
-        
-        if (!isAllowed) {
-            showError("Access restricted to Glendowie College accounts only");
-            if (button) {
-                button.innerHTML = 'Sign in with Google';
-                button.style.pointerEvents = 'auto';
-            }
-            return;
-        }
-        
-        // Store user info in localStorage
-        const storedUserInfo = {
-            name: userInfo.name,
-            email: userInfo.email,
-            picture: userInfo.picture
-        };
-        
-        try {
-            // Generate a secure auth token with timestamp
-            const authToken = Date.now() + '-' + Math.random().toString(36).substr(2, 16);
-            
-            // Store data
-            localStorage.setItem(USER_INFO_KEY, JSON.stringify(storedUserInfo));
-            localStorage.setItem(AUTH_TOKEN_KEY, authToken);
-            
-            // Set secure cookie
-            const cookieOptions = [
-                `gdcAuth=${authToken}`,
-                'path=/',
-                `max-age=${60*60*24*7}`, // 1 week
-                'secure',
-                'samesite=strict'
-            ];
-            document.cookie = cookieOptions.join('; ');
-            
-            // Redirect to target page
-            window.location.href = targetPage;
-        } catch (error) {
-            console.error("Storage error:", error);
-            showError("Could not save your session. Try clearing site data.");
-            if (button) {
-                button.innerHTML = 'Sign in with Google';
-                button.style.pointerEvents = 'auto';
-            }
+        // Redirect to target page
+        window.location.href = targetPage;
+    } catch (error) {
+        console.error("Storage error:", error);
+        showError("Could not save your session. Try clearing site data.");
+        if (button) {
+            button.innerHTML = 'Sign in with Google';
+            button.style.pointerEvents = 'auto';
         }
     }
+}
 
-    // Show error message to user
-    function showError(message) {
-        const errorElement = document.getElementById('error-message');
-        errorElement.innerHTML = `
-            <i class="fas fa-exclamation-circle"></i>
-            <span>${message}</span>
-        `;
-        errorElement.style.opacity = 1;
-        
-        // Auto-hide after delay
-        setTimeout(() => {
-            errorElement.style.opacity = 0;
-            setTimeout(() => errorElement.innerHTML = '', 300);
-        }, 5000);
-    }
+// Show error message to user
+function showError(message) {
+    const errorElement = document.getElementById('error-message');
+    errorElement.innerHTML = `
+        <i class="fas fa-exclamation-circle"></i>
+        <span>${message}</span>
+    `;
+    errorElement.style.opacity = 1;
+    
+    // Auto-hide after delay
+    setTimeout(() => {
+        errorElement.style.opacity = 0;
+        setTimeout(() => errorElement.innerHTML = '', 300);
+    }, 5000);
+}
 
-    // Check if user is already authenticated
-    function checkExistingAuth() {
+// Check if user is already authenticated
+function checkExistingAuth() {
+    try {
         const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-        if (!authToken) return false;
-        
-        // Verify cookie exists
+        const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+        const rememberMe = localStorage.getItem(REMEMBER_ME_KEY) === 'true';
         const cookieToken = document.cookie.split('; ')
             .find(row => row.startsWith('gdcAuth='))
             ?.split('=')[1];
         
-        if (!cookieToken || cookieToken !== authToken) {
+        // Case 1: No tokens at all - fresh login required
+        if (!authToken && !refreshToken) {
             clearAuthData();
             return false;
         }
         
-        // Check session timeout
-        const tokenTimestamp = parseInt(authToken.split('-')[0]);
-        if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) {
-            clearAuthData();
-            return false;
-        }
-        
-        return true;
-    }
-
-    // Clear authentication data
-    function clearAuthData() {
-        localStorage.removeItem(USER_INFO_KEY);
-        localStorage.removeItem(AUTH_TOKEN_KEY);
-        document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    }
-
-    // Initialize page when loaded
-    window.onload = function () {
-        // Redirect if already authenticated
-        if (checkExistingAuth()) {
-            window.location.href = targetPage;
-            return;
-        }
-
-        // Set up initial scroll behavior
-        setupScrollBehavior();
-        
-        // Add listener for orientation changes
-        window.addEventListener('resize', function() {
-            setupScrollBehavior();
-        });
-
-        // Add scroll effect to topbar
-        const topbar = document.getElementById('topbar');
-        window.addEventListener('scroll', function() {
-            topbar.classList.toggle('scrolled', window.scrollY > 10);
-        });
-
-        // Trigger the fade-in animation
-        const loginCard = document.getElementById('loginCard');
-        setTimeout(() => {
-            loginCard.classList.add('visible');
-        }, 100);
-
-        // Initialize Google Sign-In with custom configuration
-        google.accounts.id.initialize({
-            client_id: "410647929853-cpc6dkcj5ro6c7d5ombtcgat817nrgia.apps.googleusercontent.com",
-            callback: handleCredentialResponse,
-            ux_mode: "popup",
-            auto_select: false
-        });
-
-        // Render Google Sign-In button with enhanced styling
-        google.accounts.id.renderButton(
-            document.getElementById("signInDiv"),
-            { 
-                type: "standard",
-                theme: "outline",
-                size: "large",
-                width: 260,
-                text: "signin_with",
-                shape: "rectangular",
-                logo_alignment: "left",
-                locale: "en"
+        // Case 2: Valid session token exists
+        if (authToken && cookieToken && authToken === cookieToken) {
+            const tokenTimestamp = parseInt(authToken.split('-')[1]);
+            const currentTimeout = rememberMe ? REMEMBER_ME_TIMEOUT : SESSION_TIMEOUT;
+            
+            if (Date.now() - tokenTimestamp < currentTimeout) {
+                // Valid session - extend it if using "Remember Me"
+                if (rememberMe && (Date.now() - tokenTimestamp) > (currentTimeout / 2)) {
+                    const newAuthToken = generateToken('auth');
+                    localStorage.setItem(AUTH_TOKEN_KEY, newAuthToken);
+                    document.cookie = `gdcAuth=${newAuthToken}; path=/; max-age=${maxAge}; secure; samesite=strict`;
+                }
+                return true;
             }
-        );
+        }
+        
+        // Case 3: Session expired but refresh token exists
+        if (refreshToken) {
+            const refreshTokenTimestamp = parseInt(refreshToken.split('-')[1]);
+            
+            if (Date.now() - refreshTokenTimestamp < REMEMBER_ME_TIMEOUT) {
+                // Valid refresh token - issue new session token
+                const newAuthToken = generateToken('auth');
+                localStorage.setItem(AUTH_TOKEN_KEY, newAuthToken);
+                document.cookie = `gdcAuth=${newAuthToken}; path=/; max-age=${REMEMBER_ME_TIMEOUT/1000}; secure; samesite=strict`;
+                return true;
+            }
+        }
+        
+        // If we get here, authentication failed
+        clearAuthData();
+        return false;
+        
+    } catch (error) {
+        console.error("Auth check error:", error);
+        clearAuthData();
+        return false;
+    }
+}
 
-        // Apply additional custom styling after the button is rendered
-        setTimeout(() => {
-            const googleBtn = document.querySelector('#signInDiv [role="button"]');
-            if (googleBtn) {
-                googleBtn.classList.add('gsi-material-button');
-                googleBtn.style.transform = 'none';
-                googleBtn.style.transition = 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)';
-                
-                const icon = googleBtn.querySelector('img');
-                if (icon) {
-                    icon.style.marginRight = '12px';
+// Clear authentication data
+function clearAuthData() {
+    localStorage.removeItem(USER_INFO_KEY);
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    localStorage.removeItem(REMEMBER_ME_KEY);
+    document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+}
+
+// Initialize page when loaded
+window.onload = function () {
+    // Add "Remember Me" checkbox if not present
+    if (!document.getElementById('rememberMe')) {
+        const rememberMeDiv = document.createElement('div');
+        rememberMeDiv.className = 'remember-me';
+        rememberMeDiv.innerHTML = `
+            <input type="checkbox" id="rememberMe" name="rememberMe">
+            <label for="rememberMe">Remember me</label>
+        `;
+        const signInDiv = document.getElementById('signInDiv');
+        signInDiv.parentNode.insertBefore(rememberMeDiv, signInDiv);
+        
+        // Add some styling
+        const style = document.createElement('style');
+        style.textContent = `
+            .remember-me {
+                margin: 15px 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                font-size: 14px;
+                color: var(--text-light);
+            }
+            .remember-me input {
+                accent-color: var(--primary);
+            }
+            @media (max-width: 480px) {
+                .remember-me {
+                    font-size: 13px;
+                    margin: 10px 0;
                 }
             }
-        }, 500);
+        `;
+        document.head.appendChild(style);
+    }
 
-        // Show the One Tap prompt (if allowed)
-        google.accounts.id.prompt(notification => {
-            if (notification.isNotDisplayed() || notification.isSkipped()) {
-                // Try again later or proceed without
+    // Redirect if already authenticated
+    if (checkExistingAuth()) {
+        window.location.href = targetPage;
+        return;
+    }
+
+    // Set up initial scroll behavior
+    setupScrollBehavior();
+    
+    // Add listener for orientation changes
+    window.addEventListener('resize', function() {
+        setupScrollBehavior();
+    });
+
+    // Add scroll effect to topbar
+    const topbar = document.getElementById('topbar');
+    window.addEventListener('scroll', function() {
+        topbar.classList.toggle('scrolled', window.scrollY > 10);
+    });
+
+    // Trigger the fade-in animation
+    const loginCard = document.getElementById('loginCard');
+    setTimeout(() => {
+        loginCard.classList.add('visible');
+    }, 100);
+
+    // Initialize Google Sign-In with custom configuration
+    google.accounts.id.initialize({
+        client_id: "410647929853-cpc6dkcj5ro6c7d5ombtcgat817nrgia.apps.googleusercontent.com",
+        callback: handleCredentialResponse,
+        ux_mode: "popup",
+        auto_select: false
+    });
+
+    // Render Google Sign-In button with enhanced styling
+    google.accounts.id.renderButton(
+        document.getElementById("signInDiv"),
+        { 
+            type: "standard",
+            theme: "outline",
+            size: "large",
+            width: 260,
+            text: "signin_with",
+            shape: "rectangular",
+            logo_alignment: "left",
+            locale: "en"
+        }
+    );
+
+    // Apply additional custom styling after the button is rendered
+    setTimeout(() => {
+        const googleBtn = document.querySelector('#signInDiv [role="button"]');
+        if (googleBtn) {
+            googleBtn.classList.add('gsi-material-button');
+            googleBtn.style.transform = 'none';
+            googleBtn.style.transition = 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)';
+            
+            const icon = googleBtn.querySelector('img');
+            if (icon) {
+                icon.style.marginRight = '12px';
             }
-        });
-    };
+        }
+    }, 500);
+
+    // Show the One Tap prompt (if allowed)
+    google.accounts.id.prompt(notification => {
+        if (notification.isNotDisplayed() || notification.isSkipped()) {
+            // Try again later or proceed without
+        }
+    });
+};
 </script>
 </body>
 </html>
