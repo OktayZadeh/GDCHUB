@@ -823,6 +823,30 @@
     </div>
 
 <script>
+    // TEMPORARY DEBUGGER - REMOVE AFTER TESTING
+console.log("=== AUTH DEBUGGER ACTIVATED ===");
+const debugAuthCheck = () => {
+  const authToken = localStorage.getItem('gdcAuthToken');
+  const cookieToken = document.cookie.match(/gdcAuth=([^;]+)/)?.[1];
+  
+  console.group("[Auth Check]");
+  console.log("LocalStorage Token:", authToken);
+  console.log("Cookie Token:", cookieToken);
+  console.log("Tokens Match:", authToken === cookieToken);
+  console.groupEnd();
+
+  if (!authToken || !cookieToken || authToken !== cookieToken) {
+    console.error("AUTH FAILED! Redirecting to login...");
+    localStorage.clear();
+    document.cookie = 'gdcAuth=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+    window.location.href = "https://oktayzadeh.github.io/GDCHUB/";
+    return false;
+  }
+  return true;
+};
+
+// Force check immediately
+debugAuthCheck();
 // ========== PERSISTENT AUTHENTICATION SYSTEM ==========
 (function() {
     // Configuration constants
