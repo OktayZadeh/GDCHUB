@@ -581,49 +581,11 @@
     </div>
 </div>
 
- <script>
+<script>
 const targetPage = "https://oktayzadeh.github.io/GDCHUB/SubjectSelection.html";
 const USER_INFO_KEY = "googleUserInfo";
 const AUTH_TOKEN_KEY = "gdcAuthToken";
-const SESSION_TIMEOUT = 30 * 24 * 60 * 60 * 1000; // 30 days (now persistent by default)
-
-// Function to detect mobile devices
-function isMobileDevice() {
-    return (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('IEMobile') !== -1);
-}
-
-// Function to detect landscape orientation
-function isLandscape() {
-    return window.matchMedia("(orientation: landscape)").matches;
-}
-
-// Set up scrolling behavior
-function setupScrollBehavior() {
-    if (isMobileDevice() && isLandscape() && window.innerWidth <= 768) {
-        document.body.style.overflow = 'auto';
-        document.documentElement.style.overflow = 'auto';
-    } else {
-        document.body.style.overflow = 'hidden';
-        document.documentElement.style.overflow = 'hidden';
-    }
-}
-
-// Decode JWT token
-function decodeJwtResponse(token) {
-    try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-
-        return JSON.parse(jsonPayload);
-    } catch (error) {
-        console.error("Error decoding JWT:", error);
-        showError("Authentication error. Please try again.");
-        return null;
-    }
-}
+const SESSION_TIMEOUT = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 // Handle Google Sign-In response
 function handleCredentialResponse(response) {
@@ -633,86 +595,87 @@ function handleCredentialResponse(response) {
         button.style.pointerEvents = 'none';
     }
     
-    const userInfo = decodeJwtResponse(response.credential);
-    
-    if (!userInfo) {
-        if (button) {
-            button.innerHTML = 'Sign in with Google';
-            button.style.pointerEvents = 'auto';
-        }
-        return;
-    }
-    
-    // Check if email is allowed
-    const allowedDomain = "@gdc.school.nz";
-    const allowedExceptions = ["rwt1972@gmail.com", "fadekeyvids@gmail.com"];
-    const userEmail = userInfo.email.toLowerCase();
-    
-    if (!allowedExceptions.includes(userEmail) && !userEmail.endsWith(allowedDomain)) {
-        showError("Access restricted to Glendowie College accounts only");
-        if (button) {
-            button.innerHTML = 'Sign in with Google';
-            button.style.pointerEvents = 'auto';
-        }
-        return;
-    }
-    
-    // Store user info
-    const storedUserInfo = {
-        name: userInfo.name,
-        email: userInfo.email,
-        picture: userInfo.picture
-    };
-    
     try {
-        // Generate persistent auth token (30 days)
-        const authToken = `${Date.now()}-${Math.random().toString(36).substr(2, 16)}`;
+        // Decode JWT token
+        const base64Url = response.credential.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => 
+            '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+        const userInfo = JSON.parse(jsonPayload);
+
+        // Check if email is allowed
+        const allowedDomain = "@gdc.school.nz";
+        const allowedExceptions = ["rwt1972@gmail.com", "fadekeyvids@gmail.com"];
+        const userEmail = userInfo.email.toLowerCase();
         
-        // Store data
+        if (!allowedExceptions.includes(userEmail) && !userEmail.endsWith(allowedDomain)) {
+            showError("Access restricted to Glendowie College accounts only");
+            resetSignInButton(button);
+            return;
+        }
+        
+        // Store user info
+        const storedUserInfo = {
+            name: userInfo.name,
+            email: userInfo.email,
+            picture: userInfo.picture
+        };
+        
+        // Generate persistent auth token
+        const authToken = `auth-${Date.now()}-${crypto.randomUUID()}`;
+        
+        // Store data with 30 day expiration
         localStorage.setItem(USER_INFO_KEY, JSON.stringify(storedUserInfo));
         localStorage.setItem(AUTH_TOKEN_KEY, authToken);
         
-        // Set secure cookie (30 days)
-        document.cookie = `gdcAuth=${authToken}; path=/; max-age=${2592000}; secure; samesite=strict`;
+        // Set secure cookie with 30 day expiration
+        const expirationDate = new Date(Date.now() + SESSION_TIMEOUT).toUTCString();
+        document.cookie = `gdcAuth=${authToken}; expires=${expirationDate}; path=/; secure; samesite=strict`;
         
         // Redirect to target page
         window.location.href = targetPage;
     } catch (error) {
-        console.error("Storage error:", error);
-        showError("Could not save your session. Try clearing site data.");
-        if (button) {
-            button.innerHTML = 'Sign in with Google';
-            button.style.pointerEvents = 'auto';
-        }
+        console.error("Authentication error:", error);
+        showError("Could not complete sign in. Please try again.");
+        resetSignInButton(button);
     }
 }
 
-// Show error message
-function showError(message) {
-    const errorElement = document.getElementById('error-message');
-    errorElement.innerHTML = `<i class="fas fa-exclamation-circle"></i><span>${message}</span>`;
-    errorElement.style.opacity = 1;
-    setTimeout(() => {
-        errorElement.style.opacity = 0;
-        setTimeout(() => errorElement.innerHTML = '', 300);
-    }, 5000);
-}
-
-// Check if user is authenticated
-function checkExistingAuth() {
+// Check authentication status
+function checkAuthStatus() {
     try {
         const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-        const cookieToken = document.cookie.split('; ')
+        const cookieToken = document.cookie
+            .split('; ')
             .find(row => row.startsWith('gdcAuth='))
             ?.split('=')[1];
         
-        if (!authToken || !cookieToken || authToken !== cookieToken) {
+        // If no tokens exist
+        if (!authToken || !cookieToken) {
             clearAuthData();
             return false;
         }
         
-        // Check token age (30 days max)
-        const tokenTimestamp = parseInt(authToken.split('-')[0]);
+        // If tokens don't match
+        if (authToken !== cookieToken) {
+            clearAuthData();
+            return false;
+        }
+        
+        // Check token age
+        const tokenParts = authToken.split('-');
+        if (tokenParts.length < 3) {
+            clearAuthData();
+            return false;
+        }
+        
+        const tokenTimestamp = parseInt(tokenParts[1]);
+        if (isNaN(tokenTimestamp)) {
+            clearAuthData();
+            return false;
+        }
+        
+        // If token is expired
         if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) {
             clearAuthData();
             return false;
@@ -720,6 +683,7 @@ function checkExistingAuth() {
         
         return true;
     } catch (error) {
+        console.error("Auth check error:", error);
         clearAuthData();
         return false;
     }
@@ -732,20 +696,30 @@ function clearAuthData() {
     document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
 }
 
+// Helper functions
+function showError(message) {
+    const errorElement = document.getElementById('error-message');
+    if (errorElement) {
+        errorElement.innerHTML = `<i class="fas fa-exclamation-circle"></i><span>${message}</span>`;
+        errorElement.style.opacity = 1;
+        setTimeout(() => errorElement.style.opacity = 0, 5000);
+    }
+}
+
+function resetSignInButton(button) {
+    if (button) {
+        button.innerHTML = 'Sign in with Google';
+        button.style.pointerEvents = 'auto';
+    }
+}
+
 // Initialize page
 window.onload = function() {
-    // Redirect if authenticated
-    if (checkExistingAuth()) {
+    // Redirect if already authenticated
+    if (checkAuthStatus()) {
         window.location.href = targetPage;
         return;
     }
-
-    setupScrollBehavior();
-    window.addEventListener('resize', setupScrollBehavior);
-
-    // Fade in login card
-    const loginCard = document.getElementById('loginCard');
-    setTimeout(() => loginCard.classList.add('visible'), 100);
 
     // Initialize Google Sign-In
     google.accounts.id.initialize({
@@ -755,6 +729,7 @@ window.onload = function() {
         auto_select: false
     });
 
+    // Render Google Sign-In button
     google.accounts.id.renderButton(
         document.getElementById("signInDiv"),
         { 
@@ -768,7 +743,7 @@ window.onload = function() {
         }
     );
 
-    // Style the Google button
+    // Style the button
     setTimeout(() => {
         const googleBtn = document.querySelector('#signInDiv [role="button"]');
         if (googleBtn) {
@@ -779,7 +754,9 @@ window.onload = function() {
         }
     }, 500);
 
-    google.accounts.id.prompt();
+    // Fade in login card
+    const loginCard = document.getElementById('loginCard');
+    setTimeout(() => loginCard?.classList.add('visible'), 100);
 };
 </script>
 
