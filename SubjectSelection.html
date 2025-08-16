@@ -823,208 +823,265 @@
     </div>
 
     <script>
-        // AUTH CHECK - MUST BE AT TOP OF EVERY PROTECTED PAGE
-        (function() {
-            const USER_INFO_KEY = "googleUserInfo";
-            const AUTH_TOKEN_KEY = "gdcAuthToken";
-            const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
-            const SESSION_TIMEOUT = 30 * 60 * 1000;
+      // ========== PERSISTENT AUTHENTICATION SYSTEM ==========
+(function() {
+    // Configuration constants
+    const USER_INFO_KEY = "googleUserInfo";
+    const AUTH_TOKEN_KEY = "gdcAuthToken";
+    const REFRESH_TOKEN_KEY = "gdcRefreshToken";
+    const REMEMBER_ME_KEY = "gdcRememberMe";
+    const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
+    
+    // Timeout settings (30 minutes for normal session, 30 days for "Remember Me")
+    const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+    const REMEMBER_ME_TIMEOUT = 30 * 24 * 60 * 60 * 1000; // 30 days
+    
+    // Token management functions
+    function generateToken() {
+        return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    }
+    
+    function getTokenTimestamp(token) {
+        return parseInt(token?.split('-')[0]) || 0;
+    }
+    
+    function clearAuthData() {
+        // Clear all authentication data from storage
+        localStorage.removeItem(USER_INFO_KEY);
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem(REFRESH_TOKEN_KEY);
+        localStorage.removeItem(REMEMBER_ME_KEY);
+        document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    }
+    
+    function getCookieToken() {
+        // Extract token from cookies
+        const cookie = document.cookie.split('; ')
+            .find(row => row.startsWith('gdcAuth='));
+        return cookie ? cookie.split('=')[1] : null;
+    }
+    
+    function refreshAuthToken() {
+        // Generate new tokens and update storage
+        const rememberMe = localStorage.getItem(REMEMBER_ME_KEY) === 'true';
+        const newAuthToken = generateToken();
+        
+        localStorage.setItem(AUTH_TOKEN_KEY, newAuthToken);
+        
+        // Set cookie with appropriate expiration
+        const maxAge = rememberMe ? REMEMBER_ME_TIMEOUT/1000 : SESSION_TIMEOUT/1000;
+        document.cookie = `gdcAuth=${newAuthToken}; path=/; max-age=${maxAge}; SameSite=Lax; Secure`;
+        
+        return true;
+    }
+    
+    function checkAuthStatus() {
+        try {
+            const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+            const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+            const rememberMe = localStorage.getItem(REMEMBER_ME_KEY) === 'true';
+            const cookieToken = getCookieToken();
             
-            function checkAuth() {
-                try {
-                    const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-                    const cookieToken = document.cookie.split('; ')
-                        .find(row => row.startsWith('gdcAuth='))
-                        ?.split('=')[1];
-                    
-                    if (!authToken || !cookieToken || authToken !== cookieToken) {
-                        clearAuthData();
-                        return false;
-                    }
-                    
-                    const tokenTimestamp = parseInt(authToken.split('-')[0]);
-                    if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) {
-                        clearAuthData();
-                        return false;
-                    }
-                    
-                    return true;
-                } catch (error) {
-                    clearAuthData();
-                    return false;
-                }
+            // Case 1: No tokens at all - fresh login required
+            if (!authToken && !refreshToken) {
+                clearAuthData();
+                return false;
             }
             
-            function clearAuthData() {
-                localStorage.removeItem(USER_INFO_KEY);
-                localStorage.removeItem(AUTH_TOKEN_KEY);
-                document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-            }
-            
-            if (!checkAuth()) {
-                document.body.innerHTML = `
-                    <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Poppins',sans-serif;z-index:9999;">
-                        <div style="text-align:center;padding:30px;max-width:400px;">
-                            <h2 style="color:#2b2d42;margin-bottom:20px;">Session Expired</h2>
-                            <p style="color:#5f6a7d;margin-bottom:25px;">
-                                Please sign in again. Redirecting to login page...
-                            </p>
-                            <div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;">
-                                <div style="width:100%;height:100%;background:#4361ee;border-radius:2px;animation:progress 2s ease-in-out infinite;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <style>@keyframes progress {0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}</style>
-                `;
-                setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
-                throw new Error("Authentication required"); // Stop other scripts from executing
-            }
-            
-            // Setup logout buttons if they exist
-            document.addEventListener('DOMContentLoaded', function() {
-                document.addEventListener('click', function(e) {
-                    if (e.target.closest('.logout-btn')) {
-                        e.preventDefault();
-                        clearAuthData();
-                        window.location.href = LOGIN_PAGE;
-                    }
-                });
-            });
-        })();
-
-        // REST OF YOUR PAGE'S JAVASCRIPT GOES BELOW THIS LINE
-        // Constants
-        const USER_INFO_KEY = "googleUserInfo";
-        const profilePicElement = document.getElementById('profile-pic');
-        const dropdownContent = document.getElementById('dropdown-content');
-        const logoutButton = document.getElementById('logout-button');
-        const backgroundVideo = document.getElementById('background-video');
-        const videoSources = [
-            'https://i.imgur.com/zw3viPp.mp4',
-            'https://i.imgur.com/DH39YQe.mp4',
-            'https://i.imgur.com/baeEc27.mp4',
-            'https://i.imgur.com/1s0hopX.mp4'
-        ];
-
-        // Utility Functions
-        function isMobileDevice() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        }
-
-        function isLandscape() {
-            return window.matchMedia("(orientation: landscape)").matches;
-        }
-
-        function forceVideoPlay(video) {
-            if (video.paused) {
-                const promise = video.play();
-                if (promise !== undefined) {
-                    promise.catch(error => {
-                        video.muted = true;
-                        video.play().catch(e => console.log("Video play error:", e));
-                    });
-                }
-            }
-        }
-
-        // Profile Picture Handling
-        function handleProfilePicture() {
-            const storedUserInfo = localStorage.getItem(USER_INFO_KEY);
-
-            if (storedUserInfo) {
-                try {
-                    const userInfo = JSON.parse(storedUserInfo);
-                    if (userInfo?.picture) {
-                        profilePicElement.src = userInfo.picture;
-                        profilePicElement.style.display = 'block';
-                        return;
-                    }
-                } catch (e) {
-                    console.error("Error parsing user info:", e);
-                }
-            }
-           
-            // Show a default avatar if no profile picture
-            profilePicElement.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234361ee'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
-            profilePicElement.style.display = 'block';
-        }
-
-        // Dropdown Menu Handling
-        function setupDropdownMenu() {
-            // Toggle dropdown on click
-            profilePicElement.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const isExpanded = dropdownContent.classList.toggle('show');
-                profilePicElement.setAttribute('aria-expanded', isExpanded);
-            });
-
-            // Close when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.profile-dropdown')) {
-                    dropdownContent.classList.remove('show');
-                    profilePicElement.setAttribute('aria-expanded', 'false');
-                }
-            });
-
-            // Close on escape key
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    dropdownContent.classList.remove('show');
-                    profilePicElement.setAttribute('aria-expanded', 'false');
-                }
-            });
-
-            // Keyboard navigation for dropdown
-            logoutButton.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    logoutButton.click();
-                }
-            });
-
-            // Handle logout button click
-            logoutButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                // Clear authentication data
-                localStorage.removeItem("googleUserInfo");
-                localStorage.removeItem("gdcAuthToken");
-                document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-                // Redirect to login page
-                window.location.href = "https://oktayzadeh.github.io/GDCHUB/";
-            });
-        }
-
-        // Background Video Transition
-        function setupCardHoverEffects() {
-            const cards = document.querySelectorAll('.subject-card');
-            let currentVideoIndex = -1;
-            let isTransitioning = false;
-            
-            // Pre-select the first video source
-            backgroundVideo.innerHTML = `<source src="${videoSources[0]}" type="video/mp4">`;
-            backgroundVideo.load();
-            
-            cards.forEach((card, index) => {
-                const cardVideo = card.querySelector('.card-media');
+            // Case 2: Valid session token exists
+            if (authToken && cookieToken && authToken === cookieToken) {
+                const tokenAge = Date.now() - getTokenTimestamp(authToken);
+                const currentTimeout = rememberMe ? REMEMBER_ME_TIMEOUT : SESSION_TIMEOUT;
                 
-                card.addEventListener('mouseenter', function() {
+                if (tokenAge < currentTimeout) {
+                    // Valid session - extend it if using "Remember Me"
+                    if (rememberMe && tokenAge > currentTimeout / 2) {
+                        refreshAuthToken();
+                    }
+                    return true;
+                }
+            }
+            
+            // Case 3: Session expired but refresh token exists
+            if (refreshToken) {
+                const refreshTokenAge = Date.now() - getTokenTimestamp(refreshToken);
+                
+                if (refreshTokenAge < REMEMBER_ME_TIMEOUT) {
+                    // Valid refresh token - issue new session token
+                    return refreshAuthToken();
+                }
+            }
+            
+            // If we get here, authentication failed
+            clearAuthData();
+            return false;
+            
+        } catch (error) {
+            console.error("Authentication error:", error);
+            clearAuthData();
+            return false;
+        }
+    }
+    
+    // Main authentication check
+    if (!checkAuthStatus()) {
+        // Show session expired message and redirect
+        document.body.innerHTML = `
+            <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Poppins',sans-serif;z-index:9999;">
+                <div style="text-align:center;padding:30px;max-width:400px;">
+                    <h2 style="color:#2b2d42;margin-bottom:20px;">Session Expired</h2>
+                    <p style="color:#5f6a7d;margin-bottom:25px;">
+                        Please sign in again. Redirecting to login page...
+                    </p>
+                    <div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;">
+                        <div style="width:100%;height:100%;background:#4361ee;border-radius:2px;animation:progress 2s ease-in-out infinite;"></div>
+                    </div>
+                </div>
+            </div>
+            <style>@keyframes progress {0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}</style>
+        `;
+        setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
+        throw new Error("Authentication required");
+    }
+    
+    // ========== PAGE FUNCTIONALITY ==========
+    // Constants
+    const profilePicElement = document.getElementById('profile-pic');
+    const dropdownContent = document.getElementById('dropdown-content');
+    const logoutButton = document.getElementById('logout-button');
+    const backgroundVideo = document.getElementById('background-video');
+    const videoSources = [
+        'https://i.imgur.com/zw3viPp.mp4',
+        'https://i.imgur.com/DH39YQe.mp4',
+        'https://i.imgur.com/baeEc27.mp4',
+        'https://i.imgur.com/1s0hopX.mp4'
+    ];
+
+    // Utility Functions
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+
+    function forceVideoPlay(video) {
+        if (video.paused) {
+            const promise = video.play();
+            if (promise !== undefined) {
+                promise.catch(error => {
+                    video.muted = true;
+                    video.play().catch(e => console.log("Video play error:", e));
+                });
+            }
+        }
+    }
+
+    // Profile Picture Handling
+    function handleProfilePicture() {
+        const storedUserInfo = localStorage.getItem(USER_INFO_KEY);
+
+        if (storedUserInfo) {
+            try {
+                const userInfo = JSON.parse(storedUserInfo);
+                if (userInfo?.picture) {
+                    profilePicElement.src = userInfo.picture;
+                    profilePicElement.style.display = 'block';
+                    return;
+                }
+            } catch (e) {
+                console.error("Error parsing user info:", e);
+            }
+        }
+       
+        // Show a default avatar if no profile picture
+        profilePicElement.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234361ee'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
+        profilePicElement.style.display = 'block';
+    }
+
+    // Dropdown Menu Handling
+    function setupDropdownMenu() {
+        // Toggle dropdown on click
+        profilePicElement.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isExpanded = dropdownContent.classList.toggle('show');
+            profilePicElement.setAttribute('aria-expanded', isExpanded);
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.profile-dropdown')) {
+                dropdownContent.classList.remove('show');
+                profilePicElement.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // Close on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                dropdownContent.classList.remove('show');
+                profilePicElement.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // Handle logout button click
+        logoutButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            clearAuthData();
+            window.location.href = LOGIN_PAGE;
+        });
+    }
+
+    // Background Video Transition
+    function setupCardHoverEffects() {
+        const cards = document.querySelectorAll('.subject-card');
+        let currentVideoIndex = -1;
+        let isTransitioning = false;
+        
+        // Pre-select the first video source
+        backgroundVideo.innerHTML = `<source src="${videoSources[0]}" type="video/mp4">`;
+        backgroundVideo.load();
+        
+        cards.forEach((card, index) => {
+            const cardVideo = card.querySelector('.card-media');
+            
+            card.addEventListener('mouseenter', function() {
+                if (isTransitioning || currentVideoIndex === index) return;
+                
+                isTransitioning = true;
+                currentVideoIndex = index;
+                
+                // Fade out current video
+                document.body.classList.remove('hover-effect');
+                
+                setTimeout(() => {
+                    // Change video source
+                    backgroundVideo.innerHTML = `<source src="${videoSources[index]}" type="video/mp4">`;
+                    backgroundVideo.load();
+                    
+                    // Play the new video
+                    backgroundVideo.play().then(() => {
+                        document.body.classList.add('hover-effect');
+                        isTransitioning = false;
+                    }).catch(e => {
+                        console.log("Background video play error:", e);
+                        isTransitioning = false;
+                    });
+                }, 50);
+            });
+            
+            // For mobile touch devices
+            card.addEventListener('touchstart', function() {
+                if (isMobileDevice()) {
                     if (isTransitioning || currentVideoIndex === index) return;
                     
                     isTransitioning = true;
                     currentVideoIndex = index;
                     
-                    // Fade out current video
                     document.body.classList.remove('hover-effect');
                     
-                    // Small delay to ensure fade out starts
                     setTimeout(() => {
-                        // Change video source
                         backgroundVideo.innerHTML = `<source src="${videoSources[index]}" type="video/mp4">`;
                         backgroundVideo.load();
                         
-                        // Play the new video
                         backgroundVideo.play().then(() => {
-                            // Fade in the new video
                             document.body.classList.add('hover-effect');
                             isTransitioning = false;
                         }).catch(e => {
@@ -1032,128 +1089,104 @@
                             isTransitioning = false;
                         });
                     }, 50);
-                });
-                
-                // For mobile touch devices
-                card.addEventListener('touchstart', function() {
-                    if (isMobileDevice()) {
-                        if (isTransitioning || currentVideoIndex === index) return;
-                        
-                        isTransitioning = true;
-                        currentVideoIndex = index;
-                        
-                        document.body.classList.remove('hover-effect');
-                        
-                        setTimeout(() => {
-                            backgroundVideo.innerHTML = `<source src="${videoSources[index]}" type="video/mp4">`;
-                            backgroundVideo.load();
-                            
-                            backgroundVideo.play().then(() => {
-                                document.body.classList.add('hover-effect');
-                                isTransitioning = false;
-                            }).catch(e => {
-                                console.log("Background video play error:", e);
-                                isTransitioning = false;
-                            });
-                        }, 50);
-                    }
-                }, { passive: true });
-            });
-            
-            // Handle mouse leave from all cards
-            document.addEventListener('mouseleave', function(e) {
-                if (!e.relatedTarget || !Array.from(cards).some(card => card.contains(e.relatedTarget))) {
-                    document.body.classList.remove('hover-effect');
-                    currentVideoIndex = -1;
                 }
-            }, true);
-        }
+            }, { passive: true });
+        });
+        
+        // Handle mouse leave from all cards
+        document.addEventListener('mouseleave', function(e) {
+            if (!e.relatedTarget || !Array.from(cards).some(card => card.contains(e.relatedTarget))) {
+                document.body.classList.remove('hover-effect');
+                currentVideoIndex = -1;
+            }
+        }, true);
+    }
 
-        // Initialize Videos
-        function initializeVideos() {
-            const videos = document.querySelectorAll('.card-media');
-           
-            if (isMobileDevice()) {
-                // On mobile, autoplay all card videos muted
-                videos.forEach(video => {
-                    video.setAttribute('autoplay', '');
-                    video.setAttribute('muted', '');
-                    video.setAttribute('playsinline', '');
-                    video.setAttribute('preload', 'auto');
-                   
+    // Initialize Videos
+    function initializeVideos() {
+        const videos = document.querySelectorAll('.card-media');
+       
+        if (isMobileDevice()) {
+            // On mobile, autoplay all card videos muted
+            videos.forEach(video => {
+                video.setAttribute('autoplay', '');
+                video.setAttribute('muted', '');
+                video.setAttribute('playsinline', '');
+                video.setAttribute('preload', 'auto');
+               
+                forceVideoPlay(video);
+               
+                // Ensure videos play after user interaction
+                document.body.addEventListener('touchstart', function once() {
+                    videos.forEach(v => forceVideoPlay(v));
+                    document.body.removeEventListener('touchstart', once);
+                }, { once: true, passive: true });
+            });
+        } else {
+            // On desktop, pause all card videos initially
+            videos.forEach(video => {
+                video.pause();
+                video.currentTime = 0;
+               
+                const card = video.closest('.subject-card');
+                card.addEventListener('mouseenter', () => {
                     forceVideoPlay(video);
-                   
-                    // Ensure videos play after user interaction
-                    document.body.addEventListener('touchstart', function once() {
-                        videos.forEach(v => forceVideoPlay(v));
-                        document.body.removeEventListener('touchstart', once);
-                    }, { once: true, passive: true });
                 });
-            } else {
-                // On desktop, pause all card videos initially
-                videos.forEach(video => {
+               
+                card.addEventListener('mouseleave', () => {
                     video.pause();
                     video.currentTime = 0;
-                   
-                    const card = video.closest('.subject-card');
-                    card.addEventListener('mouseenter', () => {
-                        forceVideoPlay(video);
-                    });
-                   
-                    card.addEventListener('mouseleave', () => {
-                        video.pause();
-                        video.currentTime = 0;
-                    });
                 });
-            }
-            
-            // Initialize background video
-            backgroundVideo.muted = true;
-            backgroundVideo.playsInline = true;
+            });
         }
+        
+        // Initialize background video
+        backgroundVideo.muted = true;
+        backgroundVideo.playsInline = true;
+    }
 
-        // Event Listeners
-        function setupEventListeners() {
-            window.addEventListener('resize', function() {
-                if (isMobileDevice()) {
-                    // Handle any resize-related adjustments
-                }
-            });
+    // Event Listeners
+    function setupEventListeners() {
+        window.addEventListener('resize', function() {
+            if (isMobileDevice()) {
+                // Handle any resize-related adjustments
+            }
+        });
 
-            window.addEventListener('orientationchange', function() {
-                if (isMobileDevice()) {
-                    // Small delay to ensure orientation has changed
-                    setTimeout(() => {
-                        document.querySelectorAll('.card-media').forEach(video => {
-                            forceVideoPlay(video);
-                        });
-                    }, 100);
-                }
-            });
-
-            document.addEventListener('visibilitychange', function() {
-                if (document.visibilityState === 'visible' && isMobileDevice()) {
+        window.addEventListener('orientationchange', function() {
+            if (isMobileDevice()) {
+                setTimeout(() => {
                     document.querySelectorAll('.card-media').forEach(video => {
                         forceVideoPlay(video);
                     });
-                }
-            });
-
-            window.addEventListener('storage', function(e) {
-                if (e.key === USER_INFO_KEY) {
-                    handleProfilePicture();
-                }
-            });
-        }
-
-        // Initialization
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeVideos();
-            handleProfilePicture();
-            setupDropdownMenu();
-            setupCardHoverEffects();
-            setupEventListeners();
+                }, 100);
+            }
         });
+
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible' && isMobileDevice()) {
+                document.querySelectorAll('.card-media').forEach(video => {
+                    forceVideoPlay(video);
+                });
+            }
+        });
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === USER_INFO_KEY) {
+                handleProfilePicture();
+            }
+        });
+    }
+
+    // Initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeVideos();
+        handleProfilePicture();
+        setupDropdownMenu();
+        setupCardHoverEffects();
+        setupEventListeners();
+    });
+})();
     </script>
 </body>
 </html>
