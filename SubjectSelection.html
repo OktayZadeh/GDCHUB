@@ -822,110 +822,68 @@
         © 2025 Glendowie College. All Rights Reserved.
     </div>
 
-    <script>
-      // ========== PERSISTENT AUTHENTICATION SYSTEM ==========
+ <script>
+// ========== PERSISTENT AUTHENTICATION SYSTEM ==========
 (function() {
     // Configuration constants
     const USER_INFO_KEY = "googleUserInfo";
     const AUTH_TOKEN_KEY = "gdcAuthToken";
-    const REFRESH_TOKEN_KEY = "gdcRefreshToken";
-    const REMEMBER_ME_KEY = "gdcRememberMe";
     const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
-    
-    // Timeout settings (30 minutes for normal session, 30 days for "Remember Me")
-    const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-    const REMEMBER_ME_TIMEOUT = 30 * 24 * 60 * 60 * 1000; // 30 days
-    
+    const SESSION_TIMEOUT = 30 * 24 * 60 * 60 * 1000; // 30 days
+
     // Token management functions
-    function generateToken() {
-        return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    }
-    
     function getTokenTimestamp(token) {
-        return parseInt(token?.split('-')[0]) || 0;
+        if (!token) return 0;
+        const parts = token.split('-');
+        return parts.length >= 2 ? parseInt(parts[1]) : 0;
     }
-    
+
     function clearAuthData() {
-        // Clear all authentication data from storage
         localStorage.removeItem(USER_INFO_KEY);
         localStorage.removeItem(AUTH_TOKEN_KEY);
-        localStorage.removeItem(REFRESH_TOKEN_KEY);
-        localStorage.removeItem(REMEMBER_ME_KEY);
         document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     }
-    
+
     function getCookieToken() {
-        // Extract token from cookies
         const cookie = document.cookie.split('; ')
             .find(row => row.startsWith('gdcAuth='));
         return cookie ? cookie.split('=')[1] : null;
     }
-    
-    function refreshAuthToken() {
-        // Generate new tokens and update storage
-        const rememberMe = localStorage.getItem(REMEMBER_ME_KEY) === 'true';
-        const newAuthToken = generateToken();
-        
-        localStorage.setItem(AUTH_TOKEN_KEY, newAuthToken);
-        
-        // Set cookie with appropriate expiration
-        const maxAge = rememberMe ? REMEMBER_ME_TIMEOUT/1000 : SESSION_TIMEOUT/1000;
-        document.cookie = `gdcAuth=${newAuthToken}; path=/; max-age=${maxAge}; SameSite=Lax; Secure`;
-        
-        return true;
-    }
-    
+
     function checkAuthStatus() {
         try {
             const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-            const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-            const rememberMe = localStorage.getItem(REMEMBER_ME_KEY) === 'true';
             const cookieToken = getCookieToken();
             
-            // Case 1: No tokens at all - fresh login required
-            if (!authToken && !refreshToken) {
+            // If no tokens exist
+            if (!authToken || !cookieToken) {
                 clearAuthData();
                 return false;
             }
             
-            // Case 2: Valid session token exists
-            if (authToken && cookieToken && authToken === cookieToken) {
-                const tokenAge = Date.now() - getTokenTimestamp(authToken);
-                const currentTimeout = rememberMe ? REMEMBER_ME_TIMEOUT : SESSION_TIMEOUT;
-                
-                if (tokenAge < currentTimeout) {
-                    // Valid session - extend it if using "Remember Me"
-                    if (rememberMe && tokenAge > currentTimeout / 2) {
-                        refreshAuthToken();
-                    }
-                    return true;
-                }
+            // If tokens don't match
+            if (authToken !== cookieToken) {
+                clearAuthData();
+                return false;
             }
             
-            // Case 3: Session expired but refresh token exists
-            if (refreshToken) {
-                const refreshTokenAge = Date.now() - getTokenTimestamp(refreshToken);
-                
-                if (refreshTokenAge < REMEMBER_ME_TIMEOUT) {
-                    // Valid refresh token - issue new session token
-                    return refreshAuthToken();
-                }
+            // Check token age
+            const tokenTimestamp = getTokenTimestamp(authToken);
+            if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) {
+                clearAuthData();
+                return false;
             }
             
-            // If we get here, authentication failed
-            clearAuthData();
-            return false;
-            
+            return true;
         } catch (error) {
-            console.error("Authentication error:", error);
+            console.error("Auth check error:", error);
             clearAuthData();
             return false;
         }
     }
-    
+
     // Main authentication check
     if (!checkAuthStatus()) {
-        // Show session expired message and redirect
         document.body.innerHTML = `
             <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Poppins',sans-serif;z-index:9999;">
                 <div style="text-align:center;padding:30px;max-width:400px;">
@@ -943,7 +901,7 @@
         setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
         throw new Error("Authentication required");
     }
-    
+
     // ========== PAGE FUNCTIONALITY ==========
     // Constants
     const profilePicElement = document.getElementById('profile-pic');
@@ -977,7 +935,6 @@
     // Profile Picture Handling
     function handleProfilePicture() {
         const storedUserInfo = localStorage.getItem(USER_INFO_KEY);
-
         if (storedUserInfo) {
             try {
                 const userInfo = JSON.parse(storedUserInfo);
@@ -990,22 +947,19 @@
                 console.error("Error parsing user info:", e);
             }
         }
-       
-        // Show a default avatar if no profile picture
+        // Default avatar
         profilePicElement.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234361ee'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
         profilePicElement.style.display = 'block';
     }
 
     // Dropdown Menu Handling
     function setupDropdownMenu() {
-        // Toggle dropdown on click
         profilePicElement.addEventListener('click', function(e) {
             e.stopPropagation();
             const isExpanded = dropdownContent.classList.toggle('show');
             profilePicElement.setAttribute('aria-expanded', isExpanded);
         });
 
-        // Close when clicking outside
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.profile-dropdown')) {
                 dropdownContent.classList.remove('show');
@@ -1013,7 +967,6 @@
             }
         });
 
-        // Close on escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 dropdownContent.classList.remove('show');
@@ -1021,7 +974,6 @@
             }
         });
 
-        // Handle logout button click
         logoutButton.addEventListener('click', function(e) {
             e.preventDefault();
             clearAuthData();
@@ -1035,7 +987,6 @@
         let currentVideoIndex = -1;
         let isTransitioning = false;
         
-        // Pre-select the first video source
         backgroundVideo.innerHTML = `<source src="${videoSources[0]}" type="video/mp4">`;
         backgroundVideo.load();
         
@@ -1044,19 +995,15 @@
             
             card.addEventListener('mouseenter', function() {
                 if (isTransitioning || currentVideoIndex === index) return;
-                
                 isTransitioning = true;
                 currentVideoIndex = index;
                 
-                // Fade out current video
                 document.body.classList.remove('hover-effect');
                 
                 setTimeout(() => {
-                    // Change video source
                     backgroundVideo.innerHTML = `<source src="${videoSources[index]}" type="video/mp4">`;
                     backgroundVideo.load();
                     
-                    // Play the new video
                     backgroundVideo.play().then(() => {
                         document.body.classList.add('hover-effect');
                         isTransitioning = false;
@@ -1067,20 +1014,15 @@
                 }, 50);
             });
             
-            // For mobile touch devices
             card.addEventListener('touchstart', function() {
-                if (isMobileDevice()) {
-                    if (isTransitioning || currentVideoIndex === index) return;
-                    
+                if (isMobileDevice() && !isTransitioning && currentVideoIndex !== index) {
                     isTransitioning = true;
                     currentVideoIndex = index;
-                    
                     document.body.classList.remove('hover-effect');
                     
                     setTimeout(() => {
                         backgroundVideo.innerHTML = `<source src="${videoSources[index]}" type="video/mp4">`;
                         backgroundVideo.load();
-                        
                         backgroundVideo.play().then(() => {
                             document.body.classList.add('hover-effect');
                             isTransitioning = false;
@@ -1092,14 +1034,6 @@
                 }
             }, { passive: true });
         });
-        
-        // Handle mouse leave from all cards
-        document.addEventListener('mouseleave', function(e) {
-            if (!e.relatedTarget || !Array.from(cards).some(card => card.contains(e.relatedTarget))) {
-                document.body.classList.remove('hover-effect');
-                currentVideoIndex = -1;
-            }
-        }, true);
     }
 
     // Initialize Videos
@@ -1107,32 +1041,25 @@
         const videos = document.querySelectorAll('.card-media');
        
         if (isMobileDevice()) {
-            // On mobile, autoplay all card videos muted
             videos.forEach(video => {
                 video.setAttribute('autoplay', '');
                 video.setAttribute('muted', '');
                 video.setAttribute('playsinline', '');
                 video.setAttribute('preload', 'auto');
-               
                 forceVideoPlay(video);
                
-                // Ensure videos play after user interaction
                 document.body.addEventListener('touchstart', function once() {
                     videos.forEach(v => forceVideoPlay(v));
                     document.body.removeEventListener('touchstart', once);
                 }, { once: true, passive: true });
             });
         } else {
-            // On desktop, pause all card videos initially
             videos.forEach(video => {
                 video.pause();
                 video.currentTime = 0;
                
                 const card = video.closest('.subject-card');
-                card.addEventListener('mouseenter', () => {
-                    forceVideoPlay(video);
-                });
-               
+                card.addEventListener('mouseenter', () => forceVideoPlay(video));
                 card.addEventListener('mouseleave', () => {
                     video.pause();
                     video.currentTime = 0;
@@ -1140,42 +1067,8 @@
             });
         }
         
-        // Initialize background video
         backgroundVideo.muted = true;
         backgroundVideo.playsInline = true;
-    }
-
-    // Event Listeners
-    function setupEventListeners() {
-        window.addEventListener('resize', function() {
-            if (isMobileDevice()) {
-                // Handle any resize-related adjustments
-            }
-        });
-
-        window.addEventListener('orientationchange', function() {
-            if (isMobileDevice()) {
-                setTimeout(() => {
-                    document.querySelectorAll('.card-media').forEach(video => {
-                        forceVideoPlay(video);
-                    });
-                }, 100);
-            }
-        });
-
-        document.addEventListener('visibilitychange', function() {
-            if (document.visibilityState === 'visible' && isMobileDevice()) {
-                document.querySelectorAll('.card-media').forEach(video => {
-                    forceVideoPlay(video);
-                });
-            }
-        });
-
-        window.addEventListener('storage', function(e) {
-            if (e.key === USER_INFO_KEY) {
-                handleProfilePicture();
-            }
-        });
     }
 
     // Initialization
@@ -1184,9 +1077,8 @@
         handleProfilePicture();
         setupDropdownMenu();
         setupCardHoverEffects();
-        setupEventListeners();
     });
 })();
-    </script>
+</script>
 </body>
 </html>
