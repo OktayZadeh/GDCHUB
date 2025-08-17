@@ -874,7 +874,13 @@ catch (error) {
             return false;
         }
     }
-
+if (checkAuthStatus()) {
+    // Replace history state to prevent back navigation
+    window.history.replaceState(null, null, window.location.href);
+    window.addEventListener('popstate', function(event) {
+        window.history.replaceState(null, null, window.location.href);
+    });
+}
     // Main authentication check
     if (!checkAuthStatus()) {
         document.body.innerHTML = `
