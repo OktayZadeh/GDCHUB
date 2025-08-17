@@ -844,29 +844,30 @@
         return cookie ? cookie.split('=')[1] : null;
     }
 
-    function checkAuthStatus() {
-  const authToken = localStorage.getItem('gdcAuthToken');
-  const cookieToken = document.cookie.match(/gdcAuth=([^;]+)/)?.[1];
+   function checkAuthStatus() {
+    try {
+        const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+        const cookieToken = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('gdcAuth='))
+            ?.split('=')[1];
+        
+        // If no tokens exist
+        if (!authToken || !cookieToken) {
+            clearAuthData();
+            return false;
+        }
+        
+        // If tokens don't match
+        if (authToken !== cookieToken) {
+            clearAuthData();
+            return false;
+        }
+        
+        return true;
+    } 
 
-  // 1. Check if tokens exist and match
-  if (!authToken || !cookieToken || authToken !== cookieToken) {
-    clearAuthData();
-    window.location.href = "https://oktayzadeh.github.io/GDCHUB/";
-    return false;
-  }
 
-  // 2. Validate token format (e.g., "auth-1234567890-abc123")
-  const isValidFormat = (token) => 
-    token && token.startsWith('auth-') && token.length > 20;
-
-  if (!isValidFormat(authToken)) {
-    clearAuthData();
-    window.location.href = "https://oktayzadeh.github.io/GDCHUB/";
-    return false;
-  }
-
-  return true; // All checks passed
-}
 catch (error) {
             console.error("Auth check error:", error);
             clearAuthData();
