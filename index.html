@@ -582,76 +582,7 @@
 </div>
 
 <script>
-    // ========== PERSISTENT AUTHENTICATION SYSTEM ==========
-(function() {
-    // Configuration constants
-    const USER_INFO_KEY = "googleUserInfo";
-    const AUTH_TOKEN_KEY = "gdcAuthToken";
-    const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
 
-    // Token management functions
-    function clearAuthData() {
-        localStorage.removeItem(USER_INFO_KEY);
-        localStorage.removeItem(AUTH_TOKEN_KEY);
-        document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    }
-
-    function getCookieToken() {
-        const cookie = document.cookie.split('; ')
-            .find(row => row.startsWith('gdcAuth='));
-        return cookie ? cookie.split('=')[1] : null;
-    }
-
-   function checkAuthStatus() {
-    try {
-        const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-        const cookieToken = document.cookie
-            .split('; ')
-            .find(row => row.startsWith('gdcAuth='))
-            ?.split('=')[1];
-        
-        // If no tokens exist
-        if (!authToken || !cookieToken) {
-            clearAuthData();
-            return false;
-        }
-        
-        // If tokens don't match
-        if (authToken !== cookieToken) {
-            clearAuthData();
-            return false;
-        }
-        
-        return true;
-    } 
-
-
-catch (error) {
-            console.error("Auth check error:", error);
-            clearAuthData();
-            return false;
-        }
-    }
-
-    // Main authentication check
-    if (!checkAuthStatus()) {
-        document.body.innerHTML = `
-            <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Poppins',sans-serif;z-index:9999;">
-                <div style="text-align:center;padding:30px;max-width:400px;">
-                    <h2 style="color:#2b2d42;margin-bottom:20px;">Authentication Required</h2>
-                    <p style="color:#5f6a7d;margin-bottom:25px;">
-                        Please sign in to access this content. Redirecting to login page...
-                    </p>
-                    <div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;">
-                        <div style="width:100%;height:100%;background:#4361ee;border-radius:2px;animation:progress 2s ease-in-out infinite;"></div>
-                    </div>
-                </div>
-            </div>
-            <style>@keyframes progress {0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}</style>
-        `;
-        setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
-        throw new Error("Authentication required");
-    }
 const targetPage = "https://oktayzadeh.github.io/GDCHUB/SubjectSelection.html";
 const USER_INFO_KEY = "googleUserInfo";
 const AUTH_TOKEN_KEY = "gdcAuthToken";
