@@ -6,20 +6,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <style>
 :root {
-    /* Color palette */
-    --primary: #4361ee;
-    --primary-dark: #3a56d4;
-    --secondary: #3f37c9;
-    --accent: #4895ef;
-    --light-accent: #f0f7ff;
-    --success: #4cc9f0;
-    --warning: #f8961e;
-    --danger: #f72585;
-    --dark: #2b2d42;
-    --medium: #5f6a7d;
-    --light: #f8f9fa;
-    --lighter: #ffffff;
-    --border: #e9ecef;
+    /* Updated Color palette with #388C82 as primary */
+    --primary: #388C82;
+    --primary-dark: #2F7A70;
+    --secondary: #2D6D64;
+    --accent: #4AA89B;
+    --light-accent: #EFF9F8;
+    --success: #4CC9F0;
+    --warning: #F8961E;
+    --danger: #F72585;
+    --dark: #2B2D42;
+    --medium: #5F6A7D;
+    --light: #F8F9FA;
+    --lighter: #FFFFFF;
+    --border: #E9ECEF;
     
     /* Typography */
     --font-main: 'Inter', sans-serif;
@@ -147,7 +147,7 @@ a:hover {
 }
 
 .button.danger:hover {
-    background-color: #e5177b;
+    background-color: #E5177B;
 }
 
 .button.small {
@@ -177,7 +177,7 @@ textarea:focus,
 select:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+    box-shadow: 0 0 0 3px rgba(56, 140, 130, 0.1);
 }
 
 textarea {
@@ -393,7 +393,7 @@ select {
 .search-input:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+    box-shadow: 0 0 0 3px rgba(56, 140, 130, 0.1);
 }
 
 .search-clear {
@@ -450,7 +450,7 @@ select {
 /* Drag and Drop Styles */
 .sidebar-item.dragging {
     opacity: 0.5;
-    background-color: rgba(67, 97, 238, 0.2);
+    background-color: rgba(56, 140, 130, 0.2);
 }
 
 .sidebar-item.drop-area {
@@ -656,12 +656,12 @@ select {
     text-decoration: none;
     transition: all var(--transition-fast);
     font-size: var(--text-sm);
-    border: 1px solid rgba(67, 97, 238, 0.1);
+    border: 1px solid rgba(56, 140, 130, 0.1);
 }
 
 .file-attachment:hover {
-    background: #e1f0ff;
-    border-color: rgba(67, 97, 238, 0.3);
+    background: #E1F0FF;
+    border-color: rgba(56, 140, 130, 0.3);
 }
 
 .post-meta {
@@ -693,7 +693,7 @@ select {
 }
 
 .post-actions .delete-button:hover {
-    background: #e5177b;
+    background: #E5177B;
 }
 
 /* Reminders Styles */
@@ -736,7 +736,7 @@ select {
 }
 
 .reminder-card.trip {
-    border-left-color: #2ecc71;
+    border-left-color: #2ECC71;
 }
 
 .reminder-card.test {
@@ -748,7 +748,7 @@ select {
 }
 
 .reminder-card.deadline {
-    border-left-color: #9b59b6;
+    border-left-color: #9B59B6;
 }
 
 .reminder-title {
@@ -1236,7 +1236,7 @@ body.non-admin .sidebar-title {
                         Please sign in again. Redirecting to login page...
                     </p>
                     <div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;">
-                        <div style="width:100%;height:100%;background:#4361ee;border-radius:2px;animation:progress 2s ease-in-out infinite;"></div>
+                        <div style="width:100%;height:100%;background:#388C82;border-radius:2px;animation:progress 2s ease-in-out infinite;"></div>
                     </div>
                 </div>
             </div>
@@ -1466,34 +1466,6 @@ body.non-admin .sidebar-title {
             });
         }
 
-        // Save announcements for specific tab to Firebase
-        function saveAnnouncementsForTab(tabId, announcements) {
-            const announcementsObject = {};
-            announcements.forEach(announcement => {
-                announcementsObject[announcement.id] = announcement;
-            });
-            
-            announcementsRef.child(tabId).set(announcementsObject)
-                .catch((error) => {
-                    console.error("Error saving announcements:", error);
-                    alert("Error saving announcement. Please try again.");
-                });
-        }
-
-        // Save reminders to Firebase
-        function saveReminders() {
-            const remindersObject = {};
-            reminders.forEach(reminder => {
-                remindersObject[reminder.id] = reminder;
-            });
-            
-            remindersRef.set(remindersObject)
-                .catch((error) => {
-                    console.error("Error saving reminders:", error);
-                    alert("Error saving reminder. Please try again.");
-                });
-        }
-
         // Create post element for announcements
         function createPostElement(announcement) {
             const post = document.createElement('div');
@@ -1531,15 +1503,14 @@ body.non-admin .sidebar-title {
                     </button>
                 </div>` : '';
             
+            // Fixed the duplicate content issue by removing the extra content div
             post.innerHTML = `
                 ${actionsHtml}
                 <h3>${announcement.title}</h3>
                 <div class="collapsed-content">${announcement.content}</div>
                 <div class="post-details">
-                    <div class="post-content">${announcement.content}</div>
                     ${embedHtml}
-                    ${filesHtml ? 
-                        `<div class="file-attachments">${filesHtml}</div>` : ''}
+                    ${filesHtml ? `<div class="file-attachments">${filesHtml}</div>` : ''}
                     <div class="post-meta">
                         Posted on ${postDate}
                     </div>
