@@ -6,16 +6,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <style>
 :root {
-    /* Updated Color palette with #388C82 as primary */
-    --primary: #388C82;
-    --primary-dark: #399185;
-    --secondary: #2D6D64;
+    /* Updated Color palette with #3EA899 as primary */
+    --primary: #3EA899;
+    --primary-dark: #389185;
+    --secondary: #3EA899;
     --accent: #4AA89B;
     --light-accent: #EFF9F8;
     --success: #4CC9F0;
     --warning: #F8961E;
     --danger: #F72585;
-    --dark: #388C82;
+    --dark: #000000; /* Changed to black for main text */
     --medium: #5F6A7D;
     --light: #F8F9FA;
     --lighter: #FFFFFF;
@@ -177,7 +177,7 @@ textarea:focus,
 select:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(56, 140, 130, 0.1);
+    box-shadow: 0 0 0 3px rgba(62, 168, 153, 0.1);
 }
 
 textarea {
@@ -205,7 +205,7 @@ select {
 /* Sidebar Styles */
 .sidebar {
     width: 280px;
-    background: linear-gradient(135deg, var(--dark) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     color: white;
     flex-shrink: 0;
     min-height: 100vh;
@@ -221,7 +221,6 @@ select {
     align-items: center;
     gap: var(--space-md);
     padding: var(--space-lg) var(--space-xl);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     position: sticky;
     top: 0;
     background: inherit;
@@ -246,7 +245,7 @@ select {
 
 .sidebar-menu {
     list-style: none;
-    padding: var(--space-md) 0;
+    padding: 0 0 var(--space-md) 0;
     margin: 0;
 }
 
@@ -393,7 +392,7 @@ select {
 .search-input:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(56, 140, 130, 0.1);
+    box-shadow: 0 0 0 3px rgba(62, 168, 153, 0.1);
 }
 
 .search-clear {
@@ -450,7 +449,7 @@ select {
 /* Drag and Drop Styles */
 .sidebar-item.dragging {
     opacity: 0.5;
-    background-color: rgba(56, 140, 130, 0.2);
+    background-color: rgba(62, 168, 153, 0.2);
 }
 
 .sidebar-item.drop-area {
@@ -563,7 +562,7 @@ select {
 .post-card .back-button {
     position: fixed;
     top: var(--space-md);
-    right: var(--space-md);
+    left: calc(280px + var(--space-md));
     background: var(--primary);
     color: white;
     border: none;
@@ -631,16 +630,20 @@ select {
     display: none !important;
 }
 
-.post-card.expanded .delete-button,
-.post-card.expanded button[onclick^="editAnnouncement"] {
-    position: absolute;
-    top: var(--space-lg);
-    right: var(--space-lg);
-    z-index: 10;
+.post-card.expanded .delete-button {
+    position: fixed;
+    top: var(--space-md);
+    right: var(--space-xl);
+    z-index: 101;
+    padding: var(--space-sm) var(--space-md);
 }
 
 .post-card.expanded button[onclick^="editAnnouncement"] {
-    right: 120px;
+    position: fixed;
+    top: var(--space-md);
+    right: calc(var(--space-xl) + 100px);
+    z-index: 101;
+    padding: var(--space-sm) var(--space-md);
 }
 
 .file-attachment {
@@ -656,12 +659,12 @@ select {
     text-decoration: none;
     transition: all var(--transition-fast);
     font-size: var(--text-sm);
-    border: 1px solid rgba(56, 140, 130, 0.1);
+    border: 1px solid rgba(62, 168, 153, 0.1);
 }
 
 .file-attachment:hover {
     background: #E1F0FF;
-    border-color: rgba(56, 140, 130, 0.3);
+    border-color: rgba(62, 168, 153, 0.3);
 }
 
 .post-meta {
@@ -995,6 +998,10 @@ body.non-admin .sidebar-title {
     .post-card.expanded {
         left: 240px;
     }
+    
+    .post-card.expanded .back-button {
+        left: calc(240px + var(--space-md));
+    }
 }
 
 @media (max-width: 768px) {
@@ -1018,6 +1025,22 @@ body.non-admin .sidebar-title {
     .post-card.expanded {
         left: 0;
         padding: var(--space-lg);
+    }
+    
+    .post-card.expanded .back-button,
+    .post-card.expanded .delete-button,
+    .post-card.expanded button[onclick^="editAnnouncement"] {
+        left: var(--space-md);
+        right: auto;
+    }
+    
+    .post-card.expanded .delete-button {
+        top: calc(var(--space-md) + 60px);
+    }
+    
+    .post-card.expanded button[onclick^="editAnnouncement"] {
+        top: calc(var(--space-md) + 60px);
+        left: calc(var(--space-md) + 100px);
     }
     
     #profile-pic {
@@ -1054,6 +1077,21 @@ body.non-admin .sidebar-title {
     
     .post-card.expanded .post-actions {
         position: absolute;
+    }
+    
+    .post-card.expanded .delete-button,
+    .post-card.expanded button[onclick^="editAnnouncement"] {
+        position: fixed;
+        top: auto;
+        bottom: var(--space-md);
+    }
+    
+    .post-card.expanded .delete-button {
+        right: var(--space-md);
+    }
+    
+    .post-card.expanded button[onclick^="editAnnouncement"] {
+        right: calc(var(--space-md) + 100px);
     }
 }
     </style>
@@ -1236,7 +1274,7 @@ body.non-admin .sidebar-title {
                         Please sign in again. Redirecting to login page...
                     </p>
                     <div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;">
-                        <div style="width:100%;height:100%;background:#388C82;border-radius:2px;animation:progress 2s ease-in-out infinite;"></div>
+                        <div style="width:100%;height:100%;background:#3EA899;border-radius:2px;animation:progress 2s ease-in-out infinite;"></div>
                     </div>
                 </div>
             </div>
@@ -2071,6 +2109,19 @@ body.non-admin .sidebar-title {
                 reminders = reminders.filter(r => r.id !== reminderId);
                 saveReminders();
             }
+        }
+
+        function saveReminders() {
+            const remindersObject = {};
+            reminders.forEach(reminder => {
+                remindersObject[reminder.id] = reminder;
+            });
+            
+            remindersRef.set(remindersObject)
+                .catch((error) => {
+                    console.error("Error saving reminders:", error);
+                    alert("Error saving reminders. Please try again.");
+                });
         }
 
         // Modal close handlers
