@@ -823,7 +823,6 @@
     </div>
 
 <script>
- 
 // ========== PERSISTENT AUTHENTICATION SYSTEM ==========
 (function() {
     // Configuration constants
@@ -844,43 +843,31 @@
         return cookie ? cookie.split('=')[1] : null;
     }
 
-   function checkAuthStatus() {
-    try {
-        const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-        const cookieToken = document.cookie
-            .split('; ')
-            .find(row => row.startsWith('gdcAuth='))
-            ?.split('=')[1];
-        
-        // If no tokens exist
-        if (!authToken || !cookieToken) {
-            clearAuthData();
-            return false;
-        }
-        
-        // If tokens don't match
-        if (authToken !== cookieToken) {
-            clearAuthData();
-            return false;
-        }
-        
-        return true;
-    } 
-
-
-catch (error) {
+    function checkAuthStatus() {
+        try {
+            const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+            const cookieToken = getCookieToken();
+            
+            // If no tokens exist
+            if (!authToken || !cookieToken) {
+                clearAuthData();
+                return false;
+            }
+            
+            // If tokens don't match
+            if (authToken !== cookieToken) {
+                clearAuthData();
+                return false;
+            }
+            
+            return true;
+        } catch (error) {
             console.error("Auth check error:", error);
             clearAuthData();
             return false;
         }
     }
-if (checkAuthStatus()) {
-    // Replace history state to prevent back navigation
-    window.history.replaceState(null, null, window.location.href);
-    window.addEventListener('popstate', function(event) {
-        window.history.replaceState(null, null, window.location.href);
-    });
-}
+
     // Main authentication check
     if (!checkAuthStatus()) {
         document.body.innerHTML = `
@@ -899,6 +886,16 @@ if (checkAuthStatus()) {
         `;
         setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
         throw new Error("Authentication required");
+    } else {
+        // Prevent back navigation to login page
+        window.history.replaceState(null, null, window.location.href);
+        window.addEventListener('popstate', function() {
+            if (!window.location.href.includes(LOGIN_PAGE)) {
+                window.history.replaceState(null, null, window.location.href);
+            } else {
+                window.location.reload();
+            }
+        });
     }
 
     // ========== PAGE FUNCTIONALITY ==========
