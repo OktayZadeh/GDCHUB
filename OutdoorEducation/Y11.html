@@ -22,6 +22,22 @@
     --light: #F7FAFC;
     --lighter: #FFFFFF;
     
+    /* Dark mode colors */
+    --dark-primary: #2C7A7B;
+    --dark-primary-light: #234E52;
+    --dark-primary-dark: #1D4044;
+    --dark-secondary: #4299E1;
+    --dark-accent: #0BC5EA;
+    --dark-success: #38A169;
+    --dark-warning: #DD6B20;
+    --dark-danger: #E53E3E;
+    --dark-dark: #171923;
+    --dark-dark-gray: #1A202C;
+    --dark-medium: #A0AEC0;
+    --dark-light-gray: #2D3748;
+    --dark-light: #1A202C;
+    --dark-lighter: #2D3748;
+    
     /* Typography */
     --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-secondary: 'Roboto', sans-serif;
@@ -65,6 +81,68 @@
     --transition-slow: 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Dark mode styles */
+body.dark-mode {
+    --primary: var(--dark-primary);
+    --primary-light: var(--dark-primary-light);
+    --primary-dark: var(--dark-primary-dark);
+    --secondary: var(--dark-secondary);
+    --accent: var(--dark-accent);
+    --success: var(--dark-success);
+    --warning: var(--dark-warning);
+    --danger: var(--dark-danger);
+    --dark: var(--dark-dark);
+    --dark-gray: var(--dark-dark-gray);
+    --medium: var(--dark-medium);
+    --light-gray: var(--dark-light-gray);
+    --light: var(--dark-light);
+    --lighter: var(--dark-lighter);
+    
+    background-color: var(--dark-light);
+    color: var(--dark-medium);
+}
+
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4 {
+    color: white;
+}
+
+body.dark-mode .sidebar,
+body.dark-mode .post-card,
+body.dark-mode .reminders-container,
+body.dark-mode .modal-content {
+    background-color: var(--dark-lighter);
+    border-color: var(--dark-light-gray);
+}
+
+body.dark-mode .sidebar-link {
+    color: var(--dark-medium);
+}
+
+body.dark-mode .sidebar-link:hover {
+    color: white;
+}
+
+body.dark-mode .sidebar-link.active {
+    color: var(--dark-primary);
+}
+
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+    background-color: var(--dark-lighter);
+    border-color: var(--dark-light-gray);
+    color: white;
+}
+
+body.dark-mode .button.secondary {
+    background-color: var(--dark-lighter);
+    color: var(--dark-primary);
+    border-color: var(--dark-light-gray);
+}
+
 /* Base Styles */
 * {
     box-sizing: border-box;
@@ -83,6 +161,7 @@ body {
     color: var(--dark);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color var(--transition-normal);
 }
 
 h1, h2, h3, h4 {
@@ -483,6 +562,35 @@ select {
 #profile-pic:hover {
     transform: scale(1.1);
     box-shadow: var(--shadow-md);
+}
+
+/* Dark mode toggle */
+#dark-mode-toggle {
+    position: fixed;
+    top: var(--space-md);
+    right: calc(var(--space-md) + 50px);
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-full);
+    border: none;
+    background-color: var(--light);
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-fast);
+}
+
+#dark-mode-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: var(--shadow-md);
+}
+
+body.dark-mode #dark-mode-toggle {
+    background-color: var(--dark-lighter);
+    color: white;
 }
 
 /* Drag and Drop Styles */
@@ -1112,6 +1220,12 @@ body.non-admin .sidebar-title {
         right: var(--space-sm);
     }
     
+    #dark-mode-toggle {
+        position: absolute;
+        top: var(--space-sm);
+        right: calc(var(--space-sm) + 50px);
+    }
+    
     .reminders-list {
         grid-template-columns: 1fr;
     }
@@ -1239,6 +1353,9 @@ body.non-admin .sidebar-title {
 <body class="non-admin">
     <!-- Mobile Menu Toggle -->
     <button class="menu-toggle" id="menu-toggle">☰</button>
+
+    <!-- Dark Mode Toggle -->
+    <button id="dark-mode-toggle" title="Toggle Dark Mode">🌙</button>
 
     <!-- Profile Picture Element -->
     <img id="profile-pic" src="" alt="Profile Picture">
@@ -1478,6 +1595,7 @@ body.non-admin .sidebar-title {
         const searchClearButton = document.querySelector('.search-clear');
         const menuToggle = document.getElementById('menu-toggle');
         const sidebar = document.getElementById('sidebar');
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
 
         // Variables
         let tabs = [];
@@ -1504,12 +1622,33 @@ body.non-admin .sidebar-title {
             setupModalCloseHandlers();
             setupSearch();
             setupMobileMenu();
+            setupDarkMode();
         });
 
         // Mobile menu toggle
         function setupMobileMenu() {
             menuToggle.addEventListener('click', () => {
                 sidebar.classList.toggle('visible');
+            });
+        }
+
+        // Dark mode setup
+        function setupDarkMode() {
+            // Check for saved dark mode preference
+            const darkModeEnabled = localStorage.getItem('darkMode') === 'true';
+            if (darkModeEnabled) {
+                document.body.classList.add('dark-mode');
+                darkModeToggle.textContent = '☀️';
+            } else {
+                darkModeToggle.textContent = '🌙';
+            }
+            
+            // Toggle dark mode
+            darkModeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                const isDarkMode = document.body.classList.contains('dark-mode');
+                localStorage.setItem('darkMode', isDarkMode);
+                darkModeToggle.textContent = isDarkMode ? '☀️' : '🌙';
             });
         }
 
@@ -2152,8 +2291,13 @@ body.non-admin .sidebar-title {
             const sortedReminders = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date));
             
             sortedReminders.forEach(reminder => {
+                // Skip invalid reminders (fix for the undefined issue)
+                if (!reminder || !reminder.id || !reminder.title || !reminder.date) {
+                    return;
+                }
+                
                 const reminderElement = document.createElement('div');
-                reminderElement.className = `reminder-card ${reminder.type}`;
+                reminderElement.className = `reminder-card ${reminder.type || 'trip'}`;
                 reminderElement.dataset.id = reminder.id;
                 
                 const actionsHtml = isAdmin ? 
@@ -2174,8 +2318,13 @@ body.non-admin .sidebar-title {
         }
 
         function formatDate(dateString) {
-            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-            return new Date(dateString).toLocaleDateString(undefined, options);
+            try {
+                const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+                return new Date(dateString).toLocaleDateString(undefined, options);
+            } catch (e) {
+                console.error("Invalid date format:", dateString);
+                return "Invalid Date";
+            }
         }
 
         function openReminderEditor(reminderId = null) {
@@ -2194,7 +2343,7 @@ body.non-admin .sidebar-title {
                     document.getElementById('reminder-title').value = reminder.title;
                     document.getElementById('reminder-description').value = reminder.description || '';
                     document.getElementById('reminder-date').value = reminder.date;
-                    document.getElementById('reminder-type').value = reminder.type;
+                    document.getElementById('reminder-type').value = reminder.type || 'trip';
                     document.getElementById('save-reminder-button').textContent = 'Save Changes';
                 }
             } else {
@@ -2258,15 +2407,25 @@ body.non-admin .sidebar-title {
         function deleteReminder(reminderId) {
             if (!isAdmin) return;
             if (confirm('Are you sure you want to delete this reminder?')) {
-                reminders = reminders.filter(r => r.id !== reminderId);
-                saveReminders();
+                // Find the index of the reminder to delete
+                const index = reminders.findIndex(r => r.id === reminderId);
+                
+                if (index !== -1) {
+                    // Remove the reminder from the array
+                    reminders.splice(index, 1);
+                    
+                    // Save the updated reminders to Firebase
+                    saveReminders();
+                }
             }
         }
 
         function saveReminders() {
             const remindersObject = {};
             reminders.forEach(reminder => {
-                remindersObject[reminder.id] = reminder;
+                if (reminder && reminder.id) { // Only include valid reminders
+                    remindersObject[reminder.id] = reminder;
+                }
             });
             
             remindersRef.set(remindersObject)
