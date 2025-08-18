@@ -1698,6 +1698,44 @@ body.dark-mode .profile-dropdown-content::before {
     </div>
 
     <script>
+        function setupProfileDropdown() {
+    const dropdown = document.querySelector('.profile-dropdown');
+    const dropdownContent = document.querySelector('.profile-dropdown-content');
+    let hoverTimeout;
+    
+    // Show dropdown with delay
+    dropdown.addEventListener('mouseenter', () => {
+        clearTimeout(hoverTimeout);
+        dropdownContent.style.display = 'block';
+        setTimeout(() => {
+            dropdownContent.style.opacity = '1';
+            dropdownContent.style.transform = 'translateY(0)';
+            dropdownContent.style.pointerEvents = 'auto';
+        }, 10);
+    });
+    
+    // Hide dropdown with delay
+    dropdown.addEventListener('mouseleave', () => {
+        hoverTimeout = setTimeout(() => {
+            dropdownContent.style.opacity = '0';
+            dropdownContent.style.transform = 'translateY(10px)';
+            dropdownContent.style.pointerEvents = 'none';
+        }, 300); // 300ms delay before closing
+    });
+    
+    // Keep open if hovering dropdown
+    dropdownContent.addEventListener('mouseenter', () => {
+        clearTimeout(hoverTimeout);
+    });
+    
+    dropdownContent.addEventListener('mouseleave', () => {
+        hoverTimeout = setTimeout(() => {
+            dropdownContent.style.opacity = '0';
+            dropdownContent.style.transform = 'translateY(10px)';
+            dropdownContent.style.pointerEvents = 'none';
+        }, 300);
+    });
+}
 // AUTH CHECK - MUST BE AT TOP OF EVERY PROTECTED PAGE
 (function() {
     const USER_INFO_KEY = "googleUserInfo";
