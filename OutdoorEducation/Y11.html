@@ -1364,6 +1364,124 @@ body.non-admin .sidebar-title {
     </div>
   </div>
 </div>
+
+        .topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 54px;
+    background: var(--glass);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border-bottom: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    padding: 0 24px;
+}
+
+.topbar-content {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.topbar-logo {
+    height: 40px;
+    transition: all 0.3s ease;
+}
+
+.topbar-title {
+    font-size: 18px;
+    font-weight: 600;
+    font-family: 'Montserrat', sans-serif;
+    color: var(--dark);
+    position: relative;
+}
+
+.topbar-links {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.topbar-button {
+    padding: 6px 14px;
+    background: transparent;
+    color: var(--text);
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.topbar-button:hover {
+    background: rgba(67, 97, 238, 0.05);
+    color: var(--primary);
+    border-color: rgba(67, 97, 238, 0.2);
+}
+
+.topbar-button i {
+    font-size: 13px;
+}
+
+@media (max-width: 768px) {
+    .topbar {
+        padding: 0 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .topbar-title {
+        display: none;
+    }
+    
+    .topbar-button span {
+        display: none;
+    }
+    
+    .topbar-button {
+        padding: 8px;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        justify-content: center;
+    }
+}
+
+@media screen and (max-width: 768px) and (orientation: landscape) {
+    .topbar-title {
+        display: inline;
+    }
+    
+    .topbar-button span {
+        display: inline;
+    }
+    
+    .topbar-button {
+        padding: 6px 12px;
+        width: auto;
+        height: auto;
+        border-radius: 6px;
+    }
+}
     </style>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
