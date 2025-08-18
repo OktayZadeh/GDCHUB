@@ -4,6 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classroom Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
 :root {
     /* Modern Color palette */
@@ -193,6 +194,160 @@ a:hover {
     text-decoration: underline;
 }
 
+/* Top Navigation Bar */
+.topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 54px;
+    background: var(--lighter);
+    border-bottom: 1px solid var(--light-gray);
+    box-shadow: var(--shadow-sm);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    transition: all var(--transition-normal);
+    padding: 0 var(--space-lg);
+}
+
+.topbar-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.topbar-logo {
+    height: 36px;
+    transition: all var(--transition-fast);
+}
+
+.topbar-title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    font-family: var(--font-main);
+    color: var(--dark);
+}
+
+.topbar-links {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+}
+
+.topbar-button {
+    padding: var(--space-xs) var(--space-sm);
+    background: transparent;
+    color: var(--dark);
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    font-size: var(--text-sm);
+    transition: all var(--transition-fast);
+    border: 1px solid var(--light-gray);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.topbar-button:hover {
+    background: var(--light);
+    color: var(--primary);
+    border-color: var(--primary-light);
+}
+
+.topbar-button i {
+    font-size: var(--text-sm);
+}
+
+/* Profile dropdown */
+.profile-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: var(--lighter);
+    min-width: 160px;
+    box-shadow: var(--shadow-md);
+    border-radius: var(--radius-md);
+    z-index: 1001;
+    border: 1px solid var(--light-gray);
+    margin-top: var(--space-xs);
+}
+
+.profile-dropdown-content a {
+    color: var(--dark);
+    padding: var(--space-sm) var(--space-md);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--text-sm);
+}
+
+.profile-dropdown-content a:hover {
+    background-color: var(--light);
+    color: var(--primary);
+}
+
+.profile-dropdown-content a i {
+    width: 18px;
+    text-align: center;
+}
+
+.profile-dropdown:hover .profile-dropdown-content {
+    display: block;
+}
+
+/* Dark mode adjustments for topbar */
+body.dark-mode .topbar {
+    background-color: var(--dark-lighter);
+    border-bottom-color: var(--dark-light-gray);
+}
+
+body.dark-mode .topbar-title {
+    color: white;
+}
+
+body.dark-mode .topbar-button {
+    color: var(--dark-medium);
+    border-color: var(--dark-light-gray);
+    background-color: var(--dark-lighter);
+}
+
+body.dark-mode .topbar-button:hover {
+    background-color: var(--dark-light-gray);
+    color: var(--primary);
+}
+
+body.dark-mode .profile-dropdown-content {
+    background-color: var(--dark-lighter);
+    border-color: var(--dark-light-gray);
+}
+
+body.dark-mode .profile-dropdown-content a {
+    color: var(--dark-medium);
+}
+
+body.dark-mode .profile-dropdown-content a:hover {
+    background-color: var(--dark-light-gray);
+    color: var(--primary);
+}
+
 /* Button Styles */
 .button {
     display: inline-flex;
@@ -312,7 +467,7 @@ select {
     min-height: 100vh;
     overflow-y: auto;
     position: fixed;
-    top: 0;
+    top: 54px; /* Adjusted for topbar */
     bottom: 0;
     z-index: 100;
     border-right: 1px solid var(--light-gray);
@@ -465,6 +620,7 @@ select {
     max-width: calc(100% - 260px);
     box-sizing: border-box;
     margin-left: 260px;
+    margin-top: 54px; /* Adjusted for topbar */
     display: flex;
     flex-direction: column;
     gap: var(--space-xl);
@@ -543,18 +699,12 @@ select {
 
 /* Profile picture styles */
 #profile-pic {
-    position: fixed;
-    top: var(--space-md);
-    right: var(--space-md);
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: var(--radius-full);
     border: 2px solid white;
     cursor: pointer;
     transition: transform var(--transition-fast);
-    z-index: 100;
-    display: none;
-    background-color: white;
     object-fit: cover;
     box-shadow: var(--shadow-sm);
 }
@@ -562,35 +712,6 @@ select {
 #profile-pic:hover {
     transform: scale(1.1);
     box-shadow: var(--shadow-md);
-}
-
-/* Dark mode toggle */
-#dark-mode-toggle {
-    position: fixed;
-    top: var(--space-md);
-    right: calc(var(--space-md) + 50px);
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-full);
-    border: none;
-    background-color: var(--light);
-    cursor: pointer;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: var(--shadow-sm);
-    transition: all var(--transition-fast);
-}
-
-#dark-mode-toggle:hover {
-    transform: scale(1.1);
-    box-shadow: var(--shadow-md);
-}
-
-body.dark-mode #dark-mode-toggle {
-    background-color: var(--dark-lighter);
-    color: white;
 }
 
 /* Drag and Drop Styles */
@@ -698,7 +819,7 @@ body.dark-mode #dark-mode-toggle {
 
 .post-card.expanded {
     position: fixed;
-    top: 0;
+    top: 54px; /* Adjusted for topbar */
     left: 260px;
     right: 0;
     bottom: 0;
@@ -715,7 +836,7 @@ body.dark-mode #dark-mode-toggle {
 
 .post-card .back-button {
     position: fixed;
-    top: var(--space-md);
+    top: calc(54px + var(--space-md)); /* Adjusted for topbar */
     left: calc(260px + var(--space-md));
     background: var(--primary);
     color: white;
@@ -793,7 +914,7 @@ body.dark-mode #dark-mode-toggle {
 
 .post-card.expanded .delete-button {
     position: fixed;
-    top: var(--space-md);
+    top: calc(54px + var(--space-md)); /* Adjusted for topbar */
     right: var(--space-xl);
     z-index: 101;
     padding: var(--space-sm) var(--space-md);
@@ -801,7 +922,7 @@ body.dark-mode #dark-mode-toggle {
 
 .post-card.expanded button[onclick^="editAnnouncement"] {
     position: fixed;
-    top: var(--space-md);
+    top: calc(54px + var(--space-md)); /* Adjusted for topbar */
     right: calc(var(--space-xl) + 100px);
     z-index: 101;
     padding: var(--space-sm) var(--space-md);
@@ -1181,6 +1302,7 @@ body.non-admin .sidebar-title {
         min-height: auto;
         max-height: 60vh;
         transform: translateX(0);
+        top: 54px;
     }
     
     .sidebar.collapsed {
@@ -1191,11 +1313,13 @@ body.non-admin .sidebar-title {
         max-width: 100%;
         margin-left: 0;
         padding: var(--space-lg);
+        margin-top: 54px;
     }
     
     .post-card.expanded {
         left: 0;
         padding: var(--space-lg);
+        top: 54px;
     }
     
     .post-card.expanded .back-button,
@@ -1206,24 +1330,12 @@ body.non-admin .sidebar-title {
     }
     
     .post-card.expanded .delete-button {
-        top: calc(var(--space-md) + 60px);
+        top: calc(54px + var(--space-md) + 60px);
     }
     
     .post-card.expanded button[onclick^="editAnnouncement"] {
-        top: calc(var(--space-md) + 60px);
+        top: calc(54px + var(--space-md) + 60px);
         left: calc(var(--space-md) + 100px);
-    }
-    
-    #profile-pic {
-        position: absolute;
-        top: var(--space-sm);
-        right: var(--space-sm);
-    }
-    
-    #dark-mode-toggle {
-        position: absolute;
-        top: var(--space-sm);
-        right: calc(var(--space-sm) + 50px);
     }
     
     .reminders-list {
@@ -1288,6 +1400,27 @@ body.non-admin .sidebar-title {
     .post-card {
         padding: var(--space-md);
     }
+    
+    /* Adjust topbar for mobile */
+    .topbar {
+        padding: 0 var(--space-sm);
+    }
+    
+    .topbar-title {
+        display: none;
+    }
+    
+    .topbar-button span {
+        display: none;
+    }
+    
+    .topbar-button {
+        padding: 6px;
+        width: 36px;
+        height: 36px;
+        justify-content: center;
+        border-radius: 50%;
+    }
 }
 
 /* Mobile menu toggle */
@@ -1312,12 +1445,13 @@ body.non-admin .sidebar-title {
 @media (max-width: 768px) {
     .menu-toggle {
         display: flex;
+        top: calc(54px + var(--space-sm)); /* Adjusted for topbar */
     }
     
     .sidebar {
         position: fixed;
         left: 0;
-        top: 0;
+        top: 54px;
         bottom: 0;
         transform: translateX(-100%);
         transition: transform var(--transition-normal);
@@ -1351,14 +1485,40 @@ body.non-admin .sidebar-title {
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
 </head>
 <body class="non-admin">
+    <!-- Top Navigation Bar -->
+    <div class="topbar" id="topbar">
+        <div class="topbar-content">
+            <div class="topbar-left">
+                <img src="https://i.imgur.com/AYocV6k.png" alt="Glendowie College Logo" class="topbar-logo" />
+                <span class="topbar-title">Glendowie College</span>
+            </div>
+            <div class="topbar-links">
+                <a href="https://www.gdc.school.nz/" target="_blank" class="topbar-button">
+                    <i class="fas fa-school"></i> <span>College Site</span>
+                </a>
+                <a href="https://gdc.bridge.school.nz/" target="_blank" class="topbar-button">
+                    <i class="fas fa-book-open"></i> <span>School Point</span>
+                </a>
+                <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
+                    <i class="fas fa-envelope"></i> <span>Student Portal</span>
+                </a>
+                <div class="profile-dropdown">
+                    <img id="profile-pic" src="" alt="Profile Picture" class="topbar-button" style="width: 36px; height: 36px; padding: 0; border-radius: 50%;">
+                    <div class="profile-dropdown-content">
+                        <a href="#" class="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                        <a href="#" class="dark-mode-toggle">
+                            <i class="fas fa-moon"></i> Dark Mode
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Mobile Menu Toggle -->
     <button class="menu-toggle" id="menu-toggle">☰</button>
-
-    <!-- Dark Mode Toggle -->
-    <button id="dark-mode-toggle" title="Toggle Dark Mode">🌙</button>
-
-    <!-- Profile Picture Element -->
-    <img id="profile-pic" src="" alt="Profile Picture">
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
@@ -1595,7 +1755,7 @@ body.non-admin .sidebar-title {
         const searchClearButton = document.querySelector('.search-clear');
         const menuToggle = document.getElementById('menu-toggle');
         const sidebar = document.getElementById('sidebar');
-        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const darkModeToggle = document.querySelector('.dark-mode-toggle');
 
         // Variables
         let tabs = [];
@@ -1623,7 +1783,41 @@ body.non-admin .sidebar-title {
             setupSearch();
             setupMobileMenu();
             setupDarkMode();
+            setupProfileDropdown();
         });
+
+        // Setup profile dropdown
+        function setupProfileDropdown() {
+            // Dark mode toggle in dropdown
+            darkModeToggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.body.classList.toggle('dark-mode');
+                const isDarkMode = document.body.classList.contains('dark-mode');
+                localStorage.setItem('darkMode', isDarkMode);
+                
+                // Update icon
+                const icon = darkModeToggle.querySelector('i');
+                if (isDarkMode) {
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                    darkModeToggle.querySelector('span').textContent = 'Light Mode';
+                } else {
+                    icon.classList.remove('fa-sun');
+                    icon.classList.add('fa-moon');
+                    darkModeToggle.querySelector('span').textContent = 'Dark Mode';
+                }
+            });
+            
+            // Initialize dark mode state
+            const darkModeEnabled = localStorage.getItem('darkMode') === 'true';
+            if (darkModeEnabled) {
+                document.body.classList.add('dark-mode');
+                const icon = darkModeToggle.querySelector('i');
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                darkModeToggle.querySelector('span').textContent = 'Light Mode';
+            }
+        }
 
         // Mobile menu toggle
         function setupMobileMenu() {
@@ -1638,18 +1832,7 @@ body.non-admin .sidebar-title {
             const darkModeEnabled = localStorage.getItem('darkMode') === 'true';
             if (darkModeEnabled) {
                 document.body.classList.add('dark-mode');
-                darkModeToggle.textContent = '☀️';
-            } else {
-                darkModeToggle.textContent = '🌙';
             }
-            
-            // Toggle dark mode
-            darkModeToggle.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-                const isDarkMode = document.body.classList.contains('dark-mode');
-                localStorage.setItem('darkMode', isDarkMode);
-                darkModeToggle.textContent = isDarkMode ? '☀️' : '🌙';
-            });
         }
 
         // Check and load user profile picture and permissions from localStorage
@@ -1660,7 +1843,6 @@ body.non-admin .sidebar-title {
             if (userInfo && userInfo.picture) {
                 // User is signed in (from previous page)
                 profilePicElement.src = userInfo.picture;
-                profilePicElement.style.display = 'block';
                 
                 // Check if user is admin
                 if (userInfo.email && ADMIN_EMAILS.includes(userInfo.email.toLowerCase())) {
@@ -1674,7 +1856,6 @@ body.non-admin .sidebar-title {
                 // No user is signed in
                 isAdmin = false;
                 document.body.classList.add('non-admin');
-                profilePicElement.style.display = 'none';
             }
         }
 
