@@ -1710,1029 +1710,1161 @@ body.non-admin .sidebar-title {
     </div>
 
     <script>
-        // AUTH CHECK - MUST BE AT TOP OF EVERY PROTECTED PAGE
-        (function() {
-            const USER_INFO_KEY = "googleUserInfo";
-            const AUTH_TOKEN_KEY = "gdcAuthToken";
-            const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
-            const SESSION_TIMEOUT = 30 * 60 * 1000;
-            
-            function checkAuth() {
-                try {
-                    const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-                    const cookieToken = document.cookie.split('; ')
-                        .find(row => row.startsWith('gdcAuth='))
-                        ?.split('=')[1];
-                    
-                    if (!authToken || !cookieToken || authToken !== cookieToken) {
-                        clearAuthData();
-                        return false;
-                    }
-                    
-                    const tokenTimestamp = parseInt(authToken.split('-')[0]);
-                    if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) {
-                        clearAuthData();
-                        return false;
-                    }
-                    
-                    return true;
-                } catch (error) {
+      <script>
+    // AUTH CHECK - MUST BE AT TOP OF EVERY PROTECTED PAGE
+    (function() {
+        const USER_INFO_KEY = "googleUserInfo";
+        const AUTH_TOKEN_KEY = "gdcAuthToken";
+        const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
+        const SESSION_TIMEOUT = 30 * 60 * 1000;
+        
+        function checkAuth() {
+            try {
+                const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+                const cookieToken = document.cookie.split('; ')
+                    .find(row => row.startsWith('gdcAuth='))
+                    ?.split('=')[1];
+                
+                if (!authToken || !cookieToken || authToken !== cookieToken) {
                     clearAuthData();
                     return false;
                 }
+                
+                const tokenTimestamp = parseInt(authToken.split('-')[0]);
+                if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) {
+                    clearAuthData();
+                    return false;
+                }
+                
+                return true;
+            } catch (error) {
+                clearAuthData();
+                return false;
             }
-            
-            function clearAuthData() {
-                localStorage.removeItem(USER_INFO_KEY);
-                localStorage.removeItem(AUTH_TOKEN_KEY);
-                document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-            }
-            
-            if (!checkAuth()) {
-                document.body.innerHTML = `
-                    <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Inter',sans-serif;z-index:9999;">
-                        <div style="text-align:center;padding:30px;max-width:400px;">
-                            <h2 style="color:#2b2d42;margin-bottom:20px;">Session Expired</h2>
-                            <p style="color:#5f6a7d;margin-bottom:25px;">
-                                Please sign in again. Redirecting to login page...
-                            </p>
-                            <div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;">
-                                <div style="width:100%;height:100%;background:#3EA899;border-radius:2px;animation:progress 2s ease-in-out infinite;"></div>
-                            </div>
+        }
+        
+        function clearAuthData() {
+            localStorage.removeItem(USER_INFO_KEY);
+            localStorage.removeItem(AUTH_TOKEN_KEY);
+            document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        }
+        
+        if (!checkAuth()) {
+            document.body.innerHTML = `
+                <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Inter',sans-serif;z-index:9999;">
+                    <div style="text-align:center;padding:30px;max-width:400px;">
+                        <h2 style="color:#2b2d42;margin-bottom:20px;">Session Expired</h2>
+                        <p style="color:#5f6a7d;margin-bottom:25px;">
+                            Please sign in again. Redirecting to login page...
+                        </p>
+                        <div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;">
+                            <div style="width:100%;height:100%;background:#3EA899;border-radius:2px;animation:progress 2s ease-in-out infinite;"></div>
                         </div>
                     </div>
-                    <style>@keyframes progress {0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}</style>
-                `;
-                setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
-                throw new Error("Authentication required"); // Stop other scripts from executing
-            }
-            
-            // Setup logout buttons if they exist
-            document.addEventListener('DOMContentLoaded', function() {
-                document.addEventListener('click', function(e) {
-                    if (e.target.closest('.logout-btn')) {
-                        e.preventDefault();
-                        clearAuthData();
-                        window.location.href = LOGIN_PAGE;
-                    }
-                });
-            });
-        })();
-
-        // REST OF YOUR PAGE'S JAVASCRIPT GOES BELOW THIS LINE
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyCSTEJ3LevxY2_rlGROzajNnNBrVG3oRR4",
-            authDomain: "gdchub-3b40a.firebaseapp.com",
-            databaseURL: "https://gdchub-3b40a-default-rtdb.firebaseio.com",
-            projectId: "gdchub-3b40a",
-            storageBucket: "gdchub-3b40a.appspot.com",
-            messagingSenderId: "399894468887",
-            appId: "1:399894468887:web:e3b8669a038fec20d9bf52",
-            measurementId: "G-E25TMDFLFX"
-        };
-
-        // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        const auth = firebase.auth();
-
-        // Database references
-        const tabsRef = database.ref('tabs');
-        const announcementsRef = database.ref('announcements');
-        const remindersRef = database.ref('reminders');
-
-        // DOM Elements
-        const sidebarMenu = document.getElementById('sidebar-menu');
-        const tabEditorModal = document.getElementById('tab-editor-modal');
-        const tabNameInput = document.getElementById('tab-name-input');
-        const saveTabButton = document.getElementById('save-tab-button');
-        const profilePicElement = document.getElementById('profile-pic');
-        const currentTabTitleElement = document.getElementById('current-tab-title');
-        const announcementEditor = document.getElementById('announcement-editor');
-        const postsFeed = document.getElementById('posts-feed');
-        const announcementTitleInput = document.getElementById('announcement-title');
-        const announcementContentInput = document.getElementById('announcement-content');
-        const fileUploadInput = document.getElementById('file-upload');
-        const uploadedFilesDiv = document.getElementById('uploaded-files');
-        const embedInputsContainer = document.getElementById('embed-inputs');
-        const saveAnnouncementButton = document.getElementById('save-announcement-button');
-        const remindersList = document.getElementById('reminders-list');
-        const announcementSearchInput = document.getElementById('announcement-search');
-        const searchClearButton = document.querySelector('.search-clear');
-        const menuToggle = document.getElementById('menu-toggle');
-        const sidebar = document.getElementById('sidebar');
-        const darkModeToggle = document.querySelector('.dark-mode-toggle');
-        const profileDropdown = document.querySelector('.profile-dropdown');
-        const profileDropdownContent = document.querySelector('.profile-dropdown-content');
-
-        // Variables
-        let tabs = [];
-        let currentTabId = null;
-        let currentTabBeingEdited = null;
-        let uploadedFiles = [];
-        let expandedPost = null;
-        let reminders = [];
-        let currentReminderBeingEdited = null;
-        let draggedItem = null;
-        let isAdmin = false;
-        let currentAnnouncementBeingEdited = null;
-        let currentTabAnnouncements = []; // Store announcements for current tab
-        let dropdownHoverTimeout;
-
-        // Admin configuration
-        const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            checkUserProfile();
-            setupFirebaseListeners();
-            setupDragAndDrop();
-            setupFileUpload();
-            setupModalCloseHandlers();
-            setupSearch();
-            setupMobileMenu();
-            setupDarkMode();
-            setupProfileDropdown();
-        });
-
-        // Improved profile dropdown functionality
-        function setupProfileDropdown() {
-            // Show dropdown on hover
-            profileDropdown.addEventListener('mouseenter', () => {
-                clearTimeout(dropdownHoverTimeout);
-                profileDropdownContent.style.display = 'block';
-                setTimeout(() => {
-                    profileDropdownContent.style.opacity = '1';
-                    profileDropdownContent.style.transform = 'translateY(0)';
-                    profileDropdownContent.style.pointerEvents = 'auto';
-                }, 10);
-            });
-
-            // Hide dropdown with delay when leaving
-            profileDropdown.addEventListener('mouseleave', () => {
-                dropdownHoverTimeout = setTimeout(() => {
-                    profileDropdownContent.style.opacity = '0';
-                    profileDropdownContent.style.transform = 'translateY(-10px)';
-                    profileDropdownContent.style.pointerEvents = 'none';
-                    setTimeout(() => {
-                        profileDropdownContent.style.display = 'none';
-                    }, 200);
-                }, 300); // 300ms delay before closing
-            });
-
-            // Keep dropdown open when hovering over it
-            profileDropdownContent.addEventListener('mouseenter', () => {
-                clearTimeout(dropdownHoverTimeout);
-            });
-
-            profileDropdownContent.addEventListener('mouseleave', () => {
-                dropdownHoverTimeout = setTimeout(() => {
-                    profileDropdownContent.style.opacity = '0';
-                    profileDropdownContent.style.transform = 'translateY(-10px)';
-                    profileDropdownContent.style.pointerEvents = 'none';
-                    setTimeout(() => {
-                        profileDropdownContent.style.display = 'none';
-                    }, 200);
-                }, 300);
-            });
-
-            // Dark mode toggle in dropdown
-            darkModeToggle.addEventListener('click', (e) => {
-                e.preventDefault();
-                document.body.classList.toggle('dark-mode');
-                const isDarkMode = document.body.classList.contains('dark-mode');
-                localStorage.setItem('darkMode', isDarkMode);
-                
-                // Update icon
-                const icon = darkModeToggle.querySelector('i');
-                if (isDarkMode) {
-                    icon.classList.remove('fa-moon');
-                    icon.classList.add('fa-sun');
-                    darkModeToggle.querySelector('span').textContent = 'Light Mode';
-                } else {
-                    icon.classList.remove('fa-sun');
-                    icon.classList.add('fa-moon');
-                    darkModeToggle.querySelector('span').textContent = 'Dark Mode';
+                </div>
+                <style>@keyframes progress {0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}</style>
+            `;
+            setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
+            throw new Error("Authentication required"); // Stop other scripts from executing
+        }
+        
+        // Setup logout buttons if they exist
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.logout-btn')) {
+                    e.preventDefault();
+                    clearAuthData();
+                    window.location.href = LOGIN_PAGE;
                 }
             });
-        }
+        });
+    })();
 
-        // Mobile menu toggle
-        function setupMobileMenu() {
-            menuToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('visible');
-            });
-        }
+    // REST OF YOUR PAGE'S JAVASCRIPT GOES BELOW THIS LINE
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyCSTEJ3LevxY2_rlGROzajNnNBrVG3oRR4",
+        authDomain: "gdchub-3b40a.firebaseapp.com",
+        databaseURL: "https://gdchub-3b40a-default-rtdb.firebaseio.com",
+        projectId: "gdchub-3b40a",
+        storageBucket: "gdchub-3b40a.appspot.com",
+        messagingSenderId: "399894468887",
+        appId: "1:399894468887:web:e3b8669a038fec20d9bf52",
+        measurementId: "G-E25TMDFLFX"
+    };
 
-        // Dark mode setup
-        function setupDarkMode() {
-            // Check for saved dark mode preference
-            const darkModeEnabled = localStorage.getItem('darkMode') === 'true';
-            if (darkModeEnabled) {
-                document.body.classList.add('dark-mode');
-                const icon = darkModeToggle.querySelector('i');
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+    const storage = firebase.storage(); // Add Firebase Storage
+
+    // Database references
+    const tabsRef = database.ref('tabs');
+    const announcementsRef = database.ref('announcements');
+    const remindersRef = database.ref('reminders');
+
+    // DOM Elements
+    const sidebarMenu = document.getElementById('sidebar-menu');
+    const tabEditorModal = document.getElementById('tab-editor-modal');
+    const tabNameInput = document.getElementById('tab-name-input');
+    const saveTabButton = document.getElementById('save-tab-button');
+    const profilePicElement = document.getElementById('profile-pic');
+    const currentTabTitleElement = document.getElementById('current-tab-title');
+    const announcementEditor = document.getElementById('announcement-editor');
+    const postsFeed = document.getElementById('posts-feed');
+    const announcementTitleInput = document.getElementById('announcement-title');
+    const announcementContentInput = document.getElementById('announcement-content');
+    const fileUploadInput = document.getElementById('file-upload');
+    const uploadedFilesDiv = document.getElementById('uploaded-files');
+    const embedInputsContainer = document.getElementById('embed-inputs');
+    const saveAnnouncementButton = document.getElementById('save-announcement-button');
+    const remindersList = document.getElementById('reminders-list');
+    const announcementSearchInput = document.getElementById('announcement-search');
+    const searchClearButton = document.querySelector('.search-clear');
+    const menuToggle = document.getElementById('menu-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const darkModeToggle = document.querySelector('.dark-mode-toggle');
+    const profileDropdown = document.querySelector('.profile-dropdown');
+    const profileDropdownContent = document.querySelector('.profile-dropdown-content');
+
+    // Variables
+    let tabs = [];
+    let currentTabId = null;
+    let currentTabBeingEdited = null;
+    let uploadedFiles = [];
+    let expandedPost = null;
+    let reminders = [];
+    let currentReminderBeingEdited = null;
+    let draggedItem = null;
+    let isAdmin = false;
+    let currentAnnouncementBeingEdited = null;
+    let currentTabAnnouncements = []; // Store announcements for current tab
+    let dropdownHoverTimeout;
+    let filesToUpload = []; // Store actual File objects for upload
+
+    // Admin configuration
+    const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        checkUserProfile();
+        setupFirebaseListeners();
+        setupDragAndDrop();
+        setupFileUpload();
+        setupModalCloseHandlers();
+        setupSearch();
+        setupMobileMenu();
+        setupDarkMode();
+        setupProfileDropdown();
+    });
+
+    // Improved profile dropdown functionality
+    function setupProfileDropdown() {
+        // Show dropdown on hover
+        profileDropdown.addEventListener('mouseenter', () => {
+            clearTimeout(dropdownHoverTimeout);
+            profileDropdownContent.style.display = 'block';
+            setTimeout(() => {
+                profileDropdownContent.style.opacity = '1';
+                profileDropdownContent.style.transform = 'translateY(0)';
+                profileDropdownContent.style.pointerEvents = 'auto';
+            }, 10);
+        });
+
+        // Hide dropdown with delay when leaving
+        profileDropdown.addEventListener('mouseleave', () => {
+            dropdownHoverTimeout = setTimeout(() => {
+                profileDropdownContent.style.opacity = '0';
+                profileDropdownContent.style.transform = 'translateY(-10px)';
+                profileDropdownContent.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    profileDropdownContent.style.display = 'none';
+                }, 200);
+            }, 300); // 300ms delay before closing
+        });
+
+        // Keep dropdown open when hovering over it
+        profileDropdownContent.addEventListener('mouseenter', () => {
+            clearTimeout(dropdownHoverTimeout);
+        });
+
+        profileDropdownContent.addEventListener('mouseleave', () => {
+            dropdownHoverTimeout = setTimeout(() => {
+                profileDropdownContent.style.opacity = '0';
+                profileDropdownContent.style.transform = 'translateY(-10px)';
+                profileDropdownContent.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    profileDropdownContent.style.display = 'none';
+                }, 200);
+            }, 300);
+        });
+
+        // Dark mode toggle in dropdown
+        darkModeToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.body.classList.toggle('dark-mode');
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode);
+            
+            // Update icon
+            const icon = darkModeToggle.querySelector('i');
+            if (isDarkMode) {
                 icon.classList.remove('fa-moon');
                 icon.classList.add('fa-sun');
                 darkModeToggle.querySelector('span').textContent = 'Light Mode';
-            }
-        }
-
-        // Check and load user profile picture and permissions from localStorage
-        function checkUserProfile() {
-            // Try to get user info from localStorage (set by previous page)
-            const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
-            
-            if (userInfo && userInfo.picture) {
-                // User is signed in (from previous page)
-                profilePicElement.src = userInfo.picture;
-                
-                // Check if user is admin
-                if (userInfo.email && ADMIN_EMAILS.includes(userInfo.email.toLowerCase())) {
-                    isAdmin = true;
-                    document.body.classList.remove('non-admin');
-                } else {
-                    isAdmin = false;
-                    document.body.classList.add('non-admin');
-                }
             } else {
-                // No user is signed in
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                darkModeToggle.querySelector('span').textContent = 'Dark Mode';
+            }
+        });
+    }
+
+    // Mobile menu toggle
+    function setupMobileMenu() {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('visible');
+        });
+    }
+
+    // Dark mode setup
+    function setupDarkMode() {
+        // Check for saved dark mode preference
+        const darkModeEnabled = localStorage.getItem('darkMode') === 'true';
+        if (darkModeEnabled) {
+            document.body.classList.add('dark-mode');
+            const icon = darkModeToggle.querySelector('i');
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+            darkModeToggle.querySelector('span').textContent = 'Light Mode';
+        }
+    }
+
+    // Check and load user profile picture and permissions from localStorage
+    function checkUserProfile() {
+        // Try to get user info from localStorage (set by previous page)
+        const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
+        
+        if (userInfo && userInfo.picture) {
+            // User is signed in (from previous page)
+            profilePicElement.src = userInfo.picture;
+            
+            // Check if user is admin
+            if (userInfo.email && ADMIN_EMAILS.includes(userInfo.email.toLowerCase())) {
+                isAdmin = true;
+                document.body.classList.remove('non-admin');
+            } else {
                 isAdmin = false;
                 document.body.classList.add('non-admin');
             }
+        } else {
+            // No user is signed in
+            isAdmin = false;
+            document.body.classList.add('non-admin');
         }
+    }
 
-        // Setup search functionality
-        function setupSearch() {
-            announcementSearchInput.addEventListener('input', filterAnnouncements);
-            searchClearButton.addEventListener('click', clearSearch);
-        }
+    // Setup search functionality
+    function setupSearch() {
+        announcementSearchInput.addEventListener('input', filterAnnouncements);
+        searchClearButton.addEventListener('click', clearSearch);
+    }
 
-        function filterAnnouncements() {
-            const searchTerm = announcementSearchInput.value.toLowerCase().trim();
-            
-            if (searchTerm === '') {
-                // If search is empty, show all announcements for current tab
-                renderAnnouncements(currentTabAnnouncements);
-                searchClearButton.style.display = 'none';
-                return;
-            }
-            
-            searchClearButton.style.display = 'block';
-            
-            const filtered = currentTabAnnouncements.filter(announcement => {
-                const titleMatch = announcement.title.toLowerCase().includes(searchTerm);
-                const contentMatch = announcement.content.toLowerCase().includes(searchTerm);
-                
-                // Check if any file names match
-                let fileMatch = false;
-                if (announcement.files && announcement.files.length > 0) {
-                    fileMatch = announcement.files.some(file => 
-                        file.name.toLowerCase().includes(searchTerm)
-                    );
-                }
-                
-                return titleMatch || contentMatch || fileMatch;
-            });
-            
-            renderAnnouncements(filtered);
-        }
-
-        function clearSearch() {
-            announcementSearchInput.value = '';
+    function filterAnnouncements() {
+        const searchTerm = announcementSearchInput.value.toLowerCase().trim();
+        
+        if (searchTerm === '') {
+            // If search is empty, show all announcements for current tab
             renderAnnouncements(currentTabAnnouncements);
             searchClearButton.style.display = 'none';
+            return;
         }
-
-        // Firebase Listeners
-        function setupFirebaseListeners() {
-            // Listen for tabs changes
-            tabsRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                tabs = data ? Object.values(data) : [];
-                renderTabs();
-                
-                // Set first tab as active by default if none is selected
-                if (tabs.length > 0 && !currentTabId) {
-                    setActiveTab(tabs[0].id);
-                }
-            });
-
-            // Listen for announcements changes
-            announcementsRef.on('value', (snapshot) => {
-                const allAnnouncementsData = snapshot.val() || {};
-                
-                if (currentTabId && allAnnouncementsData[currentTabId]) {
-                    const tabAnnouncements = allAnnouncementsData[currentTabId];
-                    currentTabAnnouncements = tabAnnouncements ? Object.values(tabAnnouncements) : [];
-                    
-                    // Apply search filter if there's a search term
-                    if (announcementSearchInput.value.trim() !== '') {
-                        filterAnnouncements();
-                    } else {
-                        renderAnnouncements(currentTabAnnouncements);
-                    }
-                } else {
-                    currentTabAnnouncements = [];
-                    postsFeed.innerHTML = '';
-                }
-            });
-
-            // Listen for reminders changes
-            remindersRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                reminders = data ? Object.values(data) : [];
-                renderReminders();
-            });
-        }
-
-        // Save tabs to Firebase
-        function saveTabs() {
-            const tabsObject = {};
-            tabs.forEach(tab => {
-                tabsObject[tab.id] = tab;
-            });
+        
+        searchClearButton.style.display = 'block';
+        
+        const filtered = currentTabAnnouncements.filter(announcement => {
+            const titleMatch = announcement.title.toLowerCase().includes(searchTerm);
+            const contentMatch = announcement.content.toLowerCase().includes(searchTerm);
             
-            tabsRef.set(tabsObject)
-                .catch((error) => {
-                    console.error("Error saving tabs:", error);
-                    alert("Error saving tabs. Please try again.");
-                });
-        }
-
-        // Render announcements for the current tab
-        function renderAnnouncements(announcements) {
-            postsFeed.innerHTML = '';
-            
-            if (!announcements || announcements.length === 0) {
-                postsFeed.innerHTML = '<p>No announcements found</p>';
-                return;
+            // Check if any file names match
+            let fileMatch = false;
+            if (announcement.files && announcement.files.length > 0) {
+                fileMatch = announcement.files.some(file => 
+                    file.name.toLowerCase().includes(searchTerm)
+                );
             }
             
-            announcements.sort((a, b) => parseInt(b.id) - parseInt(a.id));
-            
-            announcements.forEach(announcement => {
-                postsFeed.appendChild(createPostElement(announcement));
-            });
-        }
+            return titleMatch || contentMatch || fileMatch;
+        });
+        
+        renderAnnouncements(filtered);
+    }
 
-        // Create post element for announcements
-        function createPostElement(announcement) {
-            const post = document.createElement('div');
-            post.classList.add('post-card');
-            post.setAttribute('data-id', announcement.id);
+    function clearSearch() {
+        announcementSearchInput.value = '';
+        renderAnnouncements(currentTabAnnouncements);
+        searchClearButton.style.display = 'none';
+    }
+
+    // Firebase Listeners
+    function setupFirebaseListeners() {
+        // Listen for tabs changes
+        tabsRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            tabs = data ? Object.values(data) : [];
+            renderTabs();
             
-            const postDate = new Date(parseInt(announcement.id)).toLocaleDateString('en-US', {
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
+            // Set first tab as active by default if none is selected
+            if (tabs.length > 0 && !currentTabId) {
+                setActiveTab(tabs[0].id);
+            }
+        });
+
+        // Listen for announcements changes
+        announcementsRef.on('value', (snapshot) => {
+            const allAnnouncementsData = snapshot.val() || {};
+            
+            if (currentTabId && allAnnouncementsData[currentTabId]) {
+                const tabAnnouncements = allAnnouncementsData[currentTabId];
+                currentTabAnnouncements = tabAnnouncements ? Object.values(tabAnnouncements) : [];
+                
+                // Apply search filter if there's a search term
+                if (announcementSearchInput.value.trim() !== '') {
+                    filterAnnouncements();
+                } else {
+                    renderAnnouncements(currentTabAnnouncements);
+                }
+            } else {
+                currentTabAnnouncements = [];
+                postsFeed.innerHTML = '';
+            }
+        });
+
+        // Listen for reminders changes
+        remindersRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            reminders = data ? Object.values(data) : [];
+            renderReminders();
+        });
+    }
+
+    // Save tabs to Firebase
+    function saveTabs() {
+        const tabsObject = {};
+        tabs.forEach(tab => {
+            tabsObject[tab.id] = tab;
+        });
+        
+        tabsRef.set(tabsObject)
+            .catch((error) => {
+                console.error("Error saving tabs:", error);
+                alert("Error saving tabs. Please try again.");
             });
-            
-            const filesHtml = announcement.files && announcement.files.length > 0 ? 
-                announcement.files.map(file => 
-                    `<a href="#" class="file-attachment" target="_blank">
-                        <i class="file-icon">📄</i> ${file.name}
-                    </a>`
-                ).join('') : '';
-            
-            // Handle multiple embed codes
-            const embedHtml = announcement.embedCodes && announcement.embedCodes.length > 0 ? 
-                announcement.embedCodes.map(embedCode => 
-                    `<div class="embed-container">${embedCode}</div>`
-                ).join('') : '';
+    }
+
+    // Render announcements for the current tab
+    function renderAnnouncements(announcements) {
+        postsFeed.innerHTML = '';
+        
+        if (!announcements || announcements.length === 0) {
+            postsFeed.innerHTML = '<p>No announcements found</p>';
+            return;
+        }
+        
+        announcements.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+        
+        announcements.forEach(announcement => {
+            postsFeed.appendChild(createPostElement(announcement));
+        });
+    }
+
+    // Create post element for announcements
+    function createPostElement(announcement) {
+        const post = document.createElement('div');
+        post.classList.add('post-card');
+        post.setAttribute('data-id', announcement.id);
+        
+        const postDate = new Date(parseInt(announcement.id)).toLocaleDateString('en-US', {
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        // Generate file links with actual download URLs
+        const filesHtml = announcement.files && announcement.files.length > 0 ? 
+            announcement.files.map(file => 
+                `<a href="${file.downloadURL}" class="file-attachment" target="_blank">
+                    <i class="file-icon">📄</i> ${file.name}
+                </a>`
+            ).join('') : '';
+        
+        // Handle multiple embed codes
+        const embedHtml = announcement.embedCodes && announcement.embedCodes.length > 0 ? 
+            announcement.embedCodes.map(embedCode => 
+                `<div class="embed-container">${embedCode}</div>`
+            ).join('') : '';
+        
+        const actionsHtml = isAdmin ? 
+            `<div class="post-actions">
+                <button class="button" onclick="event.stopPropagation(); editAnnouncement('${announcement.id}')">
+                    Edit
+                </button>
+                <button class="button delete-button" onclick="event.stopPropagation(); deleteAnnouncement('${announcement.id}')">
+                    Delete
+                </button>
+            </div>` : '';
+        
+        // Fixed the duplicate content issue by removing the extra content div
+        post.innerHTML = `
+            ${actionsHtml}
+            <h3>${announcement.title}</h3>
+            <div class="collapsed-content">${announcement.content}</div>
+            <div class="post-details">
+                ${embedHtml}
+                ${filesHtml ? `<div class="file-attachments">${filesHtml}</div>` : ''}
+                <div class="post-meta">
+                    Posted on ${postDate}
+                </div>
+            </div>`;
+        
+        post.addEventListener('click', () => expandPost(post));
+        return post;
+    }
+
+    // Render tabs in sidebar
+    function renderTabs() {
+        sidebarMenu.innerHTML = '';
+        
+        const sortedTabs = [...tabs].sort((a, b) => a.order - b.order);
+        
+        sortedTabs.forEach(tab => {
+            const tabItem = document.createElement('li');
+            tabItem.className = 'sidebar-item';
+            tabItem.dataset.tabId = tab.id;
+            tabItem.draggable = isAdmin;
             
             const actionsHtml = isAdmin ? 
-                `<div class="post-actions">
-                    <button class="button" onclick="event.stopPropagation(); editAnnouncement('${announcement.id}')">
-                        Edit
+                `<div class="tab-actions">
+                    <button class="tab-action-btn" title="Edit" onclick="editTab('${tab.id}')">
+                        ✏️
                     </button>
-                    <button class="button delete-button" onclick="event.stopPropagation(); deleteAnnouncement('${announcement.id}')">
-                        Delete
+                    <button class="tab-action-btn" title="Delete" onclick="deleteTab('${tab.id}')">
+                        🗑️
                     </button>
                 </div>` : '';
             
-            // Fixed the duplicate content issue by removing the extra content div
-            post.innerHTML = `
-                ${actionsHtml}
-                <h3>${announcement.title}</h3>
-                <div class="collapsed-content">${announcement.content}</div>
-                <div class="post-details">
-                    ${embedHtml}
-                    ${filesHtml ? `<div class="file-attachments">${filesHtml}</div>` : ''}
-                    <div class="post-meta">
-                        Posted on ${postDate}
-                    </div>
-                </div>`;
+            tabItem.innerHTML = `
+                <a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}">
+                    ${isAdmin ? '<span class="move-handle">☰</span> ' : ''}${tab.name}
+                    ${actionsHtml}
+                </a>
+            `;
             
-            post.addEventListener('click', () => expandPost(post));
-            return post;
-        }
-
-        // Render tabs in sidebar
-        function renderTabs() {
-            sidebarMenu.innerHTML = '';
-            
-            const sortedTabs = [...tabs].sort((a, b) => a.order - b.order);
-            
-            sortedTabs.forEach(tab => {
-                const tabItem = document.createElement('li');
-                tabItem.className = 'sidebar-item';
-                tabItem.dataset.tabId = tab.id;
-                tabItem.draggable = isAdmin;
-                
-                const actionsHtml = isAdmin ? 
-                    `<div class="tab-actions">
-                        <button class="tab-action-btn" title="Edit" onclick="editTab('${tab.id}')">
-                            ✏️
-                        </button>
-                        <button class="tab-action-btn" title="Delete" onclick="deleteTab('${tab.id}')">
-                            🗑️
-                        </button>
-                    </div>` : '';
-                
-                tabItem.innerHTML = `
-                    <a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}">
-                        ${isAdmin ? '<span class="move-handle">☰</span> ' : ''}${tab.name}
-                        ${actionsHtml}
-                    </a>
-                `;
-                
-                tabItem.addEventListener('click', (e) => {
-                    if (!e.target.closest('.tab-action-btn')) {
-                        e.preventDefault();
-                        setActiveTab(tab.id);
-                        if (window.innerWidth <= 768) {
-                            sidebar.classList.remove('visible');
-                        }
-                    }
-                });
-                
-                if (isAdmin) {
-                    tabItem.addEventListener('dragstart', handleDragStart);
-                    tabItem.addEventListener('dragover', handleDragOver);
-                    tabItem.addEventListener('dragleave', handleDragLeave);
-                    tabItem.addEventListener('drop', handleDrop);
-                    tabItem.addEventListener('dragend', handleDragEnd);
-                }
-                
-                sidebarMenu.appendChild(tabItem);
-            });
-        }
-
-        // Set active tab and load its announcements
-        function setActiveTab(tabId) {
-            currentTabId = tabId;
-            const tab = tabs.find(t => t.id === tabId);
-            
-            if (tab) {
-                currentTabTitleElement.textContent = tab.name;
-                
-                document.querySelectorAll('.sidebar-link').forEach(link => {
-                    link.classList.remove('active');
-                });
-                
-                const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
-                if (activeLink) {
-                    activeLink.classList.add('active');
-                }
-                
-                announcementsRef.child(tabId).once('value')
-                    .then((snapshot) => {
-                        const data = snapshot.val();
-                        currentTabAnnouncements = data ? Object.values(data) : [];
-                        
-                        // Clear search when switching tabs
-                        announcementSearchInput.value = '';
-                        searchClearButton.style.display = 'none';
-                        
-                        renderAnnouncements(currentTabAnnouncements);
-                    });
-            }
-        }
-
-        // Drag and drop functions for tabs
-        function setupDragAndDrop() {
-            // Handled by individual event listeners on each tab item
-        }
-
-        function handleDragStart(e) {
-            if (!isAdmin) return;
-            draggedItem = this;
-            this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/html', this.innerHTML);
-        }
-
-        function handleDragOver(e) {
-            if (!isAdmin) return;
-            e.preventDefault();
-            this.classList.add('drop-area');
-            e.dataTransfer.dropEffect = 'move';
-        }
-
-        function handleDragLeave() {
-            if (!isAdmin) return;
-            this.classList.remove('drop-area');
-        }
-
-        function handleDrop(e) {
-            if (!isAdmin) return;
-            e.preventDefault();
-            this.classList.remove('drop-area');
-            
-            if (draggedItem !== this) {
-                const draggedId = draggedItem.dataset.tabId;
-                const targetId = this.dataset.tabId;
-                
-                const draggedIndex = tabs.findIndex(tab => tab.id === draggedId);
-                const targetIndex = tabs.findIndex(tab => tab.id === targetId);
-                
-                if (draggedIndex !== -1 && targetIndex !== -1) {
-                    const [removed] = tabs.splice(draggedIndex, 1);
-                    tabs.splice(targetIndex, 0, removed);
-                    
-                    tabs.forEach((tab, index) => {
-                        tab.order = index + 1;
-                    });
-                    
-                    saveTabs();
-                }
-            }
-        }
-
-        function handleDragEnd() {
-            if (!isAdmin) return;
-            this.classList.remove('dragging');
-            document.querySelectorAll('.sidebar-item').forEach(item => {
-                item.classList.remove('drop-area');
-            });
-        }
-
-        // Tab management functions
-        function openTabEditor(tabId = null) {
-            if (!isAdmin) return;
-            tabEditorModal.style.display = 'flex';
-            tabNameInput.value = '';
-            
-            if (tabId) {
-                currentTabBeingEdited = tabId;
-                const tab = tabs.find(t => t.id === tabId);
-                if (tab) {
-                    tabNameInput.value = tab.name;
-                    document.getElementById('tab-editor-title').textContent = 'Edit Tab';
-                    saveTabButton.textContent = 'Save Changes';
-                }
-            } else {
-                currentTabBeingEdited = null;
-                document.getElementById('tab-editor-title').textContent = 'Add New Tab';
-                saveTabButton.textContent = 'Add Tab';
-            }
-        }
-
-        function closeTabEditor() {
-            tabEditorModal.style.display = 'none';
-            currentTabBeingEdited = null;
-        }
-
-        function saveTab() {
-            if (!isAdmin) return;
-            const tabName = tabNameInput.value.trim();
-            if (!tabName) {
-                alert('Please enter a tab name');
-                return;
-            }
-            
-            if (currentTabBeingEdited) {
-                const tabIndex = tabs.findIndex(t => t.id === currentTabBeingEdited);
-                if (tabIndex !== -1) {
-                    tabs[tabIndex].name = tabName;
-                    saveTabs();
-                    
-                    if (currentTabBeingEdited === currentTabId) {
-                        currentTabTitleElement.textContent = tabName;
+            tabItem.addEventListener('click', (e) => {
+                if (!e.target.closest('.tab-action-btn')) {
+                    e.preventDefault();
+                    setActiveTab(tab.id);
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('visible');
                     }
                 }
-            } else {
-                const newTab = {
-                    id: 'tab-' + Date.now(),
-                    name: tabName,
-                    order: tabs.length + 1
-                };
-                
-                tabs.push(newTab);
-                saveTabs();
-                setActiveTab(newTab.id);
+            });
+            
+            if (isAdmin) {
+                tabItem.addEventListener('dragstart', handleDragStart);
+                tabItem.addEventListener('dragover', handleDragOver);
+                tabItem.addEventListener('dragleave', handleDragLeave);
+                tabItem.addEventListener('drop', handleDrop);
+                tabItem.addEventListener('dragend', handleDragEnd);
             }
             
-            closeTabEditor();
-        }
+            sidebarMenu.appendChild(tabItem);
+        });
+    }
 
-        function editTab(tabId) {
-            if (!isAdmin) return;
-            event.stopPropagation();
-            openTabEditor(tabId);
+    // Set active tab and load its announcements
+    function setActiveTab(tabId) {
+        currentTabId = tabId;
+        const tab = tabs.find(t => t.id === tabId);
+        
+        if (tab) {
+            currentTabTitleElement.textContent = tab.name;
+            
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+            
+            announcementsRef.child(tabId).once('value')
+                .then((snapshot) => {
+                    const data = snapshot.val();
+                    currentTabAnnouncements = data ? Object.values(data) : [];
+                    
+                    // Clear search when switching tabs
+                    announcementSearchInput.value = '';
+                    searchClearButton.style.display = 'none';
+                    
+                    renderAnnouncements(currentTabAnnouncements);
+                });
         }
+    }
 
-        function deleteTab(tabId) {
-            if (!isAdmin) return;
-            event.stopPropagation();
-            if (confirm('Are you sure you want to delete this tab and all its announcements?')) {
-                announcementsRef.child(tabId).remove();
-                
-                tabs = tabs.filter(t => t.id !== tabId);
+    // Drag and drop functions for tabs
+    function setupDragAndDrop() {
+        // Handled by individual event listeners on each tab item
+    }
+
+    function handleDragStart(e) {
+        if (!isAdmin) return;
+        draggedItem = this;
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+    }
+
+    function handleDragOver(e) {
+        if (!isAdmin) return;
+        e.preventDefault();
+        this.classList.add('drop-area');
+        e.dataTransfer.dropEffect = 'move';
+    }
+
+    function handleDragLeave() {
+        if (!isAdmin) return;
+        this.classList.remove('drop-area');
+    }
+
+    function handleDrop(e) {
+        if (!isAdmin) return;
+        e.preventDefault();
+        this.classList.remove('drop-area');
+        
+        if (draggedItem !== this) {
+            const draggedId = draggedItem.dataset.tabId;
+            const targetId = this.dataset.tabId;
+            
+            const draggedIndex = tabs.findIndex(tab => tab.id === draggedId);
+            const targetIndex = tabs.findIndex(tab => tab.id === targetId);
+            
+            if (draggedIndex !== -1 && targetIndex !== -1) {
+                const [removed] = tabs.splice(draggedIndex, 1);
+                tabs.splice(targetIndex, 0, removed);
                 
                 tabs.forEach((tab, index) => {
                     tab.order = index + 1;
                 });
                 
                 saveTabs();
+            }
+        }
+    }
+
+    function handleDragEnd() {
+        if (!isAdmin) return;
+        this.classList.remove('dragging');
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.classList.remove('drop-area');
+        });
+    }
+
+    // Tab management functions
+    function openTabEditor(tabId = null) {
+        if (!isAdmin) return;
+        tabEditorModal.style.display = 'flex';
+        tabNameInput.value = '';
+        
+        if (tabId) {
+            currentTabBeingEdited = tabId;
+            const tab = tabs.find(t => t.id === tabId);
+            if (tab) {
+                tabNameInput.value = tab.name;
+                document.getElementById('tab-editor-title').textContent = 'Edit Tab';
+                saveTabButton.textContent = 'Save Changes';
+            }
+        } else {
+            currentTabBeingEdited = null;
+            document.getElementById('tab-editor-title').textContent = 'Add New Tab';
+            saveTabButton.textContent = 'Add Tab';
+        }
+    }
+
+    function closeTabEditor() {
+        tabEditorModal.style.display = 'none';
+        currentTabBeingEdited = null;
+    }
+
+    function saveTab() {
+        if (!isAdmin) return;
+        const tabName = tabNameInput.value.trim();
+        if (!tabName) {
+            alert('Please enter a tab name');
+            return;
+        }
+        
+        if (currentTabBeingEdited) {
+            const tabIndex = tabs.findIndex(t => t.id === currentTabBeingEdited);
+            if (tabIndex !== -1) {
+                tabs[tabIndex].name = tabName;
+                saveTabs();
                 
-                if (tabId === currentTabId) {
-                    if (tabs.length > 0) {
-                        setActiveTab(tabs[0].id);
-                    } else {
-                        currentTabId = null;
-                        currentTabTitleElement.textContent = 'Classroom';
-                        postsFeed.innerHTML = '';
+                if (currentTabBeingEdited === currentTabId) {
+                    currentTabTitleElement.textContent = tabName;
+                }
+            }
+        } else {
+            const newTab = {
+                id: 'tab-' + Date.now(),
+                name: tabName,
+                order: tabs.length + 1
+            };
+            
+            tabs.push(newTab);
+            saveTabs();
+            setActiveTab(newTab.id);
+        }
+        
+        closeTabEditor();
+    }
+
+    function editTab(tabId) {
+        if (!isAdmin) return;
+        event.stopPropagation();
+        openTabEditor(tabId);
+    }
+
+    function deleteTab(tabId) {
+        if (!isAdmin) return;
+        event.stopPropagation();
+        if (confirm('Are you sure you want to delete this tab and all its announcements?')) {
+            announcementsRef.child(tabId).remove();
+            
+            tabs = tabs.filter(t => t.id !== tabId);
+            
+            tabs.forEach((tab, index) => {
+                tab.order = index + 1;
+            });
+            
+            saveTabs();
+            
+            if (tabId === currentTabId) {
+                if (tabs.length > 0) {
+                    setActiveTab(tabs[0].id);
+                } else {
+                    currentTabId = null;
+                    currentTabTitleElement.textContent = 'Classroom';
+                    postsFeed.innerHTML = '';
+                }
+            }
+        }
+    }
+
+    // Announcement management functions
+    function openAnnouncementEditor(announcementId = null) {
+        if (!isAdmin || !currentTabId) return;
+        announcementEditor.style.display = 'flex';
+        announcementTitleInput.value = '';
+        announcementContentInput.value = '';
+        uploadedFiles = [];
+        uploadedFilesDiv.innerHTML = '';
+        filesToUpload = []; // Reset files to upload
+        
+        // Reset embed inputs
+        embedInputsContainer.innerHTML = `
+            <div class="embed-input-group">
+                <textarea class="embed-code-input" placeholder="Paste embed code for Google Slides, Docs, etc. here (optional)"></textarea>
+                <button class="button small-button" onclick="addEmbedInput()">+ Add Another</button>
+            </div>
+        `;
+        
+        saveAnnouncementButton.onclick = postAnnouncement;
+        saveAnnouncementButton.textContent = 'Post Announcement';
+        currentAnnouncementBeingEdited = null;
+        
+        if (announcementId) {
+            currentAnnouncementBeingEdited = announcementId;
+            announcementsRef.child(currentTabId).child(announcementId).once('value')
+                .then((snapshot) => {
+                    const announcementToEdit = snapshot.val();
+                    if (announcementToEdit) {
+                        announcementTitleInput.value = announcementToEdit.title;
+                        announcementContentInput.value = announcementToEdit.content;
+                        uploadedFiles = announcementToEdit.files || [];
+                        uploadedFilesDiv.innerHTML = uploadedFiles.map(file => 
+                            `<span>${file.name} <button class="remove-file" onclick="removeTempFile(this.parentNode, '${file.name}')">×</button></span>`
+                        ).join('');
+                        
+                        // Clear existing embed inputs
+                        embedInputsContainer.innerHTML = '';
+                        
+                        // Add embed inputs for each existing embed code
+                        if (announcementToEdit.embedCodes && announcementToEdit.embedCodes.length > 0) {
+                            announcementToEdit.embedCodes.forEach((embedCode, index) => {
+                                addEmbedInput(embedCode, index === announcementToEdit.embedCodes.length - 1);
+                            });
+                        } else {
+                            // Add one empty embed input
+                            addEmbedInput('', true);
+                        }
+                        
+                        saveAnnouncementButton.onclick = () => saveEditedAnnouncement(announcementId);
+                        saveAnnouncementButton.textContent = 'Save Changes';
+                    }
+                });
+        }
+    }
+
+    function closeAnnouncementEditor() {
+        announcementEditor.style.display = 'none';
+        currentAnnouncementBeingEdited = null;
+        // Clear file upload input
+        fileUploadInput.value = '';
+    }
+
+    function addEmbedInput(embedCode = '', isLast = false) {
+        const embedGroup = document.createElement('div');
+        embedGroup.className = 'embed-input-group';
+        
+        embedGroup.innerHTML = `
+            <textarea class="embed-code-input" placeholder="Paste embed code for Google Slides, Docs, etc. here (optional)">${embedCode}</textarea>
+            <button class="remove-embed-btn" onclick="removeEmbedInput(this.parentNode)">×</button>
+            ${isLast ? '<button class="button small-button" onclick="addEmbedInput()">+ Add Another</button>' : ''}
+        `;
+        
+        embedInputsContainer.appendChild(embedGroup);
+    }
+
+    function removeEmbedInput(embedGroup) {
+        embedGroup.remove();
+    }
+
+    // Upload files to Firebase Storage and create announcement
+    async function postAnnouncement() {
+        if (!isAdmin || !currentTabId) return;
+        const title = announcementTitleInput.value.trim();
+        const content = announcementContentInput.value.trim();
+        
+        // Get all embed codes
+        const embedInputs = document.querySelectorAll('.embed-code-input');
+        const embedCodes = Array.from(embedInputs)
+            .map(input => input.value.trim())
+            .filter(code => code.length > 0);
+        
+        if (!title || (!content && embedCodes.length === 0 && filesToUpload.length === 0)) {
+            alert('Please enter a title and either content, embed code(s), or files for your announcement.');
+            return;
+        }
+        
+        // Show loading state
+        const originalButtonText = saveAnnouncementButton.textContent;
+        saveAnnouncementButton.innerHTML = '<span class="loading-spinner"></span> Uploading...';
+        saveAnnouncementButton.disabled = true;
+        
+        try {
+            // Upload files to Firebase Storage if there are any
+            let uploadedFileData = [];
+            
+            if (filesToUpload.length > 0) {
+                for (const file of filesToUpload) {
+                    try {
+                        // Create a storage reference
+                        const storageRef = storage.ref();
+                        const fileRef = storageRef.child(`announcements/${currentTabId}/${Date.now()}_${file.name}`);
+                        
+                        // Upload the file
+                        const snapshot = await fileRef.put(file);
+                        
+                        // Get the download URL
+                        const downloadURL = await snapshot.ref.getDownloadURL();
+                        
+                        // Add to our file data array
+                        uploadedFileData.push({
+                            name: file.name,
+                            downloadURL: downloadURL,
+                            storagePath: snapshot.ref.fullPath
+                        });
+                    } catch (error) {
+                        console.error("Error uploading file:", error);
+                        // Continue with other files even if one fails
                     }
                 }
             }
+            
+            // Create the announcement with file data
+            const newAnnouncement = {
+                id: Date.now().toString(),
+                title,
+                content,
+                files: uploadedFileData,
+                embedCodes: embedCodes
+            };
+            
+            // Save to database
+            await announcementsRef.child(currentTabId).child(newAnnouncement.id).set(newAnnouncement);
+            
+            closeAnnouncementEditor();
+        } catch (error) {
+            console.error("Error posting announcement:", error);
+            alert("Error posting announcement. Please try again.");
+        } finally {
+            // Restore button state
+            saveAnnouncementButton.textContent = originalButtonText;
+            saveAnnouncementButton.disabled = false;
         }
+    }
 
-        // Announcement management functions
-        function openAnnouncementEditor(announcementId = null) {
-            if (!isAdmin || !currentTabId) return;
-            announcementEditor.style.display = 'flex';
-            announcementTitleInput.value = '';
-            announcementContentInput.value = '';
-            uploadedFiles = [];
-            uploadedFilesDiv.innerHTML = '';
-            
-            // Reset embed inputs
-            embedInputsContainer.innerHTML = `
-                <div class="embed-input-group">
-                    <textarea class="embed-code-input" placeholder="Paste embed code for Google Slides, Docs, etc. here (optional)"></textarea>
-                    <button class="button small-button" onclick="addEmbedInput()">+ Add Another</button>
-                </div>
-            `;
-            
-            saveAnnouncementButton.onclick = postAnnouncement;
-            saveAnnouncementButton.textContent = 'Post Announcement';
-            currentAnnouncementBeingEdited = null;
-            
-            if (announcementId) {
-                currentAnnouncementBeingEdited = announcementId;
-                announcementsRef.child(currentTabId).child(announcementId).once('value')
-                    .then((snapshot) => {
-                        const announcementToEdit = snapshot.val();
-                        if (announcementToEdit) {
-                            announcementTitleInput.value = announcementToEdit.title;
-                            announcementContentInput.value = announcementToEdit.content;
-                            uploadedFiles = announcementToEdit.files || [];
-                            uploadedFilesDiv.innerHTML = uploadedFiles.map(file => 
-                                `<span>${file.name} <button class="remove-file" onclick="removeTempFile(this.parentNode, '${file.name}')">×</button></span>`
-                            ).join('');
-                            
-                            // Clear existing embed inputs
-                            embedInputsContainer.innerHTML = '';
-                            
-                            // Add embed inputs for each existing embed code
-                            if (announcementToEdit.embedCodes && announcementToEdit.embedCodes.length > 0) {
-                                announcementToEdit.embedCodes.forEach((embedCode, index) => {
-                                    addEmbedInput(embedCode, index === announcementToEdit.embedCodes.length - 1);
-                                });
-                            } else {
-                                // Add one empty embed input
-                                addEmbedInput('', true);
-                            }
-                            
-                            saveAnnouncementButton.onclick = () => saveEditedAnnouncement(announcementId);
-                            saveAnnouncementButton.textContent = 'Save Changes';
-                        }
-                    });
-            }
+    function expandPost(postElement) {
+        if (postElement.classList.contains('expanded')) return;
+        
+        if (expandedPost) {
+            expandedPost.classList.remove('expanded');
+            expandedPost.querySelector('.back-button')?.remove();
         }
+        
+        postElement.classList.add('expanded');
+        expandedPost = postElement;
+        
+        const backButton = document.createElement('button');
+        backButton.className = 'back-button';
+        backButton.textContent = '← Back';
+        backButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            collapsePost(postElement);
+        });
+        
+        postElement.appendChild(backButton);
+    }
 
-        function closeAnnouncementEditor() {
-            announcementEditor.style.display = 'none';
-            currentAnnouncementBeingEdited = null;
+    function collapsePost(postElement) {
+        postElement.classList.remove('expanded');
+        postElement.querySelector('.back-button')?.remove();
+        expandedPost = null;
+    }
+
+    function editAnnouncement(announcementId) {
+        if (!isAdmin || !currentTabId) return;
+        event.stopPropagation();
+        openAnnouncementEditor(announcementId);
+    }
+
+    // Update existing announcement (without re-uploading files)
+    async function saveEditedAnnouncement(announcementId) {
+        if (!isAdmin || !currentTabId) return;
+        const title = announcementTitleInput.value.trim();
+        const content = announcementContentInput.value.trim();
+        
+        // Get all embed codes
+        const embedInputs = document.querySelectorAll('.embed-code-input');
+        const embedCodes = Array.from(embedInputs)
+            .map(input => input.value.trim())
+            .filter(code => code.length > 0);
+        
+        if (!title || (!content && embedCodes.length === 0 && uploadedFiles.length === 0)) {
+            alert('Please enter a title and either content, embed code(s), or files for your announcement.');
+            return;
         }
-
-        function addEmbedInput(embedCode = '', isLast = false) {
-            const embedGroup = document.createElement('div');
-            embedGroup.className = 'embed-input-group';
+        
+        // Show loading state
+        const originalButtonText = saveAnnouncementButton.textContent;
+        saveAnnouncementButton.innerHTML = '<span class="loading-spinner"></span> Saving...';
+        saveAnnouncementButton.disabled = true;
+        
+        try {
+            // Upload any new files to Firebase Storage
+            let newUploadedFileData = [];
             
-            embedGroup.innerHTML = `
-                <textarea class="embed-code-input" placeholder="Paste embed code for Google Slides, Docs, etc. here (optional)">${embedCode}</textarea>
-                <button class="remove-embed-btn" onclick="removeEmbedInput(this.parentNode)">×</button>
-                ${isLast ? '<button class="button small-button" onclick="addEmbedInput()">+ Add Another</button>' : ''}
-            `;
-            
-            embedInputsContainer.appendChild(embedGroup);
-        }
-
-        function removeEmbedInput(embedGroup) {
-            embedGroup.remove();
-        }
-
-        function postAnnouncement() {
-            if (!isAdmin || !currentTabId) return;
-            const title = announcementTitleInput.value.trim();
-            const content = announcementContentInput.value.trim();
-            
-            // Get all embed codes
-            const embedInputs = document.querySelectorAll('.embed-code-input');
-            const embedCodes = Array.from(embedInputs)
-                .map(input => input.value.trim())
-                .filter(code => code.length > 0);
-            
-            if (title && (content || embedCodes.length > 0 || uploadedFiles.length > 0)) {
-                const newAnnouncement = {
-                    id: Date.now().toString(),
-                    title,
-                    content,
-                    files: [...uploadedFiles],
-                    embedCodes: embedCodes
-                };
-                
-                announcementsRef.child(currentTabId).child(newAnnouncement.id).set(newAnnouncement)
-                    .then(() => {
-                        closeAnnouncementEditor();
-                    })
-                    .catch((error) => {
-                        console.error("Error posting announcement:", error);
-                        alert("Error posting announcement. Please try again.");
-                    });
-            } else {
-                alert('Please enter a title and either content, embed code(s), or files for your announcement.');
-            }
-        }
-
-        function expandPost(postElement) {
-            if (postElement.classList.contains('expanded')) return;
-            
-            if (expandedPost) {
-                expandedPost.classList.remove('expanded');
-                expandedPost.querySelector('.back-button')?.remove();
-            }
-            
-            postElement.classList.add('expanded');
-            expandedPost = postElement;
-            
-            const backButton = document.createElement('button');
-            backButton.className = 'back-button';
-            backButton.textContent = '← Back';
-            backButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                collapsePost(postElement);
-            });
-            
-            postElement.appendChild(backButton);
-        }
-
-        function collapsePost(postElement) {
-            postElement.classList.remove('expanded');
-            postElement.querySelector('.back-button')?.remove();
-            expandedPost = null;
-        }
-
-        function editAnnouncement(announcementId) {
-            if (!isAdmin || !currentTabId) return;
-            event.stopPropagation();
-            openAnnouncementEditor(announcementId);
-        }
-
-        function saveEditedAnnouncement(announcementId) {
-            if (!isAdmin || !currentTabId) return;
-            const title = announcementTitleInput.value.trim();
-            const content = announcementContentInput.value.trim();
-            
-            // Get all embed codes
-            const embedInputs = document.querySelectorAll('.embed-code-input');
-            const embedCodes = Array.from(embedInputs)
-                .map(input => input.value.trim())
-                .filter(code => code.length > 0);
-            
-            if (title && (content || embedCodes.length > 0 || uploadedFiles.length > 0)) {
-                const updatedAnnouncement = {
-                    id: announcementId,
-                    title,
-                    content,
-                    files: [...uploadedFiles],
-                    embedCodes: embedCodes
-                };
-                
-                announcementsRef.child(currentTabId).child(announcementId).set(updatedAnnouncement)
-                    .then(() => {
-                        closeAnnouncementEditor();
-                    })
-                    .catch((error) => {
-                        console.error("Error updating announcement:", error);
-                        alert("Error updating announcement. Please try again.");
-                    });
-            } else {
-                alert('Please enter a title and either content, embed code(s), or files for your announcement.');
-            }
-        }
-
-        function deleteAnnouncement(announcementId) {
-            if (!isAdmin || !currentTabId) return;
-            if (confirm('Are you sure you want to delete this announcement?')) {
-                announcementsRef.child(currentTabId).child(announcementId).remove()
-                    .catch((error) => {
-                        console.error("Error deleting announcement:", error);
-                        alert("Error deleting announcement. Please try again.");
-                    });
-            }
-        }
-
-        // File upload handling
-        function setupFileUpload() {
-            fileUploadInput.addEventListener('change', function() {
-                if (!isAdmin) return;
-                const files = Array.from(this.files);
-                files.forEach(file => {
-                    uploadedFiles.push({ name: file.name });
-                    const fileItem = document.createElement('span');
-                    fileItem.innerHTML = `${file.name} <button class="remove-file" onclick="removeTempFile(this.parentNode, '${file.name}')">×</button>`;
-                    uploadedFilesDiv.appendChild(fileItem);
-                });
-            });
-        }
-
-        function removeTempFile(element, fileName) {
-            if (!isAdmin) return;
-            uploadedFiles = uploadedFiles.filter(f => f.name !== fileName);
-            element.remove();
-        }
-
-        // Reminder management functions
-        function renderReminders() {
-            remindersList.innerHTML = '';
-            
-            const sortedReminders = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            sortedReminders.forEach(reminder => {
-                // Skip invalid reminders (fix for the undefined issue)
-                if (!reminder || !reminder.id || !reminder.title || !reminder.date) {
-                    return;
+            if (filesToUpload.length > 0) {
+                for (const file of filesToUpload) {
+                    try {
+                        // Create a storage reference
+                        const storageRef = storage.ref();
+                        const fileRef = storageRef.child(`announcements/${currentTabId}/${Date.now()}_${file.name}`);
+                        
+                        // Upload the file
+                        const snapshot = await fileRef.put(file);
+                        
+                        // Get the download URL
+                        const downloadURL = await snapshot.ref.getDownloadURL();
+                        
+                        // Add to our file data array
+                        newUploadedFileData.push({
+                            name: file.name,
+                            downloadURL: downloadURL,
+                            storagePath: snapshot.ref.fullPath
+                        });
+                    } catch (error) {
+                        console.error("Error uploading file:", error);
+                        // Continue with other files even if one fails
+                    }
                 }
-                
-                const reminderElement = document.createElement('div');
-                reminderElement.className = `reminder-card ${reminder.type || 'trip'}`;
-                reminderElement.dataset.id = reminder.id;
-                
-                const actionsHtml = isAdmin ? 
-                    `<div class="reminder-actions">
-                        <button class="reminder-action-btn" onclick="event.stopPropagation(); editReminder('${reminder.id}')">✏️</button>
-                        <button class="reminder-action-btn" onclick="event.stopPropagation(); deleteReminder('${reminder.id}')">🗑️</button>
-                    </div>` : '';
-                
-                reminderElement.innerHTML = `
-                    ${actionsHtml}
-                    <div class="reminder-title">${reminder.title}</div>
-                    <div class="reminder-date">${formatDate(reminder.date)}</div>
-                    ${reminder.description ? `<div class="reminder-description">${reminder.description}</div>` : ''}
-                `;
-                
-                remindersList.appendChild(reminderElement);
-            });
-        }
-
-        function formatDate(dateString) {
-            try {
-                const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-                return new Date(dateString).toLocaleDateString(undefined, options);
-            } catch (e) {
-                console.error("Invalid date format:", dateString);
-                return "Invalid Date";
             }
-        }
-
-        function openReminderEditor(reminderId = null) {
-            if (!isAdmin) return;
-            document.getElementById('reminder-editor').style.display = 'flex';
-            document.getElementById('reminder-title').value = '';
-            document.getElementById('reminder-description').value = '';
-            document.getElementById('reminder-date').value = '';
-            document.getElementById('reminder-type').value = 'trip';
             
-            if (reminderId) {
-                currentReminderBeingEdited = reminderId;
-                const reminder = reminders.find(r => r.id === reminderId);
-                if (reminder) {
-                    document.getElementById('reminder-editor-title').textContent = 'Edit Reminder';
-                    document.getElementById('reminder-title').value = reminder.title;
-                    document.getElementById('reminder-description').value = reminder.description || '';
-                    document.getElementById('reminder-date').value = reminder.date;
-                    document.getElementById('reminder-type').value = reminder.type || 'trip';
-                    document.getElementById('save-reminder-button').textContent = 'Save Changes';
+            // Combine existing files with newly uploaded files
+            const allFiles = [...uploadedFiles, ...newUploadedFileData];
+            
+            // Update the announcement
+            const updatedAnnouncement = {
+                id: announcementId,
+                title,
+                content,
+                files: allFiles,
+                embedCodes: embedCodes
+            };
+            
+            // Save to database
+            await announcementsRef.child(currentTabId).child(announcementId).set(updatedAnnouncement);
+            
+            closeAnnouncementEditor();
+        } catch (error) {
+            console.error("Error updating announcement:", error);
+            alert("Error updating announcement. Please try again.");
+        } finally {
+            // Restore button state
+            saveAnnouncementButton.textContent = originalButtonText;
+            saveAnnouncementButton.disabled = false;
+        }
+    }
+
+    // Delete announcement and its associated files
+    async function deleteAnnouncement(announcementId) {
+        if (!isAdmin || !currentTabId) return;
+        if (!confirm('Are you sure you want to delete this announcement?')) return;
+        
+        try {
+            // Get the announcement to access file information
+            const snapshot = await announcementsRef.child(currentTabId).child(announcementId).once('value');
+            const announcement = snapshot.val();
+            
+            // Delete associated files from storage if they exist
+            if (announcement.files && announcement.files.length > 0) {
+                for (const file of announcement.files) {
+                    try {
+                        const fileRef = storage.refFromURL(file.downloadURL);
+                        await fileRef.delete();
+                    } catch (error) {
+                        console.error("Error deleting file from storage:", error);
+                        // Continue even if file deletion fails
+                    }
                 }
-            } else {
-                currentReminderBeingEdited = null;
-                document.getElementById('reminder-editor-title').textContent = 'Add New Reminder';
-                document.getElementById('save-reminder-button').textContent = 'Add Reminder';
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                document.getElementById('reminder-date').value = tomorrow.toISOString().split('T')[0];
             }
-        }
-
-        function closeReminderEditor() {
-            document.getElementById('reminder-editor').style.display = 'none';
-            currentReminderBeingEdited = null;
-        }
-
-        function saveReminder() {
-            if (!isAdmin) return;
-            const title = document.getElementById('reminder-title').value.trim();
-            const description = document.getElementById('reminder-description').value.trim();
-            const date = document.getElementById('reminder-date').value;
-            const type = document.getElementById('reminder-type').value;
             
-            if (!title || !date) {
-                alert('Please enter a title and date for the reminder');
+            // Delete the announcement from the database
+            await announcementsRef.child(currentTabId).child(announcementId).remove();
+        } catch (error) {
+            console.error("Error deleting announcement:", error);
+            alert("Error deleting announcement. Please try again.");
+        }
+    }
+
+    // File upload handling
+    function setupFileUpload() {
+        fileUploadInput.addEventListener('change', function() {
+            if (!isAdmin) return;
+            const files = Array.from(this.files);
+            
+            files.forEach(file => {
+                // Store the actual File object for later upload
+                filesToUpload.push(file);
+                
+                // Display the file name to the user
+                const fileItem = document.createElement('span');
+                fileItem.innerHTML = `${file.name} <button class="remove-file" onclick="removeFileFromUploadList(this.parentNode, '${file.name}')">×</button>`;
+                uploadedFilesDiv.appendChild(fileItem);
+            });
+            
+            // Reset the file input to allow selecting the same file again
+            this.value = '';
+        });
+    }
+
+    // Remove file from upload list
+    function removeFileFromUploadList(element, fileName) {
+        if (!isAdmin) return;
+        // Remove from filesToUpload array
+        filesToUpload = filesToUpload.filter(f => f.name !== fileName);
+        // Remove from displayed list
+        element.remove();
+    }
+
+    // Remove file from existing announcement (kept for editing existing announcements)
+    function removeTempFile(element, fileName) {
+        if (!isAdmin) return;
+        uploadedFiles = uploadedFiles.filter(f => f.name !== fileName);
+        element.remove();
+    }
+
+    // Reminder management functions
+    function renderReminders() {
+        remindersList.innerHTML = '';
+        
+        const sortedReminders = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        sortedReminders.forEach(reminder => {
+            // Skip invalid reminders (fix for the undefined issue)
+            if (!reminder || !reminder.id || !reminder.title || !reminder.date) {
                 return;
             }
             
-            if (currentReminderBeingEdited) {
-                const index = reminders.findIndex(r => r.id === currentReminderBeingEdited);
-                if (index !== -1) {
-                    reminders[index] = {
-                        id: currentReminderBeingEdited,
-                        title,
-                        description,
-                        date,
-                        type
-                    };
-                }
-            } else {
-                reminders.push({
-                    id: Date.now().toString(),
+            const reminderElement = document.createElement('div');
+            reminderElement.className = `reminder-card ${reminder.type || 'trip'}`;
+            reminderElement.dataset.id = reminder.id;
+            
+            const actionsHtml = isAdmin ? 
+                `<div class="reminder-actions">
+                    <button class="reminder-action-btn" onclick="event.stopPropagation(); editReminder('${reminder.id}')">✏️</button>
+                    <button class="reminder-action-btn" onclick="event.stopPropagation(); deleteReminder('${reminder.id}')">🗑️</button>
+                </div>` : '';
+            
+            reminderElement.innerHTML = `
+                ${actionsHtml}
+                <div class="reminder-title">${reminder.title}</div>
+                <div class="reminder-date">${formatDate(reminder.date)}</div>
+                ${reminder.description ? `<div class="reminder-description">${reminder.description}</div>` : ''}
+            `;
+            
+            remindersList.appendChild(reminderElement);
+        });
+    }
+
+    function formatDate(dateString) {
+        try {
+            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        } catch (e) {
+            console.error("Invalid date format:", dateString);
+            return "Invalid Date";
+        }
+    }
+
+    function openReminderEditor(reminderId = null) {
+        if (!isAdmin) return;
+        document.getElementById('reminder-editor').style.display = 'flex';
+        document.getElementById('reminder-title').value = '';
+        document.getElementById('reminder-description').value = '';
+        document.getElementById('reminder-date').value = '';
+        document.getElementById('reminder-type').value = 'trip';
+        
+        if (reminderId) {
+            currentReminderBeingEdited = reminderId;
+            const reminder = reminders.find(r => r.id === reminderId);
+            if (reminder) {
+                document.getElementById('reminder-editor-title').textContent = 'Edit Reminder';
+                document.getElementById('reminder-title').value = reminder.title;
+                document.getElementById('reminder-description').value = reminder.description || '';
+                document.getElementById('reminder-date').value = reminder.date;
+                document.getElementById('reminder-type').value = reminder.type || 'trip';
+                document.getElementById('save-reminder-button').textContent = 'Save Changes';
+            }
+        } else {
+            currentReminderBeingEdited = null;
+            document.getElementById('reminder-editor-title').textContent = 'Add New Reminder';
+            document.getElementById('save-reminder-button').textContent = 'Add Reminder';
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('reminder-date').value = tomorrow.toISOString().split('T')[0];
+        }
+    }
+
+    function closeReminderEditor() {
+        document.getElementById('reminder-editor').style.display = 'none';
+        currentReminderBeingEdited = null;
+    }
+
+    function saveReminder() {
+        if (!isAdmin) return;
+        const title = document.getElementById('reminder-title').value.trim();
+        const description = document.getElementById('reminder-description').value.trim();
+        const date = document.getElementById('reminder-date').value;
+        const type = document.getElementById('reminder-type').value;
+        
+        if (!title || !date) {
+            alert('Please enter a title and date for the reminder');
+            return;
+        }
+        
+        if (currentReminderBeingEdited) {
+            const index = reminders.findIndex(r => r.id === currentReminderBeingEdited);
+            if (index !== -1) {
+                reminders[index] = {
+                    id: currentReminderBeingEdited,
                     title,
                     description,
                     date,
                     type
-                });
+                };
             }
-            
-            saveReminders();
-            closeReminderEditor();
-        }
-
-        function editReminder(reminderId) {
-            if (!isAdmin) return;
-            event.stopPropagation();
-            openReminderEditor(reminderId);
-        }
-
-        function deleteReminder(reminderId) {
-            if (!isAdmin) return;
-            if (confirm('Are you sure you want to delete this reminder?')) {
-                // Find the index of the reminder to delete
-                const index = reminders.findIndex(r => r.id === reminderId);
-                
-                if (index !== -1) {
-                    // Remove the reminder from the array
-                    reminders.splice(index, 1);
-                    
-                    // Save the updated reminders to Firebase
-                    saveReminders();
-                }
-            }
-        }
-
-        function saveReminders() {
-            const remindersObject = {};
-            reminders.forEach(reminder => {
-                if (reminder && reminder.id) { // Only include valid reminders
-                    remindersObject[reminder.id] = reminder;
-                }
+        } else {
+            reminders.push({
+                id: Date.now().toString(),
+                title,
+                description,
+                date,
+                type
             });
-            
-            remindersRef.set(remindersObject)
-                .catch((error) => {
-                    console.error("Error saving reminders:", error);
-                    alert("Error saving reminders. Please try again.");
-                });
         }
+        
+        saveReminders();
+        closeReminderEditor();
+    }
 
-        // Modal close handlers
-        function setupModalCloseHandlers() {
-            window.onclick = function(event) {
-                if (event.target === announcementEditor) {
-                    closeAnnouncementEditor();
-                }
-                if (event.target === tabEditorModal) {
-                    closeTabEditor();
-                }
-                if (event.target === document.getElementById('reminder-editor')) {
-                    closeReminderEditor();
-                }
-            };
+    function editReminder(reminderId) {
+        if (!isAdmin) return;
+        event.stopPropagation();
+        openReminderEditor(reminderId);
+    }
+
+    function deleteReminder(reminderId) {
+        if (!isAdmin) return;
+        if (confirm('Are you sure you want to delete this reminder?')) {
+            // Find the index of the reminder to delete
+            const index = reminders.findIndex(r => r.id === reminderId);
+            
+            if (index !== -1) {
+                // Remove the reminder from the array
+                reminders.splice(index, 1);
+                
+                // Save the updated reminders to Firebase
+                saveReminders();
+            }
         }
-    </script>
+    }
+
+    function saveReminders() {
+        const remindersObject = {};
+        reminders.forEach(reminder => {
+            if (reminder && reminder.id) { // Only include valid reminders
+                remindersObject[reminder.id] = reminder;
+            }
+        });
+        
+        remindersRef.set(remindersObject)
+            .catch((error) => {
+                console.error("Error saving reminders:", error);
+                alert("Error saving reminders. Please try again.");
+            });
+    }
+
+    // Modal close handlers
+    function setupModalCloseHandlers() {
+        window.onclick = function(event) {
+            if (event.target === announcementEditor) {
+                closeAnnouncementEditor();
+            }
+            if (event.target === tabEditorModal) {
+                closeTabEditor();
+            }
+            if (event.target === document.getElementById('reminder-editor')) {
+                closeReminderEditor();
+            }
+        };
+    }
+</script>
+
 </body>
 </html>
