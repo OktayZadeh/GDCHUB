@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1551,7 +1550,6 @@ body.non-admin .sidebar-title {
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
 </head>
 <body class="non-admin">
     <!-- Top Navigation Bar -->
@@ -1781,6 +1779,7 @@ body.non-admin .sidebar-title {
             });
         })();
 
+        // REST OF YOUR PAGE'S JAVASCRIPT GOES BELOW THIS LINE
         // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCSTEJ3LevxY2_rlGROzajNnNBrVG3oRR4",
@@ -1797,7 +1796,6 @@ body.non-admin .sidebar-title {
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const auth = firebase.auth();
-        const storage = firebase.storage(); // Initialize Firebase Storage
 
         // Database references
         const tabsRef = database.ref('tabs');
@@ -2092,11 +2090,10 @@ body.non-admin .sidebar-title {
                 minute: '2-digit'
             });
             
-            // Create file links with actual download URLs
             const filesHtml = announcement.files && announcement.files.length > 0 ? 
                 announcement.files.map(file => 
-                    `<a href="${file.url}" class="file-attachment" target="_blank" download="${file.name}">
-                        <i class="fas fa-file"></i> ${file.name}
+                    `<a href="#" class="file-attachment" target="_blank">
+                        <i class="file-icon">📄</i> ${file.name}
                     </a>`
                 ).join('') : '';
             
@@ -2116,6 +2113,7 @@ body.non-admin .sidebar-title {
                     </button>
                 </div>` : '';
             
+            // Fixed the duplicate content issue by removing the extra content div
             post.innerHTML = `
                 ${actionsHtml}
                 <h3>${announcement.title}</h3>
@@ -2439,22 +2437,7 @@ body.non-admin .sidebar-title {
             embedGroup.remove();
         }
 
-        // Upload file to Firebase Storage
-        async function uploadFileToStorage(file) {
-            // Create a storage reference
-            const storageRef = storage.ref();
-            const fileRef = storageRef.child(`announcements/${currentTabId}/${Date.now()}_${file.name}`);
-            
-            // Upload the file
-            const snapshot = await fileRef.put(file);
-            
-            // Get the download URL
-            const downloadURL = await snapshot.ref.getDownloadURL();
-            
-            return downloadURL;
-        }
-
-        async function postAnnouncement() {
+        function postAnnouncement() {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
             const content = announcementContentInput.value.trim();
@@ -2466,46 +2449,22 @@ body.non-admin .sidebar-title {
                 .filter(code => code.length > 0);
             
             if (title && (content || embedCodes.length > 0 || uploadedFiles.length > 0)) {
-                // Show loading state
-                saveAnnouncementButton.disabled = true;
-                saveAnnouncementButton.innerHTML = '<span class="loading-spinner"></span> Posting...';
+                const newAnnouncement = {
+                    id: Date.now().toString(),
+                    title,
+                    content,
+                    files: [...uploadedFiles],
+                    embedCodes: embedCodes
+                };
                 
-                try {
-                    // Upload files to Firebase Storage if there are any
-                    const filesWithURLs = [];
-                    
-                    if (uploadedFiles.length > 0) {
-                        const fileInput = document.getElementById('file-upload');
-                        const files = Array.from(fileInput.files);
-                        
-                        for (const file of files) {
-                            const downloadURL = await uploadFileToStorage(file);
-                            filesWithURLs.push({
-                                name: file.name,
-                                url: downloadURL
-                            });
-                        }
-                    }
-                    
-                    const newAnnouncement = {
-                        id: Date.now().toString(),
-                        title,
-                        content,
-                        files: filesWithURLs,
-                        embedCodes: embedCodes
-                    };
-                    
-                    await announcementsRef.child(currentTabId).child(newAnnouncement.id).set(newAnnouncement);
-                    closeAnnouncementEditor();
-                    
-                } catch (error) {
-                    console.error("Error posting announcement:", error);
-                    alert("Error posting announcement. Please try again.");
-                } finally {
-                    // Reset button state
-                    saveAnnouncementButton.disabled = false;
-                    saveAnnouncementButton.textContent = 'Post Announcement';
-                }
+                announcementsRef.child(currentTabId).child(newAnnouncement.id).set(newAnnouncement)
+                    .then(() => {
+                        closeAnnouncementEditor();
+                    })
+                    .catch((error) => {
+                        console.error("Error posting announcement:", error);
+                        alert("Error posting announcement. Please try again.");
+                    });
             } else {
                 alert('Please enter a title and either content, embed code(s), or files for your announcement.');
             }
@@ -2545,7 +2504,7 @@ body.non-admin .sidebar-title {
             openAnnouncementEditor(announcementId);
         }
 
-        async function saveEditedAnnouncement(announcementId) {
+        function saveEditedAnnouncement(announcementId) {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
             const content = announcementContentInput.value.trim();
@@ -2557,46 +2516,22 @@ body.non-admin .sidebar-title {
                 .filter(code => code.length > 0);
             
             if (title && (content || embedCodes.length > 0 || uploadedFiles.length > 0)) {
-                // Show loading state
-                saveAnnouncementButton.disabled = true;
-                saveAnnouncementButton.innerHTML = '<span class="loading-spinner"></span> Saving...';
+                const updatedAnnouncement = {
+                    id: announcementId,
+                    title,
+                    content,
+                    files: [...uploadedFiles],
+                    embedCodes: embedCodes
+                };
                 
-                try {
-                    // Upload new files to Firebase Storage if there are any
-                    const filesWithURLs = [...uploadedFiles];
-                    
-                    const fileInput = document.getElementById('file-upload');
-                    if (fileInput.files.length > 0) {
-                        const files = Array.from(fileInput.files);
-                        
-                        for (const file of files) {
-                            const downloadURL = await uploadFileToStorage(file);
-                            filesWithURLs.push({
-                                name: file.name,
-                                url: downloadURL
-                            });
-                        }
-                    }
-                    
-                    const updatedAnnouncement = {
-                        id: announcementId,
-                        title,
-                        content,
-                        files: filesWithURLs,
-                        embedCodes: embedCodes
-                    };
-                    
-                    await announcementsRef.child(currentTabId).child(announcementId).set(updatedAnnouncement);
-                    closeAnnouncementEditor();
-                    
-                } catch (error) {
-                    console.error("Error updating announcement:", error);
-                    alert("Error updating announcement. Please try again.");
-                } finally {
-                    // Reset button state
-                    saveAnnouncementButton.disabled = false;
-                    saveAnnouncementButton.textContent = 'Save Changes';
-                }
+                announcementsRef.child(currentTabId).child(announcementId).set(updatedAnnouncement)
+                    .then(() => {
+                        closeAnnouncementEditor();
+                    })
+                    .catch((error) => {
+                        console.error("Error updating announcement:", error);
+                        alert("Error updating announcement. Please try again.");
+                    });
             } else {
                 alert('Please enter a title and either content, embed code(s), or files for your announcement.');
             }
@@ -2619,7 +2554,6 @@ body.non-admin .sidebar-title {
                 if (!isAdmin) return;
                 const files = Array.from(this.files);
                 files.forEach(file => {
-                    // Add to temporary file list (will be uploaded when announcement is saved)
                     uploadedFiles.push({ name: file.name });
                     const fileItem = document.createElement('span');
                     fileItem.innerHTML = `${file.name} <button class="remove-file" onclick="removeTempFile(this.parentNode, '${file.name}')">×</button>`;
