@@ -1545,12 +1545,41 @@ body.non-admin .sidebar-title {
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+          /* Add a loading indicator for file uploads */
+        .file-upload-progress {
+            display: none;
+            margin-top: 10px;
+            background: var(--light);
+            border-radius: var(--radius-md);
+            padding: var(--space-sm);
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: var(--primary-light);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+            margin-bottom: var(--space-xs);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            font-size: var(--text-xs);
+            color: var(--medium);
+            text-align: center;
+        }
     </style>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
-     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
+       <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
 </head>
 <body class="non-admin">
     <!-- Top Navigation Bar -->
@@ -1711,7 +1740,7 @@ body.non-admin .sidebar-title {
     </div>
 
     <script>
-    // AUTH CHECK - MUST BE AT TOP OF EVERY PROTECTED PAGE
+     // AUTH CHECK - MUST BE AT TOP OF EVERY PROTECTED PAGE
 (function() {
     const USER_INFO_KEY = "googleUserInfo";
     const AUTH_TOKEN_KEY = "gdcAuthToken";
@@ -1780,7 +1809,6 @@ body.non-admin .sidebar-title {
     });
 })();
 
-// REST OF YOUR PAGE'S JAVASCRIPT GOES BELOW THIS LINE
 // Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyCSTEJ3LevxY2_rlGROzajNnNBrVG3oRR4",
@@ -1793,11 +1821,11 @@ const firebaseConfig = {
     measurementId: "G-E25TMDFLFX"
 };
 
-// Initialize Firebase
+// Initialize Firebase with Storage
 const app = firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 const auth = firebase.auth();
-const storage = firebase.storage(); // Add Firebase Storage
+const storage = firebase.storage(); // Add storage reference
 
 // Database references
 const tabsRef = database.ref('tabs');
@@ -1841,7 +1869,6 @@ let isAdmin = false;
 let currentAnnouncementBeingEdited = null;
 let currentTabAnnouncements = []; // Store announcements for current tab
 let dropdownHoverTimeout;
-let filesToUpload = []; // Store actual File objects for upload
 
 // Admin configuration
 const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
@@ -2093,10 +2120,10 @@ function createPostElement(announcement) {
         minute: '2-digit'
     });
     
-    // Generate file links with actual download URLs
+    // Update file attachments to use actual URLs
     const filesHtml = announcement.files && announcement.files.length > 0 ? 
         announcement.files.map(file => 
-            `<a href="${file.downloadURL}" class="file-attachment" target="_blank">
+            `<a href="${file.url}" class="file-attachment" target="_blank" download="${file.name}">
                 <i class="file-icon">📄</i> ${file.name}
             </a>`
         ).join('') : '';
@@ -2117,7 +2144,6 @@ function createPostElement(announcement) {
             </button>
         </div>` : '';
     
-    // Fixed the duplicate content issue by removing the extra content div
     post.innerHTML = `
         ${actionsHtml}
         <h3>${announcement.title}</h3>
@@ -2373,7 +2399,6 @@ function openAnnouncementEditor(announcementId = null) {
     announcementContentInput.value = '';
     uploadedFiles = [];
     uploadedFilesDiv.innerHTML = '';
-    filesToUpload = []; // Reset files to upload
     
     // Reset embed inputs
     embedInputsContainer.innerHTML = `
@@ -2423,8 +2448,6 @@ function openAnnouncementEditor(announcementId = null) {
 function closeAnnouncementEditor() {
     announcementEditor.style.display = 'none';
     currentAnnouncementBeingEdited = null;
-    // Clear file upload input
-    fileUploadInput.value = '';
 }
 
 function addEmbedInput(embedCode = '', isLast = false) {
@@ -2444,8 +2467,7 @@ function removeEmbedInput(embedGroup) {
     embedGroup.remove();
 }
 
-// Upload files to Firebase Storage and create announcement
-async function postAnnouncement() {
+function postAnnouncement() {
     if (!isAdmin || !currentTabId) return;
     const title = announcementTitleInput.value.trim();
     const content = announcementContentInput.value.trim();
@@ -2456,66 +2478,25 @@ async function postAnnouncement() {
         .map(input => input.value.trim())
         .filter(code => code.length > 0);
     
-    if (!title || (!content && embedCodes.length === 0 && filesToUpload.length === 0)) {
-        alert('Please enter a title and either content, embed code(s), or files for your announcement.');
-        return;
-    }
-    
-    // Show loading state
-    const originalButtonText = saveAnnouncementButton.textContent;
-    saveAnnouncementButton.innerHTML = '<span class="loading-spinner"></span> Uploading...';
-    saveAnnouncementButton.disabled = true;
-    
-    try {
-        // Upload files to Firebase Storage if there are any
-        let uploadedFileData = [];
-        
-        if (filesToUpload.length > 0) {
-            for (const file of filesToUpload) {
-                try {
-                    // Create a storage reference
-                    const storageRef = storage.ref();
-                    const fileRef = storageRef.child(`announcements/${currentTabId}/${Date.now()}_${file.name}`);
-                    
-                    // Upload the file
-                    const snapshot = await fileRef.put(file);
-                    
-                    // Get the download URL
-                    const downloadURL = await snapshot.ref.getDownloadURL();
-                    
-                    // Add to our file data array
-                    uploadedFileData.push({
-                        name: file.name,
-                        downloadURL: downloadURL,
-                        storagePath: snapshot.ref.fullPath
-                    });
-                } catch (error) {
-                    console.error("Error uploading file:", error);
-                    // Continue with other files even if one fails
-                }
-            }
-        }
-        
-        // Create the announcement with file data
+    if (title && (content || embedCodes.length > 0 || uploadedFiles.length > 0)) {
         const newAnnouncement = {
             id: Date.now().toString(),
             title,
             content,
-            files: uploadedFileData,
+            files: [...uploadedFiles],
             embedCodes: embedCodes
         };
         
-        // Save to database
-        await announcementsRef.child(currentTabId).child(newAnnouncement.id).set(newAnnouncement);
-        
-        closeAnnouncementEditor();
-    } catch (error) {
-        console.error("Error posting announcement:", error);
-        alert("Error posting announcement. Please try again.");
-    } finally {
-        // Restore button state
-        saveAnnouncementButton.textContent = originalButtonText;
-        saveAnnouncementButton.disabled = false;
+        announcementsRef.child(currentTabId).child(newAnnouncement.id).set(newAnnouncement)
+            .then(() => {
+                closeAnnouncementEditor();
+            })
+            .catch((error) => {
+                console.error("Error posting announcement:", error);
+                alert("Error posting announcement. Please try again.");
+            });
+    } else {
+        alert('Please enter a title and either content, embed code(s), or files for your announcement.');
     }
 }
 
@@ -2553,8 +2534,7 @@ function editAnnouncement(announcementId) {
     openAnnouncementEditor(announcementId);
 }
 
-// Update existing announcement (without re-uploading files)
-async function saveEditedAnnouncement(announcementId) {
+function saveEditedAnnouncement(announcementId) {
     if (!isAdmin || !currentTabId) return;
     const title = announcementTitleInput.value.trim();
     const content = announcementContentInput.value.trim();
@@ -2565,138 +2545,134 @@ async function saveEditedAnnouncement(announcementId) {
         .map(input => input.value.trim())
         .filter(code => code.length > 0);
     
-    if (!title || (!content && embedCodes.length === 0 && uploadedFiles.length === 0)) {
-        alert('Please enter a title and either content, embed code(s), or files for your announcement.');
-        return;
-    }
-    
-    // Show loading state
-    const originalButtonText = saveAnnouncementButton.textContent;
-    saveAnnouncementButton.innerHTML = '<span class="loading-spinner"></span> Saving...';
-    saveAnnouncementButton.disabled = true;
-    
-    try {
-        // Upload any new files to Firebase Storage
-        let newUploadedFileData = [];
-        
-        if (filesToUpload.length > 0) {
-            for (const file of filesToUpload) {
-                try {
-                    // Create a storage reference
-                    const storageRef = storage.ref();
-                    const fileRef = storageRef.child(`announcements/${currentTabId}/${Date.now()}_${file.name}`);
-                    
-                    // Upload the file
-                    const snapshot = await fileRef.put(file);
-                    
-                    // Get the download URL
-                    const downloadURL = await snapshot.ref.getDownloadURL();
-                    
-                    // Add to our file data array
-                    newUploadedFileData.push({
-                        name: file.name,
-                        downloadURL: downloadURL,
-                        storagePath: snapshot.ref.fullPath
-                    });
-                } catch (error) {
-                    console.error("Error uploading file:", error);
-                    // Continue with other files even if one fails
-                }
-            }
-        }
-        
-        // Combine existing files with newly uploaded files
-        const allFiles = [...uploadedFiles, ...newUploadedFileData];
-        
-        // Update the announcement
+    if (title && (content || embedCodes.length > 0 || uploadedFiles.length > 0)) {
         const updatedAnnouncement = {
             id: announcementId,
             title,
             content,
-            files: allFiles,
+            files: [...uploadedFiles],
             embedCodes: embedCodes
         };
         
-        // Save to database
-        await announcementsRef.child(currentTabId).child(announcementId).set(updatedAnnouncement);
-        
-        closeAnnouncementEditor();
-    } catch (error) {
-        console.error("Error updating announcement:", error);
-        alert("Error updating announcement. Please try again.");
-    } finally {
-        // Restore button state
-        saveAnnouncementButton.textContent = originalButtonText;
-        saveAnnouncementButton.disabled = false;
+        announcementsRef.child(currentTabId).child(announcementId).set(updatedAnnouncement)
+            .then(() => {
+                closeAnnouncementEditor();
+            })
+            .catch((error) => {
+                console.error("Error updating announcement:", error);
+                alert("Error updating announcement. Please try again.");
+            });
+    } else {
+        alert('Please enter a title and either content, embed code(s), or files for your announcement.');
     }
 }
 
-// Delete announcement and its associated files
-async function deleteAnnouncement(announcementId) {
+function deleteAnnouncement(announcementId) {
     if (!isAdmin || !currentTabId) return;
-    if (!confirm('Are you sure you want to delete this announcement?')) return;
-    
-    try {
-        // Get the announcement to access file information
-        const snapshot = await announcementsRef.child(currentTabId).child(announcementId).once('value');
-        const announcement = snapshot.val();
-        
-        // Delete associated files from storage if they exist
-        if (announcement.files && announcement.files.length > 0) {
-            for (const file of announcement.files) {
-                try {
-                    const fileRef = storage.refFromURL(file.downloadURL);
-                    await fileRef.delete();
-                } catch (error) {
-                    console.error("Error deleting file from storage:", error);
-                    // Continue even if file deletion fails
-                }
-            }
-        }
-        
-        // Delete the announcement from the database
-        await announcementsRef.child(currentTabId).child(announcementId).remove();
-    } catch (error) {
-        console.error("Error deleting announcement:", error);
-        alert("Error deleting announcement. Please try again.");
+    if (confirm('Are you sure you want to delete this announcement?')) {
+        announcementsRef.child(currentTabId).child(announcementId).remove()
+            .catch((error) => {
+                console.error("Error deleting announcement:", error);
+                alert("Error deleting announcement. Please try again.");
+            });
     }
 }
 
-// File upload handling
+// File upload handling - UPDATED TO ACTUALLY UPLOAD FILES
 function setupFileUpload() {
     fileUploadInput.addEventListener('change', function() {
         if (!isAdmin) return;
         const files = Array.from(this.files);
         
         files.forEach(file => {
-            // Store the actual File object for later upload
-            filesToUpload.push(file);
+            // Show upload progress
+            const progressContainer = document.createElement('div');
+            progressContainer.className = 'file-upload-progress';
+            progressContainer.innerHTML = `
+                <div>Uploading ${file.name}...</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-${file.name}"></div>
+                </div>
+                <div class="progress-text" id="progress-text-${file.name}">0%</div>
+            `;
+            uploadedFilesDiv.appendChild(progressContainer);
+            progressContainer.style.display = 'block';
             
-            // Display the file name to the user
-            const fileItem = document.createElement('span');
-            fileItem.innerHTML = `${file.name} <button class="remove-file" onclick="removeFileFromUploadList(this.parentNode, '${file.name}')">×</button>`;
-            uploadedFilesDiv.appendChild(fileItem);
+            // Create a reference to the file location in Firebase Storage
+            const storageRef = storage.ref();
+            const fileRef = storageRef.child(`announcements/${currentTabId}/${Date.now()}_${file.name}`);
+            
+            // Upload file to Firebase Storage
+            const uploadTask = fileRef.put(file);
+            
+            // Monitor upload progress
+            uploadTask.on('state_changed', 
+                (snapshot) => {
+                    // Progress monitoring
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    document.getElementById(`progress-${file.name}`).style.width = progress + '%';
+                    document.getElementById(`progress-text-${file.name}`).textContent = Math.round(progress) + '%';
+                },
+                (error) => {
+                    // Handle unsuccessful uploads
+                    console.error("Upload failed:", error);
+                    progressContainer.innerHTML = `<div style="color: var(--danger);">Failed to upload ${file.name}</div>`;
+                },
+                () => {
+                    // Handle successful uploads
+                    uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                        // Add file to uploadedFiles array with both name and URL
+                        uploadedFiles.push({ 
+                            name: file.name, 
+                            url: downloadURL 
+                        });
+                        
+                        // Update the UI to show the uploaded file with a proper download link
+                        progressContainer.outerHTML = `
+                            <span>${file.name} 
+                                <button class="remove-file" onclick="removeTempFile(this.parentNode, '${file.name}')">×</button>
+                            </span>
+                        `;
+                    });
+                }
+            );
         });
         
-        // Reset the file input to allow selecting the same file again
+        // Reset the file input
         this.value = '';
     });
 }
 
-// Remove file from upload list
-function removeFileFromUploadList(element, fileName) {
+function removeTempFile(element, fileName) {
     if (!isAdmin) return;
-    // Remove from filesToUpload array
-    filesToUpload = filesToUpload.filter(f => f.name !== fileName);
-    // Remove from displayed list
+    
+    // Find the file in uploadedFiles array
+    const fileIndex = uploadedFiles.findIndex(f => f.name === fileName);
+    if (fileIndex !== -1) {
+        // If the file was already uploaded to storage, you might want to delete it
+        // Note: This is optional - you might prefer to keep files in storage even if removed from UI
+        // const fileUrl = uploadedFiles[fileIndex].url;
+        // deleteFileFromStorage(fileUrl); // You would need to implement this function
+        
+        // Remove from array
+        uploadedFiles.splice(fileIndex, 1);
+    }
+    
+    // Remove from UI
     element.remove();
 }
 
-// Remove file from existing announcement (kept for editing existing announcements)
-function removeTempFile(element, fileName) {
-    if (!isAdmin) return;
-    uploadedFiles = uploadedFiles.filter(f => f.name !== fileName);
-    element.remove();
+// Optional: Function to delete file from storage
+function deleteFileFromStorage(fileUrl) {
+    // Create a reference to the file to delete
+    const fileRef = storage.refFromURL(fileUrl);
+    
+    // Delete the file
+    fileRef.delete().then(() => {
+        console.log('File deleted successfully');
+    }).catch((error) => {
+        console.error('Error deleting file:', error);
+    });
 }
 
 // Reminder management functions
