@@ -8,7 +8,7 @@
     <style>
 :root {
     /* Modern Color palette */
-    --primary: #018eaa;
+    --primary: #3EA899;
     --primary-light: #E0F2F1;
     --primary-dark: #2D7D78;
     --secondary: #4A89DC;
@@ -322,6 +322,7 @@ a:hover {
     background: var(--light);
     color: var(--primary);
     border-color: var(--primary-light);
+    text-decoration: none; /* Fix for button text underline issue */
 }
 
 .topbar-button i {
@@ -389,6 +390,7 @@ a:hover {
 .profile-dropdown-content a:hover {
     background-color: var(--light);
     color: var(--primary);
+    text-decoration: none; /* Fix for dropdown text underline issue */
 }
 
 .profile-dropdown-content a i {
@@ -413,6 +415,7 @@ body.dark-mode .profile-dropdown-content a {
 body.dark-mode .profile-dropdown-content a:hover {
     background-color: var(--dark-light-gray);
     color: var(--primary);
+    text-decoration: none; /* Fix for dark mode dropdown text underline */
 }
 
 /* Button Styles */
@@ -432,12 +435,14 @@ body.dark-mode .profile-dropdown-content a:hover {
     color: white;
     box-shadow: var(--shadow-sm);
     height: 36px;
+    text-decoration: none; /* Fix for button text underline issue */
 }
 
 .button:hover {
     background-color: var(--primary-dark);
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
+    text-decoration: none; /* Fix for button text underline issue */
 }
 
 .button:active {
@@ -460,6 +465,7 @@ body.dark-mode .profile-dropdown-content a:hover {
     background-color: var(--light);
     border-color: var(--primary);
     color: var(--primary-dark);
+    text-decoration: none; /* Fix for secondary button text underline */
 }
 
 .button.danger {
@@ -599,6 +605,7 @@ select {
 .sidebar-link:hover {
     background-color: var(--light);
     color: var(--dark);
+    text-decoration: none; /* Fix for sidebar link underline issue */
 }
 
 .sidebar-link.active {
@@ -659,7 +666,7 @@ select {
 
 .add-tab-btn {
     background: var(--primary);
-    border: none;
+    border: null;
     color: white;
     width: 28px;
     height: 28px;
@@ -672,12 +679,14 @@ select {
     transition: all var(--transition-fast);
     flex-shrink: 0;
     box-shadow: var(--shadow-sm);
+    text-decoration: none; /* Fix for add tab button text underline */
 }
 
 .add-tab-btn:hover {
     background: var(--primary-dark);
     transform: scale(1.1);
     box-shadow: var(--shadow-md);
+    text-decoration: none; /* Fix for add tab button text underline */
 }
 
 /* Main Content Styles */
@@ -901,25 +910,57 @@ select {
     border: none;
 }
 
+/* Enhanced expanded post header with fixed buttons */
+.post-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+    padding-bottom: var(--space-md);
+    margin-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--light-gray);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+body.dark-mode .post-header {
+    background: var(--dark-lighter);
+    border-bottom-color: var(--dark-light-gray);
+}
+
+.post-header h3 {
+    margin-bottom: 0;
+    flex: 1;
+    padding-right: var(--space-md);
+}
+
+.post-header-actions {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+}
+
 .post-card .back-button {
-    position: fixed;
-    top: calc(54px + var(--space-md)); /* Adjusted for topbar */
-    left: calc(260px + var(--space-md));
     background: var(--primary);
     color: white;
     border: none;
     padding: var(--space-sm) var(--space-md);
     border-radius: var(--radius-md);
     cursor: pointer;
-    z-index: 101;
     box-shadow: var(--shadow-sm);
     transition: all var(--transition-fast);
+    text-decoration: none; /* Fix for back button text underline */
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
 }
 
 .post-card .back-button:hover {
     background: var(--primary-dark);
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
+    text-decoration: none; /* Fix for back button text underline */
 }
 
 .post-details {
@@ -974,25 +1015,46 @@ select {
     border-bottom: 1px solid var(--light-gray);
 }
 
+/* Fix for dark mode expanded post title */
+body.dark-mode .post-card.expanded h3 {
+    color: white; /* Make title white in dark mode when expanded */
+}
+
 .post-card:not(.expanded) .delete-button,
 .post-card:not(.expanded) button[onclick^="editAnnouncement"] {
     display: none !important;
 }
 
 .post-card.expanded .delete-button {
-    position: fixed;
-    top: calc(54px + var(--space-md)); /* Adjusted for topbar */
-    right: var(--space-xl);
-    z-index: 101;
+    background: var(--danger);
+    color: white;
+    border: none;
     padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-decoration: none; /* Fix for delete button text underline */
+}
+
+.post-card.expanded .delete-button:hover {
+    background: #E53E3E;
+    text-decoration: none; /* Fix for delete button text underline */
 }
 
 .post-card.expanded button[onclick^="editAnnouncement"] {
-    position: fixed;
-    top: calc(54px + var(--space-md)); /* Adjusted for topbar */
-    right: calc(var(--space-xl) + 100px);
-    z-index: 101;
+    background: var(--secondary);
+    color: white;
+    border: none;
     padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-decoration: none; /* Fix for edit button text underline */
+}
+
+.post-card.expanded button[onclick^="editAnnouncement"]:hover {
+    background: #3b7bd8;
+    text-decoration: none; /* Fix for edit button text underline */
 }
 
 .file-attachment {
@@ -1040,6 +1102,7 @@ select {
     font-size: var(--text-sm);
     border-radius: var(--radius-sm);
     transition: all var(--transition-fast);
+    text-decoration: none; /* Fix for post action buttons text underline */
 }
 
 .post-actions .delete-button {
@@ -1048,6 +1111,7 @@ select {
 
 .post-actions .delete-button:hover {
     background: #E53E3E;
+    text-decoration: none; /* Fix for delete button text underline */
 }
 
 /* Reminders Styles */
@@ -1392,17 +1456,19 @@ body.non-admin .sidebar-title {
     .post-card.expanded .back-button,
     .post-card.expanded .delete-button,
     .post-card.expanded button[onclick^="editAnnouncement"] {
-        left: var(--space-md);
-        right: auto;
+        position: static;
+        margin-top: var(--space-md);
     }
     
-    .post-card.expanded .delete-button {
-        top: calc(54px + var(--space-md) + 60px);
+    .post-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-md);
     }
     
-    .post-card.expanded button[onclick^="editAnnouncement"] {
-        top: calc(54px + var(--space-md) + 60px);
-        left: calc(var(--space-md) + 100px);
+    .post-header-actions {
+        width: 100%;
+        justify-content: flex-end;
     }
     
     .reminders-list {
@@ -1438,21 +1504,6 @@ body.non-admin .sidebar-title {
     
     .post-card.expanded .post-actions {
         position: absolute;
-    }
-    
-    .post-card.expanded .delete-button,
-    .post-card.expanded button[onclick^="editAnnouncement"] {
-        position: fixed;
-        top: auto;
-        bottom: var(--space-md);
-    }
-    
-    .post-card.expanded .delete-button {
-        right: var(--space-md);
-    }
-    
-    .post-card.expanded button[onclick^="editAnnouncement"] {
-        right: calc(var(--space-md) + 100px);
     }
     
     .sidebar-header {
@@ -2481,20 +2532,62 @@ body.non-admin .sidebar-title {
             postElement.classList.add('expanded');
             expandedPost = postElement;
             
+            const announcementId = postElement.getAttribute('data-id');
+            const announcement = currentTabAnnouncements.find(a => a.id === announcementId);
+            
+            if (!announcement) return;
+            
+            // Create enhanced header with title and buttons
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'post-header';
+            
+            const titleElement = document.createElement('h3');
+            titleElement.textContent = announcement.title;
+            
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'post-header-actions';
+            
+            // Back button
             const backButton = document.createElement('button');
             backButton.className = 'back-button';
-            backButton.textContent = '← Back';
+            backButton.innerHTML = '<i class="fas fa-arrow-left"></i> Back';
             backButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 collapsePost(postElement);
             });
             
-            postElement.appendChild(backButton);
+            actionsDiv.appendChild(backButton);
+            
+            // Edit button (for admins)
+            if (isAdmin) {
+                const editButton = document.createElement('button');
+                editButton.innerHTML = '<i class="fas fa-edit"></i> Edit';
+                editButton.setAttribute('onclick', `event.stopPropagation(); editAnnouncement('${announcementId}')`);
+                actionsDiv.appendChild(editButton);
+            }
+            
+            // Delete button (for admins)
+            if (isAdmin) {
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'delete-button';
+                deleteButton.innerHTML = '<i class="fas fa-trash"></i> Delete';
+                deleteButton.setAttribute('onclick', `event.stopPropagation(); deleteAnnouncement('${announcementId}')`);
+                actionsDiv.appendChild(deleteButton);
+            }
+            
+            headerDiv.appendChild(titleElement);
+            headerDiv.appendChild(actionsDiv);
+            
+            // Insert header at the top of the post
+            postElement.insertBefore(headerDiv, postElement.firstChild);
         }
 
         function collapsePost(postElement) {
             postElement.classList.remove('expanded');
-            postElement.querySelector('.back-button')?.remove();
+            const header = postElement.querySelector('.post-header');
+            if (header) {
+                header.remove();
+            }
             expandedPost = null;
         }
 
