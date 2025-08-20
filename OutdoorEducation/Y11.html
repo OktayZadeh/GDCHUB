@@ -1602,10 +1602,14 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function autoEmbed(htmlContent) {
             if (!htmlContent) return '';
             let processedContent = htmlContent;
-            const youtubeRegex = /<p><a href="(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11}))(?:.*)?".*?>.*?<\/a><\/p>/g;
+            // UPDATED: More flexible regex to handle potential attributes in the <p> tag and surrounding whitespace.
+            const youtubeRegex = /<p.*?>\s*<a href="(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11}))(?:.*)?".*?>.*?<\/a>\s*<\/p>/g;
             processedContent = processedContent.replace(youtubeRegex, (match, url, videoId) => `<div class="embed-container"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe></div>`);
-            const gSlidesRegex = /<p><a href="(https?:\/\/docs\.google\.com\/presentation\/d\/e\/([a-zA-Z0-9_-]+)\/pub(?:.*?))".*?>.*?<\/a><\/p>/g;
+            
+            // UPDATED: More flexible regex for Google Slides as well.
+            const gSlidesRegex = /<p.*?>\s*<a href="(https?:\/\/docs\.google\.com\/presentation\/d\/e\/([a-zA-Z0-9_-]+)\/pub(?:.*?))".*?>.*?<\/a>\s*<\/p>/g;
             processedContent = processedContent.replace(gSlidesRegex, (match, url) => `<div class="embed-container"><iframe src="${url.replace('/pub', '/embed')}" frameborder="0" allowfullscreen></iframe></div>`);
+            
             return processedContent;
         }
 
