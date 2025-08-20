@@ -203,6 +203,12 @@ body.dark-mode .reminder-action-btn:hover {
     background-color: var(--dark-primary-light);
 }
 
+/* FIX: Ensure expanded post title is white in dark mode */
+body.dark-mode .post-card.expanded h3 {
+    color: white;
+    border-bottom-color: var(--dark-light-gray);
+}
+
 /* Base Styles */
 * {
     box-sizing: border-box;
@@ -322,7 +328,7 @@ a:hover {
     background: var(--light);
     color: var(--primary);
     border-color: var(--primary-light);
-    text-decoration: none; /* Fix for button text underline issue */
+    text-decoration: none; /* FIX: Remove underline on hover */
 }
 
 .topbar-button i {
@@ -390,7 +396,6 @@ a:hover {
 .profile-dropdown-content a:hover {
     background-color: var(--light);
     color: var(--primary);
-    text-decoration: none; /* Fix for dropdown text underline issue */
 }
 
 .profile-dropdown-content a i {
@@ -415,7 +420,6 @@ body.dark-mode .profile-dropdown-content a {
 body.dark-mode .profile-dropdown-content a:hover {
     background-color: var(--dark-light-gray);
     color: var(--primary);
-    text-decoration: none; /* Fix for dark mode dropdown text underline */
 }
 
 /* Button Styles */
@@ -435,14 +439,13 @@ body.dark-mode .profile-dropdown-content a:hover {
     color: white;
     box-shadow: var(--shadow-sm);
     height: 36px;
-    text-decoration: none; /* Fix for button text underline issue */
 }
 
 .button:hover {
     background-color: var(--primary-dark);
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
-    text-decoration: none; /* Fix for button text underline issue */
+    text-decoration: none; /* FIX: Remove underline on hover */
 }
 
 .button:active {
@@ -465,7 +468,6 @@ body.dark-mode .profile-dropdown-content a:hover {
     background-color: var(--light);
     border-color: var(--primary);
     color: var(--primary-dark);
-    text-decoration: none; /* Fix for secondary button text underline */
 }
 
 .button.danger {
@@ -605,7 +607,6 @@ select {
 .sidebar-link:hover {
     background-color: var(--light);
     color: var(--dark);
-    text-decoration: none; /* Fix for sidebar link underline issue */
 }
 
 .sidebar-link.active {
@@ -666,7 +667,7 @@ select {
 
 .add-tab-btn {
     background: var(--primary);
-    border: null;
+    border: none;
     color: white;
     width: 28px;
     height: 28px;
@@ -679,14 +680,12 @@ select {
     transition: all var(--transition-fast);
     flex-shrink: 0;
     box-shadow: var(--shadow-sm);
-    text-decoration: none; /* Fix for add tab button text underline */
 }
 
 .add-tab-btn:hover {
     background: var(--primary-dark);
     transform: scale(1.1);
     box-shadow: var(--shadow-md);
-    text-decoration: none; /* Fix for add tab button text underline */
 }
 
 /* Main Content Styles */
@@ -903,65 +902,43 @@ select {
     overflow-y: auto;
     margin: 0;
     padding: var(--space-xl);
+    padding-top: calc(68px + var(--space-lg)); /* NEW: Make space for fixed controls */
     background: white;
     border-radius: 0;
     box-shadow: none;
     transition: all var(--transition-normal) ease;
     border: none;
+    cursor: default;
 }
 
-/* Enhanced expanded post header with fixed buttons */
-.post-header {
-    position: sticky;
-    top: 0;
-    background: white;
-    z-index: 10;
-    padding-bottom: var(--space-md);
-    margin-bottom: var(--space-lg);
+/* NEW: Styles for the fixed controls on expanded posts */
+.expanded-post-controls {
+    position: fixed;
+    top: 54px;
+    left: 260px;
+    right: 0;
+    height: 68px;
+    padding: 0 var(--space-lg);
+    background: var(--lighter);
     border-bottom: 1px solid var(--light-gray);
-    display: flex;
-    justify-content: space-between;
+    display: none; /* Hidden by default, shown by JS */
     align-items: center;
+    justify-content: space-between;
+    z-index: 101;
+    box-shadow: var(--shadow-sm);
+    transition: background-color var(--transition-normal), border-color var(--transition-normal);
 }
 
-body.dark-mode .post-header {
+.expanded-post-actions {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+body.dark-mode .expanded-post-controls {
     background: var(--dark-lighter);
     border-bottom-color: var(--dark-light-gray);
 }
 
-.post-header h3 {
-    margin-bottom: 0;
-    flex: 1;
-    padding-right: var(--space-md);
-}
-
-.post-header-actions {
-    display: flex;
-    gap: var(--space-sm);
-    align-items: center;
-}
-
-.post-card .back-button {
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    box-shadow: var(--shadow-sm);
-    transition: all var(--transition-fast);
-    text-decoration: none; /* Fix for back button text underline */
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-}
-
-.post-card .back-button:hover {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-    text-decoration: none; /* Fix for back button text underline */
-}
 
 .post-details {
     display: none;
@@ -1015,47 +992,11 @@ body.dark-mode .post-header {
     border-bottom: 1px solid var(--light-gray);
 }
 
-/* Fix for dark mode expanded post title */
-body.dark-mode .post-card.expanded h3 {
-    color: white; /* Make title white in dark mode when expanded */
-}
-
-.post-card:not(.expanded) .delete-button,
-.post-card:not(.expanded) button[onclick^="editAnnouncement"] {
+/* This rule hides the original action buttons in the collapsed card */
+.post-card:not(.expanded) .post-actions {
     display: none !important;
 }
 
-.post-card.expanded .delete-button {
-    background: var(--danger);
-    color: white;
-    border: none;
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    text-decoration: none; /* Fix for delete button text underline */
-}
-
-.post-card.expanded .delete-button:hover {
-    background: #E53E3E;
-    text-decoration: none; /* Fix for delete button text underline */
-}
-
-.post-card.expanded button[onclick^="editAnnouncement"] {
-    background: var(--secondary);
-    color: white;
-    border: none;
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    text-decoration: none; /* Fix for edit button text underline */
-}
-
-.post-card.expanded button[onclick^="editAnnouncement"]:hover {
-    background: #3b7bd8;
-    text-decoration: none; /* Fix for edit button text underline */
-}
 
 .file-attachment {
     display: inline-flex;
@@ -1089,6 +1030,7 @@ body.dark-mode .post-card.expanded h3 {
     font-size: var(--text-sm);
 }
 
+/* This is the original container for edit/delete buttons inside the card */
 .post-actions {
     position: absolute;
     top: var(--space-lg);
@@ -1102,7 +1044,6 @@ body.dark-mode .post-card.expanded h3 {
     font-size: var(--text-sm);
     border-radius: var(--radius-sm);
     transition: all var(--transition-fast);
-    text-decoration: none; /* Fix for post action buttons text underline */
 }
 
 .post-actions .delete-button {
@@ -1111,7 +1052,6 @@ body.dark-mode .post-card.expanded h3 {
 
 .post-actions .delete-button:hover {
     background: #E53E3E;
-    text-decoration: none; /* Fix for delete button text underline */
 }
 
 /* Reminders Styles */
@@ -1222,8 +1162,7 @@ body.dark-mode .post-card.expanded h3 {
 body.non-admin .add-tab-btn,
 body.non-admin .button[onclick="openAnnouncementEditor()"],
 body.non-admin .tab-actions,
-body.non-admin .post-card .delete-button,
-body.non-admin .post-card button[onclick^="editAnnouncement"],
+body.non-admin .post-actions, /* Hide original actions container */
 body.non-admin #add-reminder-btn {
     display: none !important;
 }
@@ -1417,8 +1356,8 @@ body.non-admin .sidebar-title {
         left: 240px;
     }
     
-    .post-card.expanded .back-button {
-        left: calc(240px + var(--space-md));
+    .expanded-post-controls {
+        left: 240px;
     }
 }
 
@@ -1450,25 +1389,12 @@ body.non-admin .sidebar-title {
     .post-card.expanded {
         left: 0;
         padding: var(--space-lg);
+        padding-top: calc(68px + var(--space-lg));
         top: 54px;
     }
     
-    .post-card.expanded .back-button,
-    .post-card.expanded .delete-button,
-    .post-card.expanded button[onclick^="editAnnouncement"] {
-        position: static;
-        margin-top: var(--space-md);
-    }
-    
-    .post-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--space-md);
-    }
-    
-    .post-header-actions {
-        width: 100%;
-        justify-content: flex-end;
+    .expanded-post-controls {
+        left: 0;
     }
     
     .reminders-list {
@@ -1500,10 +1426,6 @@ body.non-admin .sidebar-title {
         position: static;
         margin-top: var(--space-md);
         justify-content: flex-end;
-    }
-    
-    .post-card.expanded .post-actions {
-        position: absolute;
     }
     
     .sidebar-header {
@@ -1679,6 +1601,14 @@ body.non-admin .sidebar-title {
             <div class="posts-feed" id="posts-feed"></div>
         </div>
     </main>
+
+    <!-- NEW: Expanded Post Controls -->
+    <div id="expanded-post-controls" class="expanded-post-controls">
+        <button id="expanded-back-btn" class="button secondary">← Back</button>
+        <div class="expanded-post-actions" id="expanded-actions-container">
+            <!-- Edit/Delete buttons will be injected here by JS -->
+        </div>
+    </div>
 
     <!-- Reminder Editor Modal -->
     <div id="reminder-editor" class="modal">
@@ -2154,6 +2084,8 @@ body.non-admin .sidebar-title {
                     `<div class="embed-container">${embedCode}</div>`
                 ).join('') : '';
             
+            // The action buttons are now only rendered here as a template.
+            // They will be hidden by CSS and cloned into the fixed header when a post is expanded.
             const actionsHtml = isAdmin ? 
                 `<div class="post-actions">
                     <button class="button" onclick="event.stopPropagation(); editAnnouncement('${announcement.id}')">
@@ -2164,12 +2096,12 @@ body.non-admin .sidebar-title {
                     </button>
                 </div>` : '';
             
-            // Fixed the duplicate content issue by removing the extra content div
             post.innerHTML = `
                 ${actionsHtml}
                 <h3>${announcement.title}</h3>
                 <div class="collapsed-content">${announcement.content}</div>
                 <div class="post-details">
+                    <p class="post-content">${announcement.content}</p>
                     ${embedHtml}
                     ${filesHtml ? `<div class="file-attachments">${filesHtml}</div>` : ''}
                     <div class="post-meta">
@@ -2521,76 +2453,54 @@ body.non-admin .sidebar-title {
             }
         }
 
+        // --- NEW EXPAND/COLLAPSE POST LOGIC ---
         function expandPost(postElement) {
             if (postElement.classList.contains('expanded')) return;
             
             if (expandedPost) {
-                expandedPost.classList.remove('expanded');
-                expandedPost.querySelector('.back-button')?.remove();
+                collapsePost(expandedPost); // Collapse any previously open post
             }
             
             postElement.classList.add('expanded');
             expandedPost = postElement;
             
-            const announcementId = postElement.getAttribute('data-id');
-            const announcement = currentTabAnnouncements.find(a => a.id === announcementId);
+            // Setup and show the external controls
+            const controls = document.getElementById('expanded-post-controls');
+            const backBtn = document.getElementById('expanded-back-btn');
+            const actionsContainer = document.getElementById('expanded-actions-container');
             
-            if (!announcement) return;
+            actionsContainer.innerHTML = ''; // Clear previous
             
-            // Create enhanced header with title and buttons
-            const headerDiv = document.createElement('div');
-            headerDiv.className = 'post-header';
+            const originalActions = postElement.querySelector('.post-actions');
+            if (originalActions) {
+                // Copy the buttons' HTML, including their onclick attributes
+                actionsContainer.innerHTML = originalActions.innerHTML;
+            }
             
-            const titleElement = document.createElement('h3');
-            titleElement.textContent = announcement.title;
-            
-            const actionsDiv = document.createElement('div');
-            actionsDiv.className = 'post-header-actions';
-            
-            // Back button
-            const backButton = document.createElement('button');
-            backButton.className = 'back-button';
-            backButton.innerHTML = '<i class="fas fa-arrow-left"></i> Back';
-            backButton.addEventListener('click', (e) => {
+            backBtn.onclick = (e) => {
                 e.stopPropagation();
                 collapsePost(postElement);
-            });
+            };
             
-            actionsDiv.appendChild(backButton);
-            
-            // Edit button (for admins)
-            if (isAdmin) {
-                const editButton = document.createElement('button');
-                editButton.innerHTML = '<i class="fas fa-edit"></i> Edit';
-                editButton.setAttribute('onclick', `event.stopPropagation(); editAnnouncement('${announcementId}')`);
-                actionsDiv.appendChild(editButton);
-            }
-            
-            // Delete button (for admins)
-            if (isAdmin) {
-                const deleteButton = document.createElement('button');
-                deleteButton.className = 'delete-button';
-                deleteButton.innerHTML = '<i class="fas fa-trash"></i> Delete';
-                deleteButton.setAttribute('onclick', `event.stopPropagation(); deleteAnnouncement('${announcementId}')`);
-                actionsDiv.appendChild(deleteButton);
-            }
-            
-            headerDiv.appendChild(titleElement);
-            headerDiv.appendChild(actionsDiv);
-            
-            // Insert header at the top of the post
-            postElement.insertBefore(headerDiv, postElement.firstChild);
+            controls.style.display = 'flex';
         }
 
         function collapsePost(postElement) {
+            if (!postElement) return;
             postElement.classList.remove('expanded');
-            const header = postElement.querySelector('.post-header');
-            if (header) {
-                header.remove();
+            
+            // Hide the external controls
+            const controls = document.getElementById('expanded-post-controls');
+            controls.style.display = 'none';
+            
+            const actionsContainer = document.getElementById('expanded-actions-container');
+            actionsContainer.innerHTML = ''; // Clean up
+            
+            if (expandedPost === postElement) {
+                expandedPost = null;
             }
-            expandedPost = null;
         }
-
+        
         function editAnnouncement(announcementId) {
             if (!isAdmin || !currentTabId) return;
             event.stopPropagation();
@@ -2634,6 +2544,12 @@ body.non-admin .sidebar-title {
             if (!isAdmin || !currentTabId) return;
             if (confirm('Are you sure you want to delete this announcement?')) {
                 announcementsRef.child(currentTabId).child(announcementId).remove()
+                    .then(() => {
+                        // If the deleted post was the one that was expanded, collapse it.
+                        if (expandedPost && expandedPost.dataset.id === announcementId) {
+                            collapsePost(expandedPost);
+                        }
+                    })
                     .catch((error) => {
                         console.error("Error deleting announcement:", error);
                         alert("Error deleting announcement. Please try again.");
