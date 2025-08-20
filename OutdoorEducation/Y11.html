@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- NEW: SunEditor WYSIWYG Editor CSS -->
+    <!-- SunEditor WYSIWYG Editor CSS -->
     <link href="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/css/suneditor.min.css" rel="stylesheet">
 
     <style>
@@ -160,11 +160,6 @@ body.dark-mode .reminder-card {
     border-left-color: var(--dark-primary);
 }
 
-body.dark-mode .file-attachment {
-    background-color: var(--dark-light-gray);
-    color: var(--dark-medium);
-}
-
 body.dark-mode .post-meta {
     border-top-color: var(--dark-light-gray);
 }
@@ -214,7 +209,7 @@ body.dark-mode .post-card.expanded h3 {
     border-bottom-color: var(--dark-light-gray);
 }
 
-/* NEW: Dark mode for SunEditor */
+/* Dark mode for SunEditor */
 body.dark-mode .sun-editor {
     background-color: var(--dark-lighter) !important;
     color: var(--dark-medium) !important;
@@ -357,7 +352,7 @@ a:hover {
     background: var(--light);
     color: var(--primary);
     border-color: var(--primary-light);
-    text-decoration: none; /* FIX: Remove underline on hover */
+    text-decoration: none;
 }
 
 .topbar-button i {
@@ -474,7 +469,7 @@ body.dark-mode .profile-dropdown-content a:hover {
     background-color: var(--primary-dark);
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
-    text-decoration: none; /* FIX: Remove underline on hover */
+    text-decoration: none;
 }
 
 .button:active {
@@ -855,7 +850,6 @@ select {
     animation: modalSlideIn var(--transition-normal) forwards;
 }
 
-/* MODIFIED: Make announcement modal wider for the editor */
 #announcement-editor .modal-content {
     max-width: 800px; /* Wider for the rich text editor */
     display: flex;
@@ -937,7 +931,8 @@ select {
     overflow-y: auto;
     margin: 0;
     padding: var(--space-xl);
-    padding-top: calc(68px + var(--space-lg)); /* NEW: Make space for fixed controls */
+    /* MODIFIED: Adjust padding for new controls height */
+    padding-top: calc(60px + var(--space-lg));
     background: white;
     border-radius: 0;
     box-shadow: none;
@@ -946,22 +941,21 @@ select {
     cursor: default;
 }
 
-/* NEW: Styles for the fixed controls on expanded posts */
+/* MODIFIED: Styles for the fixed controls on expanded posts */
 .expanded-post-controls {
     position: fixed;
     top: 54px;
     left: 260px;
     right: 0;
-    height: 68px;
+    height: 60px; /* Adjusted height */
     padding: 0 var(--space-lg);
-    background: var(--lighter);
-    border-bottom: 1px solid var(--light-gray);
+    background: transparent; /* REMOVED background color */
+    border-bottom: none; /* REMOVED border */
     display: none; /* Hidden by default, shown by JS */
     align-items: center;
     justify-content: space-between;
     z-index: 101;
-    box-shadow: var(--shadow-sm);
-    transition: background-color var(--transition-normal), border-color var(--transition-normal);
+    box-shadow: none; /* REMOVED shadow */
 }
 
 .expanded-post-actions {
@@ -969,32 +963,29 @@ select {
     gap: var(--space-sm);
 }
 
-body.dark-mode .expanded-post-controls {
-    background: var(--dark-lighter);
-    border-bottom-color: var(--dark-light-gray);
-}
-
-
 .post-details {
     display: none;
     margin-top: var(--space-lg);
 }
 
 .embed-container {
-    margin: var(--space-lg) 0;
-    background: var(--light);
-    padding: var(--space-md);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--light-gray);
-    width: 100%;
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
     overflow: hidden;
+    max-width: 100%;
+    background: #000;
+    margin: var(--space-lg) 0;
+    border-radius: var(--radius-md);
 }
 
 .embed-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    min-height: 400px;
+    height: 100%;
     border: none;
-    border-radius: var(--radius-sm);
 }
 
 .post-card .collapsed-content {
@@ -1007,9 +998,9 @@ body.dark-mode .expanded-post-controls {
     color: var(--medium);
 }
 
-/* NEW: Allow rich content in collapsed view */
-.post-card .collapsed-content img {
-    display: none; /* Hide images in collapsed view */
+/* NEW/FIX: Hide collapsed content when post is expanded to prevent duplication */
+.post-card.expanded .collapsed-content {
+    display: none;
 }
 
 .post-card.expanded .post-details {
@@ -1035,29 +1026,6 @@ body.dark-mode .expanded-post-controls {
 /* This rule hides the original action buttons in the collapsed card */
 .post-card:not(.expanded) .post-actions {
     display: none !important;
-}
-
-
-.file-attachment {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-xs);
-    background: var(--primary-light);
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-md);
-    margin-right: var(--space-sm);
-    margin-bottom: var(--space-sm);
-    color: var(--primary-dark);
-    text-decoration: none;
-    transition: all var(--transition-fast);
-    font-size: var(--text-sm);
-    border: 1px solid rgba(62, 168, 153, 0.1);
-}
-
-.file-attachment:hover {
-    background: #E1F0FF;
-    border-color: rgba(62, 168, 153, 0.3);
-    text-decoration: none;
 }
 
 .post-meta {
@@ -1133,21 +1101,10 @@ body.dark-mode .expanded-post-controls {
     transform: translateY(-2px);
 }
 
-.reminder-card.trip {
-    border-left-color: var(--success);
-}
-
-.reminder-card.test {
-    border-left-color: var(--danger);
-}
-
-.reminder-card.event {
-    border-left-color: var(--warning);
-}
-
-.reminder-card.deadline {
-    border-left-color: var(--secondary);
-}
+.reminder-card.trip { border-left-color: var(--success); }
+.reminder-card.test { border-left-color: var(--danger); }
+.reminder-card.event { border-left-color: var(--warning); }
+.reminder-card.deadline { border-left-color: var(--secondary); }
 
 .reminder-title {
     font-weight: 600;
@@ -1211,13 +1168,13 @@ body.non-admin .sidebar-title {
     padding-right: var(--space-sm);
 }
 
-/* Typography */
+/* Typography for rendered rich content */
 .post-content {
     font-size: var(--text-base);
     line-height: 1.7;
     color: var(--medium);
+    word-wrap: break-word; /* Ensure long text wraps */
 }
-/* NEW: Ensure rich content styles are applied */
 .post-content p { margin-bottom: var(--space-lg); }
 .post-content h1, .post-content h2, .post-content h3 { margin-top: var(--space-lg); }
 .post-content ul, .post-content ol { margin-left: var(--space-lg); margin-bottom: var(--space-lg); }
@@ -1265,56 +1222,6 @@ body.non-admin .sidebar-title {
     transform: scale(0.85);
 }
 
-/* Embed Input Styles */
-.embed-input-container {
-    margin: var(--space-md) 0;
-}
-
-.embed-input-group {
-    margin-bottom: var(--space-md);
-    position: relative;
-}
-
-.embed-code-input {
-    width: 100%;
-    min-height: 100px;
-    padding: var(--space-md);
-    margin-bottom: var(--space-sm);
-    border: 1px solid var(--light-gray);
-    border-radius: var(--radius-md);
-    resize: vertical;
-    font-family: monospace;
-    font-size: var(--text-sm);
-}
-
-.small-button {
-    padding: var(--space-xs) var(--space-sm);
-    font-size: var(--text-sm);
-    margin-left: var(--space-sm);
-}
-
-.remove-embed-btn {
-    position: absolute;
-    right: var(--space-sm);
-    top: var(--space-sm);
-    background: var(--danger);
-    color: white;
-    border: none;
-    width: 24px;
-    height: 24px;
-    border-radius: var(--radius-full);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: var(--text-sm);
-    transition: all var(--transition-fast);
-}
-
-.remove-embed-btn:hover {
-    transform: scale(1.1);
-}
-
 /* Animations */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
@@ -1325,144 +1232,42 @@ body.non-admin .sidebar-title {
 .post-card:nth-child(2) { animation-delay: 0.2s; }
 
 /* Scrollbar Styles */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: var(--light);
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--medium);
-    border-radius: var(--radius-full);
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--dark);
-}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--light); }
+::-webkit-scrollbar-thumb { background: var(--medium); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--dark); }
 
 /* Responsive adjustments */
 @media (max-width: 1024px) {
-    .sidebar {
-        width: 240px;
-    }
-    
-    .main-content {
-        max-width: calc(100% - 240px);
-        margin-left: 240px;
-    }
-    
-    .post-card.expanded {
-        left: 240px;
-    }
-    
-    .expanded-post-controls {
-        left: 240px;
-    }
+    .sidebar { width: 240px; }
+    .main-content { max-width: calc(100% - 240px); margin-left: 240px; }
+    .post-card.expanded { left: 240px; }
+    .expanded-post-controls { left: 240px; }
 }
 
 @media (max-width: 768px) {
-    body {
-        flex-direction: column;
-    }
-    
-    .sidebar {
-        width: 100%;
-        position: relative;
-        min-height: auto;
-        max-height: 60vh;
-        transform: translateX(0);
-        top: 54px;
-    }
-    
-    .sidebar.collapsed {
-        transform: translateX(-100%);
-    }
-    
-    .main-content {
-        max-width: 100%;
-        margin-left: 0;
-        padding: var(--space-lg);
-        margin-top: 54px;
-    }
-    
-    .post-card.expanded {
-        left: 0;
-        padding: var(--space-lg);
-        padding-top: calc(68px + var(--space-lg));
-        top: 54px;
-    }
-    
-    .expanded-post-controls {
-        left: 0;
-    }
-    
-    .reminders-list {
-        grid-template-columns: 1fr;
-    }
-    
-    .header-content {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--space-md);
-    }
-    
-    .search-container {
-        max-width: 100%;
-    }
-    
-    .modal-content {
-        padding: var(--space-lg);
-        max-width: 90%;
-    }
+    body { flex-direction: column; }
+    .sidebar { width: 100%; position: relative; min-height: auto; max-height: 60vh; transform: translateX(0); top: 54px; }
+    .sidebar.collapsed { transform: translateX(-100%); }
+    .main-content { max-width: 100%; margin-left: 0; padding: var(--space-lg); margin-top: 54px; }
+    .post-card.expanded { left: 0; padding: var(--space-lg); padding-top: calc(60px + var(--space-lg)); top: 54px; }
+    .expanded-post-controls { left: 0; }
+    .reminders-list { grid-template-columns: 1fr; }
+    .header-content { flex-direction: column; align-items: flex-start; gap: var(--space-md); }
+    .search-container { max-width: 100%; }
+    .modal-content { padding: var(--space-lg); max-width: 90%; }
 }
 
 @media (max-width: 480px) {
-    .modal-content {
-        padding: var(--space-lg);
-    }
-    
-    .post-actions {
-        position: static;
-        margin-top: var(--space-md);
-        justify-content: flex-end;
-    }
-    
-    .sidebar-header {
-        padding: var(--space-md);
-    }
-    
-    .main-content {
-        padding: var(--space-md);
-    }
-    
-    .reminders-container,
-    .post-card {
-        padding: var(--space-md);
-    }
-    
-    /* Adjust topbar for mobile */
-    .topbar {
-        padding: 0 var(--space-sm);
-    }
-    
-    .topbar-title {
-        display: none;
-    }
-    
-    .topbar-button span {
-        display: none;
-    }
-    
-    .topbar-button {
-        padding: 6px;
-        width: 36px;
-        height: 36px;
-        justify-content: center;
-        border-radius: 50%;
-    }
+    .modal-content { padding: var(--space-lg); }
+    .post-actions { position: static; margin-top: var(--space-md); justify-content: flex-end; }
+    .sidebar-header { padding: var(--space-md); }
+    .main-content { padding: var(--space-md); }
+    .reminders-container, .post-card { padding: var(--space-md); }
+    .topbar { padding: 0 var(--space-sm); }
+    .topbar-title { display: none; }
+    .topbar-button span { display: none; }
+    .topbar-button { padding: 6px; width: 36px; height: 36px; justify-content: center; border-radius: 50%; }
 }
 
 /* Mobile menu toggle */
@@ -1485,24 +1290,9 @@ body.non-admin .sidebar-title {
 }
 
 @media (max-width: 768px) {
-    .menu-toggle {
-        display: flex;
-        top: calc(54px + var(--space-sm)); /* Adjusted for topbar */
-    }
-    
-    .sidebar {
-        position: fixed;
-        left: 0;
-        top: 54px;
-        bottom: 0;
-        transform: translateX(-100%);
-        transition: transform var(--transition-normal);
-        z-index: 100;
-    }
-    
-    .sidebar.visible {
-        transform: translateX(0);
-    }
+    .menu-toggle { display: flex; top: calc(54px + var(--space-sm)); }
+    .sidebar { position: fixed; left: 0; top: 54px; bottom: 0; transform: translateX(-100%); transition: transform var(--transition-normal); z-index: 100; }
+    .sidebar.visible { transform: translateX(0); }
 }
 
 /* Loading state */
@@ -1517,15 +1307,13 @@ body.non-admin .sidebar-title {
     margin-right: var(--space-sm);
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
     </style>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
-    <!-- NEW: SunEditor WYSIWYG Editor JS -->
+    <!-- SunEditor WYSIWYG Editor JS -->
     <script src="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/suneditor.min.js"></script>
 </head>
 <body class="non-admin">
@@ -1606,7 +1394,7 @@ body.non-admin .sidebar-title {
         </div>
     </main>
 
-    <!-- NEW: Expanded Post Controls -->
+    <!-- Expanded Post Controls -->
     <div id="expanded-post-controls" class="expanded-post-controls">
         <button id="expanded-back-btn" class="button secondary">← Back</button>
         <div class="expanded-post-actions" id="expanded-actions-container">
@@ -1657,19 +1445,11 @@ body.non-admin .sidebar-title {
                 <label>Announcement Title</label>
             </div>
             
-            <!-- REMOVED old textarea and label for content -->
-            <!-- NEW: Rich Text Editor will be placed here -->
+            <!-- Rich Text Editor will replace this textarea -->
             <textarea id="announcement-content" style="display: none;"></textarea>
 
-            <!-- REMOVED File Upload Area -->
+            <!-- REMOVED Embed Content Section -->
             
-            <div class="embed-input-container" id="embed-inputs">
-                 <h4>Embed Content (e.g., Google Slides)</h4>
-                <div class="embed-input-group">
-                    <textarea class="embed-code-input" placeholder="Paste embed code for Google Slides, Docs, etc. here (optional)"></textarea>
-                    <button class="button small-button" onclick="addEmbedInput()">+ Add Another</button>
-                </div>
-            </div>
             <div class="modal-buttons">
                 <button class="button secondary" onclick="closeAnnouncementEditor()">Cancel</button>
                 <button class="button" id="save-announcement-button">Post Announcement</button>
@@ -1748,10 +1528,9 @@ body.non-admin .sidebar-title {
                     <style>@keyframes progress {0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}</style>
                 `;
                 setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
-                throw new Error("Authentication required"); // Stop other scripts from executing
+                throw new Error("Authentication required");
             }
             
-            // Setup logout buttons if they exist
             document.addEventListener('DOMContentLoaded', function() {
                 document.addEventListener('click', function(e) {
                     if (e.target.closest('.logout-btn')) {
@@ -1763,7 +1542,6 @@ body.non-admin .sidebar-title {
             });
         })();
 
-        // REST OF YOUR PAGE'S JAVASCRIPT GOES BELOW THIS LINE
         // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCSTEJ3LevxY2_rlGROzajNnNBrVG3oRR4",
@@ -1776,17 +1554,14 @@ body.non-admin .sidebar-title {
             measurementId: "G-E25TMDFLFX"
         };
 
-        // Initialize Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const auth = firebase.auth();
 
-        // Database references
         const tabsRef = database.ref('tabs');
         const announcementsRef = database.ref('announcements');
         const remindersRef = database.ref('reminders');
 
-        // DOM Elements
         const sidebarMenu = document.getElementById('sidebar-menu');
         const tabEditorModal = document.getElementById('tab-editor-modal');
         const tabNameInput = document.getElementById('tab-name-input');
@@ -1796,7 +1571,6 @@ body.non-admin .sidebar-title {
         const announcementEditor = document.getElementById('announcement-editor');
         const postsFeed = document.getElementById('posts-feed');
         const announcementTitleInput = document.getElementById('announcement-title');
-        const embedInputsContainer = document.getElementById('embed-inputs');
         const saveAnnouncementButton = document.getElementById('save-announcement-button');
         const remindersList = document.getElementById('reminders-list');
         const announcementSearchInput = document.getElementById('announcement-search');
@@ -1807,24 +1581,21 @@ body.non-admin .sidebar-title {
         const profileDropdown = document.querySelector('.profile-dropdown');
         const profileDropdownContent = document.querySelector('.profile-dropdown-content');
 
-        // Variables
         let tabs = [];
         let currentTabId = null;
         let currentTabBeingEdited = null;
-        let announcementEditorInstance = null; // NEW: For the rich text editor
+        let announcementEditorInstance = null;
         let expandedPost = null;
         let reminders = [];
         let currentReminderBeingEdited = null;
         let draggedItem = null;
         let isAdmin = false;
         let currentAnnouncementBeingEdited = null;
-        let currentTabAnnouncements = []; // Store announcements for current tab
+        let currentTabAnnouncements = [];
         let dropdownHoverTimeout;
 
-        // Admin configuration
         const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             checkUserProfile();
             setupFirebaseListeners();
@@ -1834,14 +1605,15 @@ body.non-admin .sidebar-title {
             setupMobileMenu();
             setupDarkMode();
             setupProfileDropdown();
-            initializeSunEditor(); // NEW: Initialize the rich text editor
+            initializeSunEditor();
         });
 
-        // NEW: Initialize SunEditor
         function initializeSunEditor() {
             announcementEditorInstance = SUNEDITOR.create('announcement-content', {
                 height: 'auto',
                 minHeight: '250px',
+                // MODIFIED: Set default font and remove preview button
+                defaultStyle: "font-family: Arial; font-size: 16px;",
                 buttonList: [
                     ['undo', 'redo'],
                     ['font', 'fontSize', 'formatBlock'],
@@ -1851,16 +1623,13 @@ body.non-admin .sidebar-title {
                     ['removeFormat'],
                     ['outdent', 'indent'],
                     ['align', 'horizontalRule', 'list', 'lineHeight'],
-                    ['table', 'link', 'image', 'video'], // Image button allows upload
-                    ['fullScreen', 'showBlocks', 'codeView'],
-                    ['preview']
+                    ['table', 'link', 'image', 'video'],
+                    ['fullScreen', 'showBlocks', 'codeView']
                 ],
-                imageUploadSizeLimit: 5 * 1024 * 1024, // 5MB limit for images
-                // Images are automatically base64 encoded and embedded, no server needed
+                imageUploadSizeLimit: 5 * 1024 * 1024,
             });
         }
 
-        // Improved profile dropdown functionality
         function setupProfileDropdown() {
             profileDropdown.addEventListener('mouseenter', () => {
                 clearTimeout(dropdownHoverTimeout);
@@ -1871,84 +1640,63 @@ body.non-admin .sidebar-title {
                     profileDropdownContent.style.pointerEvents = 'auto';
                 }, 10);
             });
-
             profileDropdown.addEventListener('mouseleave', () => {
                 dropdownHoverTimeout = setTimeout(() => {
                     profileDropdownContent.style.opacity = '0';
                     profileDropdownContent.style.transform = 'translateY(-10px)';
                     profileDropdownContent.style.pointerEvents = 'none';
-                    setTimeout(() => {
-                        profileDropdownContent.style.display = 'none';
-                    }, 200);
+                    setTimeout(() => { profileDropdownContent.style.display = 'none'; }, 200);
                 }, 300);
             });
-
-            profileDropdownContent.addEventListener('mouseenter', () => {
-                clearTimeout(dropdownHoverTimeout);
-            });
-
+            profileDropdownContent.addEventListener('mouseenter', () => clearTimeout(dropdownHoverTimeout));
             profileDropdownContent.addEventListener('mouseleave', () => {
                 dropdownHoverTimeout = setTimeout(() => {
                     profileDropdownContent.style.opacity = '0';
                     profileDropdownContent.style.transform = 'translateY(-10px)';
                     profileDropdownContent.style.pointerEvents = 'none';
-                    setTimeout(() => {
-                        profileDropdownContent.style.display = 'none';
-                    }, 200);
+                    setTimeout(() => { profileDropdownContent.style.display = 'none'; }, 200);
                 }, 300);
             });
-
             darkModeToggle.addEventListener('click', (e) => {
                 e.preventDefault();
                 document.body.classList.toggle('dark-mode');
                 const isDarkMode = document.body.classList.contains('dark-mode');
                 localStorage.setItem('darkMode', isDarkMode);
-                
                 const icon = darkModeToggle.querySelector('i');
                 if (isDarkMode) {
-                    icon.classList.remove('fa-moon');
-                    icon.classList.add('fa-sun');
+                    icon.classList.replace('fa-moon', 'fa-sun');
                     darkModeToggle.querySelector('span').textContent = 'Light Mode';
                 } else {
-                    icon.classList.remove('fa-sun');
-                    icon.classList.add('fa-moon');
+                    icon.classList.replace('fa-sun', 'fa-moon');
                     darkModeToggle.querySelector('span').textContent = 'Dark Mode';
                 }
             });
         }
 
         function setupMobileMenu() {
-            menuToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('visible');
-            });
+            menuToggle.addEventListener('click', () => sidebar.classList.toggle('visible'));
         }
 
         function setupDarkMode() {
-            const darkModeEnabled = localStorage.getItem('darkMode') === 'true';
-            if (darkModeEnabled) {
+            if (localStorage.getItem('darkMode') === 'true') {
                 document.body.classList.add('dark-mode');
                 const icon = darkModeToggle.querySelector('i');
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
+                icon.classList.replace('fa-moon', 'fa-sun');
                 darkModeToggle.querySelector('span').textContent = 'Light Mode';
             }
         }
 
         function checkUserProfile() {
             const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
-            
             if (userInfo && userInfo.picture) {
                 profilePicElement.src = userInfo.picture;
-                
                 if (userInfo.email && ADMIN_EMAILS.includes(userInfo.email.toLowerCase())) {
                     isAdmin = true;
                     document.body.classList.remove('non-admin');
                 } else {
-                    isAdmin = false;
                     document.body.classList.add('non-admin');
                 }
             } else {
-                isAdmin = false;
                 document.body.classList.add('non-admin');
             }
         }
@@ -1960,28 +1708,19 @@ body.non-admin .sidebar-title {
 
         function filterAnnouncements() {
             const searchTerm = announcementSearchInput.value.toLowerCase().trim();
-            
             if (searchTerm === '') {
                 renderAnnouncements(currentTabAnnouncements);
                 searchClearButton.style.display = 'none';
                 return;
             }
-            
             searchClearButton.style.display = 'block';
-            
-            // Create a temporary div to strip HTML for searching
             const tempDiv = document.createElement('div');
-            
             const filtered = currentTabAnnouncements.filter(announcement => {
                 const titleMatch = announcement.title.toLowerCase().includes(searchTerm);
-                
-                // Search content without HTML tags
                 tempDiv.innerHTML = announcement.content;
-                const contentMatch = (tempDiv.textContent || tempDiv.innerText || "").toLowerCase().includes(searchTerm);
-                
+                const contentMatch = (tempDiv.textContent || "").toLowerCase().includes(searchTerm);
                 return titleMatch || contentMatch;
             });
-            
             renderAnnouncements(filtered);
         }
 
@@ -1991,124 +1730,114 @@ body.non-admin .sidebar-title {
             searchClearButton.style.display = 'none';
         }
 
-        // Firebase Listeners
         function setupFirebaseListeners() {
             tabsRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 tabs = data ? Object.values(data) : [];
                 renderTabs();
-                
-                if (tabs.length > 0 && !currentTabId) {
-                    setActiveTab(tabs[0].id);
-                }
+                if (tabs.length > 0 && !currentTabId) setActiveTab(tabs[0].id);
             });
-
             announcementsRef.on('value', (snapshot) => {
                 const allAnnouncementsData = snapshot.val() || {};
-                
                 if (currentTabId && allAnnouncementsData[currentTabId]) {
-                    const tabAnnouncements = allAnnouncementsData[currentTabId];
-                    currentTabAnnouncements = tabAnnouncements ? Object.values(tabAnnouncements) : [];
-                    
-                    if (announcementSearchInput.value.trim() !== '') {
-                        filterAnnouncements();
-                    } else {
-                        renderAnnouncements(currentTabAnnouncements);
-                    }
+                    currentTabAnnouncements = Object.values(allAnnouncementsData[currentTabId]);
+                    if (announcementSearchInput.value.trim()) filterAnnouncements();
+                    else renderAnnouncements(currentTabAnnouncements);
                 } else {
                     currentTabAnnouncements = [];
                     postsFeed.innerHTML = '';
                 }
             });
-
             remindersRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                reminders = data ? Object.values(data) : [];
+                reminders = snapshot.val() ? Object.values(snapshot.val()) : [];
                 renderReminders();
             });
         }
 
         function saveTabs() {
             const tabsObject = {};
-            tabs.forEach(tab => {
-                tabsObject[tab.id] = tab;
-            });
-            
-            tabsRef.set(tabsObject)
-                .catch((error) => console.error("Error saving tabs:", error));
+            tabs.forEach(tab => { tabsObject[tab.id] = tab; });
+            tabsRef.set(tabsObject).catch(error => console.error("Error saving tabs:", error));
         }
+        
+        // NEW: Auto-embed function
+        function autoEmbed(htmlContent) {
+            if (!htmlContent) return '';
+            let processedContent = htmlContent;
+
+            // YouTube: handles watch, youtu.be, and embed links on their own line
+            const youtubeRegex = /<p><a href="(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11}))(?:.*)?".*?>.*?<\/a><\/p>/g;
+            processedContent = processedContent.replace(youtubeRegex, (match, url, videoId) => {
+                return `<div class="embed-container"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+            });
+
+            // Google Slides: handles published links ('/pub')
+            const gSlidesRegex = /<p><a href="(https?:\/\/docs\.google\.com\/presentation\/d\/e\/([a-zA-Z0-9_-]+)\/pub(?:.*?))".*?>.*?<\/a><\/p>/g;
+            processedContent = processedContent.replace(gSlidesRegex, (match, url) => {
+                const embedUrl = url.replace('/pub', '/embed');
+                return `<div class="embed-container"><iframe src="${embedUrl}" frameborder="0" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe></div>`;
+            });
+
+            return processedContent;
+        }
+
 
         function renderAnnouncements(announcements) {
             postsFeed.innerHTML = '';
-            
             if (!announcements || announcements.length === 0) {
                 postsFeed.innerHTML = '<p>No announcements found for this tab.</p>';
                 return;
             }
-            
-            announcements.sort((a, b) => parseInt(b.id) - parseInt(a.id));
-            
-            announcements.forEach(announcement => {
-                postsFeed.appendChild(createPostElement(announcement));
+            announcements.sort((a, b) => parseInt(b.id) - parseInt(a.id)).forEach(ann => {
+                postsFeed.appendChild(createPostElement(ann));
             });
         }
 
         function createPostElement(announcement) {
             const post = document.createElement('div');
             post.classList.add('post-card');
-            post.setAttribute('data-id', announcement.id);
+            post.dataset.id = announcement.id;
             
-            const postDate = new Date(parseInt(announcement.id)).toLocaleDateString('en-US', {
-                year: 'numeric', month: 'long', day: 'numeric',
-                hour: '2-digit', minute: '2-digit'
+            const postDate = new Date(parseInt(announcement.id)).toLocaleString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
             });
             
-            // Handle multiple embed codes
-            const embedHtml = announcement.embedCodes && announcement.embedCodes.length > 0 ? 
-                announcement.embedCodes.map(embedCode => 
-                    `<div class="embed-container">${embedCode}</div>`
-                ).join('') : '';
-            
-            const actionsHtml = isAdmin ? 
-                `<div class="post-actions">
+            const actionsHtml = isAdmin ? `
+                <div class="post-actions">
                     <button class="button" onclick="event.stopPropagation(); editAnnouncement('${announcement.id}')">Edit</button>
                     <button class="button delete-button" onclick="event.stopPropagation(); deleteAnnouncement('${announcement.id}')">Delete</button>
                 </div>` : '';
             
-            // Create a temporary element to strip HTML for the collapsed view
             const tempDiv = document.createElement("div");
             tempDiv.innerHTML = announcement.content;
-            const collapsedText = tempDiv.textContent || tempDiv.innerText || "";
+            const collapsedText = tempDiv.textContent || "";
+            
+            // Apply auto-embedding to the full content
+            const finalContent = autoEmbed(announcement.content);
 
             post.innerHTML = `
                 ${actionsHtml}
                 <h3>${announcement.title}</h3>
                 <div class="collapsed-content">${collapsedText}</div>
                 <div class="post-details">
-                    <div class="post-content">${announcement.content}</div>
-                    ${embedHtml}
-                    <div class="post-meta">
-                        Posted on ${postDate}
-                    </div>
+                    <div class="post-content">${finalContent}</div>
+                    <div class="post-meta">Posted on ${postDate}</div>
                 </div>`;
             
             post.addEventListener('click', () => expandPost(post));
             return post;
         }
 
-        // Render tabs in sidebar
         function renderTabs() {
             sidebarMenu.innerHTML = '';
-            const sortedTabs = [...tabs].sort((a, b) => a.order - b.order);
-            
-            sortedTabs.forEach(tab => {
+            [...tabs].sort((a, b) => a.order - b.order).forEach(tab => {
                 const tabItem = document.createElement('li');
                 tabItem.className = 'sidebar-item';
                 tabItem.dataset.tabId = tab.id;
                 tabItem.draggable = isAdmin;
                 
-                const actionsHtml = isAdmin ? 
-                    `<div class="tab-actions">
+                const actionsHtml = isAdmin ? `
+                    <div class="tab-actions">
                         <button class="tab-action-btn" title="Edit" onclick="editTab('${tab.id}')">✏️</button>
                         <button class="tab-action-btn" title="Delete" onclick="deleteTab('${tab.id}')">🗑️</button>
                     </div>` : '';
@@ -2117,10 +1846,9 @@ body.non-admin .sidebar-title {
                     <a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}">
                         ${isAdmin ? '<span class="move-handle">☰</span> ' : ''}${tab.name}
                         ${actionsHtml}
-                    </a>
-                `;
+                    </a>`;
                 
-                tabItem.addEventListener('click', (e) => {
+                tabItem.addEventListener('click', e => {
                     if (!e.target.closest('.tab-action-btn')) {
                         e.preventDefault();
                         setActiveTab(tab.id);
@@ -2135,7 +1863,6 @@ body.non-admin .sidebar-title {
                     tabItem.addEventListener('drop', handleDrop);
                     tabItem.addEventListener('dragend', handleDragEnd);
                 }
-                
                 sidebarMenu.appendChild(tabItem);
             });
         }
@@ -2143,59 +1870,32 @@ body.non-admin .sidebar-title {
         function setActiveTab(tabId) {
             currentTabId = tabId;
             const tab = tabs.find(t => t.id === tabId);
-            
             if (tab) {
                 currentTabTitleElement.textContent = tab.name;
-                
-                document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
-                
+                document.querySelectorAll('.sidebar-link.active').forEach(l => l.classList.remove('active'));
                 const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
                 if (activeLink) activeLink.classList.add('active');
                 
-                announcementsRef.child(tabId).once('value')
-                    .then((snapshot) => {
-                        const data = snapshot.val();
-                        currentTabAnnouncements = data ? Object.values(data) : [];
-                        announcementSearchInput.value = '';
-                        searchClearButton.style.display = 'none';
-                        renderAnnouncements(currentTabAnnouncements);
-                    });
+                announcementsRef.child(tabId).once('value').then(snapshot => {
+                    currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : [];
+                    clearSearch(); // Also renders announcements
+                });
             }
         }
 
-        // Drag and drop functions for tabs
         function setupDragAndDrop() {}
-
-        function handleDragStart(e) {
-            if (!isAdmin) return;
-            draggedItem = this;
-            this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/html', this.innerHTML);
-        }
-
-        function handleDragOver(e) {
-            if (!isAdmin) return;
-            e.preventDefault();
-            this.classList.add('drop-area');
-            e.dataTransfer.dropEffect = 'move';
-        }
-
-        function handleDragLeave() { if (!isAdmin) return; this.classList.remove('drop-area'); }
-
+        function handleDragStart(e) { if (!isAdmin) return; draggedItem = this; this.classList.add('dragging'); }
+        function handleDragOver(e) { if (!isAdmin) return; e.preventDefault(); this.classList.add('drop-area'); }
+        function handleDragLeave(e) { if (!isAdmin) return; this.classList.remove('drop-area'); }
+        function handleDragEnd(e) { if (!isAdmin) return; this.classList.remove('dragging'); document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('drop-area')); }
         function handleDrop(e) {
             if (!isAdmin) return;
             e.preventDefault();
             this.classList.remove('drop-area');
-            
             if (draggedItem !== this) {
-                const draggedId = draggedItem.dataset.tabId;
-                const targetId = this.dataset.tabId;
-                
-                const draggedIndex = tabs.findIndex(tab => tab.id === draggedId);
-                const targetIndex = tabs.findIndex(tab => tab.id === targetId);
-                
-                if (draggedIndex !== -1 && targetIndex !== -1) {
+                const draggedIndex = tabs.findIndex(t => t.id === draggedItem.dataset.tabId);
+                const targetIndex = tabs.findIndex(t => t.id === this.dataset.tabId);
+                if (draggedIndex > -1 && targetIndex > -1) {
                     const [removed] = tabs.splice(draggedIndex, 1);
                     tabs.splice(targetIndex, 0, removed);
                     tabs.forEach((tab, index) => tab.order = index + 1);
@@ -2204,26 +1904,16 @@ body.non-admin .sidebar-title {
             }
         }
 
-        function handleDragEnd() {
-            if (!isAdmin) return;
-            this.classList.remove('dragging');
-            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('drop-area'));
-        }
-
-        // Tab management functions
         function openTabEditor(tabId = null) {
             if (!isAdmin) return;
             tabEditorModal.style.display = 'flex';
             tabNameInput.value = '';
-            
             if (tabId) {
                 currentTabBeingEdited = tabId;
                 const tab = tabs.find(t => t.id === tabId);
-                if (tab) {
-                    tabNameInput.value = tab.name;
-                    document.getElementById('tab-editor-title').textContent = 'Edit Tab';
-                    saveTabButton.textContent = 'Save Changes';
-                }
+                tabNameInput.value = tab ? tab.name : '';
+                document.getElementById('tab-editor-title').textContent = 'Edit Tab';
+                saveTabButton.textContent = 'Save Changes';
             } else {
                 currentTabBeingEdited = null;
                 document.getElementById('tab-editor-title').textContent = 'Add New Tab';
@@ -2231,22 +1921,18 @@ body.non-admin .sidebar-title {
             }
         }
 
-        function closeTabEditor() {
-            tabEditorModal.style.display = 'none';
-            currentTabBeingEdited = null;
-        }
+        function closeTabEditor() { tabEditorModal.style.display = 'none'; currentTabBeingEdited = null; }
 
         function saveTab() {
             if (!isAdmin) return;
             const tabName = tabNameInput.value.trim();
             if (!tabName) return alert('Please enter a tab name');
-            
             if (currentTabBeingEdited) {
-                const tabIndex = tabs.findIndex(t => t.id === currentTabBeingEdited);
-                if (tabIndex !== -1) {
-                    tabs[tabIndex].name = tabName;
+                const tab = tabs.find(t => t.id === currentTabBeingEdited);
+                if (tab) {
+                    tab.name = tabName;
                     saveTabs();
-                    if (currentTabBeingEdited === currentTabId) currentTabTitleElement.textContent = tabName;
+                    if (currentTabId === currentTabBeingEdited) currentTabTitleElement.textContent = tabName;
                 }
             } else {
                 const newTab = { id: 'tab-' + Date.now(), name: tabName, order: tabs.length + 1 };
@@ -2257,11 +1943,7 @@ body.non-admin .sidebar-title {
             closeTabEditor();
         }
 
-        function editTab(tabId) {
-            if (!isAdmin) return;
-            event.stopPropagation();
-            openTabEditor(tabId);
-        }
+        function editTab(tabId) { if (!isAdmin) return; event.stopPropagation(); openTabEditor(tabId); }
 
         function deleteTab(tabId) {
             if (!isAdmin) return;
@@ -2269,286 +1951,166 @@ body.non-admin .sidebar-title {
             if (confirm('Are you sure you want to delete this tab and all its announcements?')) {
                 announcementsRef.child(tabId).remove();
                 tabs = tabs.filter(t => t.id !== tabId);
-                tabs.forEach((tab, index) => tab.order = index + 1);
+                tabs.forEach((t, i) => t.order = i + 1);
                 saveTabs();
-                
-                if (tabId === currentTabId) {
-                    if (tabs.length > 0) {
-                        setActiveTab(tabs[0].id);
-                    } else {
-                        currentTabId = null;
-                        currentTabTitleElement.textContent = 'Classroom';
-                        postsFeed.innerHTML = '';
-                    }
-                }
+                if (tabId === currentTabId) setActiveTab(tabs.length > 0 ? tabs[0].id : null);
             }
         }
 
-        // Announcement management functions
         function openAnnouncementEditor(announcementId = null) {
             if (!isAdmin || !currentTabId) return;
             announcementEditor.style.display = 'flex';
             announcementTitleInput.value = '';
-            announcementEditorInstance.setContents(''); // Clear rich text editor
-            
-            // Reset embed inputs
-            embedInputsContainer.innerHTML = `
-                <h4>Embed Content (e.g., Google Slides)</h4>
-                <div class="embed-input-group">
-                    <textarea class="embed-code-input" placeholder="Paste embed code for Google Slides, Docs, etc. here (optional)"></textarea>
-                    <button class="button small-button" onclick="addEmbedInput()">+ Add Another</button>
-                </div>
-            `;
-            
+            announcementEditorInstance.setContents('');
             saveAnnouncementButton.onclick = postAnnouncement;
             saveAnnouncementButton.textContent = 'Post Announcement';
             currentAnnouncementBeingEdited = null;
             
             if (announcementId) {
                 currentAnnouncementBeingEdited = announcementId;
-                announcementsRef.child(currentTabId).child(announcementId).once('value')
-                    .then((snapshot) => {
-                        const announcementToEdit = snapshot.val();
-                        if (announcementToEdit) {
-                            announcementTitleInput.value = announcementToEdit.title;
-                            announcementEditorInstance.setContents(announcementToEdit.content);
-                            
-                            embedInputsContainer.innerHTML = '<h4>Embed Content (e.g., Google Slides)</h4>';
-                            if (announcementToEdit.embedCodes && announcementToEdit.embedCodes.length > 0) {
-                                announcementToEdit.embedCodes.forEach((embedCode, index) => {
-                                    addEmbedInput(embedCode, index === announcementToEdit.embedCodes.length - 1);
-                                });
-                            } else {
-                                addEmbedInput('', true);
-                            }
-                            
-                            saveAnnouncementButton.onclick = () => saveEditedAnnouncement(announcementId);
-                            saveAnnouncementButton.textContent = 'Save Changes';
-                        }
-                    });
+                announcementsRef.child(currentTabId).child(announcementId).once('value').then(snapshot => {
+                    const ann = snapshot.val();
+                    if (ann) {
+                        announcementTitleInput.value = ann.title;
+                        announcementEditorInstance.setContents(ann.content);
+                        saveAnnouncementButton.onclick = () => saveEditedAnnouncement(announcementId);
+                        saveAnnouncementButton.textContent = 'Save Changes';
+                    }
+                });
             }
         }
 
-        function closeAnnouncementEditor() {
-            announcementEditor.style.display = 'none';
-            currentAnnouncementBeingEdited = null;
-        }
-
-        function addEmbedInput(embedCode = '', isLast = false) {
-            const embedGroup = document.createElement('div');
-            embedGroup.className = 'embed-input-group';
-            
-            embedGroup.innerHTML = `
-                <textarea class="embed-code-input" placeholder="Paste embed code for Google Slides, Docs, etc. here (optional)">${embedCode}</textarea>
-                <button class="remove-embed-btn" onclick="removeEmbedInput(this.parentNode)">×</button>
-                ${isLast ? '<button class="button small-button" onclick="addEmbedInput()">+ Add Another</button>' : ''}
-            `;
-            // Remove the add button from previous last item
-            const lastAddBtn = embedInputsContainer.querySelector('.small-button');
-            if (lastAddBtn) lastAddBtn.remove();
-            
-            embedInputsContainer.appendChild(embedGroup);
-        }
-
-        function removeEmbedInput(embedGroup) {
-            embedGroup.remove();
-            // Add the "+ Add Another" button back to the new last element if it exists
-            const lastGroup = embedInputsContainer.querySelector('.embed-input-group:last-child');
-            if (lastGroup && !lastGroup.querySelector('.small-button')) {
-                 const addBtn = document.createElement('button');
-                 addBtn.className = 'button small-button';
-                 addBtn.textContent = '+ Add Another';
-                 addBtn.onclick = () => addEmbedInput();
-                 lastGroup.appendChild(addBtn);
-            }
-        }
+        function closeAnnouncementEditor() { announcementEditor.style.display = 'none'; currentAnnouncementBeingEdited = null; }
 
         function postAnnouncement() {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
             const content = announcementEditorInstance.getContents(true);
-            
-            const embedInputs = document.querySelectorAll('.embed-code-input');
-            const embedCodes = Array.from(embedInputs)
-                .map(input => input.value.trim()).filter(code => code.length > 0);
-            
-            if (title && (content || embedCodes.length > 0)) {
-                const newAnnouncement = {
-                    id: Date.now().toString(),
-                    title,
-                    content,
-                    embedCodes
-                };
-                
+            if (title && content) {
+                const newAnnouncement = { id: Date.now().toString(), title, content };
                 announcementsRef.child(currentTabId).child(newAnnouncement.id).set(newAnnouncement)
                     .then(closeAnnouncementEditor)
-                    .catch((error) => alert("Error posting announcement. Please try again."));
+                    .catch(e => alert("Error posting announcement."));
             } else {
-                alert('Please enter a title and content for your announcement.');
+                alert('Please enter a title and content.');
             }
         }
 
-        // Expand/Collapse Post Logic
         function expandPost(postElement) {
             if (postElement.classList.contains('expanded')) return;
             if (expandedPost) collapsePost(expandedPost);
-            
             postElement.classList.add('expanded');
             expandedPost = postElement;
-            
             const controls = document.getElementById('expanded-post-controls');
-            const backBtn = document.getElementById('expanded-back-btn');
             const actionsContainer = document.getElementById('expanded-actions-container');
-            
             actionsContainer.innerHTML = '';
             const originalActions = postElement.querySelector('.post-actions');
             if (originalActions) actionsContainer.innerHTML = originalActions.innerHTML;
-            
-            backBtn.onclick = (e) => { e.stopPropagation(); collapsePost(postElement); };
+            document.getElementById('expanded-back-btn').onclick = e => { e.stopPropagation(); collapsePost(postElement); };
             controls.style.display = 'flex';
         }
 
         function collapsePost(postElement) {
             if (!postElement) return;
             postElement.classList.remove('expanded');
-            
-            const controls = document.getElementById('expanded-post-controls');
-            controls.style.display = 'none';
+            document.getElementById('expanded-post-controls').style.display = 'none';
             document.getElementById('expanded-actions-container').innerHTML = '';
-            
             if (expandedPost === postElement) expandedPost = null;
         }
         
-        function editAnnouncement(announcementId) {
-            if (!isAdmin || !currentTabId) return;
-            event.stopPropagation();
-            openAnnouncementEditor(announcementId);
-        }
+        function editAnnouncement(announcementId) { if (!isAdmin || !currentTabId) return; event.stopPropagation(); openAnnouncementEditor(announcementId); }
 
         function saveEditedAnnouncement(announcementId) {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
             const content = announcementEditorInstance.getContents(true);
-            
-            const embedInputs = document.querySelectorAll('.embed-code-input');
-            const embedCodes = Array.from(embedInputs)
-                .map(input => input.value.trim()).filter(code => code.length > 0);
-            
-            if (title && (content || embedCodes.length > 0)) {
-                const updatedAnnouncement = {
-                    id: announcementId,
-                    title,
-                    content,
-                    embedCodes
-                };
-                
+            if (title && content) {
+                const updatedAnnouncement = { id: announcementId, title, content };
                 announcementsRef.child(currentTabId).child(announcementId).set(updatedAnnouncement)
                     .then(closeAnnouncementEditor)
-                    .catch((error) => alert("Error updating announcement. Please try again."));
+                    .catch(e => alert("Error updating announcement."));
             } else {
-                alert('Please enter a title and content for your announcement.');
+                alert('Please enter a title and content.');
             }
         }
 
         function deleteAnnouncement(announcementId) {
             if (!isAdmin || !currentTabId) return;
             if (confirm('Are you sure you want to delete this announcement?')) {
-                announcementsRef.child(currentTabId).child(announcementId).remove()
-                    .then(() => {
-                        if (expandedPost && expandedPost.dataset.id === announcementId) {
-                            collapsePost(expandedPost);
-                        }
-                    })
-                    .catch((error) => alert("Error deleting announcement. Please try again."));
+                announcementsRef.child(currentTabId).child(announcementId).remove().then(() => {
+                    if (expandedPost && expandedPost.dataset.id === announcementId) collapsePost(expandedPost);
+                }).catch(e => alert("Error deleting announcement."));
             }
         }
         
-        // Reminder management functions
         function renderReminders() {
             remindersList.innerHTML = '';
-            const sortedReminders = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            sortedReminders.forEach(reminder => {
-                if (!reminder || !reminder.id || !reminder.title || !reminder.date) return;
-                
-                const reminderElement = document.createElement('div');
-                reminderElement.className = `reminder-card ${reminder.type || 'trip'}`;
-                reminderElement.dataset.id = reminder.id;
-                
-                const actionsHtml = isAdmin ? 
-                    `<div class="reminder-actions">
-                        <button class="reminder-action-btn" onclick="event.stopPropagation(); editReminder('${reminder.id}')">✏️</button>
-                        <button class="reminder-action-btn" onclick="event.stopPropagation(); deleteReminder('${reminder.id}')">🗑️</button>
+            [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(rem => {
+                if (!rem || !rem.id || !rem.title || !rem.date) return;
+                const el = document.createElement('div');
+                el.className = `reminder-card ${rem.type || 'trip'}`;
+                el.dataset.id = rem.id;
+                const actionsHtml = isAdmin ? `
+                    <div class="reminder-actions">
+                        <button class="reminder-action-btn" onclick="event.stopPropagation(); editReminder('${rem.id}')">✏️</button>
+                        <button class="reminder-action-btn" onclick="event.stopPropagation(); deleteReminder('${rem.id}')">🗑️</button>
                     </div>` : '';
-                
-                reminderElement.innerHTML = `
+                el.innerHTML = `
                     ${actionsHtml}
-                    <div class="reminder-title">${reminder.title}</div>
-                    <div class="reminder-date">${formatDate(reminder.date)}</div>
-                    ${reminder.description ? `<div class="reminder-description">${reminder.description}</div>` : ''}
+                    <div class="reminder-title">${rem.title}</div>
+                    <div class="reminder-date">${formatDate(rem.date)}</div>
+                    ${rem.description ? `<div class="reminder-description">${rem.description}</div>` : ''}
                 `;
-                
-                remindersList.appendChild(reminderElement);
+                remindersList.appendChild(el);
             });
         }
 
         function formatDate(dateString) {
-            try {
-                const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-                return new Date(dateString).toLocaleDateString(undefined, options);
-            } catch (e) {
-                return "Invalid Date";
-            }
+            try { return new Date(dateString).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }); }
+            catch (e) { return "Invalid Date"; }
         }
 
         function openReminderEditor(reminderId = null) {
             if (!isAdmin) return;
-            document.getElementById('reminder-editor').style.display = 'flex';
+            const modal = document.getElementById('reminder-editor');
+            modal.style.display = 'flex';
             document.getElementById('reminder-title').value = '';
             document.getElementById('reminder-description').value = '';
             document.getElementById('reminder-date').value = '';
             document.getElementById('reminder-type').value = 'trip';
-            
             if (reminderId) {
                 currentReminderBeingEdited = reminderId;
-                const reminder = reminders.find(r => r.id === reminderId);
-                if (reminder) {
-                    document.getElementById('reminder-editor-title').textContent = 'Edit Reminder';
-                    document.getElementById('reminder-title').value = reminder.title;
-                    document.getElementById('reminder-description').value = reminder.description || '';
-                    document.getElementById('reminder-date').value = reminder.date;
-                    document.getElementById('reminder-type').value = reminder.type || 'trip';
-                    document.getElementById('save-reminder-button').textContent = 'Save Changes';
+                const rem = reminders.find(r => r.id === reminderId);
+                if (rem) {
+                    modal.querySelector('h2').textContent = 'Edit Reminder';
+                    document.getElementById('reminder-title').value = rem.title;
+                    document.getElementById('reminder-description').value = rem.description || '';
+                    document.getElementById('reminder-date').value = rem.date;
+                    document.getElementById('reminder-type').value = rem.type || 'trip';
+                    modal.querySelector('#save-reminder-button').textContent = 'Save Changes';
                 }
             } else {
                 currentReminderBeingEdited = null;
-                document.getElementById('reminder-editor-title').textContent = 'Add New Reminder';
-                document.getElementById('save-reminder-button').textContent = 'Add Reminder';
+                modal.querySelector('h2').textContent = 'Add New Reminder';
+                modal.querySelector('#save-reminder-button').textContent = 'Add Reminder';
                 const tomorrow = new Date();
                 tomorrow.setDate(tomorrow.getDate() + 1);
                 document.getElementById('reminder-date').value = tomorrow.toISOString().split('T')[0];
             }
         }
 
-        function closeReminderEditor() {
-            document.getElementById('reminder-editor').style.display = 'none';
-            currentReminderBeingEdited = null;
-        }
+        function closeReminderEditor() { document.getElementById('reminder-editor').style.display = 'none'; currentReminderBeingEdited = null; }
 
         function saveReminder() {
             if (!isAdmin) return;
             const title = document.getElementById('reminder-title').value.trim();
-            const description = document.getElementById('reminder-description').value.trim();
             const date = document.getElementById('reminder-date').value;
-            const type = document.getElementById('reminder-type').value;
-            
             if (!title || !date) return alert('Please enter a title and date');
-            
+            const description = document.getElementById('reminder-description').value.trim();
+            const type = document.getElementById('reminder-type').value;
             if (currentReminderBeingEdited) {
                 const index = reminders.findIndex(r => r.id === currentReminderBeingEdited);
-                if (index !== -1) {
-                    reminders[index] = { id: currentReminderBeingEdited, title, description, date, type };
-                }
+                if (index > -1) reminders[index] = { id: currentReminderBeingEdited, title, description, date, type };
             } else {
                 reminders.push({ id: Date.now().toString(), title, description, date, type });
             }
@@ -2556,17 +2118,13 @@ body.non-admin .sidebar-title {
             closeReminderEditor();
         }
 
-        function editReminder(reminderId) {
-            if (!isAdmin) return;
-            event.stopPropagation();
-            openReminderEditor(reminderId);
-        }
+        function editReminder(id) { if (!isAdmin) return; event.stopPropagation(); openReminderEditor(id); }
 
-        function deleteReminder(reminderId) {
+        function deleteReminder(id) {
             if (!isAdmin) return;
             if (confirm('Are you sure you want to delete this reminder?')) {
-                const index = reminders.findIndex(r => r.id === reminderId);
-                if (index !== -1) {
+                const index = reminders.findIndex(r => r.id === id);
+                if (index > -1) {
                     reminders.splice(index, 1);
                     saveReminders();
                 }
@@ -2575,11 +2133,8 @@ body.non-admin .sidebar-title {
 
         function saveReminders() {
             const remindersObject = {};
-            reminders.forEach(reminder => {
-                if (reminder && reminder.id) remindersObject[reminder.id] = reminder;
-            });
-            remindersRef.set(remindersObject)
-                .catch((error) => alert("Error saving reminders."));
+            reminders.forEach(rem => { if (rem && rem.id) remindersObject[rem.id] = rem; });
+            remindersRef.set(remindersObject).catch(e => alert("Error saving reminders."));
         }
 
         function setupModalCloseHandlers() {
