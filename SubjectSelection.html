@@ -1,1 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glendowie College - Subject Selection</title>
+    
+    <!-- External Resources -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <style>
+        /* ========== CSS Variables ========== */
+        :root {
+            /* Color Scheme */
+            --primary: #4361ee;
+            --primary-light: #4895ef;
+            --secondary: #3a0ca3;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --accent: #f72585;
+            --text: #2b2d42;
+            --text-light: #8d99ae;
+            --white: #ffffff;
+            
+            /* Glass Effect */
+            --glass: rgba(255, 255, 255, 0.98);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            
+            /* Card Colors */
+            --myp-color: #4cc9f0;
+            --pe-color: #4361ee;
+            --outdoor-color: #3a0ca3;
+            --health-color: #f72585;
+            
+            /* Card Dimensions */
+            --card-width: 300px;
+            --card-height: 480px;
+            --card-media-height: 160px;
+        }
 
+        /* ========== Base Styles ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'Open Sans', sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            position: relative;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #1d6a76;
+        }
+
+        body::before, 
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            transition: opacity 0.5s ease;
+        }
+
+        body::before {
+            background-image: url('https://projectspace.nz/ujalvxpj/Main/Official%20Website/Content/LogInPageWallpaper.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            z-index: -2;
+        }
+
+        body.hover-effect::before {
+            opacity: 0;
+        }
+
+        body::after {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* ========== Background Video ========== */
+        #background-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -3;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            background-color: var(--dark);
+        }
+
+        body.hover-effect #background-video {
+            opacity: 1;
+        }
+
+        /* ========== Top Navigation Bar ========== */
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--glass);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            padding: 0 24px;
+        }
+
+        .topbar-content {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .topbar-logo {
+            height: 40px;
+            transition: all 0.3s ease;
+        }
+
+        .topbar-title {
+            font-size: 18px;
+            font-weight: 600;
+            font-family: 'Montserrat', sans-serif;
+            color: var(--dark);
+            position: relative;
+        }
+
+        .topbar-links {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .topbar-button {
+            padding: 8px 16px;
+            background: transparent;
+            color: var(--text);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .topbar-button:hover {
+            background: rgba(67, 97, 238, 0.05);
+            color: var(--primary);
+            border-color: rgba(67, 97, 238, 0.2);
+        }
+
+        .topbar-button i {
+            font-size: 14px;
+        }
+
+        /* Profile Dropdown Styles */
+        .profile-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        #profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #007bb5;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background-color: #f0f0f0;
+        }
+
+        #profile-pic::after {
+            content: '▼';
+            position: absolute;
+            bottom: -12px;
+            font-size: 10px;
+            color: var(--primary);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        #profile-pic:hover::after,
+        #profile-pic[aria-expanded="true"]::after {
+            opacity: 1;
+        }
+
+        #profile-pic:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #profile-pic[aria-expanded="true"] {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 50px;
+            background-color: var(--glass);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            min-width: 160px;
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--glass-border);
+            z-index: 1001;
+            overflow: hidden;
+            transform: translateY(-5px);
+            opacity: 0;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .dropdown-content.show {
+            display: block;
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            width: 100%;
+            background: none;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover,
+        .dropdown-item:focus {
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+            outline: none;
+        }
+
+        .dropdown-item i {
+            width: 18px;
+            text-align: center;
+            color: var(--primary);
+        }
+
+        /* ========== Main Content ========== */
+        .main-content-container {
+            position: fixed;
+            top: 60px;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 24px;
+            padding: 20px;
+            width: max-content;
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+
+        .main-content::-webkit-scrollbar {
+            display: none; /* Chrome, Safari and Opera */
+        }
+
+        /* ========== Footer/Copyright ========== */
+        .copyright {
+            position: fixed;
+            bottom: 5px;
+            left: 0;
+            right: 0;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            text-align: center;
+            padding: 5px 0;
+            z-index: 1;
+        }
+
+        /* ========== Subject Cards ========== */
+        .subject-card {
+            width: var(--card-width);
+            min-width: var(--card-width);
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s forwards;
+            height: var(--card-height);
+            -webkit-tap-highlight-color: transparent;
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+            will-change: transform;
+            flex-shrink: 0;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .subject-card:nth-child(1) { animation-delay: 0.1s; }
+        .subject-card:nth-child(2) { animation-delay: 0.2s; }
+        .subject-card:nth-child(3) { animation-delay: 0.3s; }
+        .subject-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .subject-card:hover {
+            transform: translateY(-8px) !important;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Card Media */
+        .card-media-container {
+            height: var(--card-media-height);
+            position: relative;
+            overflow: hidden;
+            transform: translateZ(0);
+        }
+
+        .card-media {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            transition: transform 0.5s ease;
+            transform: translateZ(0);
+        }
+
+        .subject-card:hover .card-media {
+            transform: scale(1.05) translateZ(0);
+        }
+
+        .card-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+
+        .subject-card:hover .card-overlay {
+            opacity: 1;
+        }
+
+        /* Card Content */
+        .card-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            flex-grow: 1;
+            height: calc(var(--card-height) - var(--card-media-height));
+            position: relative;
+            z-index: 1;
+        }
+
+        .subject-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            min-height: 50px;
+        }
+
+        .subject-name {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--dark);
+            line-height: 1.3;
+            margin: 0;
+        }
+
+        .subject-icon {
+            font-size: 24px;
+            color: var(--subject-color);
+            flex-shrink: 0;
+            margin-top: 3px;
+            transition: all 0.5s ease;
+        }
+
+        .subject-card:hover .subject-icon {
+            transform: scale(1.4) rotate(15deg);
+            filter: drop-shadow(0 0 6px var(--subject-color));
+        }
+
+        .subject-description {
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.5;
+            margin: 0 0 6px 0;
+            flex-grow: 1;
+            min-height: 60px;
+        }
+
+        /* Year Selection */
+        .year-selection {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .year-selection-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .year-selection-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(0,0,0,0.1);
+        }
+
+        .year-buttons {
+            display: grid;
+            gap: 8px;
+        }
+
+        /* Default year buttons layout */
+        .year-buttons {
+            grid-template-columns: repeat(auto-fit, minmax(65px, 1fr));
+        }
+
+        .year-button {
+            padding: 10px 0;
+            background: var(--subject-light);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--subject-color);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            min-height: 40px;
+            text-align: center;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+            transform: translateZ(0);
+        }
+
+        .year-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 60%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .year-button:hover {
+            background: var(--subject-color);
+            color: white;
+            transform: translateY(-2px) translateZ(0);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+        }
+
+        .year-button:hover::before {
+            opacity: 1;
+        }
+
+        .year-button:active {
+            transform: translateY(0) translateZ(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* ========== Subject Specific Styles ========== */
+        .myp-card {
+            --subject-color: var(--myp-color);
+            --subject-light: rgba(76, 201, 240, 0.1);
+        }
+
+        .pe-card {
+            --subject-color: var(--pe-color);
+            --subject-light: rgba(67, 97, 238, 0.1);
+        }
+
+        .outdoor-card {
+            --subject-color: var(--outdoor-color);
+            --subject-light: rgba(58, 12, 163, 0.1);
+        }
+
+        .health-card {
+            --subject-color: var(--health-color);
+            --subject-light: rgba(247, 37, 133, 0.1);
+        }
+
+        /* Health card specific year buttons layout */
+        .health-card .year-buttons {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+        }
+
+        .health-card .year-buttons .year-button:nth-child(1) {
+            grid-column: 1 / span 2;
+        }
+        .health-card .year-buttons .year-button:nth-child(2) {
+            grid-column: 3 / span 2;
+        }
+        .health-card .year-buttons .year-button:nth-child(3) {
+            grid-column: 5 / span 2;
+        }
+        .health-card .year-buttons .year-button:nth-child(4) {
+            grid-column: 1 / span 3;
+            width: calc(100% - 5px);
+            justify-self: end;
+        }
+        .health-card .year-buttons .year-button:nth-child(5) {
+            grid-column: 4 / span 3;
+            width: calc(100% - 5px);
+            justify-self: start;
+        }
+
+        /* ========== Responsive Styles ========== */
+        @media (max-width: 768px) {
+            .topbar {
+                padding: 0 16px;
+                height: 56px;
+            }
+           
+            .topbar-title {
+                display: none;
+            }
+           
+            .topbar-button span {
+                display: none;
+            }
+           
+            .topbar-button {
+                padding: 8px;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                justify-content: center;
+            }
+           
+            .main-content-container {
+                padding: 15px;
+                justify-content: flex-start;
+            }
+
+            .year-buttons {
+                grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+                gap: 8px;
+            }
+
+            .year-button {
+                padding: 10px 0;
+                min-height: 38px;
+            }
+
+            /* Health card adjustments for mobile */
+            .health-card .year-buttons {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            /* Single button full width */
+            .health-card .year-buttons .year-button:nth-last-child(1):first-child {
+                grid-column: 1 / -1;
+            }
+
+            /* Adjust dropdown for mobile */
+            .dropdown-content {
+                min-width: 140px;
+            }
+
+            #profile-pic::after {
+                display: none;
+            }
+        }
+
+        /* Landscape mode for mobile devices */
+        @media screen and (max-width: 768px) and (orientation: landscape) {
+            .subject-card {
+                width: 250px;
+                min-width: 250px;
+                height: 440px;
+            }
+            
+            .card-media-container {
+                height: 140px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Video -->
+    <video id="background-video" loop muted playsinline></video>
+    
+    <!-- Top Navigation Bar -->
+    <div class="topbar" id="topbar">
+        <div class="topbar-content">
+            <div class="topbar-left">
+                <img src="https://i.imgur.com/AYocV6k.png" alt="Glendowie College Logo" class="topbar-logo">
+                <span class="topbar-title">Glendowie College</span>
+            </div>
+            <div class="topbar-links">
+                <a href="https://www.gdc.school.nz/" target="_blank" class="topbar-button">
+                    <i class="fas fa-school"></i> <span>College Site</span>
+                </a>
+                <a href="https://gdc.bridge.school.nz/" target="_blank" class="topbar-button">
+                    <i class="fas fa-book-open"></i> <span>School Point</span>
+                </a>
+                <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
+                    <i class="fas fa-envelope"></i> <span>Student Portal</span>
+                </a>
+                <div class="profile-dropdown">
+                    <img id="profile-pic" src="" alt="Profile Picture" aria-haspopup="true" aria-expanded="false">
+                    <div class="dropdown-content" id="dropdown-content">
+                        <button class="dropdown-item" id="logout-button">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Log Out</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content-container">
+        <div class="main-content">
+            <!-- MYP Card -->
+            <div class="subject-card myp-card">
+                <div class="card-media-container">
+                    <video class="card-media" loop muted playsinline preload="auto">
+                        <source src="https://i.imgur.com/zw3viPp.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div class="card-overlay"></div>
+                </div>
+                <div class="card-content">
+                    <div class="subject-header">
+                        <h3 class="subject-name">Middle Years Programme</h3>
+                        <i class="fas fa-graduation-cap subject-icon"></i>
+                    </div>
+                    <p class="subject-description">The IB Middle Years Programme (MYP) provides a framework of academic challenge for students aged 11-15.</p>
+                    <div class="year-selection">
+                        <div class="year-selection-title">Select Year Level</div>
+                        <div class="year-buttons">
+                            <a href="https://oktayzadeh.github.io/GDCHUB/MYP/Y9.html" class="year-button">Year 9</a>
+                            <a href="https://oktayzadeh.github.io/GDCHUB/MYP/Y10.html" class="year-button">Year 10</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Physical Education Card -->
+            <div class="subject-card pe-card">
+                <div class="card-media-container">
+                    <video class="card-media" loop muted playsinline preload="auto">
+                        <source src="https://i.imgur.com/DH39YQe.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div class="card-overlay"></div>
+                </div>
+                <div class="card-content">
+                    <div class="subject-header">
+                        <h3 class="subject-name">Sports Science (Physical Education)</h3>
+                        <i class="fas fa-running subject-icon"></i>
+                    </div>
+                    <p class="subject-description">Develop physical skills and knowledge through practical activities and theoretical understanding of human movement.</p>
+                    <div class="year-selection">
+                        <div class="year-selection-title">Select Year Level</div>
+                        <div class="year-buttons">
+                            <a href="https://oktayzadeh.github.io/GDCHUB/SportsScience/Y11.html" class="year-button">Year 11</a>
+                            <a href="https://oktayzadeh.github.io/GDCHUB/SportsScience/Y12.html" class="year-button">Year 12</a>
+                            <a href="https://oktayzadeh.github.io/GDCHUB/SportsScience/Y13.html" class="year-button">Year 13</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Outdoor Education Card -->
+            <div class="subject-card outdoor-card">
+                <div class="card-media-container">
+                    <video class="card-media" loop muted playsinline preload="auto">
+                        <source src="https://i.imgur.com/baeEc27.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div class="card-overlay"></div>
+                </div>
+                <div class="card-content">
+                    <div class="subject-header">
+                        <h3 class="subject-name">Outdoor Education</h3>
+                        <i class="fas fa-mountain subject-icon"></i>
+                    </div>
+                    <p class="subject-description">Explore adventure activities and develop skills in leadership, risk management, and environmental awareness.</p>
+                    <div class="year-selection">
+                        <div class="year-selection-title">Select Year Level</div>
+                        <div class="year-buttons">
+                            <a href="https://oktayzadeh.github.io/GDCHUB/OutdoorEducation/Y11.html" class="year-button">Year 11</a>
+                            <a href="https://oktayzadeh.github.io/GDCHUB/OutdoorEducation/Y12.html" class="year-button">Year 12</a>
+                            <a href="https://oktayzadeh.github.io/GDCHUB/OutdoorEducation/Y13.html" class="year-button">Year 13</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Health Card -->
+            <div class="subject-card health-card">
+                <div class="card-media-container">
+                    <video class="card-media" loop muted playsinline preload="auto">
+                        <source src="https://i.imgur.com/1s0hopX.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div class="card-overlay"></div>
+                </div>
+                <div class="card-content">
+                    <div class="subject-header">
+                        <h3 class="subject-name">Health</h3>
+                        <i class="fas fa-heartbeat subject-icon"></i>
+                    </div>
+                    <p class="subject-description">Learn about personal well-being, relationships, and societal health issues to make informed life choices.</p>
+                    <div class="year-selection">
+                        <div class="year-selection-title">Select Year Level</div>
+                        <div class="year-buttons">
+                            <a href="https://oktayzadeh.github.io/GDCHUB/Health/Y9.html" class="year-button">Year 9</a>
+                            <a href="https://oktayzadeh.github.io/GDCHUB/Health/Y10.html" class="year-button">Year 10</a>
+                            <a href="https://oktayzadeh.github.io/GDCHUB/Health/Y11.html" class="year-button">Year 11</a>
+                            <a href="https://oktayzadeh.github.io/GDCHUB/Health/Y12.html" class="year-button">Year 12</a>
+                            <a href="https://oktayzadeh.github.io/GDCHUB/Health/Y13.html" class="year-button">Year 13</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copyright Notice -->
+    <div class="copyright">
+        © 2025 Glendowie College. All Rights Reserved.
+    </div>
+
+<script>
+// ========== PERSISTENT AUTHENTICATION SYSTEM ==========
+(function() {
+    // Configuration constants
+    const USER_INFO_KEY = "googleUserInfo";
+    const AUTH_TOKEN_KEY = "gdcAuthToken";
+    const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
+
+    // Token management functions
+    function clearAuthData() {
+        localStorage.removeItem(USER_INFO_KEY);
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    }
+
+    function getCookieToken() {
+        const cookie = document.cookie.split('; ')
+            .find(row => row.startsWith('gdcAuth='));
+        return cookie ? cookie.split('=')[1] : null;
+    }
+
+    function checkAuthStatus() {
+        try {
+            const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+            const cookieToken = getCookieToken();
+            
+            // If no tokens exist
+            if (!authToken || !cookieToken) {
+                clearAuthData();
+                return false;
+            }
+            
+            // If tokens don't match
+            if (authToken !== cookieToken) {
+                clearAuthData();
+                return false;
+            }
+            
+            return true;
+        } catch (error) {
+            console.error("Auth check error:", error);
+            clearAuthData();
+            return false;
+        }
+    }
+
+    // Main authentication check
+    if (!checkAuthStatus()) {
+        document.body.innerHTML = `
+            <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Poppins',sans-serif;z-index:9999;">
+                <div style="text-align:center;padding:30px;max-width:400px;">
+                    <h2 style="color:#2b2d42;margin-bottom:20px;">Authentication Required</h2>
+                    <p style="color:#5f6a7d;margin-bottom:25px;">
+                        Please sign in to access this content. Redirecting to login page...
+                    </p>
+                    <div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;">
+                        <div style="width:100%;height:100%;background:#4361ee;border-radius:2px;animation:progress 2s ease-in-out infinite;"></div>
+                    </div>
+                </div>
+            </div>
+            <style>@keyframes progress {0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}</style>
+        `;
+        setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
+        throw new Error("Authentication required");
+    } else {
+        // Prevent back navigation to login page
+        window.history.replaceState(null, null, window.location.href);
+        window.addEventListener('popstate', function() {
+            if (!window.location.href.includes(LOGIN_PAGE)) {
+                window.history.replaceState(null, null, window.location.href);
+            } else {
+                window.location.reload();
+            }
+        });
+    }
+
+    // ========== PAGE FUNCTIONALITY ==========
+    // Constants
+    const profilePicElement = document.getElementById('profile-pic');
+    const dropdownContent = document.getElementById('dropdown-content');
+    const logoutButton = document.getElementById('logout-button');
+    const backgroundVideo = document.getElementById('background-video');
+    const videoSources = [
+        'https://i.imgur.com/zw3viPp.mp4',
+        'https://i.imgur.com/DH39YQe.mp4',
+        'https://i.imgur.com/baeEc27.mp4',
+        'https://i.imgur.com/1s0hopX.mp4'
+    ];
+
+    // Utility Functions
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+
+    function forceVideoPlay(video) {
+        if (video.paused) {
+            const promise = video.play();
+            if (promise !== undefined) {
+                promise.catch(error => {
+                    video.muted = true;
+                    video.play().catch(e => console.log("Video play error:", e));
+                });
+            }
+        }
+    }
+
+    // Profile Picture Handling
+    function handleProfilePicture() {
+        const storedUserInfo = localStorage.getItem(USER_INFO_KEY);
+        if (storedUserInfo) {
+            try {
+                const userInfo = JSON.parse(storedUserInfo);
+                if (userInfo?.picture) {
+                    profilePicElement.src = userInfo.picture;
+                    profilePicElement.style.display = 'block';
+                    return;
+                }
+            } catch (e) {
+                console.error("Error parsing user info:", e);
+            }
+        }
+        // Default avatar
+        profilePicElement.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234361ee'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
+        profilePicElement.style.display = 'block';
+    }
+
+    // Dropdown Menu Handling
+    function setupDropdownMenu() {
+        profilePicElement.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isExpanded = dropdownContent.classList.toggle('show');
+            profilePicElement.setAttribute('aria-expanded', isExpanded);
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.profile-dropdown')) {
+                dropdownContent.classList.remove('show');
+                profilePicElement.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                dropdownContent.classList.remove('show');
+                profilePicElement.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        logoutButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            clearAuthData();
+            window.location.href = LOGIN_PAGE;
+        });
+    }
+
+    // Background Video Transition
+    function setupCardHoverEffects() {
+        const cards = document.querySelectorAll('.subject-card');
+        let currentVideoIndex = -1;
+        let isTransitioning = false;
+        
+        backgroundVideo.innerHTML = `<source src="${videoSources[0]}" type="video/mp4">`;
+        backgroundVideo.load();
+        
+        cards.forEach((card, index) => {
+            const cardVideo = card.querySelector('.card-media');
+            
+            card.addEventListener('mouseenter', function() {
+                if (isTransitioning || currentVideoIndex === index) return;
+                isTransitioning = true;
+                currentVideoIndex = index;
+                
+                document.body.classList.remove('hover-effect');
+                
+                setTimeout(() => {
+                    backgroundVideo.innerHTML = `<source src="${videoSources[index]}" type="video/mp4">`;
+                    backgroundVideo.load();
+                    
+                    backgroundVideo.play().then(() => {
+                        document.body.classList.add('hover-effect');
+                        isTransitioning = false;
+                    }).catch(e => {
+                        console.log("Background video play error:", e);
+                        isTransitioning = false;
+                    });
+                }, 50);
+            });
+            
+            card.addEventListener('touchstart', function() {
+                if (isMobileDevice() && !isTransitioning && currentVideoIndex !== index) {
+                    isTransitioning = true;
+                    currentVideoIndex = index;
+                    document.body.classList.remove('hover-effect');
+                    
+                    setTimeout(() => {
+                        backgroundVideo.innerHTML = `<source src="${videoSources[index]}" type="video/mp4">`;
+                        backgroundVideo.load();
+                        backgroundVideo.play().then(() => {
+                            document.body.classList.add('hover-effect');
+                            isTransitioning = false;
+                        }).catch(e => {
+                            console.log("Background video play error:", e);
+                            isTransitioning = false;
+                        });
+                    }, 50);
+                }
+            }, { passive: true });
+        });
+    }
+
+    // Initialize Videos
+    function initializeVideos() {
+        const videos = document.querySelectorAll('.card-media');
+       
+        if (isMobileDevice()) {
+            videos.forEach(video => {
+                video.setAttribute('autoplay', '');
+                video.setAttribute('muted', '');
+                video.setAttribute('playsinline', '');
+                video.setAttribute('preload', 'auto');
+                forceVideoPlay(video);
+               
+                document.body.addEventListener('touchstart', function once() {
+                    videos.forEach(v => forceVideoPlay(v));
+                    document.body.removeEventListener('touchstart', once);
+                }, { once: true, passive: true });
+            });
+        } else {
+            videos.forEach(video => {
+                video.pause();
+                video.currentTime = 0;
+               
+                const card = video.closest('.subject-card');
+                card.addEventListener('mouseenter', () => forceVideoPlay(video));
+                card.addEventListener('mouseleave', () => {
+                    video.pause();
+                    video.currentTime = 0;
+                });
+            });
+        }
+        
+        backgroundVideo.muted = true;
+        backgroundVideo.playsInline = true;
+    }
+
+    // Initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeVideos();
+        handleProfilePicture();
+        setupDropdownMenu();
+        setupCardHoverEffects();
+    });
+})();
+</script>
+</body>
+</html>
