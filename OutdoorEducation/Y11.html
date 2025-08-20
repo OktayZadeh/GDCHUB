@@ -1,2845 +1,1155 @@
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Classroom Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-:root {
-    /* Modern Color palette */
-    --primary: #3EA899;
-    --primary-light: #E0F2F1;
-    --primary-dark: #2D7D78;
-    --secondary: #4A89DC;
-    --accent: #4CC9F0;
-    --success: #48BB78;
-    --warning: #ED8936;
-    --danger: #F56565;
-    --dark: #1A202C;
-    --dark-gray: #2D3748;
-    --medium: #718096;
-    --light-gray: #E2E8F0;
-    --light: #F7FAFC;
-    --lighter: #FFFFFF;
-    
-    /* Dark mode colors */
-    --dark-primary: #2C7A7B;
-    --dark-primary-light: #234E52;
-    --dark-primary-dark: #1D4044;
-    --dark-secondary: #4299E1;
-    --dark-accent: #0BC5EA;
-    --dark-success: #38A169;
-    --dark-warning: #DD6B20;
-    --dark-danger: #E53E3E;
-    --dark-dark: #171923;
-    --dark-dark-gray: #1A202C;
-    --dark-medium: #A0AEC0;
-    --dark-light-gray: #2D3748;
-    --dark-light: #1A202C;
-    --dark-lighter: #2D3748;
-    
-    /* Typography */
-    --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-secondary: 'Roboto', sans-serif;
-    --text-xs: 0.75rem;
-    --text-sm: 0.875rem;
-    --text-base: 1rem;
-    --text-lg: 1.125rem;
-    --text-xl: 1.25rem;
-    --text-2xl: 1.5rem;
-    --text-3xl: 1.875rem;
-    --text-4xl: 2.25rem;
-    
-    /* Spacing */
-    --space-xxs: 0.25rem;
-    --space-xs: 0.5rem;
-    --space-sm: 0.75rem;
-    --space-md: 1rem;
-    --space-lg: 1.5rem;
-    --space-xl: 2rem;
-    --space-2xl: 3rem;
-    
-    /* Shadows */
-    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    --shadow-primary: 0 0 0 3px rgba(62, 168, 153, 0.3);
-    
-    /* Border radius */
-    --radius-xs: 2px;
-    --radius-sm: 4px;
-    --radius-md: 6px;
-    --radius-lg: 8px;
-    --radius-xl: 12px;
-    --radius-full: 9999px;
-    
-    /* Transitions */
-    --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Dark mode styles */
-body.dark-mode {
-    --primary: var(--dark-primary);
-    --primary-light: var(--dark-primary-light);
-    --primary-dark: var(--dark-primary-dark);
-    --secondary: var(--dark-secondary);
-    --accent: var(--dark-accent);
-    --success: var(--dark-success);
-    --warning: var(--dark-warning);
-    --danger: var(--dark-danger);
-    --dark: var(--dark-dark);
-    --dark-gray: var(--dark-dark-gray);
-    --medium: var(--dark-medium);
-    --light-gray: var(--dark-light-gray);
-    --light: var(--dark-light);
-    --lighter: var(--dark-lighter);
-    
-    background-color: var(--dark-light);
-    color: var(--dark-medium);
-}
-
-body.dark-mode h1,
-body.dark-mode h2,
-body.dark-mode h3,
-body.dark-mode h4 {
-    color: white;
-}
-
-body.dark-mode .sidebar,
-body.dark-mode .post-card,
-body.dark-mode .reminders-container,
-body.dark-mode .modal-content {
-    background-color: var(--dark-lighter);
-    border-color: var(--dark-light-gray);
-}
-
-body.dark-mode .sidebar-link {
-    color: var(--dark-medium);
-}
-
-body.dark-mode .sidebar-link:hover {
-    color: white;
-}
-
-body.dark-mode .sidebar-link.active {
-    color: var(--dark-primary);
-}
-
-body.dark-mode input,
-body.dark-mode textarea,
-body.dark-mode select {
-    background-color: var(--dark-lighter);
-    border-color: var(--dark-light-gray);
-    color: white;
-}
-
-body.dark-mode .button.secondary {
-    background-color: var(--dark-lighter);
-    color: var(--dark-primary);
-    border-color: var(--dark-light-gray);
-}
-
-/* Dark mode specific improvements */
-body.dark-mode .sidebar-header {
-    background-color: var(--dark-lighter);
-    border-bottom-color: var(--dark-light-gray);
-}
-
-body.dark-mode .reminder-card {
-    background-color: var(--dark-lighter);
-    border-left-color: var(--dark-primary);
-}
-
-body.dark-mode .file-attachment {
-    background-color: var(--dark-light-gray);
-    color: var(--dark-medium);
-}
-
-body.dark-mode .post-meta {
-    border-top-color: var(--dark-light-gray);
-}
-
-body.dark-mode .embed-container {
-    background-color: var(--dark-light);
-    border-color: var(--dark-light-gray);
-}
-
-body.dark-mode .search-input {
-    background-color: var(--dark-lighter);
-    color: white;
-}
-
-body.dark-mode .search-input::placeholder {
-    color: var(--dark-medium);
-}
-
-body.dark-mode .topbar-button {
-    color: var(--dark-medium);
-}
-
-body.dark-mode .topbar-button:hover {
-    color: var(--primary);
-}
-
-body.dark-mode .tab-action-btn {
-    background-color: var(--dark-light-gray);
-}
-
-body.dark-mode .tab-action-btn:hover {
-    background-color: var(--dark-primary-light);
-}
-
-body.dark-mode .reminder-actions {
-    background-color: var(--dark-light-gray);
-    border-color: var(--dark-light-gray);
-}
-
-body.dark-mode .reminder-action-btn:hover {
-    background-color: var(--dark-primary-light);
-}
-
-/* Base Styles */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-body {
-    margin: 0;
-    padding: 0;
-    font-family: var(--font-main);
-    display: flex;
-    min-height: 100vh;
-    background: var(--light);
-    line-height: 1.5;
-    color: var(--dark);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    transition: background-color var(--transition-normal);
-}
-
-h1, h2, h3, h4 {
-    font-weight: 600;
-    color: var(--dark);
-    margin-bottom: var(--space-md);
-    line-height: 1.25;
-}
-
-h1 { font-size: var(--text-3xl); }
-h2 { font-size: var(--text-2xl); }
-h3 { font-size: var(--text-xl); }
-h4 { font-size: var(--text-lg); }
-
-p {
-    margin-bottom: var(--space-md);
-    color: var(--medium);
-    line-height: 1.6;
-}
-
-a {
-    color: var(--primary);
-    text-decoration: none;
-    transition: color var(--transition-fast);
-}
-
-a:hover {
-    color: var(--primary-dark);
-    text-decoration: underline;
-}
-
-/* Top Navigation Bar */
-.topbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 54px;
-    background: var(--lighter);
-    border-bottom: 1px solid var(--light-gray);
-    box-shadow: var(--shadow-sm);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    transition: all var(--transition-normal);
-    padding: 0 var(--space-lg);
-}
-
-.topbar-content {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.topbar-left {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-}
-
-.topbar-logo {
-    height: 36px;
-    transition: all var(--transition-fast);
-}
-
-.topbar-title {
-    font-size: var(--text-lg);
-    font-weight: 600;
-    font-family: var(--font-main);
-    color: var(--dark);
-}
-
-.topbar-links {
-    display: flex;
-    gap: var(--space-sm);
-    align-items: center;
-}
-
-.topbar-button {
-    padding: var(--space-xs) var(--space-sm);
-    background: transparent;
-    color: var(--dark);
-    text-decoration: none;
-    border-radius: var(--radius-md);
-    font-weight: 500;
-    font-size: var(--text-sm);
-    transition: all var(--transition-fast);
-    border: 1px solid var(--light-gray);
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-}
-
-.topbar-button:hover {
-    background: var(--light);
-    color: var(--primary);
-    border-color: var(--primary-light);
-}
-
-.topbar-button i {
-    font-size: var(--text-sm);
-}
-
-/* Profile dropdown - Improved */
-.profile-dropdown {
-    position: relative;
-    display: inline-block;
-}
-
-.profile-dropdown-content {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: calc(100% + 8px);
-    background-color: var(--lighter);
-    min-width: 180px;
-    box-shadow: var(--shadow-md);
-    border-radius: var(--radius-md);
-    z-index: 1001;
-    border: 1px solid var(--light-gray);
-    opacity: 0;
-    transform: translateY(-10px);
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    pointer-events: none;
-}
-
-.profile-dropdown:hover .profile-dropdown-content,
-.profile-dropdown-content:hover {
-    display: block;
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-    transition-delay: 0s;
-}
-
-/* Dropdown arrow */
-.profile-dropdown-content::before {
-    content: '';
-    position: absolute;
-    top: -6px;
-    right: 12px;
-    width: 0;
-    height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-bottom: 6px solid var(--lighter);
-    z-index: 1002;
-}
-
-/* Dropdown items */
-.profile-dropdown-content a {
-    color: var(--dark);
-    padding: var(--space-sm) var(--space-md);
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    font-size: var(--text-sm);
-    transition: all var(--transition-fast);
-}
-
-.profile-dropdown-content a:hover {
-    background-color: var(--light);
-    color: var(--primary);
-}
-
-.profile-dropdown-content a i {
-    width: 18px;
-    text-align: center;
-}
-
-/* Dark mode adjustments for dropdown */
-body.dark-mode .profile-dropdown-content {
-    background-color: var(--dark-lighter);
-    border-color: var(--dark-light-gray);
-}
-
-body.dark-mode .profile-dropdown-content::before {
-    border-bottom-color: var(--dark-lighter);
-}
-
-body.dark-mode .profile-dropdown-content a {
-    color: var(--dark-medium);
-}
-
-body.dark-mode .profile-dropdown-content a:hover {
-    background-color: var(--dark-light-gray);
-    color: var(--primary);
-}
-
-/* Button Styles */
-.button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-md);
-    font-weight: 500;
-    font-size: var(--text-sm);
-    line-height: 1;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    border: none;
-    background-color: var(--primary);
-    color: white;
-    box-shadow: var(--shadow-sm);
-    height: 36px;
-}
-
-.button:hover {
-    background-color: var(--primary-dark);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
-.button:active {
-    transform: translateY(0);
-    box-shadow: var(--shadow-sm);
-}
-
-.button:focus {
-    outline: none;
-    box-shadow: var(--shadow-primary);
-}
-
-.button.secondary {
-    background-color: white;
-    color: var(--primary);
-    border: 1px solid var(--light-gray);
-}
-
-.button.secondary:hover {
-    background-color: var(--light);
-    border-color: var(--primary);
-    color: var(--primary-dark);
-}
-
-.button.danger {
-    background-color: var(--danger);
-}
-
-.button.danger:hover {
-    background-color: #E53E3E;
-}
-
-.button.small {
-    padding: var(--space-xs) var(--space-sm);
-    font-size: var(--text-sm);
-    height: 30px;
-}
-
-/* Input Styles */
-input[type="text"],
-input[type="date"],
-input[type="file"],
-textarea,
-select {
-    width: 100%;
-    padding: var(--space-sm) var(--space-md);
-    border: 1px solid var(--light-gray);
-    border-radius: var(--radius-md);
-    font-size: var(--text-base);
-    font-family: var(--font-main);
-    transition: all var(--transition-fast);
-    margin-bottom: var(--space-md);
-    background-color: white;
-}
-
-input[type="text"]:focus,
-input[type="date"]:focus,
-textarea:focus,
-select:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: var(--shadow-primary);
-}
-
-textarea {
-    min-height: 120px;
-    resize: vertical;
-    line-height: 1.5;
-}
-
-select {
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right var(--space-md) center;
-    background-size: 16px;
-    padding-right: var(--space-xl);
-}
-
-/* Layout */
-.container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 var(--space-md);
-}
-
-/* Sidebar Styles */
-.sidebar {
-    width: 260px;
-    background: white;
-    color: var(--dark);
-    flex-shrink: 0;
-    min-height: 100vh;
-    overflow-y: auto;
-    position: fixed;
-    top: 54px; /* Adjusted for topbar */
-    bottom: 0;
-    z-index: 100;
-    border-right: 1px solid var(--light-gray);
-    box-shadow: var(--shadow-sm);
-    transition: transform var(--transition-normal);
-}
-
-.sidebar-header {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    padding: var(--space-lg);
-    position: sticky;
-    top: 0;
-    background: white;
-    z-index: 10;
-    border-bottom: 1px solid var(--light-gray);
-}
-
-.sidebar-logo {
-    width: 36px;
-    height: 36px;
-    object-fit: contain;
-    border-radius: var(--radius-sm);
-}
-
-.sidebar-title {
-    font-size: var(--text-lg);
-    font-weight: 600;
-    margin: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-grow: 1;
-    color: var(--dark);
-}
-
-.sidebar-menu {
-    list-style: none;
-    padding: var(--space-sm) 0;
-    margin: 0;
-}
-
-.sidebar-item {
-    position: relative;
-    margin-bottom: var(--space-xxs);
-    padding: 0 var(--space-sm);
-}
-
-.sidebar-link {
-    display: flex;
-    align-items: center;
-    color: var(--medium);
-    text-decoration: none;
-    padding: var(--space-sm) var(--space-md);
-    transition: all var(--transition-fast);
-    border-radius: var(--radius-md);
-    font-size: var(--text-sm);
-    font-weight: 500;
-}
-
-.sidebar-link:hover {
-    background-color: var(--light);
-    color: var(--dark);
-}
-
-.sidebar-link.active {
-    background-color: var(--primary-light);
-    color: var(--primary-dark);
-    font-weight: 600;
-}
-
-.sidebar-link.active .tab-icon {
-    color: var(--primary-dark);
-}
-
-.tab-actions {
-    position: absolute;
-    right: var(--space-md);
-    top: 50%;
-    transform: translateY(-50%);
-    display: none;
-    background: white;
-    border-radius: var(--radius-md);
-    padding: var(--space-xs);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--light-gray);
-}
-
-.sidebar-item:hover .tab-actions {
-    display: flex;
-    gap: var(--space-xs);
-}
-
-.tab-action-btn {
-    background: none;
-    border: none;
-    color: var(--medium);
-    cursor: pointer;
-    padding: var(--space-xs);
-    font-size: var(--text-sm);
-    transition: all var(--transition-fast);
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--radius-sm);
-}
-
-.tab-action-btn:hover {
-    color: var(--primary);
-    background: var(--primary-light);
-}
-
-.move-handle {
-    cursor: move;
-    margin-right: var(--space-sm);
-    color: var(--medium);
-    opacity: 0.5;
-}
-
-.add-tab-btn {
-    background: var(--primary);
-    border: none;
-    color: white;
-    width: 28px;
-    height: 28px;
-    border-radius: var(--radius-full);
-    cursor: pointer;
-    font-size: var(--text-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--transition-fast);
-    flex-shrink: 0;
-    box-shadow: var(--shadow-sm);
-}
-
-.add-tab-btn:hover {
-    background: var(--primary-dark);
-    transform: scale(1.1);
-    box-shadow: var(--shadow-md);
-}
-
-/* Main Content Styles */
-.main-content {
-    flex-grow: 1;
-    padding: var(--space-xl);
-    max-width: calc(100% - 260px);
-    box-sizing: border-box;
-    margin-left: 260px;
-    margin-top: 54px; /* Adjusted for topbar */
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xl);
-}
-
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-lg);
-    padding-bottom: var(--space-md);
-    border-bottom: 1px solid var(--light-gray);
-}
-
-/* Search Bar Styles */
-.search-container {
-    position: relative;
-    width: 100%;
-    max-width: 400px;
-}
-
-.search-input {
-    width: 100%;
-    padding: var(--space-sm) var(--space-md) var(--space-sm) var(--space-xl);
-    border: 1px solid var(--light-gray);
-    border-radius: var(--radius-full);
-    font-size: var(--text-sm);
-    background-color: white;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23718096" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
-    background-repeat: no-repeat;
-    background-position: var(--space-md) center;
-    background-size: 16px 16px;
-    transition: all var(--transition-fast);
-    box-shadow: var(--shadow-sm);
-}
-
-.search-input::placeholder {
-    color: var(--medium);
-    opacity: 1;
-}
-
-.search-input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: var(--shadow-primary);
-}
-
-.search-clear {
-    position: absolute;
-    right: var(--space-md);
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: var(--medium);
-    cursor: pointer;
-    display: none;
-    font-size: var(--text-lg);
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--radius-full);
-    transition: all var(--transition-fast);
-}
-
-.search-clear:hover {
-    background: var(--light);
-    color: var(--danger);
-}
-
-.search-input:not(:placeholder-shown) + .search-clear {
-    display: flex;
-}
-
-/* Profile picture styles */
-#profile-pic {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius-full);
-    border: 2px solid white;
-    cursor: pointer;
-    transition: transform var(--transition-fast);
-    object-fit: cover;
-    box-shadow: var(--shadow-sm);
-}
-
-#profile-pic:hover {
-    transform: scale(1.1);
-    box-shadow: var(--shadow-md);
-}
-
-/* Drag and Drop Styles */
-.sidebar-item.dragging {
-    opacity: 0.5;
-    background-color: var(--primary-light);
-}
-
-.sidebar-item.drop-area {
-    border-top: 2px dashed var(--primary);
-}
-
-/* Modal Styles */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(4px);
-    animation: modalFadeIn var(--transition-fast) forwards;
-}
-
-.modal-content {
-    background-color: white;
-    padding: var(--space-xl);
-    border-radius: var(--radius-lg);
-    width: 100%;
-    max-width: 500px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: var(--shadow-xl);
-    animation: modalSlideIn var(--transition-normal) forwards;
-}
-
-@keyframes modalFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes modalSlideIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.close-button {
-    position: absolute;
-    top: var(--space-md);
-    right: var(--space-md);
-    font-size: var(--text-xl);
-    cursor: pointer;
-    color: var(--medium);
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--radius-full);
-    transition: all var(--transition-fast);
-}
-
-.close-button:hover {
-    color: var(--danger);
-    background: var(--light);
-}
-
-.modal h2 {
-    margin-top: 0;
-    padding-right: var(--space-lg);
-    color: var(--dark);
-}
-
-.modal-buttons {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: var(--space-lg);
-    gap: var(--space-sm);
-}
-
-/* Post Styles */
-.post-card {
-    background: white;
-    border-radius: var(--radius-lg);
-    padding: var(--space-lg);
-    margin-bottom: var(--space-lg);
-    box-shadow: var(--shadow-sm);
-    cursor: pointer;
-    transition: all var(--transition-normal) cubic-bezier(0.25, 0.8, 0.25, 1);
-    position: relative;
-    animation: fadeIn var(--transition-normal) forwards;
-    opacity: 0;
-    border: 1px solid var(--light-gray);
-}
-
-.post-card:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
-    border-color: var(--primary);
-}
-
-.post-card.expanded {
-    position: fixed;
-    top: 54px; /* Adjusted for topbar */
-    left: 260px;
-    right: 0;
-    bottom: 0;
-    z-index: 100;
-    overflow-y: auto;
-    margin: 0;
-    padding: var(--space-xl);
-    background: white;
-    border-radius: 0;
-    box-shadow: none;
-    transition: all var(--transition-normal) ease;
-    border: none;
-}
-
-.post-card .back-button {
-    position: fixed;
-    top: calc(54px + var(--space-md)); /* Adjusted for topbar */
-    left: calc(260px + var(--space-md));
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    z-index: 101;
-    box-shadow: var(--shadow-sm);
-    transition: all var(--transition-fast);
-}
-
-.post-card .back-button:hover {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
-.post-details {
-    display: none;
-    margin-top: var(--space-lg);
-}
-
-.embed-container {
-    margin: var(--space-lg) 0;
-    background: var(--light);
-    padding: var(--space-md);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--light-gray);
-    width: 100%;
-    overflow: hidden;
-}
-
-.embed-container iframe {
-    width: 100%;
-    min-height: 400px;
-    border: none;
-    border-radius: var(--radius-sm);
-}
-
-.post-card .collapsed-content {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-bottom: 0;
-    color: var(--medium);
-}
-
-.post-card.expanded .post-details {
-    display: block;
-    margin-top: var(--space-xl);
-    font-size: var(--text-base);
-    line-height: 1.6;
-    color: var(--medium);
-}
-
-.post-card.expanded .post-details p {
-    margin-bottom: var(--space-lg);
-}
-
-.post-card.expanded h3 {
-    font-size: var(--text-2xl);
-    color: var(--dark);
-    margin-bottom: var(--space-lg);
-    padding-bottom: var(--space-md);
-    border-bottom: 1px solid var(--light-gray);
-}
-
-.post-card:not(.expanded) .delete-button,
-.post-card:not(.expanded) button[onclick^="editAnnouncement"] {
-    display: none !important;
-}
-
-.post-card.expanded .delete-button {
-    position: fixed;
-    top: calc(54px + var(--space-md)); /* Adjusted for topbar */
-    right: var(--space-xl);
-    z-index: 101;
-    padding: var(--space-sm) var(--space-md);
-}
-
-.post-card.expanded button[onclick^="editAnnouncement"] {
-    position: fixed;
-    top: calc(54px + var(--space-md)); /* Adjusted for topbar */
-    right: calc(var(--space-xl) + 100px);
-    z-index: 101;
-    padding: var(--space-sm) var(--space-md);
-}
-
-.file-attachment {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-xs);
-    background: var(--primary-light);
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-md);
-    margin-right: var(--space-sm);
-    margin-bottom: var(--space-sm);
-    color: var(--primary-dark);
-    text-decoration: none;
-    transition: all var(--transition-fast);
-    font-size: var(--text-sm);
-    border: 1px solid rgba(62, 168, 153, 0.1);
-}
-
-.file-attachment:hover {
-    background: #E1F0FF;
-    border-color: rgba(62, 168, 153, 0.3);
-    text-decoration: none;
-}
-
-.post-meta {
-    display: flex;
-    align-items: center;
-    margin-top: var(--space-xl);
-    padding-top: var(--space-md);
-    border-top: 1px solid var(--light-gray);
-    color: var(--medium);
-    font-size: var(--text-sm);
-}
-
-.post-actions {
-    position: absolute;
-    top: var(--space-lg);
-    right: var(--space-lg);
-    display: flex;
-    gap: var(--space-sm);
-}
-
-.post-actions button {
-    padding: var(--space-sm) var(--space-md);
-    font-size: var(--text-sm);
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
-}
-
-.post-actions .delete-button {
-    background: var(--danger);
-}
-
-.post-actions .delete-button:hover {
-    background: #E53E3E;
-}
-
-/* Reminders Styles */
-.reminders-container {
-    background: white;
-    border-radius: var(--radius-lg);
-    padding: var(--space-lg);
-    margin-bottom: var(--space-lg);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--light-gray);
-}
-
-.reminders-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-lg);
-}
-
-.reminders-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: var(--space-md);
-}
-
-.reminder-card {
-    background: white;
-    border-left: 4px solid var(--primary);
-    padding: var(--space-md);
-    border-radius: var(--radius-md);
-    position: relative;
-    transition: all var(--transition-normal) cubic-bezier(0.25, 0.8, 0.25, 1);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--light-gray);
-}
-
-.reminder-card:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
-}
-
-.reminder-card.trip {
-    border-left-color: var(--success);
-}
-
-.reminder-card.test {
-    border-left-color: var(--danger);
-}
-
-.reminder-card.event {
-    border-left-color: var(--warning);
-}
-
-.reminder-card.deadline {
-    border-left-color: var(--secondary);
-}
-
-.reminder-title {
-    font-weight: 600;
-    margin-bottom: var(--space-xs);
-    color: var(--dark);
-}
-
-.reminder-date {
-    font-size: var(--text-sm);
-    color: var(--medium);
-    margin-bottom: var(--space-sm);
-}
-
-.reminder-description {
-    font-size: var(--text-sm);
-    color: var(--medium);
-    line-height: 1.5;
-}
-
-.reminder-actions {
-    position: absolute;
-    top: var(--space-sm);
-    right: var(--space-sm);
-    display: none;
-    background: white;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
-    border: 1px solid var(--light-gray);
-}
-
-.reminder-card:hover .reminder-actions {
-    display: flex;
-}
-
-.reminder-action-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: var(--space-xs);
-    font-size: var(--text-sm);
-    color: var(--medium);
-    transition: all var(--transition-fast);
-}
-
-.reminder-action-btn:hover {
-    color: var(--primary);
-    background: var(--light);
-}
-
-/* Hide editing controls for non-admins */
-body.non-admin .add-tab-btn,
-body.non-admin .button[onclick="openAnnouncementEditor()"],
-body.non-admin .tab-actions,
-body.non-admin .post-card .delete-button,
-body.non-admin .post-card button[onclick^="editAnnouncement"],
-body.non-admin #add-reminder-btn {
-    display: none !important;
-}
-
-body.non-admin .sidebar-title {
-    padding-right: var(--space-sm);
-}
-
-/* Typography */
-.post-content {
-    font-size: var(--text-base);
-    line-height: 1.7;
-    color: var(--medium);
-}
-
-.post-content p {
-    margin-bottom: var(--space-lg);
-}
-
-/* Input Styles */
-.input-group {
-    position: relative;
-    margin: var(--space-lg) 0;
-}
-
-.input-group label {
-    position: absolute;
-    top: var(--space-sm);
-    left: var(--space-md);
-    color: var(--medium);
-    pointer-events: none;
-    transition: all var(--transition-fast);
-    font-size: var(--text-sm);
-    background: white;
-    padding: 0 var(--space-xs);
-    transform-origin: left center;
-}
-
-.input-group input:focus + label,
-.input-group input:not(:placeholder-shown) + label,
-.input-group textarea:focus + label,
-.input-group textarea:not(:placeholder-shown) + label {
-    top: -10px;
-    font-size: var(--text-xs);
-    color: var(--primary);
-    transform: scale(0.85);
-}
-
-/* Embed Input Styles */
-.embed-input-container {
-    margin: var(--space-md) 0;
-}
-
-.embed-input-group {
-    margin-bottom: var(--space-md);
-    position: relative;
-}
-
-.embed-code-input {
-    width: 100%;
-    min-height: 100px;
-    padding: var(--space-md);
-    margin-bottom: var(--space-sm);
-    border: 1px solid var(--light-gray);
-    border-radius: var(--radius-md);
-    resize: vertical;
-    font-family: monospace;
-    font-size: var(--text-sm);
-}
-
-.small-button {
-    padding: var(--space-xs) var(--space-sm);
-    font-size: var(--text-sm);
-    margin-left: var(--space-sm);
-}
-
-.remove-embed-btn {
-    position: absolute;
-    right: var(--space-sm);
-    top: var(--space-sm);
-    background: var(--danger);
-    color: white;
-    border: none;
-    width: 24px;
-    height: 24px;
-    border-radius: var(--radius-full);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: var(--text-sm);
-    transition: all var(--transition-fast);
-}
-
-.remove-embed-btn:hover {
-    transform: scale(1.1);
-}
-
-/* Upload area */
-.upload-area {
-    margin: var(--space-md) 0;
-}
-
-.upload-button {
-    display: inline-block;
-    padding: var(--space-sm) var(--space-md);
-    background: var(--light);
-    border: 1px dashed var(--light-gray);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    font-size: var(--text-sm);
-    color: var(--medium);
-}
-
-.upload-button:hover {
-    background: var(--primary-light);
-    border-color: var(--primary);
-    color: var(--primary-dark);
-}
-
-#uploaded-files {
-    margin-top: var(--space-sm);
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-sm);
-}
-
-#uploaded-files span {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-xs);
-    background: var(--light);
-    padding: var(--space-xs) var(--space-sm);
-    border-radius: var(--radius-md);
-    font-size: var(--text-sm);
-}
-
-.remove-file {
-    background: none;
-    border: none;
-    color: var(--danger);
-    cursor: pointer;
-    font-size: var(--text-sm);
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.post-card:nth-child(1) { animation-delay: 0.1s; }
-.post-card:nth-child(2) { animation-delay: 0.2s; }
-
-/* Scrollbar Styles */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: var(--light);
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--medium);
-    border-radius: var(--radius-full);
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--dark);
-}
-
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-    .sidebar {
-        width: 240px;
-    }
-    
-    .main-content {
-        max-width: calc(100% - 240px);
-        margin-left: 240px;
-    }
-    
-    .post-card.expanded {
-        left: 240px;
-    }
-    
-    .post-card.expanded .back-button {
-        left: calc(240px + var(--space-md));
-    }
-}
-
-@media (max-width: 768px) {
-    body {
-        flex-direction: column;
-    }
-    
-    .sidebar {
-        width: 100%;
-        position: relative;
-        min-height: auto;
-        max-height: 60vh;
-        transform: translateX(0);
-        top: 54px;
-    }
-    
-    .sidebar.collapsed {
-        transform: translateX(-100%);
-    }
-    
-    .main-content {
-        max-width: 100%;
-        margin-left: 0;
-        padding: var(--space-lg);
-        margin-top: 54px;
-    }
-    
-    .post-card.expanded {
-        left: 0;
-        padding: var(--space-lg);
-        top: 54px;
-    }
-    
-    .post-card.expanded .back-button,
-    .post-card.expanded .delete-button,
-    .post-card.expanded button[onclick^="editAnnouncement"] {
-        left: var(--space-md);
-        right: auto;
-    }
-    
-    .post-card.expanded .delete-button {
-        top: calc(54px + var(--space-md) + 60px);
-    }
-    
-    .post-card.expanded button[onclick^="editAnnouncement"] {
-        top: calc(54px + var(--space-md) + 60px);
-        left: calc(var(--space-md) + 100px);
-    }
-    
-    .reminders-list {
-        grid-template-columns: 1fr;
-    }
-    
-    .header-content {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--space-md);
-    }
-    
-    .search-container {
-        max-width: 100%;
-    }
-    
-    .modal-content {
-        padding: var(--space-lg);
-        max-width: 90%;
-    }
-}
-
-@media (max-width: 480px) {
-    .modal-content {
-        padding: var(--space-lg);
-    }
-    
-    .post-actions {
-        position: static;
-        margin-top: var(--space-md);
-        justify-content: flex-end;
-    }
-    
-    .post-card.expanded .post-actions {
-        position: absolute;
-    }
-    
-    .post-card.expanded .delete-button,
-    .post-card.expanded button[onclick^="editAnnouncement"] {
-        position: fixed;
-        top: auto;
-        bottom: var(--space-md);
-    }
-    
-    .post-card.expanded .delete-button {
-        right: var(--space-md);
-    }
-    
-    .post-card.expanded button[onclick^="editAnnouncement"] {
-        right: calc(var(--space-md) + 100px);
-    }
-    
-    .sidebar-header {
-        padding: var(--space-md);
-    }
-    
-    .main-content {
-        padding: var(--space-md);
-    }
-    
-    .reminders-container,
-    .post-card {
-        padding: var(--space-md);
-    }
-    
-    /* Adjust topbar for mobile */
-    .topbar {
-        padding: 0 var(--space-sm);
-    }
-    
-    .topbar-title {
-        display: none;
-    }
-    
-    .topbar-button span {
-        display: none;
-    }
-    
-    .topbar-button {
-        padding: 6px;
-        width: 36px;
-        height: 36px;
-        justify-content: center;
-        border-radius: 50%;
-    }
-}
-
-/* Mobile menu toggle */
-.menu-toggle {
-    display: none;
-    position: fixed;
-    top: var(--space-sm);
-    left: var(--space-sm);
-    background: var(--primary);
-    color: white;
-    border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    z-index: 101;
-    box-shadow: var(--shadow-sm);
-    justify-content: center;
-    align-items: center;
-}
-
-@media (max-width: 768px) {
-    .menu-toggle {
-        display: flex;
-        top: calc(54px + var(--space-sm)); /* Adjusted for topbar */
-    }
-    
-    .sidebar {
-        position: fixed;
-        left: 0;
-        top: 54px;
-        bottom: 0;
-        transform: translateX(-100%);
-        transition: transform var(--transition-normal);
-        z-index: 100;
-    }
-    
-    .sidebar.visible {
-        transform: translateX(0);
-    }
-}
-
-/* Loading state */
-.loading-spinner {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-radius: var(--radius-full);
-    border-top-color: white;
-    animation: spin 1s ease-in-out infinite;
-    margin-right: var(--space-sm);
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-          /* Add a loading indicator for file uploads */
-        .file-upload-progress {
-            display: none;
-            margin-top: 10px;
-            background: var(--light);
-            border-radius: var(--radius-md);
-            padding: var(--space-sm);
-        }
+<script>
+    // AUTH CHECK - MUST BE AT TOP OF EVERY PROTECTED PAGE
+    (function() {
+        const USER_INFO_KEY = "googleUserInfo";
+        const AUTH_TOKEN_KEY = "gdcAuthToken";
+        const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
+        const SESSION_TIMEOUT = 30 * 60 * 1000;
         
-        .progress-bar {
-            height: 8px;
-            background: var(--primary-light);
-            border-radius: var(--radius-full);
-            overflow: hidden;
-            margin-bottom: var(--space-xs);
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: var(--primary);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-        
-        .progress-text {
-            font-size: var(--text-xs);
-            color: var(--medium);
-            text-align: center;
-        }
-    </style>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
-       <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
-</head>
-<body class="non-admin">
-    <!-- Top Navigation Bar -->
-    <div class="topbar" id="topbar">
-        <div class="topbar-content">
-            <div class="topbar-left">
-                <img src="https://i.imgur.com/AYocV6k.png" alt="Glendowie College Logo" class="topbar-logo" />
-                <span class="topbar-title">Glendowie College</span>
-            </div>
-            <div class="topbar-links">
-                <a href="https://www.gdc.school.nz/" target="_blank" class="topbar-button">
-                    <i class="fas fa-school"></i> <span>College Site</span>
-                </a>
-                <a href="https://gdc.bridge.school.nz/" target="_blank" class="topbar-button">
-                    <i class="fas fa-book-open"></i> <span>School Point</span>
-                </a>
-                <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
-                    <i class="fas fa-envelope"></i> <span>Student Portal</span>
-                </a>
-                <div class="profile-dropdown">
-                    <img id="profile-pic" src="" alt="Profile Picture" class="topbar-button" style="width: 36px; height: 36px; padding: 0; border-radius: 50%;">
-                    <div class="profile-dropdown-content">
-                        <a href="#" class="dark-mode-toggle">
-                            <i class="fas fa-moon"></i> <span>Dark Mode</span>
-                        </a>
-                        <a href="#" class="logout-btn">
-                            <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Mobile Menu Toggle -->
-    <button class="menu-toggle" id="menu-toggle">☰</button>
-
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZV7lnbEjDM_XlekqYanoGOGv5aQo50TOSvA&s" alt="Logo" class="sidebar-logo">
-            <h2 class="sidebar-title">Navigation
-                <button class="add-tab-btn" title="Add New Tab" onclick="openTabEditor()">+</button>
-            </h2>
-        </div>
-        <ul class="sidebar-menu" id="sidebar-menu">
-            <!-- Tabs will be populated dynamically -->
-        </ul>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="reminders-container">
-            <div class="reminders-header">
-                <h2>Upcoming Reminders</h2>
-                <button class="button" onclick="openReminderEditor()" id="add-reminder-btn">+ Add Reminder</button>
-            </div>
-            <div class="reminders-list" id="reminders-list">
-                <!-- Reminders will be added here dynamically -->
-            </div>
-        </div>
-        
-        <header class="header-content">
-            <h1 id="current-tab-title">Classroom</h1>
-            <button class="button" onclick="openAnnouncementEditor()">Create Announcement</button>
-        </header>
-
-        <!-- Search Bar -->
-        <div class="search-container">
-            <input type="text" class="search-input" id="announcement-search" placeholder="Search announcements...">
-            <button class="search-clear" onclick="clearSearch()">×</button>
-        </div>
-
-        <!-- Posts Feed -->
-        <div class="classroom-info">
-            <div class="posts-feed" id="posts-feed"></div>
-        </div>
-    </main>
-
-    <!-- Reminder Editor Modal -->
-    <div id="reminder-editor" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeReminderEditor()">×</span>
-            <h2 id="reminder-editor-title">Add New Reminder</h2>
-            <div class="input-group">
-                <input type="text" id="reminder-title" placeholder=" ">
-                <label>Reminder Title</label>
-            </div>
-            <div class="input-group">
-                <textarea id="reminder-description" placeholder=" "></textarea>
-                <label>Description (optional)</label>
-            </div>
-            <div class="input-group">
-                <input type="date" id="reminder-date">
-                <label>Date</label>
-            </div>
-            <div class="input-group">
-                <select id="reminder-type">
-                    <option value="trip">Field Trip</option>
-                    <option value="test">Internal</option>
-                    <option value="event">External</option>
-                    <option value="deadline">Deadline</option>
-                </select>
-                <label>Type</label>
-            </div>
-            <div class="modal-buttons">
-                <button class="button secondary" onclick="closeReminderEditor()">Cancel</button>
-                <button class="button" id="save-reminder-button" onclick="saveReminder()">Save</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Announcement Editor Modal -->
-    <div id="announcement-editor" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeAnnouncementEditor()">×</span>
-            <h2>Create New Announcement</h2>
-            <div class="input-group">
-                <input type="text" id="announcement-title" placeholder=" ">
-                <label>Announcement Title</label>
-            </div>
-            <div class="input-group">
-                <textarea id="announcement-content" placeholder=" "></textarea>
-                <label>Write your announcement here...</label>
-            </div>
-            <div class="upload-area">
-                <label for="file-upload" class="upload-button">Upload Files</label>
-                <input type="file" id="file-upload" multiple style="display:none;">
-                <div id="uploaded-files"></div>
-            </div>
-            <div class="embed-input-container" id="embed-inputs">
-                <div class="embed-input-group">
-                    <textarea class="embed-code-input" placeholder="Paste embed code for Google Slides, Docs, etc. here (optional)"></textarea>
-                    <button class="button small-button" onclick="addEmbedInput()">+ Add Another</button>
-                </div>
-            </div>
-            <div class="modal-buttons">
-                <button class="button secondary" onclick="closeAnnouncementEditor()">Cancel</button>
-                <button class="button" id="save-announcement-button">Post Announcement</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tab Editor Modal -->
-    <div id="tab-editor-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeTabEditor()">×</span>
-            <h2 id="tab-editor-title">Add New Tab</h2>
-            <div class="input-group">
-                <input type="text" id="tab-name-input" placeholder=" ">
-                <label>Tab Name</label>
-            </div>
-            <div class="modal-buttons">
-                <button class="button secondary" onclick="closeTabEditor()">Cancel</button>
-                <button class="button" id="save-tab-button" onclick="saveTab()">Save</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-     // AUTH CHECK - MUST BE AT TOP OF EVERY PROTECTED PAGE
-(function() {
-    const USER_INFO_KEY = "googleUserInfo";
-    const AUTH_TOKEN_KEY = "gdcAuthToken";
-    const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
-    const SESSION_TIMEOUT = 30 * 60 * 1000;
-    
-    function checkAuth() {
-        try {
-            const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-            const cookieToken = document.cookie.split('; ')
-                .find(row => row.startsWith('gdcAuth='))
-                ?.split('=')[1];
-            
-            if (!authToken || !cookieToken || authToken !== cookieToken) {
+        function checkAuth() {
+            try {
+                const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+                const cookieToken = document.cookie.split('; ')
+                    .find(row => row.startsWith('gdcAuth='))
+                    ?.split('=')[1];
+                
+                if (!authToken || !cookieToken || authToken !== cookieToken) {
+                    clearAuthData();
+                    return false;
+                }
+                
+                const tokenTimestamp = parseInt(authToken.split('-')[0]);
+                if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) {
+                    clearAuthData();
+                    return false;
+                }
+                
+                return true;
+            } catch (error) {
                 clearAuthData();
                 return false;
             }
-            
-            const tokenTimestamp = parseInt(authToken.split('-')[0]);
-            if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) {
-                clearAuthData();
-                return false;
-            }
-            
-            return true;
-        } catch (error) {
-            clearAuthData();
-            return false;
         }
-    }
-    
-    function clearAuthData() {
-        localStorage.removeItem(USER_INFO_KEY);
-        localStorage.removeItem(AUTH_TOKEN_KEY);
-        document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    }
-    
-    if (!checkAuth()) {
-        document.body.innerHTML = `
-            <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Inter',sans-serif;z-index:9999;">
-                <div style="text-align:center;padding:30px;max-width:400px;">
-                    <h2 style="color:#2b2d42;margin-bottom:20px;">Session Expired</h2>
-                    <p style="color:#5f6a7d;margin-bottom:25px;">
-                        Please sign in again. Redirecting to login page...
-                    </p>
-                    <div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;">
-                        <div style="width:100%;height:100%;background:#3EA899;border-radius:2px;animation:progress 2s ease-in-out infinite;"></div>
+        
+        function clearAuthData() {
+            localStorage.removeItem(USER_INFO_KEY);
+            localStorage.removeItem(AUTH_TOKEN_KEY);
+            document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        }
+        
+        if (!checkAuth()) {
+            document.body.innerHTML = `
+                <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Inter',sans-serif;z-index:9999;">
+                    <div style="text-align:center;padding:30px;max-width:400px;">
+                        <h2 style="color:#2b2d42;margin-bottom:20px;">Session Expired</h2>
+                        <p style="color:#5f6a7d;margin-bottom:25px;">
+                            Please sign in again. Redirecting to login page...
+                        </p>
+                        <div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;">
+                            <div style="width:100%;height:100%;background:#3EA899;border-radius:2px;animation:progress 2s ease-in-out infinite;"></div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <style>@keyframes progress {0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}</style>
-        `;
-        setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
-        throw new Error("Authentication required"); // Stop other scripts from executing
-    }
-    
-    // Setup logout buttons if they exist
-    document.addEventListener('DOMContentLoaded', function() {
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('.logout-btn')) {
-                e.preventDefault();
-                clearAuthData();
-                window.location.href = LOGIN_PAGE;
+                <style>@keyframes progress {0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}</style>
+            `;
+            setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
+            throw new Error("Authentication required"); // Stop other scripts from executing
+        }
+        
+        // Setup logout buttons if they exist
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.logout-btn')) {
+                    e.preventDefault();
+                    clearAuthData();
+                    window.location.href = LOGIN_PAGE;
+                }
+            });
+        });
+    })();
+
+    // REST OF YOUR PAGE'S JAVASCRIPT GOES BELOW THIS LINE
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyCSTEJ3LevxY2_rlGROzajNnNBrVG3oRR4",
+        authDomain: "gdchub-3b40a.firebaseapp.com",
+        databaseURL: "https://gdchub-3b40a-default-rtdb.firebaseio.com",
+        projectId: "gdchub-3b40a",
+        storageBucket: "gdchub-3b40a.appspot.com",
+        messagingSenderId: "399894468887",
+        appId: "1:399894468887:web:e3b8669a038fec20d9bf52",
+        measurementId: "G-E25TMDFLFX"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+    const storage = firebase.storage(); // Add Firebase Storage
+
+    // Database references
+    const tabsRef = database.ref('tabs');
+    const announcementsRef = database.ref('announcements');
+    const remindersRef = database.ref('reminders');
+
+    // DOM Elements
+    const sidebarMenu = document.getElementById('sidebar-menu');
+    const tabEditorModal = document.getElementById('tab-editor-modal');
+    const tabNameInput = document.getElementById('tab-name-input');
+    const saveTabButton = document.getElementById('save-tab-button');
+    const profilePicElement = document.getElementById('profile-pic');
+    const currentTabTitleElement = document.getElementById('current-tab-title');
+    const announcementEditor = document.getElementById('announcement-editor');
+    const postsFeed = document.getElementById('posts-feed');
+    const announcementTitleInput = document.getElementById('announcement-title');
+    const announcementContentInput = document.getElementById('announcement-content');
+    const fileUploadInput = document.getElementById('file-upload');
+    const uploadedFilesDiv = document.getElementById('uploaded-files');
+    const embedInputsContainer = document.getElementById('embed-inputs');
+    const saveAnnouncementButton = document.getElementById('save-announcement-button');
+    const remindersList = document.getElementById('reminders-list');
+    const announcementSearchInput = document.getElementById('announcement-search');
+    const searchClearButton = document.querySelector('.search-clear');
+    const menuToggle = document.getElementById('menu-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const darkModeToggle = document.querySelector('.dark-mode-toggle');
+    const profileDropdown = document.querySelector('.profile-dropdown');
+    const profileDropdownContent = document.querySelector('.profile-dropdown-content');
+
+    // Variables
+    let tabs = [];
+    let currentTabId = null;
+    let currentTabBeingEdited = null;
+    let uploadedFiles = [];
+    let expandedPost = null;
+    let reminders = [];
+    let currentReminderBeingEdited = null;
+    let draggedItem = null;
+    let isAdmin = false;
+    let currentAnnouncementBeingEdited = null;
+    let currentTabAnnouncements = []; // Store announcements for current tab
+    let dropdownHoverTimeout;
+    let filesToUpload = []; // Store actual File objects for upload
+
+    // Admin configuration
+    const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        checkUserProfile();
+        setupFirebaseListeners();
+        setupDragAndDrop();
+        setupFileUpload();
+        setupModalCloseHandlers();
+        setupSearch();
+        setupMobileMenu();
+        setupDarkMode();
+        setupProfileDropdown();
+    });
+
+    // Improved profile dropdown functionality
+    function setupProfileDropdown() {
+        // Show dropdown on hover
+        profileDropdown.addEventListener('mouseenter', () => {
+            clearTimeout(dropdownHoverTimeout);
+            profileDropdownContent.style.display = 'block';
+            setTimeout(() => {
+                profileDropdownContent.style.opacity = '1';
+                profileDropdownContent.style.transform = 'translateY(0)';
+                profileDropdownContent.style.pointerEvents = 'auto';
+            }, 10);
+        });
+
+        // Hide dropdown with delay when leaving
+        profileDropdown.addEventListener('mouseleave', () => {
+            dropdownHoverTimeout = setTimeout(() => {
+                profileDropdownContent.style.opacity = '0';
+                profileDropdownContent.style.transform = 'translateY(-10px)';
+                profileDropdownContent.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    profileDropdownContent.style.display = 'none';
+                }, 200);
+            }, 300); // 300ms delay before closing
+        });
+
+        // Keep dropdown open when hovering over it
+        profileDropdownContent.addEventListener('mouseenter', () => {
+            clearTimeout(dropdownHoverTimeout);
+        });
+
+        profileDropdownContent.addEventListener('mouseleave', () => {
+            dropdownHoverTimeout = setTimeout(() => {
+                profileDropdownContent.style.opacity = '0';
+                profileDropdownContent.style.transform = 'translateY(-10px)';
+                profileDropdownContent.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    profileDropdownContent.style.display = 'none';
+                }, 200);
+            }, 300);
+        });
+
+        // Dark mode toggle in dropdown
+        darkModeToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.body.classList.toggle('dark-mode');
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode);
+            
+            // Update icon
+            const icon = darkModeToggle.querySelector('i');
+            if (isDarkMode) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                darkModeToggle.querySelector('span').textContent = 'Light Mode';
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                darkModeToggle.querySelector('span').textContent = 'Dark Mode';
             }
         });
-    });
-})();
+    }
 
-// Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyCSTEJ3LevxY2_rlGROzajNnNBrVG3oRR4",
-    authDomain: "gdchub-3b40a.firebaseapp.com",
-    databaseURL: "https://gdchub-3b40a-default-rtdb.firebaseio.com",
-    projectId: "gdchub-3b40a",
-    storageBucket: "gdchub-3b40a.appspot.com",
-    messagingSenderId: "399894468887",
-    appId: "1:399894468887:web:e3b8669a038fec20d9bf52",
-    measurementId: "G-E25TMDFLFX"
-};
+    // Mobile menu toggle
+    function setupMobileMenu() {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('visible');
+        });
+    }
 
-// Initialize Firebase with Storage
-const app = firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-const auth = firebase.auth();
-const storage = firebase.storage(); // Add storage reference
-
-// Database references
-const tabsRef = database.ref('tabs');
-const announcementsRef = database.ref('announcements');
-const remindersRef = database.ref('reminders');
-
-// DOM Elements
-const sidebarMenu = document.getElementById('sidebar-menu');
-const tabEditorModal = document.getElementById('tab-editor-modal');
-const tabNameInput = document.getElementById('tab-name-input');
-const saveTabButton = document.getElementById('save-tab-button');
-const profilePicElement = document.getElementById('profile-pic');
-const currentTabTitleElement = document.getElementById('current-tab-title');
-const announcementEditor = document.getElementById('announcement-editor');
-const postsFeed = document.getElementById('posts-feed');
-const announcementTitleInput = document.getElementById('announcement-title');
-const announcementContentInput = document.getElementById('announcement-content');
-const fileUploadInput = document.getElementById('file-upload');
-const uploadedFilesDiv = document.getElementById('uploaded-files');
-const embedInputsContainer = document.getElementById('embed-inputs');
-const saveAnnouncementButton = document.getElementById('save-announcement-button');
-const remindersList = document.getElementById('reminders-list');
-const announcementSearchInput = document.getElementById('announcement-search');
-const searchClearButton = document.querySelector('.search-clear');
-const menuToggle = document.getElementById('menu-toggle');
-const sidebar = document.getElementById('sidebar');
-const darkModeToggle = document.querySelector('.dark-mode-toggle');
-const profileDropdown = document.querySelector('.profile-dropdown');
-const profileDropdownContent = document.querySelector('.profile-dropdown-content');
-
-// Variables
-let tabs = [];
-let currentTabId = null;
-let currentTabBeingEdited = null;
-let uploadedFiles = [];
-let expandedPost = null;
-let reminders = [];
-let currentReminderBeingEdited = null;
-let draggedItem = null;
-let isAdmin = false;
-let currentAnnouncementBeingEdited = null;
-let currentTabAnnouncements = []; // Store announcements for current tab
-let dropdownHoverTimeout;
-
-// Admin configuration
-const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
-
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    checkUserProfile();
-    setupFirebaseListeners();
-    setupDragAndDrop();
-    setupFileUpload();
-    setupModalCloseHandlers();
-    setupSearch();
-    setupMobileMenu();
-    setupDarkMode();
-    setupProfileDropdown();
-});
-
-// Improved profile dropdown functionality
-function setupProfileDropdown() {
-    // Show dropdown on hover
-    profileDropdown.addEventListener('mouseenter', () => {
-        clearTimeout(dropdownHoverTimeout);
-        profileDropdownContent.style.display = 'block';
-        setTimeout(() => {
-            profileDropdownContent.style.opacity = '1';
-            profileDropdownContent.style.transform = 'translateY(0)';
-            profileDropdownContent.style.pointerEvents = 'auto';
-        }, 10);
-    });
-
-    // Hide dropdown with delay when leaving
-    profileDropdown.addEventListener('mouseleave', () => {
-        dropdownHoverTimeout = setTimeout(() => {
-            profileDropdownContent.style.opacity = '0';
-            profileDropdownContent.style.transform = 'translateY(-10px)';
-            profileDropdownContent.style.pointerEvents = 'none';
-            setTimeout(() => {
-                profileDropdownContent.style.display = 'none';
-            }, 200);
-        }, 300); // 300ms delay before closing
-    });
-
-    // Keep dropdown open when hovering over it
-    profileDropdownContent.addEventListener('mouseenter', () => {
-        clearTimeout(dropdownHoverTimeout);
-    });
-
-    profileDropdownContent.addEventListener('mouseleave', () => {
-        dropdownHoverTimeout = setTimeout(() => {
-            profileDropdownContent.style.opacity = '0';
-            profileDropdownContent.style.transform = 'translateY(-10px)';
-            profileDropdownContent.style.pointerEvents = 'none';
-            setTimeout(() => {
-                profileDropdownContent.style.display = 'none';
-            }, 200);
-        }, 300);
-    });
-
-    // Dark mode toggle in dropdown
-    darkModeToggle.addEventListener('click', (e) => {
-        e.preventDefault();
-        document.body.classList.toggle('dark-mode');
-        const isDarkMode = document.body.classList.contains('dark-mode');
-        localStorage.setItem('darkMode', isDarkMode);
-        
-        // Update icon
-        const icon = darkModeToggle.querySelector('i');
-        if (isDarkMode) {
+    // Dark mode setup
+    function setupDarkMode() {
+        // Check for saved dark mode preference
+        const darkModeEnabled = localStorage.getItem('darkMode') === 'true';
+        if (darkModeEnabled) {
+            document.body.classList.add('dark-mode');
+            const icon = darkModeToggle.querySelector('i');
             icon.classList.remove('fa-moon');
             icon.classList.add('fa-sun');
             darkModeToggle.querySelector('span').textContent = 'Light Mode';
-        } else {
-            icon.classList.remove('fa-sun');
-            icon.classList.add('fa-moon');
-            darkModeToggle.querySelector('span').textContent = 'Dark Mode';
         }
-    });
-}
-
-// Mobile menu toggle
-function setupMobileMenu() {
-    menuToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('visible');
-    });
-}
-
-// Dark mode setup
-function setupDarkMode() {
-    // Check for saved dark mode preference
-    const darkModeEnabled = localStorage.getItem('darkMode') === 'true';
-    if (darkModeEnabled) {
-        document.body.classList.add('dark-mode');
-        const icon = darkModeToggle.querySelector('i');
-        icon.classList.remove('fa-moon');
-        icon.classList.add('fa-sun');
-        darkModeToggle.querySelector('span').textContent = 'Light Mode';
     }
-}
 
-// Check and load user profile picture and permissions from localStorage
-function checkUserProfile() {
-    // Try to get user info from localStorage (set by previous page)
-    const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
-    
-    if (userInfo && userInfo.picture) {
-        // User is signed in (from previous page)
-        profilePicElement.src = userInfo.picture;
+    // Check and load user profile picture and permissions from localStorage
+    function checkUserProfile() {
+        // Try to get user info from localStorage (set by previous page)
+        const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
         
-        // Check if user is admin
-        if (userInfo.email && ADMIN_EMAILS.includes(userInfo.email.toLowerCase())) {
-            isAdmin = true;
-            document.body.classList.remove('non-admin');
+        if (userInfo && userInfo.picture) {
+            // User is signed in (from previous page)
+            profilePicElement.src = userInfo.picture;
+            
+            // Check if user is admin
+            if (userInfo.email && ADMIN_EMAILS.includes(userInfo.email.toLowerCase())) {
+                isAdmin = true;
+                document.body.classList.remove('non-admin');
+            } else {
+                isAdmin = false;
+                document.body.classList.add('non-admin');
+            }
         } else {
+            // No user is signed in
             isAdmin = false;
             document.body.classList.add('non-admin');
         }
-    } else {
-        // No user is signed in
-        isAdmin = false;
-        document.body.classList.add('non-admin');
     }
-}
 
-// Setup search functionality
-function setupSearch() {
-    announcementSearchInput.addEventListener('input', filterAnnouncements);
-    searchClearButton.addEventListener('click', clearSearch);
-}
+    // Setup search functionality
+    function setupSearch() {
+        announcementSearchInput.addEventListener('input', filterAnnouncements);
+        searchClearButton.addEventListener('click', clearSearch);
+    }
 
-function filterAnnouncements() {
-    const searchTerm = announcementSearchInput.value.toLowerCase().trim();
-    
-    if (searchTerm === '') {
-        // If search is empty, show all announcements for current tab
+    function filterAnnouncements() {
+        const searchTerm = announcementSearchInput.value.toLowerCase().trim();
+        
+        if (searchTerm === '') {
+            // If search is empty, show all announcements for current tab
+            renderAnnouncements(currentTabAnnouncements);
+            searchClearButton.style.display = 'none';
+            return;
+        }
+        
+        searchClearButton.style.display = 'block';
+        
+        const filtered = currentTabAnnouncements.filter(announcement => {
+            const titleMatch = announcement.title.toLowerCase().includes(searchTerm);
+            const contentMatch = announcement.content.toLowerCase().includes(searchTerm);
+            
+            // Check if any file names match
+            let fileMatch = false;
+            if (announcement.files && announcement.files.length > 0) {
+                fileMatch = announcement.files.some(file => 
+                    file.name.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            return titleMatch || contentMatch || fileMatch;
+        });
+        
+        renderAnnouncements(filtered);
+    }
+
+    function clearSearch() {
+        announcementSearchInput.value = '';
         renderAnnouncements(currentTabAnnouncements);
         searchClearButton.style.display = 'none';
-        return;
     }
-    
-    searchClearButton.style.display = 'block';
-    
-    const filtered = currentTabAnnouncements.filter(announcement => {
-        const titleMatch = announcement.title.toLowerCase().includes(searchTerm);
-        const contentMatch = announcement.content.toLowerCase().includes(searchTerm);
-        
-        // Check if any file names match
-        let fileMatch = false;
-        if (announcement.files && announcement.files.length > 0) {
-            fileMatch = announcement.files.some(file => 
-                file.name.toLowerCase().includes(searchTerm)
-            );
-        }
-        
-        return titleMatch || contentMatch || fileMatch;
-    });
-    
-    renderAnnouncements(filtered);
-}
 
-function clearSearch() {
-    announcementSearchInput.value = '';
-    renderAnnouncements(currentTabAnnouncements);
-    searchClearButton.style.display = 'none';
-}
-
-// Firebase Listeners
-function setupFirebaseListeners() {
-    // Listen for tabs changes
-    tabsRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        tabs = data ? Object.values(data) : [];
-        renderTabs();
-        
-        // Set first tab as active by default if none is selected
-        if (tabs.length > 0 && !currentTabId) {
-            setActiveTab(tabs[0].id);
-        }
-    });
-
-    // Listen for announcements changes
-    announcementsRef.on('value', (snapshot) => {
-        const allAnnouncementsData = snapshot.val() || {};
-        
-        if (currentTabId && allAnnouncementsData[currentTabId]) {
-            const tabAnnouncements = allAnnouncementsData[currentTabId];
-            currentTabAnnouncements = tabAnnouncements ? Object.values(tabAnnouncements) : [];
+    // Firebase Listeners
+    function setupFirebaseListeners() {
+        // Listen for tabs changes
+        tabsRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            tabs = data ? Object.values(data) : [];
+            renderTabs();
             
-            // Apply search filter if there's a search term
-            if (announcementSearchInput.value.trim() !== '') {
-                filterAnnouncements();
-            } else {
-                renderAnnouncements(currentTabAnnouncements);
+            // Set first tab as active by default if none is selected
+            if (tabs.length > 0 && !currentTabId) {
+                setActiveTab(tabs[0].id);
             }
-        } else {
-            currentTabAnnouncements = [];
-            postsFeed.innerHTML = '';
-        }
-    });
-
-    // Listen for reminders changes
-    remindersRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        reminders = data ? Object.values(data) : [];
-        renderReminders();
-    });
-}
-
-// Save tabs to Firebase
-function saveTabs() {
-    const tabsObject = {};
-    tabs.forEach(tab => {
-        tabsObject[tab.id] = tab;
-    });
-    
-    tabsRef.set(tabsObject)
-        .catch((error) => {
-            console.error("Error saving tabs:", error);
-            alert("Error saving tabs. Please try again.");
         });
-}
 
-// Render announcements for the current tab
-function renderAnnouncements(announcements) {
-    postsFeed.innerHTML = '';
-    
-    if (!announcements || announcements.length === 0) {
-        postsFeed.innerHTML = '<p>No announcements found</p>';
-        return;
+        // Listen for announcements changes
+        announcementsRef.on('value', (snapshot) => {
+            const allAnnouncementsData = snapshot.val() || {};
+            
+            if (currentTabId && allAnnouncementsData[currentTabId]) {
+                const tabAnnouncements = allAnnouncementsData[currentTabId];
+                currentTabAnnouncements = tabAnnouncements ? Object.values(tabAnnouncements) : [];
+                
+                // Apply search filter if there's a search term
+                if (announcementSearchInput.value.trim() !== '') {
+                    filterAnnouncements();
+                } else {
+                    renderAnnouncements(currentTabAnnouncements);
+                }
+            } else {
+                currentTabAnnouncements = [];
+                postsFeed.innerHTML = '';
+            }
+        });
+
+        // Listen for reminders changes
+        remindersRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            reminders = data ? Object.values(data) : [];
+            renderReminders();
+        });
     }
-    
-    announcements.sort((a, b) => parseInt(b.id) - parseInt(a.id));
-    
-    announcements.forEach(announcement => {
-        postsFeed.appendChild(createPostElement(announcement));
-    });
-}
 
-// Create post element for announcements
-function createPostElement(announcement) {
-    const post = document.createElement('div');
-    post.classList.add('post-card');
-    post.setAttribute('data-id', announcement.id);
-    
-    const postDate = new Date(parseInt(announcement.id)).toLocaleDateString('en-US', {
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-    
-    // Update file attachments to use actual URLs
-    const filesHtml = announcement.files && announcement.files.length > 0 ? 
-        announcement.files.map(file => 
-            `<a href="${file.url}" class="file-attachment" target="_blank" download="${file.name}">
-                <i class="file-icon">📄</i> ${file.name}
-            </a>`
-        ).join('') : '';
-    
-    // Handle multiple embed codes
-    const embedHtml = announcement.embedCodes && announcement.embedCodes.length > 0 ? 
-        announcement.embedCodes.map(embedCode => 
-            `<div class="embed-container">${embedCode}</div>`
-        ).join('') : '';
-    
-    const actionsHtml = isAdmin ? 
-        `<div class="post-actions">
-            <button class="button" onclick="event.stopPropagation(); editAnnouncement('${announcement.id}')">
-                Edit
-            </button>
-            <button class="button delete-button" onclick="event.stopPropagation(); deleteAnnouncement('${announcement.id}')">
-                Delete
-            </button>
-        </div>` : '';
-    
-    post.innerHTML = `
-        ${actionsHtml}
-        <h3>${announcement.title}</h3>
-        <div class="collapsed-content">${announcement.content}</div>
-        <div class="post-details">
-            ${embedHtml}
-            ${filesHtml ? `<div class="file-attachments">${filesHtml}</div>` : ''}
-            <div class="post-meta">
-                Posted on ${postDate}
-            </div>
-        </div>`;
-    
-    post.addEventListener('click', () => expandPost(post));
-    return post;
-}
+    // Save tabs to Firebase
+    function saveTabs() {
+        const tabsObject = {};
+        tabs.forEach(tab => {
+            tabsObject[tab.id] = tab;
+        });
+        
+        tabsRef.set(tabsObject)
+            .catch((error) => {
+                console.error("Error saving tabs:", error);
+                alert("Error saving tabs. Please try again.");
+            });
+    }
 
-// Render tabs in sidebar
-function renderTabs() {
-    sidebarMenu.innerHTML = '';
-    
-    const sortedTabs = [...tabs].sort((a, b) => a.order - b.order);
-    
-    sortedTabs.forEach(tab => {
-        const tabItem = document.createElement('li');
-        tabItem.className = 'sidebar-item';
-        tabItem.dataset.tabId = tab.id;
-        tabItem.draggable = isAdmin;
+    // Render announcements for the current tab
+    function renderAnnouncements(announcements) {
+        postsFeed.innerHTML = '';
+        
+        if (!announcements || announcements.length === 0) {
+            postsFeed.innerHTML = '<p>No announcements found</p>';
+            return;
+        }
+        
+        announcements.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+        
+        announcements.forEach(announcement => {
+            postsFeed.appendChild(createPostElement(announcement));
+        });
+    }
+
+    // Create post element for announcements
+    function createPostElement(announcement) {
+        const post = document.createElement('div');
+        post.classList.add('post-card');
+        post.setAttribute('data-id', announcement.id);
+        
+        const postDate = new Date(parseInt(announcement.id)).toLocaleDateString('en-US', {
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        // Generate file links with actual download URLs
+        const filesHtml = announcement.files && announcement.files.length > 0 ? 
+            announcement.files.map(file => 
+                `<a href="${file.downloadURL}" class="file-attachment" target="_blank">
+                    <i class="file-icon">📄</i> ${file.name}
+                </a>`
+            ).join('') : '';
+        
+        // Handle multiple embed codes
+        const embedHtml = announcement.embedCodes && announcement.embedCodes.length > 0 ? 
+            announcement.embedCodes.map(embedCode => 
+                `<div class="embed-container">${embedCode}</div>`
+            ).join('') : '';
         
         const actionsHtml = isAdmin ? 
-            `<div class="tab-actions">
-                <button class="tab-action-btn" title="Edit" onclick="editTab('${tab.id}')">
-                    ✏️
+            `<div class="post-actions">
+                <button class="button" onclick="event.stopPropagation(); editAnnouncement('${announcement.id}')">
+                    Edit
                 </button>
-                <button class="tab-action-btn" title="Delete" onclick="deleteTab('${tab.id}')">
-                    🗑️
+                <button class="button delete-button" onclick="event.stopPropagation(); deleteAnnouncement('${announcement.id}')">
+                    Delete
                 </button>
             </div>` : '';
         
-        tabItem.innerHTML = `
-            <a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}">
-                ${isAdmin ? '<span class="move-handle">☰</span> ' : ''}${tab.name}
-                ${actionsHtml}
-            </a>
-        `;
+        // Fixed the duplicate content issue by removing the extra content div
+        post.innerHTML = `
+            ${actionsHtml}
+            <h3>${announcement.title}</h3>
+            <div class="collapsed-content">${announcement.content}</div>
+            <div class="post-details">
+                ${embedHtml}
+                ${filesHtml ? `<div class="file-attachments">${filesHtml}</div>` : ''}
+                <div class="post-meta">
+                    Posted on ${postDate}
+                </div>
+            </div>`;
         
-        tabItem.addEventListener('click', (e) => {
-            if (!e.target.closest('.tab-action-btn')) {
-                e.preventDefault();
-                setActiveTab(tab.id);
-                if (window.innerWidth <= 768) {
-                    sidebar.classList.remove('visible');
+        post.addEventListener('click', () => expandPost(post));
+        return post;
+    }
+
+    // Render tabs in sidebar
+    function renderTabs() {
+        sidebarMenu.innerHTML = '';
+        
+        const sortedTabs = [...tabs].sort((a, b) => a.order - b.order);
+        
+        sortedTabs.forEach(tab => {
+            const tabItem = document.createElement('li');
+            tabItem.className = 'sidebar-item';
+            tabItem.dataset.tabId = tab.id;
+            tabItem.draggable = isAdmin;
+            
+            const actionsHtml = isAdmin ? 
+                `<div class="tab-actions">
+                    <button class="tab-action-btn" title="Edit" onclick="editTab('${tab.id}')">
+                        ✏️
+                    </button>
+                    <button class="tab-action-btn" title="Delete" onclick="deleteTab('${tab.id}')">
+                        🗑️
+                    </button>
+                </div>` : '';
+            
+            tabItem.innerHTML = `
+                <a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}">
+                    ${isAdmin ? '<span class="move-handle">☰</span> ' : ''}${tab.name}
+                    ${actionsHtml}
+                </a>
+            `;
+            
+            tabItem.addEventListener('click', (e) => {
+                if (!e.target.closest('.tab-action-btn')) {
+                    e.preventDefault();
+                    setActiveTab(tab.id);
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('visible');
+                    }
+                }
+            });
+            
+            if (isAdmin) {
+                tabItem.addEventListener('dragstart', handleDragStart);
+                tabItem.addEventListener('dragover', handleDragOver);
+                tabItem.addEventListener('dragleave', handleDragLeave);
+                tabItem.addEventListener('drop', handleDrop);
+                tabItem.addEventListener('dragend', handleDragEnd);
+            }
+            
+            sidebarMenu.appendChild(tabItem);
+        });
+    }
+
+    // Set active tab and load its announcements
+    function setActiveTab(tabId) {
+        currentTabId = tabId;
+        const tab = tabs.find(t => t.id === tabId);
+        
+        if (tab) {
+            currentTabTitleElement.textContent = tab.name;
+            
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+            
+            announcementsRef.child(tabId).once('value')
+                .then((snapshot) => {
+                    const data = snapshot.val();
+                    currentTabAnnouncements = data ? Object.values(data) : [];
+                    
+                    // Clear search when switching tabs
+                    announcementSearchInput.value = '';
+                    searchClearButton.style.display = 'none';
+                    
+                    renderAnnouncements(currentTabAnnouncements);
+                });
+        }
+    }
+
+    // Drag and drop functions for tabs
+    function setupDragAndDrop() {
+        // Handled by individual event listeners on each tab item
+    }
+
+    function handleDragStart(e) {
+        if (!isAdmin) return;
+        draggedItem = this;
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+    }
+
+    function handleDragOver(e) {
+        if (!isAdmin) return;
+        e.preventDefault();
+        this.classList.add('drop-area');
+        e.dataTransfer.dropEffect = 'move';
+    }
+
+    function handleDragLeave() {
+        if (!isAdmin) return;
+        this.classList.remove('drop-area');
+    }
+
+    function handleDrop(e) {
+        if (!isAdmin) return;
+        e.preventDefault();
+        this.classList.remove('drop-area');
+        
+        if (draggedItem !== this) {
+            const draggedId = draggedItem.dataset.tabId;
+            const targetId = this.dataset.tabId;
+            
+            const draggedIndex = tabs.findIndex(tab => tab.id === draggedId);
+            const targetIndex = tabs.findIndex(tab => tab.id === targetId);
+            
+            if (draggedIndex !== -1 && targetIndex !== -1) {
+                const [removed] = tabs.splice(draggedIndex, 1);
+                tabs.splice(targetIndex, 0, removed);
+                
+                tabs.forEach((tab, index) => {
+                    tab.order = index + 1;
+                });
+                
+                saveTabs();
+            }
+        }
+    }
+
+    function handleDragEnd() {
+        if (!isAdmin) return;
+        this.classList.remove('dragging');
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.classList.remove('drop-area');
+        });
+    }
+
+    // Tab management functions
+    function openTabEditor(tabId = null) {
+        if (!isAdmin) return;
+        tabEditorModal.style.display = 'flex';
+        tabNameInput.value = '';
+        
+        if (tabId) {
+            currentTabBeingEdited = tabId;
+            const tab = tabs.find(t => t.id === tabId);
+            if (tab) {
+                tabNameInput.value = tab.name;
+                document.getElementById('tab-editor-title').textContent = 'Edit Tab';
+                saveTabButton.textContent = 'Save Changes';
+            }
+        } else {
+            currentTabBeingEdited = null;
+            document.getElementById('tab-editor-title').textContent = 'Add New Tab';
+            saveTabButton.textContent = 'Add Tab';
+        }
+    }
+
+    function closeTabEditor() {
+        tabEditorModal.style.display = 'none';
+        currentTabBeingEdited = null;
+    }
+
+    function saveTab() {
+        if (!isAdmin) return;
+        const tabName = tabNameInput.value.trim();
+        if (!tabName) {
+            alert('Please enter a tab name');
+            return;
+        }
+        
+        if (currentTabBeingEdited) {
+            const tabIndex = tabs.findIndex(t => t.id === currentTabBeingEdited);
+            if (tabIndex !== -1) {
+                tabs[tabIndex].name = tabName;
+                saveTabs();
+                
+                if (currentTabBeingEdited === currentTabId) {
+                    currentTabTitleElement.textContent = tabName;
                 }
             }
-        });
-        
-        if (isAdmin) {
-            tabItem.addEventListener('dragstart', handleDragStart);
-            tabItem.addEventListener('dragover', handleDragOver);
-            tabItem.addEventListener('dragleave', handleDragLeave);
-            tabItem.addEventListener('drop', handleDrop);
-            tabItem.addEventListener('dragend', handleDragEnd);
+        } else {
+            const newTab = {
+                id: 'tab-' + Date.now(),
+                name: tabName,
+                order: tabs.length + 1
+            };
+            
+            tabs.push(newTab);
+            saveTabs();
+            setActiveTab(newTab.id);
         }
         
-        sidebarMenu.appendChild(tabItem);
-    });
-}
-
-// Set active tab and load its announcements
-function setActiveTab(tabId) {
-    currentTabId = tabId;
-    const tab = tabs.find(t => t.id === tabId);
-    
-    if (tab) {
-        currentTabTitleElement.textContent = tab.name;
-        
-        document.querySelectorAll('.sidebar-link').forEach(link => {
-            link.classList.remove('active');
-        });
-        
-        const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
-        if (activeLink) {
-            activeLink.classList.add('active');
-        }
-        
-        announcementsRef.child(tabId).once('value')
-            .then((snapshot) => {
-                const data = snapshot.val();
-                currentTabAnnouncements = data ? Object.values(data) : [];
-                
-                // Clear search when switching tabs
-                announcementSearchInput.value = '';
-                searchClearButton.style.display = 'none';
-                
-                renderAnnouncements(currentTabAnnouncements);
-            });
+        closeTabEditor();
     }
-}
 
-// Drag and drop functions for tabs
-function setupDragAndDrop() {
-    // Handled by individual event listeners on each tab item
-}
+    function editTab(tabId) {
+        if (!isAdmin) return;
+        event.stopPropagation();
+        openTabEditor(tabId);
+    }
 
-function handleDragStart(e) {
-    if (!isAdmin) return;
-    draggedItem = this;
-    this.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', this.innerHTML);
-}
-
-function handleDragOver(e) {
-    if (!isAdmin) return;
-    e.preventDefault();
-    this.classList.add('drop-area');
-    e.dataTransfer.dropEffect = 'move';
-}
-
-function handleDragLeave() {
-    if (!isAdmin) return;
-    this.classList.remove('drop-area');
-}
-
-function handleDrop(e) {
-    if (!isAdmin) return;
-    e.preventDefault();
-    this.classList.remove('drop-area');
-    
-    if (draggedItem !== this) {
-        const draggedId = draggedItem.dataset.tabId;
-        const targetId = this.dataset.tabId;
-        
-        const draggedIndex = tabs.findIndex(tab => tab.id === draggedId);
-        const targetIndex = tabs.findIndex(tab => tab.id === targetId);
-        
-        if (draggedIndex !== -1 && targetIndex !== -1) {
-            const [removed] = tabs.splice(draggedIndex, 1);
-            tabs.splice(targetIndex, 0, removed);
+    function deleteTab(tabId) {
+        if (!isAdmin) return;
+        event.stopPropagation();
+        if (confirm('Are you sure you want to delete this tab and all its announcements?')) {
+            announcementsRef.child(tabId).remove();
+            
+            tabs = tabs.filter(t => t.id !== tabId);
             
             tabs.forEach((tab, index) => {
                 tab.order = index + 1;
             });
             
             saveTabs();
-        }
-    }
-}
-
-function handleDragEnd() {
-    if (!isAdmin) return;
-    this.classList.remove('dragging');
-    document.querySelectorAll('.sidebar-item').forEach(item => {
-        item.classList.remove('drop-area');
-    });
-}
-
-// Tab management functions
-function openTabEditor(tabId = null) {
-    if (!isAdmin) return;
-    tabEditorModal.style.display = 'flex';
-    tabNameInput.value = '';
-    
-    if (tabId) {
-        currentTabBeingEdited = tabId;
-        const tab = tabs.find(t => t.id === tabId);
-        if (tab) {
-            tabNameInput.value = tab.name;
-            document.getElementById('tab-editor-title').textContent = 'Edit Tab';
-            saveTabButton.textContent = 'Save Changes';
-        }
-    } else {
-        currentTabBeingEdited = null;
-        document.getElementById('tab-editor-title').textContent = 'Add New Tab';
-        saveTabButton.textContent = 'Add Tab';
-    }
-}
-
-function closeTabEditor() {
-    tabEditorModal.style.display = 'none';
-    currentTabBeingEdited = null;
-}
-
-function saveTab() {
-    if (!isAdmin) return;
-    const tabName = tabNameInput.value.trim();
-    if (!tabName) {
-        alert('Please enter a tab name');
-        return;
-    }
-    
-    if (currentTabBeingEdited) {
-        const tabIndex = tabs.findIndex(t => t.id === currentTabBeingEdited);
-        if (tabIndex !== -1) {
-            tabs[tabIndex].name = tabName;
-            saveTabs();
             
-            if (currentTabBeingEdited === currentTabId) {
-                currentTabTitleElement.textContent = tabName;
-            }
-        }
-    } else {
-        const newTab = {
-            id: 'tab-' + Date.now(),
-            name: tabName,
-            order: tabs.length + 1
-        };
-        
-        tabs.push(newTab);
-        saveTabs();
-        setActiveTab(newTab.id);
-    }
-    
-    closeTabEditor();
-}
-
-function editTab(tabId) {
-    if (!isAdmin) return;
-    event.stopPropagation();
-    openTabEditor(tabId);
-}
-
-function deleteTab(tabId) {
-    if (!isAdmin) return;
-    event.stopPropagation();
-    if (confirm('Are you sure you want to delete this tab and all its announcements?')) {
-        announcementsRef.child(tabId).remove();
-        
-        tabs = tabs.filter(t => t.id !== tabId);
-        
-        tabs.forEach((tab, index) => {
-            tab.order = index + 1;
-        });
-        
-        saveTabs();
-        
-        if (tabId === currentTabId) {
-            if (tabs.length > 0) {
-                setActiveTab(tabs[0].id);
-            } else {
-                currentTabId = null;
-                currentTabTitleElement.textContent = 'Classroom';
-                postsFeed.innerHTML = '';
-            }
-        }
-    }
-}
-
-// Announcement management functions
-function openAnnouncementEditor(announcementId = null) {
-    if (!isAdmin || !currentTabId) return;
-    announcementEditor.style.display = 'flex';
-    announcementTitleInput.value = '';
-    announcementContentInput.value = '';
-    uploadedFiles = [];
-    uploadedFilesDiv.innerHTML = '';
-    
-    // Reset embed inputs
-    embedInputsContainer.innerHTML = `
-        <div class="embed-input-group">
-            <textarea class="embed-code-input" placeholder="Paste embed code for Google Slides, Docs, etc. here (optional)"></textarea>
-            <button class="button small-button" onclick="addEmbedInput()">+ Add Another</button>
-        </div>
-    `;
-    
-    saveAnnouncementButton.onclick = postAnnouncement;
-    saveAnnouncementButton.textContent = 'Post Announcement';
-    currentAnnouncementBeingEdited = null;
-    
-    if (announcementId) {
-        currentAnnouncementBeingEdited = announcementId;
-        announcementsRef.child(currentTabId).child(announcementId).once('value')
-            .then((snapshot) => {
-                const announcementToEdit = snapshot.val();
-                if (announcementToEdit) {
-                    announcementTitleInput.value = announcementToEdit.title;
-                    announcementContentInput.value = announcementToEdit.content;
-                    uploadedFiles = announcementToEdit.files || [];
-                    uploadedFilesDiv.innerHTML = uploadedFiles.map(file => 
-                        `<span>${file.name} <button class="remove-file" onclick="removeTempFile(this.parentNode, '${file.name}')">×</button></span>`
-                    ).join('');
-                    
-                    // Clear existing embed inputs
-                    embedInputsContainer.innerHTML = '';
-                    
-                    // Add embed inputs for each existing embed code
-                    if (announcementToEdit.embedCodes && announcementToEdit.embedCodes.length > 0) {
-                        announcementToEdit.embedCodes.forEach((embedCode, index) => {
-                            addEmbedInput(embedCode, index === announcementToEdit.embedCodes.length - 1);
-                        });
-                    } else {
-                        // Add one empty embed input
-                        addEmbedInput('', true);
-                    }
-                    
-                    saveAnnouncementButton.onclick = () => saveEditedAnnouncement(announcementId);
-                    saveAnnouncementButton.textContent = 'Save Changes';
+            if (tabId === currentTabId) {
+                if (tabs.length > 0) {
+                    setActiveTab(tabs[0].id);
+                } else {
+                    currentTabId = null;
+                    currentTabTitleElement.textContent = 'Classroom';
+                    postsFeed.innerHTML = '';
                 }
-            });
+            }
+        }
     }
-}
 
-function closeAnnouncementEditor() {
-    announcementEditor.style.display = 'none';
-    currentAnnouncementBeingEdited = null;
-}
-
-function addEmbedInput(embedCode = '', isLast = false) {
-    const embedGroup = document.createElement('div');
-    embedGroup.className = 'embed-input-group';
-    
-    embedGroup.innerHTML = `
-        <textarea class="embed-code-input" placeholder="Paste embed code for Google Slides, Docs, etc. here (optional)">${embedCode}</textarea>
-        <button class="remove-embed-btn" onclick="removeEmbedInput(this.parentNode)">×</button>
-        ${isLast ? '<button class="button small-button" onclick="addEmbedInput()">+ Add Another</button>' : ''}
-    `;
-    
-    embedInputsContainer.appendChild(embedGroup);
-}
-
-function removeEmbedInput(embedGroup) {
-    embedGroup.remove();
-}
-
-function postAnnouncement() {
-    if (!isAdmin || !currentTabId) return;
-    const title = announcementTitleInput.value.trim();
-    const content = announcementContentInput.value.trim();
-    
-    // Get all embed codes
-    const embedInputs = document.querySelectorAll('.embed-code-input');
-    const embedCodes = Array.from(embedInputs)
-        .map(input => input.value.trim())
-        .filter(code => code.length > 0);
-    
-    if (title && (content || embedCodes.length > 0 || uploadedFiles.length > 0)) {
-        const newAnnouncement = {
-            id: Date.now().toString(),
-            title,
-            content,
-            files: [...uploadedFiles],
-            embedCodes: embedCodes
-        };
+    // Announcement management functions
+    function openAnnouncementEditor(announcementId = null) {
+        if (!isAdmin || !currentTabId) return;
+        announcementEditor.style.display = 'flex';
+        announcementTitleInput.value = '';
+        announcementContentInput.value = '';
+        uploadedFiles = [];
+        uploadedFilesDiv.innerHTML = '';
+        filesToUpload = []; // Reset files to upload
         
-        announcementsRef.child(currentTabId).child(newAnnouncement.id).set(newAnnouncement)
-            .then(() => {
-                closeAnnouncementEditor();
-            })
-            .catch((error) => {
-                console.error("Error posting announcement:", error);
-                alert("Error posting announcement. Please try again.");
-            });
-    } else {
-        alert('Please enter a title and either content, embed code(s), or files for your announcement.');
-    }
-}
-
-function expandPost(postElement) {
-    if (postElement.classList.contains('expanded')) return;
-    
-    if (expandedPost) {
-        expandedPost.classList.remove('expanded');
-        expandedPost.querySelector('.back-button')?.remove();
-    }
-    
-    postElement.classList.add('expanded');
-    expandedPost = postElement;
-    
-    const backButton = document.createElement('button');
-    backButton.className = 'back-button';
-    backButton.textContent = '← Back';
-    backButton.addEventListener('click', (e) => {
-        e.stopPropagation();
-        collapsePost(postElement);
-    });
-    
-    postElement.appendChild(backButton);
-}
-
-function collapsePost(postElement) {
-    postElement.classList.remove('expanded');
-    postElement.querySelector('.back-button')?.remove();
-    expandedPost = null;
-}
-
-function editAnnouncement(announcementId) {
-    if (!isAdmin || !currentTabId) return;
-    event.stopPropagation();
-    openAnnouncementEditor(announcementId);
-}
-
-function saveEditedAnnouncement(announcementId) {
-    if (!isAdmin || !currentTabId) return;
-    const title = announcementTitleInput.value.trim();
-    const content = announcementContentInput.value.trim();
-    
-    // Get all embed codes
-    const embedInputs = document.querySelectorAll('.embed-code-input');
-    const embedCodes = Array.from(embedInputs)
-        .map(input => input.value.trim())
-        .filter(code => code.length > 0);
-    
-    if (title && (content || embedCodes.length > 0 || uploadedFiles.length > 0)) {
-        const updatedAnnouncement = {
-            id: announcementId,
-            title,
-            content,
-            files: [...uploadedFiles],
-            embedCodes: embedCodes
-        };
+        // Reset embed inputs
+        embedInputsContainer.innerHTML = `
+            <div class="embed-input-group">
+                <textarea class="embed-code-input" placeholder="Paste embed code for Google Slides, Docs, etc. here (optional)"></textarea>
+                <button class="button small-button" onclick="addEmbedInput()">+ Add Another</button>
+            </div>
+        `;
         
-        announcementsRef.child(currentTabId).child(announcementId).set(updatedAnnouncement)
-            .then(() => {
-                closeAnnouncementEditor();
-            })
-            .catch((error) => {
-                console.error("Error updating announcement:", error);
-                alert("Error updating announcement. Please try again.");
-            });
-    } else {
-        alert('Please enter a title and either content, embed code(s), or files for your announcement.');
-    }
-}
-
-function deleteAnnouncement(announcementId) {
-    if (!isAdmin || !currentTabId) return;
-    if (confirm('Are you sure you want to delete this announcement?')) {
-        announcementsRef.child(currentTabId).child(announcementId).remove()
-            .catch((error) => {
-                console.error("Error deleting announcement:", error);
-                alert("Error deleting announcement. Please try again.");
-            });
-    }
-}
-
-// File upload handling - UPDATED TO ACTUALLY UPLOAD FILES
-function setupFileUpload() {
-    fileUploadInput.addEventListener('change', function() {
-        if (!isAdmin) return;
-        const files = Array.from(this.files);
+        saveAnnouncementButton.onclick = postAnnouncement;
+        saveAnnouncementButton.textContent = 'Post Announcement';
+        currentAnnouncementBeingEdited = null;
         
-        files.forEach(file => {
-            // Show upload progress
-            const progressContainer = document.createElement('div');
-            progressContainer.className = 'file-upload-progress';
-            progressContainer.innerHTML = `
-                <div>Uploading ${file.name}...</div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progress-${file.name}"></div>
-                </div>
-                <div class="progress-text" id="progress-text-${file.name}">0%</div>
-            `;
-            uploadedFilesDiv.appendChild(progressContainer);
-            progressContainer.style.display = 'block';
-            
-            // Create a reference to the file location in Firebase Storage
-            const storageRef = storage.ref();
-            const fileRef = storageRef.child(`announcements/${currentTabId}/${Date.now()}_${file.name}`);
-            
-            // Upload file to Firebase Storage
-            const uploadTask = fileRef.put(file);
-            
-            // Monitor upload progress
-            uploadTask.on('state_changed', 
-                (snapshot) => {
-                    // Progress monitoring
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    document.getElementById(`progress-${file.name}`).style.width = progress + '%';
-                    document.getElementById(`progress-text-${file.name}`).textContent = Math.round(progress) + '%';
-                },
-                (error) => {
-                    // Handle unsuccessful uploads
-                    console.error("Upload failed:", error);
-                    progressContainer.innerHTML = `<div style="color: var(--danger);">Failed to upload ${file.name}</div>`;
-                },
-                () => {
-                    // Handle successful uploads
-                    uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-                        // Add file to uploadedFiles array with both name and URL
-                        uploadedFiles.push({ 
-                            name: file.name, 
-                            url: downloadURL 
-                        });
+        if (announcementId) {
+            currentAnnouncementBeingEdited = announcementId;
+            announcementsRef.child(currentTabId).child(announcementId).once('value')
+                .then((snapshot) => {
+                    const announcementToEdit = snapshot.val();
+                    if (announcementToEdit) {
+                        announcementTitleInput.value = announcementToEdit.title;
+                        announcementContentInput.value = announcementToEdit.content;
+                        uploadedFiles = announcementToEdit.files || [];
+                        uploadedFilesDiv.innerHTML = uploadedFiles.map(file => 
+                            `<span>${file.name} <button class="remove-file" onclick="removeTempFile(this.parentNode, '${file.name}')">×</button></span>`
+                        ).join('');
                         
-                        // Update the UI to show the uploaded file with a proper download link
-                        progressContainer.outerHTML = `
-                            <span>${file.name} 
-                                <button class="remove-file" onclick="removeTempFile(this.parentNode, '${file.name}')">×</button>
-                            </span>
-                        `;
-                    });
-                }
-            );
-        });
-        
-        // Reset the file input
-        this.value = '';
-    });
-}
-
-function removeTempFile(element, fileName) {
-    if (!isAdmin) return;
-    
-    // Find the file in uploadedFiles array
-    const fileIndex = uploadedFiles.findIndex(f => f.name === fileName);
-    if (fileIndex !== -1) {
-        // If the file was already uploaded to storage, you might want to delete it
-        // Note: This is optional - you might prefer to keep files in storage even if removed from UI
-        // const fileUrl = uploadedFiles[fileIndex].url;
-        // deleteFileFromStorage(fileUrl); // You would need to implement this function
-        
-        // Remove from array
-        uploadedFiles.splice(fileIndex, 1);
+                        // Clear existing embed inputs
+                        embedInputsContainer.innerHTML = '';
+                        
+                        // Add embed inputs for each existing embed code
+                        if (announcementToEdit.embedCodes && announcementToEdit.embedCodes.length > 0) {
+                            announcementToEdit.embedCodes.forEach((embedCode, index) => {
+                                addEmbedInput(embedCode, index === announcementToEdit.embedCodes.length - 1);
+                            });
+                        } else {
+                            // Add one empty embed input
+                            addEmbedInput('', true);
+                        }
+                        
+                        saveAnnouncementButton.onclick = () => saveEditedAnnouncement(announcementId);
+                        saveAnnouncementButton.textContent = 'Save Changes';
+                    }
+                });
+        }
     }
-    
-    // Remove from UI
-    element.remove();
-}
 
-// Optional: Function to delete file from storage
-function deleteFileFromStorage(fileUrl) {
-    // Create a reference to the file to delete
-    const fileRef = storage.refFromURL(fileUrl);
-    
-    // Delete the file
-    fileRef.delete().then(() => {
-        console.log('File deleted successfully');
-    }).catch((error) => {
-        console.error('Error deleting file:', error);
-    });
-}
+    function closeAnnouncementEditor() {
+        announcementEditor.style.display = 'none';
+        currentAnnouncementBeingEdited = null;
+        // Clear file upload input
+        fileUploadInput.value = '';
+    }
 
-// Reminder management functions
-function renderReminders() {
-    remindersList.innerHTML = '';
-    
-    const sortedReminders = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date));
-    
-    sortedReminders.forEach(reminder => {
-        // Skip invalid reminders (fix for the undefined issue)
-        if (!reminder || !reminder.id || !reminder.title || !reminder.date) {
+    function addEmbedInput(embedCode = '', isLast = false) {
+        const embedGroup = document.createElement('div');
+        embedGroup.className = 'embed-input-group';
+        
+        embedGroup.innerHTML = `
+            <textarea class="embed-code-input" placeholder="Paste embed code for Google Slides, Docs, etc. here (optional)">${embedCode}</textarea>
+            <button class="remove-embed-btn" onclick="removeEmbedInput(this.parentNode)">×</button>
+            ${isLast ? '<button class="button small-button" onclick="addEmbedInput()">+ Add Another</button>' : ''}
+        `;
+        
+        embedInputsContainer.appendChild(embedGroup);
+    }
+
+    function removeEmbedInput(embedGroup) {
+        embedGroup.remove();
+    }
+
+    // Upload files to Firebase Storage and create announcement
+    async function postAnnouncement() {
+        if (!isAdmin || !currentTabId) return;
+        const title = announcementTitleInput.value.trim();
+        const content = announcementContentInput.value.trim();
+        
+        // Get all embed codes
+        const embedInputs = document.querySelectorAll('.embed-code-input');
+        const embedCodes = Array.from(embedInputs)
+            .map(input => input.value.trim())
+            .filter(code => code.length > 0);
+        
+        if (!title || (!content && embedCodes.length === 0 && filesToUpload.length === 0)) {
+            alert('Please enter a title and either content, embed code(s), or files for your announcement.');
             return;
         }
         
-        const reminderElement = document.createElement('div');
-        reminderElement.className = `reminder-card ${reminder.type || 'trip'}`;
-        reminderElement.dataset.id = reminder.id;
+        // Show loading state
+        const originalButtonText = saveAnnouncementButton.textContent;
+        saveAnnouncementButton.innerHTML = '<span class="loading-spinner"></span> Uploading...';
+        saveAnnouncementButton.disabled = true;
         
-        const actionsHtml = isAdmin ? 
-            `<div class="reminder-actions">
-                <button class="reminder-action-btn" onclick="event.stopPropagation(); editReminder('${reminder.id}')">✏️</button>
-                <button class="reminder-action-btn" onclick="event.stopPropagation(); deleteReminder('${reminder.id}')">🗑️</button>
-            </div>` : '';
-        
-        reminderElement.innerHTML = `
-            ${actionsHtml}
-            <div class="reminder-title">${reminder.title}</div>
-            <div class="reminder-date">${formatDate(reminder.date)}</div>
-            ${reminder.description ? `<div class="reminder-description">${reminder.description}</div>` : ''}
-        `;
-        
-        remindersList.appendChild(reminderElement);
-    });
-}
-
-function formatDate(dateString) {
-    try {
-        const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-        return new Date(dateString).toLocaleDateString(undefined, options);
-    } catch (e) {
-        console.error("Invalid date format:", dateString);
-        return "Invalid Date";
-    }
-}
-
-function openReminderEditor(reminderId = null) {
-    if (!isAdmin) return;
-    document.getElementById('reminder-editor').style.display = 'flex';
-    document.getElementById('reminder-title').value = '';
-    document.getElementById('reminder-description').value = '';
-    document.getElementById('reminder-date').value = '';
-    document.getElementById('reminder-type').value = 'trip';
-    
-    if (reminderId) {
-        currentReminderBeingEdited = reminderId;
-        const reminder = reminders.find(r => r.id === reminderId);
-        if (reminder) {
-            document.getElementById('reminder-editor-title').textContent = 'Edit Reminder';
-            document.getElementById('reminder-title').value = reminder.title;
-            document.getElementById('reminder-description').value = reminder.description || '';
-            document.getElementById('reminder-date').value = reminder.date;
-            document.getElementById('reminder-type').value = reminder.type || 'trip';
-            document.getElementById('save-reminder-button').textContent = 'Save Changes';
+        try {
+            // Upload files to Firebase Storage if there are any
+            let uploadedFileData = [];
+            
+            if (filesToUpload.length > 0) {
+                for (const file of filesToUpload) {
+                    try {
+                        // Create a storage reference
+                        const storageRef = storage.ref();
+                        const fileRef = storageRef.child(`announcements/${currentTabId}/${Date.now()}_${file.name}`);
+                        
+                        // Upload the file
+                        const snapshot = await fileRef.put(file);
+                        
+                        // Get the download URL
+                        const downloadURL = await snapshot.ref.getDownloadURL();
+                        
+                        // Add to our file data array
+                        uploadedFileData.push({
+                            name: file.name,
+                            downloadURL: downloadURL,
+                            storagePath: snapshot.ref.fullPath
+                        });
+                    } catch (error) {
+                        console.error("Error uploading file:", error);
+                        // Continue with other files even if one fails
+                    }
+                }
+            }
+            
+            // Create the announcement with file data
+            const newAnnouncement = {
+                id: Date.now().toString(),
+                title,
+                content,
+                files: uploadedFileData,
+                embedCodes: embedCodes
+            };
+            
+            // Save to database
+            await announcementsRef.child(currentTabId).child(newAnnouncement.id).set(newAnnouncement);
+            
+            closeAnnouncementEditor();
+        } catch (error) {
+            console.error("Error posting announcement:", error);
+            alert("Error posting announcement. Please try again.");
+        } finally {
+            // Restore button state
+            saveAnnouncementButton.textContent = originalButtonText;
+            saveAnnouncementButton.disabled = false;
         }
-    } else {
+    }
+
+    function expandPost(postElement) {
+        if (postElement.classList.contains('expanded')) return;
+        
+        if (expandedPost) {
+            expandedPost.classList.remove('expanded');
+            expandedPost.querySelector('.back-button')?.remove();
+        }
+        
+        postElement.classList.add('expanded');
+        expandedPost = postElement;
+        
+        const backButton = document.createElement('button');
+        backButton.className = 'back-button';
+        backButton.textContent = '← Back';
+        backButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            collapsePost(postElement);
+        });
+        
+        postElement.appendChild(backButton);
+    }
+
+    function collapsePost(postElement) {
+        postElement.classList.remove('expanded');
+        postElement.querySelector('.back-button')?.remove();
+        expandedPost = null;
+    }
+
+    function editAnnouncement(announcementId) {
+        if (!isAdmin || !currentTabId) return;
+        event.stopPropagation();
+        openAnnouncementEditor(announcementId);
+    }
+
+    // Update existing announcement (without re-uploading files)
+    async function saveEditedAnnouncement(announcementId) {
+        if (!isAdmin || !currentTabId) return;
+        const title = announcementTitleInput.value.trim();
+        const content = announcementContentInput.value.trim();
+        
+        // Get all embed codes
+        const embedInputs = document.querySelectorAll('.embed-code-input');
+        const embedCodes = Array.from(embedInputs)
+            .map(input => input.value.trim())
+            .filter(code => code.length > 0);
+        
+        if (!title || (!content && embedCodes.length === 0 && uploadedFiles.length === 0)) {
+            alert('Please enter a title and either content, embed code(s), or files for your announcement.');
+            return;
+        }
+        
+        // Show loading state
+        const originalButtonText = saveAnnouncementButton.textContent;
+        saveAnnouncementButton.innerHTML = '<span class="loading-spinner"></span> Saving...';
+        saveAnnouncementButton.disabled = true;
+        
+        try {
+            // Upload any new files to Firebase Storage
+            let newUploadedFileData = [];
+            
+            if (filesToUpload.length > 0) {
+                for (const file of filesToUpload) {
+                    try {
+                        // Create a storage reference
+                        const storageRef = storage.ref();
+                        const fileRef = storageRef.child(`announcements/${currentTabId}/${Date.now()}_${file.name}`);
+                        
+                        // Upload the file
+                        const snapshot = await fileRef.put(file);
+                        
+                        // Get the download URL
+                        const downloadURL = await snapshot.ref.getDownloadURL();
+                        
+                        // Add to our file data array
+                        newUploadedFileData.push({
+                            name: file.name,
+                            downloadURL: downloadURL,
+                            storagePath: snapshot.ref.fullPath
+                        });
+                    } catch (error) {
+                        console.error("Error uploading file:", error);
+                        // Continue with other files even if one fails
+                    }
+                }
+            }
+            
+            // Combine existing files with newly uploaded files
+            const allFiles = [...uploadedFiles, ...newUploadedFileData];
+            
+            // Update the announcement
+            const updatedAnnouncement = {
+                id: announcementId,
+                title,
+                content,
+                files: allFiles,
+                embedCodes: embedCodes
+            };
+            
+            // Save to database
+            await announcementsRef.child(currentTabId).child(announcementId).set(updatedAnnouncement);
+            
+            closeAnnouncementEditor();
+        } catch (error) {
+            console.error("Error updating announcement:", error);
+            alert("Error updating announcement. Please try again.");
+        } finally {
+            // Restore button state
+            saveAnnouncementButton.textContent = originalButtonText;
+            saveAnnouncementButton.disabled = false;
+        }
+    }
+
+    // Delete announcement and its associated files
+    async function deleteAnnouncement(announcementId) {
+        if (!isAdmin || !currentTabId) return;
+        if (!confirm('Are you sure you want to delete this announcement?')) return;
+        
+        try {
+            // Get the announcement to access file information
+            const snapshot = await announcementsRef.child(currentTabId).child(announcementId).once('value');
+            const announcement = snapshot.val();
+            
+            // Delete associated files from storage if they exist
+            if (announcement.files && announcement.files.length > 0) {
+                for (const file of announcement.files) {
+                    try {
+                        const fileRef = storage.refFromURL(file.downloadURL);
+                        await fileRef.delete();
+                    } catch (error) {
+                        console.error("Error deleting file from storage:", error);
+                        // Continue even if file deletion fails
+                    }
+                }
+            }
+            
+            // Delete the announcement from the database
+            await announcementsRef.child(currentTabId).child(announcementId).remove();
+        } catch (error) {
+            console.error("Error deleting announcement:", error);
+            alert("Error deleting announcement. Please try again.");
+        }
+    }
+
+    // File upload handling
+    function setupFileUpload() {
+        fileUploadInput.addEventListener('change', function() {
+            if (!isAdmin) return;
+            const files = Array.from(this.files);
+            
+            files.forEach(file => {
+                // Store the actual File object for later upload
+                filesToUpload.push(file);
+                
+                // Display the file name to the user
+                const fileItem = document.createElement('span');
+                fileItem.innerHTML = `${file.name} <button class="remove-file" onclick="removeFileFromUploadList(this.parentNode, '${file.name}')">×</button>`;
+                uploadedFilesDiv.appendChild(fileItem);
+            });
+            
+            // Reset the file input to allow selecting the same file again
+            this.value = '';
+        });
+    }
+
+    // Remove file from upload list
+    function removeFileFromUploadList(element, fileName) {
+        if (!isAdmin) return;
+        // Remove from filesToUpload array
+        filesToUpload = filesToUpload.filter(f => f.name !== fileName);
+        // Remove from displayed list
+        element.remove();
+    }
+
+    // Remove file from existing announcement (kept for editing existing announcements)
+    function removeTempFile(element, fileName) {
+        if (!isAdmin) return;
+        uploadedFiles = uploadedFiles.filter(f => f.name !== fileName);
+        element.remove();
+    }
+
+    // Reminder management functions
+    function renderReminders() {
+        remindersList.innerHTML = '';
+        
+        const sortedReminders = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        sortedReminders.forEach(reminder => {
+            // Skip invalid reminders (fix for the undefined issue)
+            if (!reminder || !reminder.id || !reminder.title || !reminder.date) {
+                return;
+            }
+            
+            const reminderElement = document.createElement('div');
+            reminderElement.className = `reminder-card ${reminder.type || 'trip'}`;
+            reminderElement.dataset.id = reminder.id;
+            
+            const actionsHtml = isAdmin ? 
+                `<div class="reminder-actions">
+                    <button class="reminder-action-btn" onclick="event.stopPropagation(); editReminder('${reminder.id}')">✏️</button>
+                    <button class="reminder-action-btn" onclick="event.stopPropagation(); deleteReminder('${reminder.id}')">🗑️</button>
+                </div>` : '';
+            
+            reminderElement.innerHTML = `
+                ${actionsHtml}
+                <div class="reminder-title">${reminder.title}</div>
+                <div class="reminder-date">${formatDate(reminder.date)}</div>
+                ${reminder.description ? `<div class="reminder-description">${reminder.description}</div>` : ''}
+            `;
+            
+            remindersList.appendChild(reminderElement);
+        });
+    }
+
+    function formatDate(dateString) {
+        try {
+            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        } catch (e) {
+            console.error("Invalid date format:", dateString);
+            return "Invalid Date";
+        }
+    }
+
+    function openReminderEditor(reminderId = null) {
+        if (!isAdmin) return;
+        document.getElementById('reminder-editor').style.display = 'flex';
+        document.getElementById('reminder-title').value = '';
+        document.getElementById('reminder-description').value = '';
+        document.getElementById('reminder-date').value = '';
+        document.getElementById('reminder-type').value = 'trip';
+        
+        if (reminderId) {
+            currentReminderBeingEdited = reminderId;
+            const reminder = reminders.find(r => r.id === reminderId);
+            if (reminder) {
+                document.getElementById('reminder-editor-title').textContent = 'Edit Reminder';
+                document.getElementById('reminder-title').value = reminder.title;
+                document.getElementById('reminder-description').value = reminder.description || '';
+                document.getElementById('reminder-date').value = reminder.date;
+                document.getElementById('reminder-type').value = reminder.type || 'trip';
+                document.getElementById('save-reminder-button').textContent = 'Save Changes';
+            }
+        } else {
+            currentReminderBeingEdited = null;
+            document.getElementById('reminder-editor-title').textContent = 'Add New Reminder';
+            document.getElementById('save-reminder-button').textContent = 'Add Reminder';
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('reminder-date').value = tomorrow.toISOString().split('T')[0];
+        }
+    }
+
+    function closeReminderEditor() {
+        document.getElementById('reminder-editor').style.display = 'none';
         currentReminderBeingEdited = null;
-        document.getElementById('reminder-editor-title').textContent = 'Add New Reminder';
-        document.getElementById('save-reminder-button').textContent = 'Add Reminder';
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        document.getElementById('reminder-date').value = tomorrow.toISOString().split('T')[0];
     }
-}
 
-function closeReminderEditor() {
-    document.getElementById('reminder-editor').style.display = 'none';
-    currentReminderBeingEdited = null;
-}
-
-function saveReminder() {
-    if (!isAdmin) return;
-    const title = document.getElementById('reminder-title').value.trim();
-    const description = document.getElementById('reminder-description').value.trim();
-    const date = document.getElementById('reminder-date').value;
-    const type = document.getElementById('reminder-type').value;
-    
-    if (!title || !date) {
-        alert('Please enter a title and date for the reminder');
-        return;
-    }
-    
-    if (currentReminderBeingEdited) {
-        const index = reminders.findIndex(r => r.id === currentReminderBeingEdited);
-        if (index !== -1) {
-            reminders[index] = {
-                id: currentReminderBeingEdited,
+    function saveReminder() {
+        if (!isAdmin) return;
+        const title = document.getElementById('reminder-title').value.trim();
+        const description = document.getElementById('reminder-description').value.trim();
+        const date = document.getElementById('reminder-date').value;
+        const type = document.getElementById('reminder-type').value;
+        
+        if (!title || !date) {
+            alert('Please enter a title and date for the reminder');
+            return;
+        }
+        
+        if (currentReminderBeingEdited) {
+            const index = reminders.findIndex(r => r.id === currentReminderBeingEdited);
+            if (index !== -1) {
+                reminders[index] = {
+                    id: currentReminderBeingEdited,
+                    title,
+                    description,
+                    date,
+                    type
+                };
+            }
+        } else {
+            reminders.push({
+                id: Date.now().toString(),
                 title,
                 description,
                 date,
                 type
-            };
+            });
         }
-    } else {
-        reminders.push({
-            id: Date.now().toString(),
-            title,
-            description,
-            date,
-            type
-        });
-    }
-    
-    saveReminders();
-    closeReminderEditor();
-}
-
-function editReminder(reminderId) {
-    if (!isAdmin) return;
-    event.stopPropagation();
-    openReminderEditor(reminderId);
-}
-
-function deleteReminder(reminderId) {
-    if (!isAdmin) return;
-    if (confirm('Are you sure you want to delete this reminder?')) {
-        // Find the index of the reminder to delete
-        const index = reminders.findIndex(r => r.id === reminderId);
         
-        if (index !== -1) {
-            // Remove the reminder from the array
-            reminders.splice(index, 1);
+        saveReminders();
+        closeReminderEditor();
+    }
+
+    function editReminder(reminderId) {
+        if (!isAdmin) return;
+        event.stopPropagation();
+        openReminderEditor(reminderId);
+    }
+
+    function deleteReminder(reminderId) {
+        if (!isAdmin) return;
+        if (confirm('Are you sure you want to delete this reminder?')) {
+            // Find the index of the reminder to delete
+            const index = reminders.findIndex(r => r.id === reminderId);
             
-            // Save the updated reminders to Firebase
-            saveReminders();
+            if (index !== -1) {
+                // Remove the reminder from the array
+                reminders.splice(index, 1);
+                
+                // Save the updated reminders to Firebase
+                saveReminders();
+            }
         }
     }
-}
 
-function saveReminders() {
-    const remindersObject = {};
-    reminders.forEach(reminder => {
-        if (reminder && reminder.id) { // Only include valid reminders
-            remindersObject[reminder.id] = reminder;
-        }
-    });
-    
-    remindersRef.set(remindersObject)
-        .catch((error) => {
-            console.error("Error saving reminders:", error);
-            alert("Error saving reminders. Please try again.");
+    function saveReminders() {
+        const remindersObject = {};
+        reminders.forEach(reminder => {
+            if (reminder && reminder.id) { // Only include valid reminders
+                remindersObject[reminder.id] = reminder;
+            }
         });
-}
+        
+        remindersRef.set(remindersObject)
+            .catch((error) => {
+                console.error("Error saving reminders:", error);
+                alert("Error saving reminders. Please try again.");
+            });
+    }
 
-// Modal close handlers
-function setupModalCloseHandlers() {
-    window.onclick = function(event) {
-        if (event.target === announcementEditor) {
-            closeAnnouncementEditor();
-        }
-        if (event.target === tabEditorModal) {
-            closeTabEditor();
-        }
-        if (event.target === document.getElementById('reminder-editor')) {
-            closeReminderEditor();
-        }
-    };
-}
-    </script>
-</body>
-</html>
+    // Modal close handlers
+    function setupModalCloseHandlers() {
+        window.onclick = function(event) {
+            if (event.target === announcementEditor) {
+                closeAnnouncementEditor();
+            }
+            if (event.target === tabEditorModal) {
+                closeTabEditor();
+            }
+            if (event.target === document.getElementById('reminder-editor')) {
+                closeReminderEditor();
+            }
+        };
+    }
+</script>
