@@ -931,7 +931,7 @@ select {
     overflow-y: auto;
     margin: 0;
     padding: var(--space-xl);
-    padding-top: calc(68px + var(--space-lg)); /* REVERTED */
+    padding-top: calc(68px + var(--space-lg)); /* RESTORED */
     background: white;
     border-radius: 0;
     box-shadow: none;
@@ -940,7 +940,7 @@ select {
     cursor: default;
 }
 
-/* REVERTED: Styles for the fixed controls on expanded posts */
+/* RESTORED: Styles for the fixed controls on expanded posts */
 .expanded-post-controls {
     position: fixed;
     top: 54px;
@@ -1166,24 +1166,14 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 <span class="topbar-title">Glendowie College</span>
             </div>
             <div class="topbar-links">
-                <a href="https://www.gdc.school.nz/" target="_blank" class="topbar-button">
-                    <i class="fas fa-school"></i> <span>College Site</span>
-                </a>
-                <a href="https://gdc.bridge.school.nz/" target="_blank" class="topbar-button">
-                    <i class="fas fa-book-open"></i> <span>School Point</span>
-                </a>
-                <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
-                    <i class="fas fa-envelope"></i> <span>Student Portal</span>
-                </a>
+                <a href="https://www.gdc.school.nz/" target="_blank" class="topbar-button"><i class="fas fa-school"></i> <span>College Site</span></a>
+                <a href="https://gdc.bridge.school.nz/" target="_blank" class="topbar-button"><i class="fas fa-book-open"></i> <span>School Point</span></a>
+                <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button"><i class="fas fa-envelope"></i> <span>Student Portal</span></a>
                 <div class="profile-dropdown">
                     <img id="profile-pic" src="" alt="Profile Picture" class="topbar-button" style="width: 36px; height: 36px; padding: 0; border-radius: 50%;">
                     <div class="profile-dropdown-content">
-                        <a href="#" class="dark-mode-toggle">
-                            <i class="fas fa-moon"></i> <span>Dark Mode</span>
-                        </a>
-                        <a href="#" class="logout-btn">
-                            <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
-                        </a>
+                        <a href="#" class="dark-mode-toggle"><i class="fas fa-moon"></i> <span>Dark Mode</span></a>
+                        <a href="#" class="logout-btn"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
                     </div>
                 </div>
             </div>
@@ -1197,9 +1187,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZV7lnbEjDM_XlekqYanoGOGv5aQo50TOSvA&s" alt="Logo" class="sidebar-logo">
-            <h2 class="sidebar-title">Navigation
-                <button class="add-tab-btn" title="Add New Tab" onclick="openTabEditor()">+</button>
-            </h2>
+            <h2 class="sidebar-title">Navigation<button class="add-tab-btn" title="Add New Tab" onclick="openTabEditor()">+</button></h2>
         </div>
         <ul class="sidebar-menu" id="sidebar-menu"></ul>
     </aside>
@@ -1235,70 +1223,15 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         <div class="expanded-post-actions" id="expanded-actions-container"></div>
     </div>
 
-    <!-- Reminder Editor Modal -->
+    <!-- Modals -->
     <div id="reminder-editor" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeReminderEditor()">×</span>
-            <h2 id="reminder-editor-title">Add New Reminder</h2>
-            <div class="input-group">
-                <input type="text" id="reminder-title" placeholder=" ">
-                <label>Reminder Title</label>
-            </div>
-            <div class="input-group">
-                <textarea id="reminder-description" placeholder=" "></textarea>
-                <label>Description (optional)</label>
-            </div>
-            <div class="input-group">
-                <input type="date" id="reminder-date">
-                <label>Date</label>
-            </div>
-            <div class="input-group">
-                <select id="reminder-type">
-                    <option value="trip">Field Trip</option>
-                    <option value="test">Internal</option>
-                    <option value="event">External</option>
-                    <option value="deadline">Deadline</option>
-                </select>
-                <label>Type</label>
-            </div>
-            <div class="modal-buttons">
-                <button class="button secondary" onclick="closeReminderEditor()">Cancel</button>
-                <button class="button" id="save-reminder-button" onclick="saveReminder()">Save</button>
-            </div>
-        </div>
+        <div class="modal-content"><span class="close-button" onclick="closeReminderEditor()">×</span><h2 id="reminder-editor-title">Add New Reminder</h2><div class="input-group"><input type="text" id="reminder-title" placeholder=" "><label>Reminder Title</label></div><div class="input-group"><textarea id="reminder-description" placeholder=" "></textarea><label>Description (optional)</label></div><div class="input-group"><input type="date" id="reminder-date"><label>Date</label></div><div class="input-group"><select id="reminder-type"><option value="trip">Field Trip</option><option value="test">Internal</option><option value="event">External</option><option value="deadline">Deadline</option></select><label>Type</label></div><div class="modal-buttons"><button class="button secondary" onclick="closeReminderEditor()">Cancel</button><button class="button" id="save-reminder-button" onclick="saveReminder()">Save</button></div></div>
     </div>
-    
-    <!-- Announcement Editor Modal -->
     <div id="announcement-editor" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeAnnouncementEditor()">×</span>
-            <h2>Create New Announcement</h2>
-            <div class="input-group">
-                <input type="text" id="announcement-title" placeholder=" ">
-                <label>Announcement Title</label>
-            </div>
-            <textarea id="announcement-content" style="display: none;"></textarea>
-            <div class="modal-buttons">
-                <button class="button secondary" onclick="closeAnnouncementEditor()">Cancel</button>
-                <button class="button" id="save-announcement-button">Post Announcement</button>
-            </div>
-        </div>
+        <div class="modal-content"><span class="close-button" onclick="closeAnnouncementEditor()">×</span><h2>Create New Announcement</h2><div class="input-group"><input type="text" id="announcement-title" placeholder=" "><label>Announcement Title</label></div><textarea id="announcement-content" style="display: none;"></textarea><div class="modal-buttons"><button class="button secondary" onclick="closeAnnouncementEditor()">Cancel</button><button class="button" id="save-announcement-button">Post Announcement</button></div></div>
     </div>
-
-    <!-- Tab Editor Modal -->
     <div id="tab-editor-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeTabEditor()">×</span>
-            <h2 id="tab-editor-title">Add New Tab</h2>
-            <div class="input-group">
-                <input type="text" id="tab-name-input" placeholder=" ">
-                <label>Tab Name</label>
-            </div>
-            <div class="modal-buttons">
-                <button class="button secondary" onclick="closeTabEditor()">Cancel</button>
-                <button class="button" id="save-tab-button" onclick="saveTab()">Save</button>
-            </div>
-        </div>
+        <div class="modal-content"><span class="close-button" onclick="closeTabEditor()">×</span><h2 id="tab-editor-title">Add New Tab</h2><div class="input-group"><input type="text" id="tab-name-input" placeholder=" "><label>Tab Name</label></div><div class="modal-buttons"><button class="button secondary" onclick="closeTabEditor()">Cancel</button><button class="button" id="save-tab-button" onclick="saveTab()">Save</button></div></div>
     </div>
 
     <script>
@@ -1507,7 +1440,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function expandPost(postElement) {
             if (expandedPost) collapsePost(expandedPost);
             
-            // NEW: Process embeds only on expand
+            // This is the key fix: process embeds only on expand
             const contentDiv = postElement.querySelector('.post-content');
             if (!contentDiv.dataset.embedProcessed) {
                 contentDiv.innerHTML = autoEmbed(contentDiv.innerHTML);
