@@ -1535,7 +1535,12 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         }
 
-        function setupMobileMenu() { sidebar.classList.toggle('visible'); }
+        function setupMobileMenu() {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('visible');
+            });
+        }
+
         function setupDarkMode() {
             if (localStorage.getItem('darkMode') === 'true') {
                 document.body.classList.add('dark-mode');
@@ -1642,10 +1647,22 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     </div>
                 </div>`;
         }
+        
+        // *** NEW/FIXED FUNCTION ***
+        // This function persists the local 'tabs' array to Firebase.
+        function saveTabs() {
+            if (!isAdmin) return;
+            // Convert array to an object with keys being tab IDs for Firebase.
+            const tabsObject = tabs.reduce((acc, tab) => {
+                acc[tab.id] = tab;
+                return acc;
+            }, {});
+            tabsRef.set(tabsObject).catch(error => console.error("Error saving tabs:", error));
+        }
 
         function renderTabs() {
             sidebarMenu.innerHTML = [...tabs].sort((a, b) => a.order - b.order).map(tab => {
-                const actionsHtml = isAdmin ? `<div class="tab-actions"><button class="tab-action-btn" title="Edit" onclick="editTab('${tab.id}')">✏️</button><button class="tab-action-btn" title="Delete" onclick="deleteTab('${tab.id}')">🗑️</button></div>` : '';
+                const actionsHtml = isAdmin ? `<div class="tab-actions"><button class="tab-action-btn" title="Edit" onclick="editTab(event, '${tab.id}')">✏️</button><button class="tab-action-btn" title="Delete" onclick="deleteTab(event, '${tab.id}')">🗑️</button></div>` : '';
                 return `
                     <li class="sidebar-item" data-tab-id="${tab.id}" draggable="${isAdmin}">
                         <a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}">
@@ -1676,7 +1693,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                             const [removed] = tabs.splice(dIndex, 1);
                             tabs.splice(tIndex, 0, removed);
                             tabs.forEach((t, i) => t.order = i + 1);
-                            saveTabs();
+                            saveTabs(); // Persist the new order
                         }
                     });
                 }
@@ -1725,8 +1742,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             }
             closeTabEditor();
         }
-        function editTab(id) { event.stopPropagation(); openTabEditor(id); }
-        function deleteTab(id) {
+        function editTab(event, id) { event.stopPropagation(); openTabEditor(id); }
+        function deleteTab(event, id) {
             event.stopPropagation();
             if (isAdmin && confirm('Are you sure you want to delete this tab and all its announcements?')) {
                 announcementsRef.child(id).remove();
@@ -1837,7 +1854,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             database.ref('reminders/' + reminder.id).set(reminder).then(closeReminderEditor);
         }
         window.editReminder = id => { event.stopPropagation(); openReminderEditor(id); };
-        window.deleteReminder = id => { event.stopPropagation(); if (isAdmin && confirm('Are you sure?')) database.ref('reminders/' + id).remove(); };
+        window.deleteReminder = id => { event.stopPropagation(); if (isAdmin && confirm('Are you sure?')) database.ref('reminders/'' + id).remove(); };
         
         function setupModalCloseHandlers() {
             window.onclick = e => {
