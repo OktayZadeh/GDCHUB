@@ -608,6 +608,7 @@ select {
     font-weight: 600;
     margin: 0;
     color: var(--dark);
+    margin-right: auto; /* Pushes button to the right */
 }
 
 .add-tab-header-button {
@@ -653,6 +654,7 @@ body.dark-mode .add-tab-header-button:hover {
     position: relative;
     margin-bottom: var(--space-xxs);
     padding: 0 var(--space-sm);
+    transition: transform var(--transition-fast), opacity var(--transition-fast);
 }
 
 .sidebar-link {
@@ -740,6 +742,23 @@ body.dark-mode .add-tab-header-button:hover {
     color: var(--medium);
     opacity: 0.5;
 }
+
+/* New Drag and Drop Styles */
+.placeholder {
+    background: var(--primary-light);
+    border: 2px dashed var(--primary);
+    border-radius: var(--radius-md);
+    margin: 0 var(--space-sm) var(--space-xxs);
+    height: 46px; /* Approx height of a sidebar item */
+}
+
+.sidebar-item.dragging {
+    opacity: 0.4;
+    background-color: var(--primary-light);
+    transform: scale(1.02);
+    box-shadow: var(--shadow-lg);
+}
+
 
 /* Main Content Styles */
 .main-content {
@@ -840,16 +859,6 @@ body.dark-mode .add-tab-header-button:hover {
 #profile-pic:hover {
     transform: scale(1.1);
     box-shadow: var(--shadow-md);
-}
-
-/* Drag and Drop Styles */
-.sidebar-item.dragging {
-    opacity: 0.5;
-    background-color: var(--primary-light);
-}
-
-.sidebar-item.drop-area {
-    border-top: 2px dashed var(--primary);
 }
 
 /* Modal Styles */
@@ -1495,12 +1504,16 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         let expandedPost = null;
         let reminders = [];
         let currentReminderBeingEdited = null;
-        let draggedItem = null;
         let isAdmin = false;
         let currentAnnouncementBeingEdited = null;
         let currentTabAnnouncements = [];
         
         const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
+        
+        // Drag and Drop State Variables
+        let placeholder = null;
+        let draggedItem = null;
+
 
         document.addEventListener('DOMContentLoaded', () => {
             checkUserProfile();
@@ -1511,8 +1524,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             setupDarkMode();
             setupProfileDropdown();
             initializeSunEditor();
+            setupDragAndDropListeners();
 
-            // Event listener for Enter key on tab input
             tabNameInput.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter') {
                     event.preventDefault();
@@ -1617,16 +1630,25 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         }
 
         function setupFirebaseListeners() {
-            tabsRef.on('value', snapshot => {
-                tabs = snapshot.val() ? Object.values(snapshot.val()) : [];
+            tabsRef.orderByChild('order').on('value', snapshot => {
+                tabs = [];
+                snapshot.forEach(childSnapshot => {
+                    tabs.push(childSnapshot.val());
+                });
                 renderTabs();
-                if (tabs.length > 0 && !currentTabId) setActiveTab(tabs[0].id);
+                if (tabs.length > 0 && !currentTabId) {
+                    setActiveTab(tabs[0].id);
+                } else if (tabs.length > 0 && !tabs.some(t => t.id === currentTabId)) {
+                    // If current tab was deleted, set to first tab
+                    setActiveTab(tabs[0].id);
+                } else if (tabs.length === 0) {
+                    // No tabs exist
+                    currentTabId = null;
+                    currentTabTitleElement.textContent = "No Tabs";
+                    postsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
+                }
             });
-            announcementsRef.on('value', snapshot => {
-                const allData = snapshot.val() || {};
-                currentTabAnnouncements = (currentTabId && allData[currentTabId]) ? Object.values(allData[currentTabId]) : [];
-                filterAnnouncements();
-            });
+
             remindersRef.on('value', snapshot => {
                 reminders = snapshot.val() ? Object.values(snapshot.val()) : [];
                 renderReminders();
@@ -1676,15 +1698,15 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         
         function saveTabs() {
             if (!isAdmin) return;
-            const tabsObject = tabs.reduce((acc, tab) => {
-                acc[tab.id] = tab;
-                return acc;
-            }, {});
-            tabsRef.set(tabsObject).catch(error => console.error("Error saving tabs:", error));
+            const updates = {};
+            tabs.forEach(tab => {
+                updates[tab.id] = tab;
+            });
+            tabsRef.set(updates).catch(error => console.error("Error saving tabs:", error));
         }
 
         function renderTabs() {
-            sidebarMenu.innerHTML = [...tabs].sort((a, b) => a.order - b.order).map(tab => {
+            sidebarMenu.innerHTML = tabs.map(tab => {
                 const actionsHtml = isAdmin ? `<div class="tab-actions">
                     <button class="tab-action-btn" title="Edit Tab" onclick="editTab(event, '${tab.id}')"><i class="fas fa-pencil-alt"></i></button>
                     <button class="tab-action-btn delete" title="Delete Tab" onclick="deleteTab(event, '${tab.id}')"><i class="fas fa-trash-alt"></i></button>
@@ -1705,23 +1727,66 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                         if (window.innerWidth <= 768) sidebar.classList.remove('visible');
                     }
                 });
-                if (isAdmin) {
-                    item.addEventListener('dragstart', e => { draggedItem = e.currentTarget; e.currentTarget.classList.add('dragging'); });
-                    item.addEventListener('dragover', e => { e.preventDefault(); e.currentTarget.classList.add('drop-area'); });
-                    item.addEventListener('dragleave', e => e.currentTarget.classList.remove('drop-area'));
-                    item.addEventListener('dragend', e => e.currentTarget.classList.remove('dragging'));
-                    item.addEventListener('drop', e => {
-                        e.preventDefault(); e.currentTarget.classList.remove('drop-area');
-                        if (draggedItem !== e.currentTarget) {
-                            const dIndex = tabs.findIndex(t => t.id === draggedItem.dataset.tabId);
-                            const tIndex = tabs.findIndex(t => t.id === e.currentTarget.dataset.tabId);
-                            const [removed] = tabs.splice(dIndex, 1);
-                            tabs.splice(tIndex, 0, removed);
-                            tabs.forEach((t, i) => t.order = i + 1);
-                            saveTabs();
-                        }
-                    });
+            });
+        }
+        
+        function setupDragAndDropListeners() {
+            if (!isAdmin) return;
+
+            sidebarMenu.addEventListener('dragstart', e => {
+                const target = e.target.closest('.sidebar-item');
+                if (target) {
+                    draggedItem = target;
+                    setTimeout(() => {
+                        draggedItem.classList.add('dragging');
+                    }, 0);
                 }
+            });
+
+            sidebarMenu.addEventListener('dragend', () => {
+                if (draggedItem) {
+                    draggedItem.classList.remove('dragging');
+                }
+                if (placeholder && placeholder.parentNode) {
+                    placeholder.parentNode.removeChild(placeholder);
+                }
+                draggedItem = null;
+                placeholder = null;
+            });
+
+            sidebarMenu.addEventListener('dragover', e => {
+                e.preventDefault();
+                const overElement = e.target.closest('.sidebar-item');
+                if (overElement && overElement !== draggedItem) {
+                    if (!placeholder) {
+                        placeholder = document.createElement('li');
+                        placeholder.className = 'placeholder';
+                    }
+                    const rect = overElement.getBoundingClientRect();
+                    const midpoint = rect.top + rect.height / 2;
+                    if (e.clientY < midpoint) {
+                        overElement.parentNode.insertBefore(placeholder, overElement);
+                    } else {
+                        overElement.parentNode.insertBefore(placeholder, overElement.nextSibling);
+                    }
+                }
+            });
+
+            sidebarMenu.addEventListener('drop', e => {
+                e.preventDefault();
+                if (!placeholder || !placeholder.parentNode || !draggedItem) return;
+
+                const children = Array.from(sidebarMenu.children);
+                const newIndex = children.indexOf(placeholder);
+
+                const draggedId = draggedItem.dataset.tabId;
+                const oldIndex = tabs.findIndex(t => t.id === draggedId);
+                
+                const [movedTab] = tabs.splice(oldIndex, 1);
+                tabs.splice(newIndex, 0, movedTab);
+
+                tabs.forEach((t, i) => t.order = i);
+                saveTabs();
             });
         }
 
@@ -1730,16 +1795,20 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const tab = tabs.find(t => t.id === tabId);
             if (tab) {
                 currentTabTitleElement.textContent = tab.name;
+                // Update active link in sidebar
                 document.querySelectorAll('.sidebar-link.active').forEach(l => l.classList.remove('active'));
                 const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
                 if (activeLink) activeLink.classList.add('active');
                 
-                announcementsRef.child(tabId).once('value').then(snapshot => {
+                // Unsubscribe from previous listener and subscribe to new one
+                announcementsRef.off(); // Detach all previous listeners on announcements
+                announcementsRef.child(tabId).on('value', snapshot => {
                     currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : [];
-                    clearSearch();
+                    filterAnnouncements(); // This calls renderAnnouncements
                 });
             }
         }
+
 
         function openTabEditor(tabId = null) {
             if (!isAdmin) return;
@@ -1758,13 +1827,16 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const name = tabNameInput.value.trim();
             if (!name) return alert('Please enter a tab name');
             if (currentTabBeingEdited) {
-                const tab = tabs.find(t => t.id === currentTabBeingEdited);
-                if (tab) { tab.name = name; saveTabs(); }
+                const tabIndex = tabs.findIndex(t => t.id === currentTabBeingEdited);
+                if (tabIndex > -1) { 
+                    tabs[tabIndex].name = name; 
+                    saveTabs(); 
+                }
             } else {
-                const newTab = { id: 'tab-' + Date.now(), name, order: tabs.length + 1 };
-                tabs.push(newTab);
-                saveTabs();
-                setActiveTab(newTab.id);
+                const newTab = { id: 'tab-' + Date.now(), name, order: tabs.length };
+                tabsRef.child(newTab.id).set(newTab).then(() => {
+                    setActiveTab(newTab.id);
+                });
             }
             closeTabEditor();
         }
@@ -1772,11 +1844,9 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function deleteTab(event, id) {
             event.stopPropagation();
             if (isAdmin && confirm('Are you sure you want to delete this tab and all its announcements?')) {
+                tabsRef.child(id).remove();
                 announcementsRef.child(id).remove();
-                tabs = tabs.filter(t => t.id !== id);
-                tabs.forEach((t, i) => t.order = i + 1);
-                saveTabs();
-                if (id === currentTabId) setActiveTab(tabs.length > 0 ? tabs[0].id : null);
+                // State will update automatically via Firebase listener
             }
         }
 
