@@ -637,6 +637,7 @@ select {
 .sidebar-link:hover {
     background-color: var(--light);
     color: var(--dark);
+    text-decoration: none; /* This line was added */
 }
 
 .sidebar-link.active {
@@ -1847,11 +1848,9 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             database.ref('reminders/' + reminder.id).set(reminder).then(closeReminderEditor);
         }
         
-        // *** UPDATED/FIXED FUNCTIONS ***
         window.editReminder = (event, id) => { event.stopPropagation(); openReminderEditor(id); };
         window.deleteReminder = (event, id) => { 
             event.stopPropagation(); 
-            // *** CRITICAL SYNTAX FIX WAS HERE ***
             if (isAdmin && confirm('Are you sure?')) database.ref('reminders/' + id).remove(); 
         };
         
