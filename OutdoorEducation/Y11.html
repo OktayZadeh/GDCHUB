@@ -687,7 +687,7 @@ select {
 }
 
 .tab-action-btn i {
-    font-size: 12px; /* Adjust icon size */
+    font-size: 12px;
 }
 
 
@@ -710,10 +710,9 @@ select {
     opacity: 0.5;
 }
 
-/* === NEW "ADD TAB" BUTTON STYLES === */
 .add-tab-container {
     padding: var(--space-sm) var(--space-sm) var(--space-md);
-    margin-top: auto; /* Pushes to the bottom */
+    margin-top: auto;
     flex-shrink: 0;
 }
 
@@ -1525,6 +1524,14 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             setupDarkMode();
             setupProfileDropdown();
             initializeSunEditor();
+
+            // *** NEW: Add event listener for Enter key on tab input ***
+            tabNameInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevent default form submission
+                    saveTab();
+                }
+            });
         });
 
         function initializeSunEditor() {
@@ -1756,6 +1763,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             tabNameInput.value = isEditing && tab ? tab.name : '';
             document.getElementById('tab-editor-title').textContent = isEditing ? 'Edit Tab' : 'Add New Tab';
             document.getElementById('save-tab-button').textContent = isEditing ? 'Save Changes' : 'Add Tab';
+            setTimeout(() => tabNameInput.focus(), 100); // Focus the input field when modal opens
         }
         function closeTabEditor() { tabEditorModal.style.display = 'none'; }
         function saveTab() {
