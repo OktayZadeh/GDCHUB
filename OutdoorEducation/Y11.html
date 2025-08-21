@@ -194,6 +194,10 @@ body.dark-mode .tab-action-btn:hover {
     background-color: var(--dark-primary-light);
 }
 
+body.dark-mode .tab-action-btn.delete:hover {
+    background-color: rgba(229, 62, 62, 0.2);
+}
+
 body.dark-mode .reminder-actions {
     background-color: var(--dark-light-gray);
     border-color: var(--dark-light-gray);
@@ -203,14 +207,11 @@ body.dark-mode .reminder-action-btn:hover {
     background-color: var(--dark-primary-light);
 }
 
-/* REVERTED: Dark mode for expanded post controls */
 body.dark-mode .expanded-post-controls {
     background: var(--dark-lighter);
     border-bottom-color: var(--dark-light-gray);
 }
 
-
-/* FIX: Ensure expanded post title is white in dark mode */
 body.dark-mode .post-card.expanded h3 {
     color: white;
     border-bottom-color: var(--dark-light-gray);
@@ -637,7 +638,7 @@ select {
 .sidebar-link:hover {
     background-color: var(--light);
     color: var(--dark);
-    text-decoration: none; /* This line was added */
+    text-decoration: none; 
 }
 
 .sidebar-link.active {
@@ -650,44 +651,54 @@ select {
     color: var(--primary-dark);
 }
 
+/* === IMPROVED SIDEBAR ACTIONS === */
 .tab-actions {
     position: absolute;
     right: var(--space-md);
     top: 50%;
-    transform: translateY(-50%);
-    display: none;
-    background: white;
-    border-radius: var(--radius-md);
-    padding: var(--space-xs);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--light-gray);
+    display: flex;
+    gap: var(--space-xs);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-50%) scale(0.95);
+    transition: opacity var(--transition-fast), transform var(--transition-fast);
 }
 
 .sidebar-item:hover .tab-actions {
-    display: flex;
-    gap: var(--space-xs);
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(-50%) scale(1);
 }
 
 .tab-action-btn {
-    background: none;
-    border: none;
+    background: var(--light);
+    border: 1px solid var(--light-gray);
     color: var(--medium);
     cursor: pointer;
-    padding: var(--space-xs);
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
     transition: all var(--transition-fast);
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--radius-sm);
+    border-radius: 50%;
+    box-shadow: var(--shadow-xs);
 }
 
 .tab-action-btn:hover {
     color: var(--primary);
     background: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
 }
+
+.tab-action-btn.delete:hover {
+    color: var(--danger);
+    background: rgba(245, 101, 101, 0.1);
+}
+/* === END IMPROVEMENT === */
+
 
 .move-handle {
     cursor: move;
@@ -939,7 +950,6 @@ select {
     overflow-y: auto;
     margin: 0;
     padding: var(--space-xl);
-    /* REVERTED: Padding for original controls height */
     padding-top: calc(68px + var(--space-lg));
     background: white;
     border-radius: 0;
@@ -949,7 +959,6 @@ select {
     cursor: default;
 }
 
-/* REVERTED: Styles for the fixed controls on expanded posts */
 .expanded-post-controls {
     position: fixed;
     top: 54px;
@@ -1007,7 +1016,6 @@ select {
     color: var(--medium);
 }
 
-/* NEW/FIX: Explicitly hide rich content in collapsed view */
 .post-card:not(.expanded) .post-content img,
 .post-card:not(.expanded) .post-content iframe,
 .post-card:not(.expanded) .post-content .embed-container {
@@ -1655,9 +1663,13 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             tabsRef.set(tabsObject).catch(error => console.error("Error saving tabs:", error));
         }
 
+        // === UPDATED JAVASCRIPT FUNCTION ===
         function renderTabs() {
             sidebarMenu.innerHTML = [...tabs].sort((a, b) => a.order - b.order).map(tab => {
-                const actionsHtml = isAdmin ? `<div class="tab-actions"><button class="tab-action-btn" title="Edit" onclick="editTab(event, '${tab.id}')">✏️</button><button class="tab-action-btn" title="Delete" onclick="deleteTab(event, '${tab.id}')">🗑️</button></div>` : '';
+                const actionsHtml = isAdmin ? `<div class="tab-actions">
+                    <button class="tab-action-btn" title="Edit Tab" onclick="editTab(event, '${tab.id}')"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="tab-action-btn delete" title="Delete Tab" onclick="deleteTab(event, '${tab.id}')"><i class="fas fa-trash-alt"></i></button>
+                    </div>` : '';
                 return `
                     <li class="sidebar-item" data-tab-id="${tab.id}" draggable="${isAdmin}">
                         <a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}">
