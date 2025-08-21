@@ -608,6 +608,38 @@ select {
     font-weight: 600;
     margin: 0;
     color: var(--dark);
+    flex-grow: 1; /* Allows title to take up space */
+}
+
+.add-tab-header-button {
+    background: transparent;
+    border: none;
+    color: var(--medium);
+    cursor: pointer;
+    font-size: var(--text-base);
+    padding: var(--space-xs);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.add-tab-header-button:hover {
+    background-color: var(--light);
+    color: var(--primary);
+}
+
+body.dark-mode .add-tab-header-button {
+    color: var(--dark-medium);
+}
+
+body.dark-mode .add-tab-header-button:hover {
+    background-color: var(--dark-light-gray);
+    color: var(--primary);
 }
 
 .sidebar-menu {
@@ -709,47 +741,6 @@ select {
     color: var(--medium);
     opacity: 0.5;
 }
-
-.add-tab-container {
-    padding: var(--space-sm) var(--space-sm) var(--space-md);
-    margin-top: auto;
-    flex-shrink: 0;
-}
-
-.add-tab-btn-new {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-sm);
-    padding: var(--space-sm);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    color: var(--medium);
-    background: transparent;
-    border: 1px dashed var(--light-gray);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.add-tab-btn-new:hover {
-    color: var(--primary-dark);
-    background-color: var(--primary-light);
-    border-color: var(--primary);
-    border-style: solid;
-}
-
-body.dark-mode .add-tab-btn-new {
-    border-color: var(--dark-light-gray);
-}
-
-body.dark-mode .add-tab-btn-new:hover {
-    color: var(--primary);
-    background-color: var(--dark-primary-light);
-    border-color: var(--primary);
-}
-
 
 /* Main Content Styles */
 .main-content {
@@ -1169,7 +1160,7 @@ body.dark-mode .add-tab-btn-new:hover {
 .reminder-action-btn:hover { color: var(--primary); background: var(--light); }
 
 /* Hide editing controls for non-admins */
-body.non-admin .add-tab-container,
+body.non-admin .add-tab-header-button,
 body.non-admin .button[onclick="openAnnouncementEditor()"],
 body.non-admin .tab-actions,
 body.non-admin .post-actions,
@@ -1265,7 +1256,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
     <!-- SunEditor WYSIWYG Editor JS -->
     <script src="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/suneditor.min.js"></script>
 </head>
-<body>
+<body class="non-admin">
     <!-- Top Navigation Bar -->
     <div class="topbar" id="topbar">
         <div class="topbar-content">
@@ -1306,16 +1297,13 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         <div class="sidebar-header">
             <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZV7lnbEjDM_XlekqYanoGOGv5aQo50TOSvA&s" alt="Logo" class="sidebar-logo">
             <h2 class="sidebar-title">GDCHUB</h2>
+            <button class="add-tab-header-button" onclick="openTabEditor()" title="Add New Tab">
+                <i class="fas fa-plus"></i>
+            </button>
         </div>
         <ul class="sidebar-menu" id="sidebar-menu">
             <!-- Tabs will be populated dynamically -->
         </ul>
-        <div class="add-tab-container">
-            <button class="add-tab-btn-new" onclick="openTabEditor()">
-                <i class="fas fa-plus"></i>
-                <span>Add New Tab</span>
-            </button>
-        </div>
     </aside>
 
     <!-- Main Content -->
