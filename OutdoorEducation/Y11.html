@@ -1525,10 +1525,10 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             setupProfileDropdown();
             initializeSunEditor();
 
-            // *** NEW: Add event listener for Enter key on tab input ***
+            // Event listener for Enter key on tab input
             tabNameInput.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter') {
-                    event.preventDefault(); // Prevent default form submission
+                    event.preventDefault();
                     saveTab();
                 }
             });
@@ -1763,7 +1763,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             tabNameInput.value = isEditing && tab ? tab.name : '';
             document.getElementById('tab-editor-title').textContent = isEditing ? 'Edit Tab' : 'Add New Tab';
             document.getElementById('save-tab-button').textContent = isEditing ? 'Save Changes' : 'Add Tab';
-            setTimeout(() => tabNameInput.focus(), 100); // Focus the input field when modal opens
+            setTimeout(() => tabNameInput.focus(), 100);
         }
         function closeTabEditor() { tabEditorModal.style.display = 'none'; }
         function saveTab() {
