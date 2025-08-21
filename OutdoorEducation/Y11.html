@@ -579,6 +579,8 @@ select {
     border-right: 1px solid var(--light-gray);
     box-shadow: var(--shadow-sm);
     transition: transform var(--transition-normal);
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar-header {
@@ -591,6 +593,7 @@ select {
     background: white;
     z-index: 10;
     border-bottom: 1px solid var(--light-gray);
+    flex-shrink: 0;
 }
 
 .sidebar-logo {
@@ -604,10 +607,6 @@ select {
     font-size: var(--text-lg);
     font-weight: 600;
     margin: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-grow: 1;
     color: var(--dark);
 }
 
@@ -615,6 +614,8 @@ select {
     list-style: none;
     padding: var(--space-sm) 0;
     margin: 0;
+    flex-grow: 1;
+    overflow-y: auto;
 }
 
 .sidebar-item {
@@ -651,7 +652,6 @@ select {
     color: var(--primary-dark);
 }
 
-/* === IMPROVED SIDEBAR ACTIONS === */
 .tab-actions {
     position: absolute;
     right: var(--space-md);
@@ -686,6 +686,11 @@ select {
     box-shadow: var(--shadow-xs);
 }
 
+.tab-action-btn i {
+    font-size: 12px; /* Adjust icon size */
+}
+
+
 .tab-action-btn:hover {
     color: var(--primary);
     background: var(--primary-light);
@@ -697,8 +702,6 @@ select {
     color: var(--danger);
     background: rgba(245, 101, 101, 0.1);
 }
-/* === END IMPROVEMENT === */
-
 
 .move-handle {
     cursor: move;
@@ -707,28 +710,47 @@ select {
     opacity: 0.5;
 }
 
-.add-tab-btn {
-    background: var(--primary);
-    border: none;
-    color: white;
-    width: 28px;
-    height: 28px;
-    border-radius: var(--radius-full);
-    cursor: pointer;
-    font-size: var(--text-sm);
+/* === NEW "ADD TAB" BUTTON STYLES === */
+.add-tab-container {
+    padding: var(--space-sm) var(--space-sm) var(--space-md);
+    margin-top: auto; /* Pushes to the bottom */
+    flex-shrink: 0;
+}
+
+.add-tab-btn-new {
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--medium);
+    background: transparent;
+    border: 1px dashed var(--light-gray);
+    border-radius: var(--radius-md);
+    cursor: pointer;
     transition: all var(--transition-fast);
-    flex-shrink: 0;
-    box-shadow: var(--shadow-sm);
 }
 
-.add-tab-btn:hover {
-    background: var(--primary-dark);
-    transform: scale(1.1);
-    box-shadow: var(--shadow-md);
+.add-tab-btn-new:hover {
+    color: var(--primary-dark);
+    background-color: var(--primary-light);
+    border-color: var(--primary);
+    border-style: solid;
 }
+
+body.dark-mode .add-tab-btn-new {
+    border-color: var(--dark-light-gray);
+}
+
+body.dark-mode .add-tab-btn-new:hover {
+    color: var(--primary);
+    background-color: var(--dark-primary-light);
+    border-color: var(--primary);
+}
+
 
 /* Main Content Styles */
 .main-content {
@@ -1148,7 +1170,7 @@ select {
 .reminder-action-btn:hover { color: var(--primary); background: var(--light); }
 
 /* Hide editing controls for non-admins */
-body.non-admin .add-tab-btn,
+body.non-admin .add-tab-container,
 body.non-admin .button[onclick="openAnnouncementEditor()"],
 body.non-admin .tab-actions,
 body.non-admin .post-actions,
@@ -1284,13 +1306,17 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZV7lnbEjDM_XlekqYanoGOGv5aQo50TOSvA&s" alt="Logo" class="sidebar-logo">
-            <h2 class="sidebar-title">Navigation
-                <button class="add-tab-btn" title="Add New Tab" onclick="openTabEditor()">+</button>
-            </h2>
+            <h2 class="sidebar-title">GDCHUB</h2>
         </div>
         <ul class="sidebar-menu" id="sidebar-menu">
             <!-- Tabs will be populated dynamically -->
         </ul>
+        <div class="add-tab-container">
+            <button class="add-tab-btn-new" onclick="openTabEditor()">
+                <i class="fas fa-plus"></i>
+                <span>Add New Tab</span>
+            </button>
+        </div>
     </aside>
 
     <!-- Main Content -->
@@ -1663,7 +1689,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             tabsRef.set(tabsObject).catch(error => console.error("Error saving tabs:", error));
         }
 
-        // === UPDATED JAVASCRIPT FUNCTION ===
         function renderTabs() {
             sidebarMenu.innerHTML = [...tabs].sort((a, b) => a.order - b.order).map(tab => {
                 const actionsHtml = isAdmin ? `<div class="tab-actions">
