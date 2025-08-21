@@ -1607,11 +1607,9 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function autoEmbed(htmlContent) {
             if (!htmlContent) return '';
             let processedContent = htmlContent;
-            // UPDATED: More flexible regex to handle potential attributes in the <p> tag and surrounding whitespace.
             const youtubeRegex = /<p.*?>\s*<a href="(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11}))(?:.*)?".*?>.*?<\/a>\s*<\/p>/g;
             processedContent = processedContent.replace(youtubeRegex, (match, url, videoId) => `<div class="embed-container"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe></div>`);
             
-            // UPDATED: More flexible regex for Google Slides as well.
             const gSlidesRegex = /<p.*?>\s*<a href="(https?:\/\/docs\.google\.com\/presentation\/d\/e\/([a-zA-Z0-9_-]+)\/pub(?:.*?))".*?>.*?<\/a>\s*<\/p>/g;
             processedContent = processedContent.replace(gSlidesRegex, (match, url) => `<div class="embed-container"><iframe src="${url.replace('/pub', '/embed')}" frameborder="0" allowfullscreen></iframe></div>`);
             
@@ -1623,7 +1621,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 ? announcements.sort((a, b) => b.id - a.id).map(createPostElement).join('')
                 : '<p>No announcements found for this tab.</p>';
             
-            // Re-add event listeners since we used innerHTML
             document.querySelectorAll('.post-card').forEach(card => card.addEventListener('click', () => expandPost(card)));
             document.querySelectorAll('.post-actions button').forEach(button => button.addEventListener('click', e => e.stopPropagation()));
         }
@@ -1648,11 +1645,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 </div>`;
         }
         
-        // *** NEW/FIXED FUNCTION ***
-        // This function persists the local 'tabs' array to Firebase.
         function saveTabs() {
             if (!isAdmin) return;
-            // Convert array to an object with keys being tab IDs for Firebase.
             const tabsObject = tabs.reduce((acc, tab) => {
                 acc[tab.id] = tab;
                 return acc;
@@ -1671,7 +1665,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     </li>`;
             }).join('');
             
-            // Re-add event listeners
             document.querySelectorAll('.sidebar-item').forEach(item => {
                 item.addEventListener('click', e => {
                     if (!e.target.closest('.tab-action-btn')) {
@@ -1693,7 +1686,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                             const [removed] = tabs.splice(dIndex, 1);
                             tabs.splice(tIndex, 0, removed);
                             tabs.forEach((t, i) => t.order = i + 1);
-                            saveTabs(); // Persist the new order
+                            saveTabs();
                         }
                     });
                 }
@@ -1821,7 +1814,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function renderReminders() {
             remindersList.innerHTML = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date)).map(rem => {
                 if (!rem || !rem.id) return '';
-                const actionsHtml = isAdmin ? `<div class="reminder-actions"><button class="reminder-action-btn" onclick="editReminder('${rem.id}')">✏️</button><button class="reminder-action-btn" onclick="deleteReminder('${rem.id}')">🗑️</button></div>` : '';
+                const actionsHtml = isAdmin ? `<div class="reminder-actions"><button class="reminder-action-btn" onclick="editReminder(event, '${rem.id}')">✏️</button><button class="reminder-action-btn" onclick="deleteReminder(event, '${rem.id}')">🗑️</button></div>` : '';
                 return `<div class="reminder-card ${rem.type || 'trip'}">${actionsHtml}<div class="reminder-title">${rem.title}</div><div class="reminder-date">${formatDate(rem.date)}</div>${rem.description ? `<div class="reminder-description">${rem.description}</div>` : ''}</div>`;
             }).join('');
         }
@@ -1853,8 +1846,14 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const reminder = { id: currentReminderBeingEdited || String(Date.now()), title, description, date, type };
             database.ref('reminders/' + reminder.id).set(reminder).then(closeReminderEditor);
         }
-        window.editReminder = id => { event.stopPropagation(); openReminderEditor(id); };
-        window.deleteReminder = id => { event.stopPropagation(); if (isAdmin && confirm('Are you sure?')) database.ref('reminders/'' + id).remove(); };
+        
+        // *** UPDATED/FIXED FUNCTIONS ***
+        window.editReminder = (event, id) => { event.stopPropagation(); openReminderEditor(id); };
+        window.deleteReminder = (event, id) => { 
+            event.stopPropagation(); 
+            // *** CRITICAL SYNTAX FIX WAS HERE ***
+            if (isAdmin && confirm('Are you sure?')) database.ref('reminders/' + id).remove(); 
+        };
         
         function setupModalCloseHandlers() {
             window.onclick = e => {
