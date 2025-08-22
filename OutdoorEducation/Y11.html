@@ -608,7 +608,7 @@ select {
     font-weight: 600;
     margin: 0;
     color: var(--dark);
-    margin-right: auto; /* Pushes button to the right */
+    margin-right: auto;
 }
 
 .add-tab-header-button {
@@ -743,8 +743,8 @@ body.dark-mode .add-tab-header-button:hover {
     opacity: 0.5;
 }
 
-/* New Drag and Drop Styles */
-.placeholder {
+/* Sidebar Drag and Drop Styles */
+.sidebar-placeholder {
     background: var(--primary-light);
     border: 2px dashed var(--primary);
     border-radius: var(--radius-md);
@@ -939,6 +939,26 @@ body.dark-mode .add-tab-header-button:hover {
     gap: var(--space-sm);
 }
 
+/* Pinned Posts Styles */
+#pinned-posts-header {
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 2px solid var(--primary);
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.post-placeholder {
+    background: var(--primary-light);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-lg);
+    min-height: 100px;
+    border: 2px dashed var(--primary);
+}
+
+
 /* Post Styles */
 .post-card {
     background: white;
@@ -953,12 +973,38 @@ body.dark-mode .add-tab-header-button:hover {
     opacity: 0;
     border: 1px solid var(--light-gray);
 }
+.post-card.pinned {
+    border-left: 4px solid var(--primary);
+}
+.post-card.dragging {
+    opacity: 0.4;
+    transform: scale(1.02);
+    box-shadow: var(--shadow-lg);
+}
+
 
 .post-card:hover {
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
     border-color: var(--primary);
 }
+
+.pin-icon {
+    position: absolute;
+    top: var(--space-lg);
+    left: -10px;
+    color: var(--primary);
+    background-color: var(--lighter);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--light-gray);
+}
+
 
 .post-card.expanded {
     position: fixed;
@@ -1176,6 +1222,11 @@ body.non-admin #add-reminder-btn {
     display: none !important;
 }
 
+body.non-admin .move-handle,
+body.non-admin .post-card-drag-handle {
+    display: none !important;
+}
+
 body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
 /* Typography for rendered rich content */
@@ -1337,9 +1388,14 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             <button class="search-clear" onclick="clearSearch()">×</button>
         </div>
 
-        <!-- Posts Feed -->
-        <div class="classroom-info">
-            <div class="posts-feed" id="posts-feed"></div>
+        <!-- Posts Feed Container -->
+        <div class="classroom-info" id="classroom-info">
+            <div id="pinned-posts-header" style="display: none;">
+                <i class="fas fa-thumbtack"></i>
+                <h2>Pinned</h2>
+            </div>
+            <div class="posts-feed" id="pinned-posts-feed"></div>
+            <div class="posts-feed" id="unpinned-posts-feed"></div>
         </div>
     </main>
 
@@ -1486,7 +1542,10 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         const profilePicElement = document.getElementById('profile-pic');
         const currentTabTitleElement = document.getElementById('current-tab-title');
         const announcementEditor = document.getElementById('announcement-editor');
-        const postsFeed = document.getElementById('posts-feed');
+        const classroomInfo = document.getElementById('classroom-info');
+        const pinnedPostsFeed = document.getElementById('pinned-posts-feed');
+        const unpinnedPostsFeed = document.getElementById('unpinned-posts-feed');
+        const pinnedPostsHeader = document.getElementById('pinned-posts-header');
         const announcementTitleInput = document.getElementById('announcement-title');
         const saveAnnouncementButton = document.getElementById('save-announcement-button');
         const remindersList = document.getElementById('reminders-list');
@@ -1509,11 +1568,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         let currentTabAnnouncements = [];
         
         const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
-        
-        // Drag and Drop State Variables
-        let placeholder = null;
-        let draggedItem = null;
-
 
         document.addEventListener('DOMContentLoaded', () => {
             checkUserProfile();
@@ -1524,7 +1578,10 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             setupDarkMode();
             setupProfileDropdown();
             initializeSunEditor();
-            setupDragAndDropListeners();
+            if (isAdmin) {
+                setupSidebarDragAndDrop();
+                setupPostsDragAndDrop();
+            }
 
             tabNameInput.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter') {
@@ -1632,20 +1689,15 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function setupFirebaseListeners() {
             tabsRef.orderByChild('order').on('value', snapshot => {
                 tabs = [];
-                snapshot.forEach(childSnapshot => {
-                    tabs.push(childSnapshot.val());
-                });
+                snapshot.forEach(childSnapshot => tabs.push(childSnapshot.val()));
                 renderTabs();
-                if (tabs.length > 0 && !currentTabId) {
-                    setActiveTab(tabs[0].id);
-                } else if (tabs.length > 0 && !tabs.some(t => t.id === currentTabId)) {
-                    // If current tab was deleted, set to first tab
+                if (tabs.length > 0 && (!currentTabId || !tabs.some(t => t.id === currentTabId))) {
                     setActiveTab(tabs[0].id);
                 } else if (tabs.length === 0) {
-                    // No tabs exist
                     currentTabId = null;
                     currentTabTitleElement.textContent = "No Tabs";
-                    postsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
+                    pinnedPostsFeed.innerHTML = "";
+                    unpinnedPostsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
                 }
             });
 
@@ -1668,24 +1720,44 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         }
 
         function renderAnnouncements(announcements) {
-            postsFeed.innerHTML = announcements && announcements.length > 0
-                ? announcements.sort((a, b) => b.id - a.id).map(createPostElement).join('')
-                : '<p>No announcements found for this tab.</p>';
-            
-            document.querySelectorAll('.post-card').forEach(card => card.addEventListener('click', () => expandPost(card)));
+            const pinned = announcements.filter(a => a.pinned).sort((a, b) => a.order - b.order);
+            const unpinned = announcements.filter(a => !a.pinned).sort((a, b) => b.order - a.order);
+
+            pinnedPostsHeader.style.display = pinned.length > 0 ? 'flex' : 'none';
+            pinnedPostsFeed.innerHTML = pinned.map(createPostElement).join('');
+            unpinnedPostsFeed.innerHTML = unpinned.map(createPostElement).join('');
+            if (announcements.length === 0) {
+                unpinnedPostsFeed.innerHTML = '<p>No announcements found for this tab.</p>';
+            }
+
+            document.querySelectorAll('.post-card').forEach(card => {
+                if (!card.closest('.expanded')) { // Prevent re-adding listener to expanded card
+                    card.addEventListener('click', (e) => {
+                       if (!e.target.closest('button')) expandPost(card);
+                    });
+                }
+            });
             document.querySelectorAll('.post-actions button').forEach(button => button.addEventListener('click', e => e.stopPropagation()));
         }
 
         function createPostElement(announcement) {
             const postDate = new Date(parseInt(announcement.id)).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
-            const actionsHtml = isAdmin ? `<div class="post-actions"><button class="button" onclick="editAnnouncement('${announcement.id}')">Edit</button><button class="button delete-button" onclick="deleteAnnouncement('${announcement.id}')">Delete</button></div>` : '';
+            const pinButtonText = announcement.pinned ? 'Unpin' : 'Pin';
+            const pinIcon = announcement.pinned ? `<div class="pin-icon"><i class="fas fa-thumbtack"></i></div>` : '';
+            const actionsHtml = isAdmin ? `
+                <div class="post-actions">
+                    <button class="button small secondary" onclick="togglePin('${announcement.id}')">${pinButtonText}</button>
+                    <button class="button small" onclick="editAnnouncement('${announcement.id}')">Edit</button>
+                    <button class="button small delete-button" onclick="deleteAnnouncement('${announcement.id}')">Delete</button>
+                </div>` : '';
             const tempDiv = document.createElement("div");
             tempDiv.innerHTML = announcement.content;
             const collapsedText = tempDiv.textContent || "";
             const finalContent = autoEmbed(announcement.content);
 
             return `
-                <div class="post-card" data-id="${announcement.id}">
+                <div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" draggable="${isAdmin}">
+                    ${pinIcon}
                     ${actionsHtml}
                     <h3>${announcement.title}</h3>
                     <div class="collapsed-content">${collapsedText}</div>
@@ -1698,10 +1770,10 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         
         function saveTabs() {
             if (!isAdmin) return;
-            const updates = {};
-            tabs.forEach(tab => {
-                updates[tab.id] = tab;
-            });
+            const updates = tabs.reduce((acc, tab) => {
+                acc[tab.id] = tab;
+                return acc;
+            }, {});
             tabsRef.set(updates).catch(error => console.error("Error saving tabs:", error));
         }
 
@@ -1714,14 +1786,14 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 return `
                     <li class="sidebar-item" data-tab-id="${tab.id}" draggable="${isAdmin}">
                         <a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}">
-                            ${isAdmin ? '<span class="move-handle">☰</span> ' : ''}${tab.name}${actionsHtml}
+                            <span class="move-handle">☰</span> ${tab.name}${actionsHtml}
                         </a>
                     </li>`;
             }).join('');
             
             document.querySelectorAll('.sidebar-item').forEach(item => {
                 item.addEventListener('click', e => {
-                    if (!e.target.closest('.tab-action-btn')) {
+                    if (!e.target.closest('.tab-action-btn, .move-handle')) {
                         e.preventDefault();
                         setActiveTab(item.dataset.tabId);
                         if (window.innerWidth <= 768) sidebar.classList.remove('visible');
@@ -1730,61 +1802,40 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         }
         
-        function setupDragAndDropListeners() {
-            if (!isAdmin) return;
-
+        function setupSidebarDragAndDrop() {
+            let draggedItem = null, placeholder = null;
             sidebarMenu.addEventListener('dragstart', e => {
-                const target = e.target.closest('.sidebar-item');
-                if (target) {
-                    draggedItem = target;
-                    setTimeout(() => {
-                        draggedItem.classList.add('dragging');
-                    }, 0);
+                draggedItem = e.target.closest('.sidebar-item');
+                if (draggedItem && e.target.classList.contains('move-handle')) {
+                    placeholder = document.createElement('li');
+                    placeholder.className = 'sidebar-placeholder';
+                    setTimeout(() => draggedItem.classList.add('dragging'), 0);
+                } else {
+                    e.preventDefault();
                 }
             });
-
-            sidebarMenu.addEventListener('dragend', () => {
-                if (draggedItem) {
-                    draggedItem.classList.remove('dragging');
-                }
-                if (placeholder && placeholder.parentNode) {
-                    placeholder.parentNode.removeChild(placeholder);
-                }
-                draggedItem = null;
-                placeholder = null;
-            });
-
             sidebarMenu.addEventListener('dragover', e => {
                 e.preventDefault();
+                if (!draggedItem) return;
                 const overElement = e.target.closest('.sidebar-item');
                 if (overElement && overElement !== draggedItem) {
-                    if (!placeholder) {
-                        placeholder = document.createElement('li');
-                        placeholder.className = 'placeholder';
-                    }
                     const rect = overElement.getBoundingClientRect();
-                    const midpoint = rect.top + rect.height / 2;
-                    if (e.clientY < midpoint) {
-                        overElement.parentNode.insertBefore(placeholder, overElement);
-                    } else {
-                        overElement.parentNode.insertBefore(placeholder, overElement.nextSibling);
-                    }
+                    e.clientY < rect.top + rect.height / 2 ? overElement.parentNode.insertBefore(placeholder, overElement) : overElement.parentNode.insertBefore(placeholder, overElement.nextSibling);
                 }
             });
-
+            sidebarMenu.addEventListener('dragend', () => {
+                if (!draggedItem) return;
+                draggedItem.classList.remove('dragging');
+                placeholder?.remove();
+                draggedItem = null; placeholder = null;
+            });
             sidebarMenu.addEventListener('drop', e => {
                 e.preventDefault();
                 if (!placeholder || !placeholder.parentNode || !draggedItem) return;
-
-                const children = Array.from(sidebarMenu.children);
-                const newIndex = children.indexOf(placeholder);
-
-                const draggedId = draggedItem.dataset.tabId;
-                const oldIndex = tabs.findIndex(t => t.id === draggedId);
-                
+                const newIndex = Array.from(sidebarMenu.children).indexOf(placeholder);
+                const oldIndex = tabs.findIndex(t => t.id === draggedItem.dataset.tabId);
                 const [movedTab] = tabs.splice(oldIndex, 1);
                 tabs.splice(newIndex, 0, movedTab);
-
                 tabs.forEach((t, i) => t.order = i);
                 saveTabs();
             });
@@ -1795,16 +1846,14 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const tab = tabs.find(t => t.id === tabId);
             if (tab) {
                 currentTabTitleElement.textContent = tab.name;
-                // Update active link in sidebar
                 document.querySelectorAll('.sidebar-link.active').forEach(l => l.classList.remove('active'));
                 const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
                 if (activeLink) activeLink.classList.add('active');
                 
-                // Unsubscribe from previous listener and subscribe to new one
-                announcementsRef.off(); // Detach all previous listeners on announcements
+                announcementsRef.child(tabId).off();
                 announcementsRef.child(tabId).on('value', snapshot => {
                     currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : [];
-                    filterAnnouncements(); // This calls renderAnnouncements
+                    filterAnnouncements();
                 });
             }
         }
@@ -1827,16 +1876,10 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const name = tabNameInput.value.trim();
             if (!name) return alert('Please enter a tab name');
             if (currentTabBeingEdited) {
-                const tabIndex = tabs.findIndex(t => t.id === currentTabBeingEdited);
-                if (tabIndex > -1) { 
-                    tabs[tabIndex].name = name; 
-                    saveTabs(); 
-                }
+                tabsRef.child(currentTabBeingEdited).update({ name: name });
             } else {
-                const newTab = { id: 'tab-' + Date.now(), name, order: tabs.length };
-                tabsRef.child(newTab.id).set(newTab).then(() => {
-                    setActiveTab(newTab.id);
-                });
+                const newTabRef = tabsRef.push();
+                newTabRef.set({ id: newTabRef.key, name, order: tabs.length });
             }
             closeTabEditor();
         }
@@ -1846,7 +1889,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             if (isAdmin && confirm('Are you sure you want to delete this tab and all its announcements?')) {
                 tabsRef.child(id).remove();
                 announcementsRef.child(id).remove();
-                // State will update automatically via Firebase listener
             }
         }
 
@@ -1874,8 +1916,9 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const title = announcementTitleInput.value.trim();
             const content = announcementEditorInstance.getContents(true);
             if (!title || !content) return alert('Please enter a title and content.');
-            const newAnn = { id: String(Date.now()), title, content };
-            announcementsRef.child(currentTabId).child(newAnn.id).set(newAnn).then(closeAnnouncementEditor);
+            const newAnnRef = announcementsRef.child(currentTabId).push();
+            const newAnn = { id: newAnnRef.key, title, content, pinned: false, order: Date.now() };
+            newAnnRef.set(newAnn).then(closeAnnouncementEditor);
         }
 
         function saveEditedAnnouncement(id) {
@@ -1883,9 +1926,24 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const title = announcementTitleInput.value.trim();
             const content = announcementEditorInstance.getContents(true);
             if (!title || !content) return alert('Please enter a title and content.');
-            const updatedAnn = { id, title, content };
-            announcementsRef.child(currentTabId).child(id).set(updatedAnn).then(closeAnnouncementEditor);
+            announcementsRef.child(currentTabId).child(id).update({ title, content }).then(closeAnnouncementEditor);
         }
+        
+        window.togglePin = (id) => {
+            const announcement = currentTabAnnouncements.find(a => a.id === id);
+            if (!announcement) return;
+            const newPinnedStatus = !announcement.pinned;
+            let newOrder;
+            if (newPinnedStatus) { // Pinning
+                const pinnedPosts = currentTabAnnouncements.filter(a => a.pinned).sort((a,b) => a.order - b.order);
+                const topOrder = pinnedPosts.length > 0 ? pinnedPosts[pinnedPosts.length - 1].order : 0;
+                newOrder = topOrder + 1000;
+            } else { // Unpinning
+                newOrder = Date.now();
+            }
+            announcementsRef.child(currentTabId).child(id).update({ pinned: newPinnedStatus, order: newOrder });
+        };
+
 
         function expandPost(postElement) {
             if (expandedPost) collapsePost(expandedPost);
@@ -1913,6 +1971,72 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 });
             }
         };
+
+        function setupPostsDragAndDrop() {
+            let draggedPost = null, postPlaceholder = null;
+            classroomInfo.addEventListener('dragstart', e => {
+                draggedPost = e.target.closest('.post-card');
+                if (draggedPost) {
+                    postPlaceholder = document.createElement('div');
+                    postPlaceholder.className = 'post-placeholder';
+                    postPlaceholder.style.height = `${draggedPost.offsetHeight}px`;
+                    setTimeout(() => draggedPost.classList.add('dragging'), 0);
+                }
+            });
+
+            classroomInfo.addEventListener('dragover', e => {
+                e.preventDefault();
+                if (!draggedPost) return;
+                const overElement = e.target.closest('.post-card');
+                const container = overElement ? overElement.parentNode : (e.target.closest('.posts-feed') || (e.clientY < unpinnedPostsFeed.offsetTop ? pinnedPostsFeed : unpinnedPostsFeed));
+                
+                if (overElement && overElement !== draggedPost) {
+                    const rect = overElement.getBoundingClientRect();
+                    e.clientY < rect.top + rect.height / 2 ? container.insertBefore(postPlaceholder, overElement) : container.insertBefore(postPlaceholder, overElement.nextSibling);
+                } else if (!overElement && container) {
+                    container.appendChild(postPlaceholder);
+                }
+            });
+
+            classroomInfo.addEventListener('dragend', () => {
+                if (!draggedPost) return;
+                draggedPost.classList.remove('dragging');
+                postPlaceholder?.remove();
+                draggedPost = null; postPlaceholder = null;
+            });
+
+            classroomInfo.addEventListener('drop', e => {
+                e.preventDefault();
+                if (!postPlaceholder || !postPlaceholder.parentNode || !draggedPost) return;
+
+                const parentContainer = postPlaceholder.parentNode;
+                const isPinnedDrop = parentContainer.id === 'pinned-posts-feed';
+
+                const siblings = Array.from(parentContainer.children).filter(c => c.classList.contains('post-card'));
+                const placeholderIndex = siblings.indexOf(postPlaceholder);
+                
+                const prevSibling = siblings[placeholderIndex - 1];
+                const nextSibling = siblings[placeholderIndex];
+                
+                const prevOrder = prevSibling ? currentTabAnnouncements.find(a => a.id === prevSibling.dataset.id).order : 0;
+                const nextOrder = nextSibling ? currentTabAnnouncements.find(a => a.id === nextSibling.dataset.id).order : (prevOrder + 2000);
+                
+                let newOrder;
+                if(isPinnedDrop) {
+                     newOrder = (prevOrder + nextOrder) / 2;
+                } else {
+                    // For unpinned, we sort descending, so the logic is flipped
+                    const prevOrderDesc = prevSibling ? currentTabAnnouncements.find(a => a.id === prevSibling.dataset.id).order : (nextOrder + 2000);
+                    const nextOrderDesc = nextSibling ? currentTabAnnouncements.find(a => a.id === nextSibling.dataset.id).order : 0;
+                    newOrder = (prevOrderDesc + nextOrderDesc) / 2;
+                }
+
+                announcementsRef.child(currentTabId).child(draggedPost.dataset.id).update({
+                    order: newOrder,
+                    pinned: isPinnedDrop
+                });
+            });
+        }
         
         function renderReminders() {
             remindersList.innerHTML = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date)).map(rem => {
@@ -1946,8 +2070,9 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             if (!title || !date) return alert('Please enter a title and date');
             const description = document.getElementById('reminder-description').value.trim();
             const type = document.getElementById('reminder-type').value;
-            const reminder = { id: currentReminderBeingEdited || String(Date.now()), title, description, date, type };
-            database.ref('reminders/' + reminder.id).set(reminder).then(closeReminderEditor);
+            const id = currentReminderBeingEdited || database.ref().push().key;
+            const reminder = { id, title, description, date, type };
+            database.ref('reminders/' + id).set(reminder).then(closeReminderEditor);
         }
         
         window.editReminder = (event, id) => { event.stopPropagation(); openReminderEditor(id); };
