@@ -741,6 +741,7 @@ body.dark-mode .add-tab-header-button:hover {
     margin-right: var(--space-sm);
     color: var(--medium);
     opacity: 0.5;
+    touch-action: none; /* For mobile */
 }
 
 /* Sidebar Drag and Drop Styles */
@@ -982,13 +983,6 @@ body.dark-mode .add-tab-header-button:hover {
     box-shadow: var(--shadow-lg);
 }
 
-
-.post-card:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
-    border-color: var(--primary);
-}
-
 .pin-icon {
     position: absolute;
     top: var(--space-lg);
@@ -1003,6 +997,19 @@ body.dark-mode .add-tab-header-button:hover {
     justify-content: center;
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--light-gray);
+}
+
+.post-card-drag-handle {
+    position: absolute;
+    top: var(--space-md);
+    left: var(--space-md);
+    padding: var(--space-xs);
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.post-card:hover .post-card-drag-handle {
+    opacity: 0.5;
 }
 
 
@@ -1687,9 +1694,10 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         }
 
         function setupFirebaseListeners() {
-            tabsRef.orderByChild('order').on('value', snapshot => {
-                tabs = [];
-                snapshot.forEach(childSnapshot => tabs.push(childSnapshot.val()));
+            tabsRef.on('value', snapshot => {
+                const tabsData = snapshot.val();
+                tabs = tabsData ? Object.values(tabsData) : [];
+                tabs.sort((a, b) => (a.order || 0) - (b.order || 0)); // Client-side sort for robustness
                 renderTabs();
                 if (tabs.length > 0 && (!currentTabId || !tabs.some(t => t.id === currentTabId))) {
                     setActiveTab(tabs[0].id);
@@ -1720,8 +1728,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         }
 
         function renderAnnouncements(announcements) {
-            const pinned = announcements.filter(a => a.pinned).sort((a, b) => a.order - b.order);
-            const unpinned = announcements.filter(a => !a.pinned).sort((a, b) => b.order - a.order);
+            const pinned = announcements.filter(a => a.pinned).sort((a, b) => (a.order || 0) - (b.order || 0));
+            const unpinned = announcements.filter(a => !a.pinned).sort((a, b) => (b.order || 0) - (a.order || 0));
 
             pinnedPostsHeader.style.display = pinned.length > 0 ? 'flex' : 'none';
             pinnedPostsFeed.innerHTML = pinned.map(createPostElement).join('');
@@ -1731,17 +1739,15 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             }
 
             document.querySelectorAll('.post-card').forEach(card => {
-                if (!card.closest('.expanded')) { // Prevent re-adding listener to expanded card
-                    card.addEventListener('click', (e) => {
-                       if (!e.target.closest('button')) expandPost(card);
-                    });
-                }
+                card.addEventListener('click', (e) => {
+                    if (!e.target.closest('button, .move-handle')) expandPost(card);
+                });
             });
             document.querySelectorAll('.post-actions button').forEach(button => button.addEventListener('click', e => e.stopPropagation()));
         }
 
         function createPostElement(announcement) {
-            const postDate = new Date(parseInt(announcement.id)).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
+            const postDate = new Date(announcement.order).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
             const pinButtonText = announcement.pinned ? 'Unpin' : 'Pin';
             const pinIcon = announcement.pinned ? `<div class="pin-icon"><i class="fas fa-thumbtack"></i></div>` : '';
             const actionsHtml = isAdmin ? `
@@ -1757,6 +1763,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
             return `
                 <div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" draggable="${isAdmin}">
+                    <span class="post-card-drag-handle move-handle">☰</span>
                     ${pinIcon}
                     ${actionsHtml}
                     <h3>${announcement.title}</h3>
@@ -1805,8 +1812,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function setupSidebarDragAndDrop() {
             let draggedItem = null, placeholder = null;
             sidebarMenu.addEventListener('dragstart', e => {
-                draggedItem = e.target.closest('.sidebar-item');
-                if (draggedItem && e.target.classList.contains('move-handle')) {
+                if (e.target.classList.contains('move-handle')) {
+                    draggedItem = e.target.closest('.sidebar-item');
                     placeholder = document.createElement('li');
                     placeholder.className = 'sidebar-placeholder';
                     setTimeout(() => draggedItem.classList.add('dragging'), 0);
@@ -1824,8 +1831,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
             sidebarMenu.addEventListener('dragend', () => {
-                if (!draggedItem) return;
-                draggedItem.classList.remove('dragging');
+                draggedItem?.classList.remove('dragging');
                 placeholder?.remove();
                 draggedItem = null; placeholder = null;
             });
@@ -1933,15 +1939,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const announcement = currentTabAnnouncements.find(a => a.id === id);
             if (!announcement) return;
             const newPinnedStatus = !announcement.pinned;
-            let newOrder;
-            if (newPinnedStatus) { // Pinning
-                const pinnedPosts = currentTabAnnouncements.filter(a => a.pinned).sort((a,b) => a.order - b.order);
-                const topOrder = pinnedPosts.length > 0 ? pinnedPosts[pinnedPosts.length - 1].order : 0;
-                newOrder = topOrder + 1000;
-            } else { // Unpinning
-                newOrder = Date.now();
-            }
-            announcementsRef.child(currentTabId).child(id).update({ pinned: newPinnedStatus, order: newOrder });
+            announcementsRef.child(currentTabId).child(id).update({ pinned: newPinnedStatus });
         };
 
 
@@ -1975,12 +1973,14 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function setupPostsDragAndDrop() {
             let draggedPost = null, postPlaceholder = null;
             classroomInfo.addEventListener('dragstart', e => {
-                draggedPost = e.target.closest('.post-card');
-                if (draggedPost) {
+                if (e.target.classList.contains('move-handle')) {
+                    draggedPost = e.target.closest('.post-card');
                     postPlaceholder = document.createElement('div');
                     postPlaceholder.className = 'post-placeholder';
                     postPlaceholder.style.height = `${draggedPost.offsetHeight}px`;
                     setTimeout(() => draggedPost.classList.add('dragging'), 0);
+                } else {
+                    e.preventDefault();
                 }
             });
 
@@ -1988,7 +1988,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 e.preventDefault();
                 if (!draggedPost) return;
                 const overElement = e.target.closest('.post-card');
-                const container = overElement ? overElement.parentNode : (e.target.closest('.posts-feed') || (e.clientY < unpinnedPostsFeed.offsetTop ? pinnedPostsFeed : unpinnedPostsFeed));
+                const container = overElement ? overElement.parentNode : (e.target.closest('.posts-feed') || (e.clientY < unpinnedPostsFeed.getBoundingClientRect().top ? pinnedPostsFeed : unpinnedPostsFeed));
                 
                 if (overElement && overElement !== draggedPost) {
                     const rect = overElement.getBoundingClientRect();
@@ -1997,44 +1997,34 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     container.appendChild(postPlaceholder);
                 }
             });
-
-            classroomInfo.addEventListener('dragend', () => {
-                if (!draggedPost) return;
-                draggedPost.classList.remove('dragging');
+            
+            const endDrag = () => {
+                draggedPost?.classList.remove('dragging');
                 postPlaceholder?.remove();
                 draggedPost = null; postPlaceholder = null;
-            });
-
+            };
+            classroomInfo.addEventListener('dragend', endDrag);
             classroomInfo.addEventListener('drop', e => {
                 e.preventDefault();
                 if (!postPlaceholder || !postPlaceholder.parentNode || !draggedPost) return;
 
-                const parentContainer = postPlaceholder.parentNode;
-                const isPinnedDrop = parentContainer.id === 'pinned-posts-feed';
+                postPlaceholder.parentNode.insertBefore(draggedPost, postPlaceholder);
+                endDrag();
 
-                const siblings = Array.from(parentContainer.children).filter(c => c.classList.contains('post-card'));
-                const placeholderIndex = siblings.indexOf(postPlaceholder);
-                
-                const prevSibling = siblings[placeholderIndex - 1];
-                const nextSibling = siblings[placeholderIndex];
-                
-                const prevOrder = prevSibling ? currentTabAnnouncements.find(a => a.id === prevSibling.dataset.id).order : 0;
-                const nextOrder = nextSibling ? currentTabAnnouncements.find(a => a.id === nextSibling.dataset.id).order : (prevOrder + 2000);
-                
-                let newOrder;
-                if(isPinnedDrop) {
-                     newOrder = (prevOrder + nextOrder) / 2;
-                } else {
-                    // For unpinned, we sort descending, so the logic is flipped
-                    const prevOrderDesc = prevSibling ? currentTabAnnouncements.find(a => a.id === prevSibling.dataset.id).order : (nextOrder + 2000);
-                    const nextOrderDesc = nextSibling ? currentTabAnnouncements.find(a => a.id === nextSibling.dataset.id).order : 0;
-                    newOrder = (prevOrderDesc + nextOrderDesc) / 2;
-                }
+                const updates = {};
+                const pinnedIds = Array.from(pinnedPostsFeed.querySelectorAll('.post-card')).map(p => p.dataset.id);
+                const unpinnedIds = Array.from(unpinnedPostsFeed.querySelectorAll('.post-card')).map(p => p.dataset.id);
 
-                announcementsRef.child(currentTabId).child(draggedPost.dataset.id).update({
-                    order: newOrder,
-                    pinned: isPinnedDrop
+                pinnedIds.forEach((id, index) => {
+                    updates[`${id}/order`] = index;
+                    updates[`${id}/pinned`] = true;
                 });
+                unpinnedIds.forEach((id, index) => {
+                    updates[`${id}/order`] = Date.now() - index; // Keep newest at top
+                    updates[`${id}/pinned`] = false;
+                });
+                
+                announcementsRef.child(currentTabId).update(updates);
             });
         }
         
