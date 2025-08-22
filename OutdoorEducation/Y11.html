@@ -1740,7 +1740,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
             document.querySelectorAll('.post-card').forEach(card => {
                 card.addEventListener('click', (e) => {
-                    if (!e.target.closest('button, .move-handle')) expandPost(card);
+                    if (!e.target.closest('button, .move-handle, .post-card-drag-handle')) expandPost(card);
                 });
             });
             document.querySelectorAll('.post-actions button').forEach(button => button.addEventListener('click', e => e.stopPropagation()));
@@ -1811,39 +1811,68 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         
         function setupSidebarDragAndDrop() {
             let draggedItem = null, placeholder = null;
+
             sidebarMenu.addEventListener('dragstart', e => {
-                if (e.target.classList.contains('move-handle')) {
-                    draggedItem = e.target.closest('.sidebar-item');
-                    placeholder = document.createElement('li');
-                    placeholder.className = 'sidebar-placeholder';
-                    setTimeout(() => draggedItem.classList.add('dragging'), 0);
-                } else {
-                    e.preventDefault();
-                }
+                draggedItem = e.target.closest('.sidebar-item');
+                if (!draggedItem) return;
+
+                e.dataTransfer.effectAllowed = 'move';
+                
+                placeholder = document.createElement('li');
+                placeholder.className = 'sidebar-placeholder';
+                
+                //
+                setTimeout(() => {
+                    if(draggedItem) draggedItem.classList.add('dragging');
+                }, 0);
             });
+
             sidebarMenu.addEventListener('dragover', e => {
                 e.preventDefault();
                 if (!draggedItem) return;
+
                 const overElement = e.target.closest('.sidebar-item');
                 if (overElement && overElement !== draggedItem) {
                     const rect = overElement.getBoundingClientRect();
-                    e.clientY < rect.top + rect.height / 2 ? overElement.parentNode.insertBefore(placeholder, overElement) : overElement.parentNode.insertBefore(placeholder, overElement.nextSibling);
+                    const isBefore = e.clientY < rect.top + rect.height / 2;
+                    if (isBefore) {
+                        overElement.parentNode.insertBefore(placeholder, overElement);
+                    } else {
+                        overElement.parentNode.insertBefore(placeholder, overElement.nextSibling);
+                    }
                 }
             });
-            sidebarMenu.addEventListener('dragend', () => {
-                draggedItem?.classList.remove('dragging');
-                placeholder?.remove();
-                draggedItem = null; placeholder = null;
-            });
+            
+            const endDrag = () => {
+                if(draggedItem) draggedItem.classList.remove('dragging');
+                if(placeholder) placeholder.remove();
+                draggedItem = null;
+                placeholder = null;
+            }
+
+            sidebarMenu.addEventListener('dragend', endDrag);
+
             sidebarMenu.addEventListener('drop', e => {
                 e.preventDefault();
-                if (!placeholder || !placeholder.parentNode || !draggedItem) return;
-                const newIndex = Array.from(sidebarMenu.children).indexOf(placeholder);
-                const oldIndex = tabs.findIndex(t => t.id === draggedItem.dataset.tabId);
-                const [movedTab] = tabs.splice(oldIndex, 1);
+                if (!placeholder || !placeholder.parentNode || !draggedItem) {
+                    endDrag();
+                    return;
+                }
+                
+                placeholder.parentNode.insertBefore(draggedItem, placeholder);
+                
+                const originalIndex = tabs.findIndex(t => t.id === draggedItem.dataset.tabId);
+                const [movedTab] = tabs.splice(originalIndex, 1);
+
+                const newIndex = Array.from(sidebarMenu.children).indexOf(draggedItem);
                 tabs.splice(newIndex, 0, movedTab);
-                tabs.forEach((t, i) => t.order = i);
+                
+                tabs.forEach((tab, index) => {
+                    tab.order = index;
+                });
+                
                 saveTabs();
+                endDrag();
             });
         }
 
@@ -1972,45 +2001,60 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
         function setupPostsDragAndDrop() {
             let draggedPost = null, postPlaceholder = null;
+            
             classroomInfo.addEventListener('dragstart', e => {
-                if (e.target.classList.contains('move-handle')) {
-                    draggedPost = e.target.closest('.post-card');
-                    postPlaceholder = document.createElement('div');
-                    postPlaceholder.className = 'post-placeholder';
-                    postPlaceholder.style.height = `${draggedPost.offsetHeight}px`;
-                    setTimeout(() => draggedPost.classList.add('dragging'), 0);
-                } else {
-                    e.preventDefault();
-                }
+                draggedPost = e.target.closest('.post-card');
+                if (!draggedPost) return;
+
+                e.dataTransfer.effectAllowed = 'move';
+
+                postPlaceholder = document.createElement('div');
+                postPlaceholder.className = 'post-placeholder';
+                postPlaceholder.style.height = `${draggedPost.offsetHeight}px`;
+
+                setTimeout(() => {
+                    if (draggedPost) draggedPost.classList.add('dragging');
+                }, 0);
             });
 
             classroomInfo.addEventListener('dragover', e => {
                 e.preventDefault();
                 if (!draggedPost) return;
+
                 const overElement = e.target.closest('.post-card');
                 const container = overElement ? overElement.parentNode : (e.target.closest('.posts-feed') || (e.clientY < unpinnedPostsFeed.getBoundingClientRect().top ? pinnedPostsFeed : unpinnedPostsFeed));
                 
                 if (overElement && overElement !== draggedPost) {
                     const rect = overElement.getBoundingClientRect();
-                    e.clientY < rect.top + rect.height / 2 ? container.insertBefore(postPlaceholder, overElement) : container.insertBefore(postPlaceholder, overElement.nextSibling);
-                } else if (!overElement && container) {
+                    const isBefore = e.clientY < rect.top + rect.height / 2;
+                    if (isBefore) {
+                        container.insertBefore(postPlaceholder, overElement);
+                    } else {
+                        container.insertBefore(postPlaceholder, overElement.nextSibling);
+                    }
+                } else if (!overElement && container && !container.contains(postPlaceholder)) {
                     container.appendChild(postPlaceholder);
                 }
             });
             
             const endDrag = () => {
-                draggedPost?.classList.remove('dragging');
-                postPlaceholder?.remove();
-                draggedPost = null; postPlaceholder = null;
+                if(draggedPost) draggedPost.classList.remove('dragging');
+                if(postPlaceholder) postPlaceholder.remove();
+                draggedPost = null;
+                postPlaceholder = null;
             };
+
             classroomInfo.addEventListener('dragend', endDrag);
+
             classroomInfo.addEventListener('drop', e => {
                 e.preventDefault();
-                if (!postPlaceholder || !postPlaceholder.parentNode || !draggedPost) return;
+                if (!postPlaceholder || !postPlaceholder.parentNode || !draggedPost) {
+                    endDrag();
+                    return;
+                }
 
                 postPlaceholder.parentNode.insertBefore(draggedPost, postPlaceholder);
-                endDrag();
-
+                
                 const updates = {};
                 const pinnedIds = Array.from(pinnedPostsFeed.querySelectorAll('.post-card')).map(p => p.dataset.id);
                 const unpinnedIds = Array.from(unpinnedPostsFeed.querySelectorAll('.post-card')).map(p => p.dataset.id);
@@ -2019,12 +2063,14 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     updates[`${id}/order`] = index;
                     updates[`${id}/pinned`] = true;
                 });
+
                 unpinnedIds.forEach((id, index) => {
-                    updates[`${id}/order`] = Date.now() - index; // Keep newest at top
+                    updates[`${id}/order`] = Date.now() - index; 
                     updates[`${id}/pinned`] = false;
                 });
                 
                 announcementsRef.child(currentTabId).update(updates);
+                endDrag();
             });
         }
         
