@@ -2000,14 +2000,17 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         };
 
         function setupPostsDragAndDrop() {
-            let draggedPost = null, postPlaceholder = null;
-            
+            let draggedPost = null;
+            let postPlaceholder = null;
+            let sourceContainer = null;
+
             classroomInfo.addEventListener('dragstart', e => {
-                draggedPost = e.target.closest('.post-card');
+                draggedPost = e.target.closest('.post-card[draggable="true"]');
                 if (!draggedPost) return;
 
+                sourceContainer = draggedPost.parentElement;
                 e.dataTransfer.effectAllowed = 'move';
-
+                
                 postPlaceholder = document.createElement('div');
                 postPlaceholder.className = 'post-placeholder';
                 postPlaceholder.style.height = `${draggedPost.offsetHeight}px`;
@@ -2018,22 +2021,26 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
 
             classroomInfo.addEventListener('dragover', e => {
-                e.preventDefault();
-                if (!draggedPost) return;
+                if (!draggedPost || !sourceContainer) return;
+                
+                const currentContainer = e.target.closest('.posts-feed');
+                if (currentContainer !== sourceContainer) {
+                    return;
+                }
 
+                e.preventDefault();
                 const overElement = e.target.closest('.post-card');
-                const container = overElement ? overElement.parentNode : (e.target.closest('.posts-feed') || (e.clientY < unpinnedPostsFeed.getBoundingClientRect().top ? pinnedPostsFeed : unpinnedPostsFeed));
                 
                 if (overElement && overElement !== draggedPost) {
                     const rect = overElement.getBoundingClientRect();
                     const isBefore = e.clientY < rect.top + rect.height / 2;
                     if (isBefore) {
-                        container.insertBefore(postPlaceholder, overElement);
+                        sourceContainer.insertBefore(postPlaceholder, overElement);
                     } else {
-                        container.insertBefore(postPlaceholder, overElement.nextSibling);
+                        sourceContainer.insertBefore(postPlaceholder, overElement.nextSibling);
                     }
-                } else if (!overElement && container && !container.contains(postPlaceholder)) {
-                    container.appendChild(postPlaceholder);
+                } else if (!overElement && !sourceContainer.contains(postPlaceholder)) {
+                    sourceContainer.appendChild(postPlaceholder);
                 }
             });
             
@@ -2042,13 +2049,14 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 if(postPlaceholder) postPlaceholder.remove();
                 draggedPost = null;
                 postPlaceholder = null;
+                sourceContainer = null;
             };
 
             classroomInfo.addEventListener('dragend', endDrag);
 
             classroomInfo.addEventListener('drop', e => {
                 e.preventDefault();
-                if (!postPlaceholder || !postPlaceholder.parentNode || !draggedPost) {
+                if (!postPlaceholder || !postPlaceholder.parentNode || !draggedPost || !sourceContainer) {
                     endDrag();
                     return;
                 }
@@ -2056,21 +2064,22 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 postPlaceholder.parentNode.insertBefore(draggedPost, postPlaceholder);
                 
                 const updates = {};
-                const pinnedIds = Array.from(pinnedPostsFeed.querySelectorAll('.post-card')).map(p => p.dataset.id);
-                const unpinnedIds = Array.from(unpinnedPostsFeed.querySelectorAll('.post-card')).map(p => p.dataset.id);
+                const isPinnedList = sourceContainer.id === 'pinned-posts-feed';
+                const orderedIds = Array.from(sourceContainer.querySelectorAll('.post-card')).map(p => p.dataset.id);
 
-                pinnedIds.forEach((id, index) => {
-                    updates[`${id}/order`] = index;
-                    updates[`${id}/pinned`] = true;
-                });
-
-                unpinnedIds.forEach((id, index) => {
-                    updates[`${id}/order`] = Date.now() - index; 
-                    updates[`${id}/pinned`] = false;
-                });
+                if (isPinnedList) {
+                    orderedIds.forEach((id, index) => {
+                        updates[`${id}/order`] = index;
+                    });
+                } else {
+                    orderedIds.forEach((id, index) => {
+                        updates[`${id}/order`] = Date.now() - index;
+                    });
+                }
                 
-                announcementsRef.child(currentTabId).update(updates);
-                endDrag();
+                if (Object.keys(updates).length > 0) {
+                    announcementsRef.child(currentTabId).update(updates);
+                }
             });
         }
         
