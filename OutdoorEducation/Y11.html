@@ -984,39 +984,50 @@ body.dark-mode .editor-content #custom-editor-container {
     align-items: center;
     border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
-.custom-editor-toolbar button, .custom-editor-toolbar select, .custom-editor-toolbar input {
+.custom-editor-toolbar button, .custom-editor-toolbar select, .custom-editor-toolbar label {
     background: transparent;
-    border: none;
+    border: 1px solid transparent;
     cursor: pointer;
-    height: 32px;
+    height: 34px;
     border-radius: var(--radius-sm);
     color: var(--dark);
     font-family: var(--font-main);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--space-xs);
 }
 .custom-editor-toolbar button {
-    width: 32px;
+    width: 34px;
     font-size: var(--text-base);
 }
 .custom-editor-toolbar select {
     padding: 0 var(--space-xs);
 }
 .custom-editor-toolbar input[type="color"] {
-    width: 32px;
-    padding: 2px;
-    border: 1px solid transparent;
+   opacity: 0;
+   width: 0;
+   height: 0;
+   position: absolute;
 }
-.custom-editor-toolbar input[type="color"]:hover {
-    border-color: var(--light-gray);
+.custom-editor-toolbar label {
+    width: 34px;
 }
 
-.custom-editor-toolbar button:hover, .custom-editor-toolbar select:hover {
+.custom-editor-toolbar button:hover, .custom-editor-toolbar select:hover, .custom-editor-toolbar label:hover {
     background-color: var(--light-gray);
+    border-color: var(--medium);
 }
 .custom-editor-toolbar .toolbar-separator {
     width: 1px;
     height: 20px;
     background: var(--light-gray);
     margin: 0 var(--space-xs);
+}
+.toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
 }
 
 #custom-editable-content {
@@ -1033,11 +1044,12 @@ body.dark-mode .custom-editor-toolbar {
     background-color: var(--dark-dark-gray);
     border-bottom-color: var(--dark-light-gray);
 }
-body.dark-mode .custom-editor-toolbar button, body.dark-mode .custom-editor-toolbar select {
+body.dark-mode .custom-editor-toolbar button, body.dark-mode .custom-editor-toolbar select, body.dark-mode .custom-editor-toolbar label {
     color: var(--dark-medium);
 }
-body.dark-mode .custom-editor-toolbar button:hover, body.dark-mode .custom-editor-toolbar select:hover {
+body.dark-mode .custom-editor-toolbar button:hover, body.dark-mode .custom-editor-toolbar select:hover, body.dark-mode .custom-editor-toolbar label:hover {
     background-color: var(--dark-light-gray);
+    border-color: var(--dark-medium);
 }
 body.dark-mode #custom-editable-content {
     background-color: var(--dark-lighter);
@@ -1701,40 +1713,53 @@ body.dark-mode .input-group label {
             <!-- Custom Editor -->
             <div id="custom-editor-container">
                 <div class="custom-editor-toolbar">
-                    <button onclick="formatDoc('bold');" title="Bold"><i class="fas fa-bold"></i></button>
-                    <button onclick="formatDoc('italic');" title="Italic"><i class="fas fa-italic"></i></button>
-                    <button onclick="formatDoc('underline');" title="Underline"><i class="fas fa-underline"></i></button>
-                    <span class="toolbar-separator"></span>
-                    <select onchange="formatDoc('fontName', this.value);" title="Font Family">
-                        <option value="Inter">Inter</option>
-                        <option value="Roboto">Roboto</option>
-                        <option value="Arial">Arial</option>
-                        <option value="Courier New">Courier New</option>
-                        <option value="Georgia">Georgia</option>
-                        <option value="Times New Roman">Times New Roman</option>
-                    </select>
-                    <select onchange="formatDoc('fontSize', this.value);" title="Font Size">
-                        <option value="3">Normal</option>
-                        <option value="5">Large</option>
-                        <option value="6">Heading</option>
-                        <option value="7">Title</option>
-                    </select>
-                    <span class="toolbar-separator"></span>
-                    <label for="foreColor" class="toolbar-label" title="Text Color">
-                        <i class="fas fa-font" style="margin: 0 8px;"></i>
-                        <input type="color" id="foreColor" onchange="formatDoc('foreColor', this.value);" style="width:0; height:0; padding:0; border:none; visibility: hidden;">
-                    </label>
-                     <label for="backColor" class="toolbar-label" title="Highlight Color">
-                        <i class="fas fa-fill-drip" style="margin: 0 8px;"></i>
-                        <input type="color" id="backColor" onchange="formatDoc('backColor', this.value);" style="width:0; height:0; padding:0; border:none; visibility: hidden;">
-                    </label>
-                    <span class="toolbar-separator"></span>
-                    <button onclick="formatDoc('insertUnorderedList');" title="Bulleted List"><i class="fas fa-list-ul"></i></button>
-                    <button onclick="formatDoc('insertOrderedList');" title="Numbered List"><i class="fas fa-list-ol"></i></button>
-                    <span class="toolbar-separator"></span>
-                    <button onclick="addLink();" title="Add Link"><i class="fas fa-link"></i></button>
-                    <button onclick="embedVideo();" title="Embed YouTube Video"><i class="fab fa-youtube"></i></button>
-                    <button onclick="embedGoogleDrive();" title="Embed Google Drive File"><i class="fab fa-google-drive"></i></button>
+                    <div class="toolbar-group">
+                        <button onclick="formatDoc('bold');" title="Bold"><i class="fas fa-bold"></i></button>
+                        <button onclick="formatDoc('italic');" title="Italic"><i class="fas fa-italic"></i></button>
+                        <button onclick="formatDoc('underline');" title="Underline"><i class="fas fa-underline"></i></button>
+                    </div>
+                    <div class="toolbar-separator"></div>
+                    <div class="toolbar-group">
+                        <select onchange="formatDoc('fontName', this.value);" title="Font Family">
+                            <option value="Inter" selected>Inter</option>
+                            <option value="Roboto">Roboto</option>
+                            <option value="Arial">Arial</option>
+                            <option value="Courier New">Courier</option>
+                            <option value="Georgia">Georgia</option>
+                            <option value="Times New Roman">Times New Roman</option>
+                        </select>
+                        <select onchange="formatDoc('fontSize', this.value);" title="Font Size">
+                            <option value="2">Small</option>
+                            <option value="3" selected>Normal</option>
+                            <option value="5">Large</option>
+                            <option value="6">Heading</option>
+                        </select>
+                    </div>
+                    <div class="toolbar-separator"></div>
+                    <div class="toolbar-group">
+                         <label for="foreColor" class="toolbar-label" title="Text Color">
+                            <i class="fas fa-font"></i>
+                            <input type="color" id="foreColor" onchange="formatDoc('foreColor', this.value);">
+                        </label>
+                         <label for="backColor" class="toolbar-label" title="Highlight Color">
+                            <i class="fas fa-fill-drip"></i>
+                            <input type="color" id="backColor" onchange="formatDoc('backColor', this.value);">
+                        </label>
+                    </div>
+                    <div class="toolbar-separator"></div>
+                    <div class="toolbar-group">
+                        <button onclick="formatDoc('insertUnorderedList');" title="Bulleted List"><i class="fas fa-list-ul"></i></button>
+                        <button onclick="formatDoc('insertOrderedList');" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                        <button onclick="formatDoc('justifyLeft');" title="Align Left"><i class="fas fa-align-left"></i></button>
+                        <button onclick="formatDoc('justifyCenter');" title="Align Center"><i class="fas fa-align-center"></i></button>
+                        <button onclick="formatDoc('justifyRight');" title="Align Right"><i class="fas fa-align-right"></i></button>
+                    </div>
+                    <div class="toolbar-separator"></div>
+                    <div class="toolbar-group">
+                        <button onclick="addLink();" title="Add Link"><i class="fas fa-link"></i></button>
+                        <button onclick="embedVideo();" title="Embed YouTube Video"><i class="fab fa-youtube"></i></button>
+                        <button onclick="embedGoogleDrive();" title="Embed Google Drive File"><i class="fab fa-google-drive"></i></button>
+                    </div>
                 </div>
                 <div id="custom-editable-content" contenteditable="true" class="post-content"></div>
             </div>
@@ -1883,7 +1908,6 @@ body.dark-mode .input-group label {
             setupMobileMenu();
             setupDarkMode();
             setupProfileDropdown();
-            // No editor to initialize anymore!
             UndoManager.init();
             if (isAdmin) {
                 setupSidebarDragAndDrop();
@@ -1931,25 +1955,22 @@ body.dark-mode .input-group label {
 
             let embedHtml = '';
 
-            // Google Slides
             const gSlidesRegex = /https:\/\/docs\.google\.com\/presentation\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
             const gSlidesMatch = url.match(gSlidesRegex);
             if (gSlidesMatch && gSlidesMatch[1]) {
                 embedHtml = `<div class="embed-container" contenteditable="false"><iframe src="https://docs.google.com/presentation/d/${gSlidesMatch[1]}/embed?start=false&loop=false&delayms=3000" frameborder="0" allowfullscreen></iframe></div><p><br></p>`;
             }
 
-            // Google Docs
             const gDocsRegex = /https:\/\/docs\.google\.com\/document\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
             const gDocsMatch = url.match(gDocsRegex);
             if (gDocsMatch && gDocsMatch[1]) {
                  embedHtml = `<div class="embed-container" style="padding-bottom: 141.42%;" contenteditable="false"><iframe src="https://docs.google.com/document/d/${gDocsMatch[1]}/preview" frameborder="0" allowfullscreen></iframe></div><p><br></p>`;
             }
             
-            // Google Sheets
             const gSheetsRegex = /https:\/\/docs\.google\.com\/spreadsheets\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
             const gSheetsMatch = url.match(gSheetsRegex);
             if(gSheetsMatch && gSheetsMatch[1]) {
-                embedHtml = `<div class="embed-container" contenteditable="false"><iframe src="https://docs.google.com/spreadsheets/d/${gSheetsMatch[1]}/edit?usp=sharing" frameborder="0" allowfullscreen></iframe></div><p><br></p>`
+                embedHtml = `<div class="embed-container" contenteditable="false"><iframe src="https://docs.google.com/spreadsheets/d/${gSheetsMatch[1]}/pubhtml?widget=true&amp;headers=false"></iframe></div><p><br></p>`
             }
 
             if (embedHtml) {
