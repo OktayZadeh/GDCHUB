@@ -7,8 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- FIXED: TinyMCE Script with YOUR valid API key -->
-    <script src="https://cdn.tiny.cloud/1/ay97lghbygwk64o8kb20mpyu2ochdhommyrstgszzss65gy2/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
 
     <style>
 :root {
@@ -951,18 +949,15 @@ body.dark-mode .add-tab-header-button:hover {
     padding: var(--space-xl);
     display: flex;
     flex-direction: column;
+    max-width: 800px; /* Optimal reading width */
+    width: 100%;
+    margin: 0 auto;
 }
 .editor-content .input-group {
     margin-top: 0;
     margin-bottom: var(--space-xl);
 }
-.editor-content .tox-tinymce {
-    flex-grow: 1 !important;
-    border-radius: var(--radius-md) !important;
-}
-.tox .tox-edit-area__iframe {
-    background-color: var(--lighter) !important;
-}
+
 
 body.dark-mode #announcement-editor-overlay {
     background-color: var(--dark-light);
@@ -971,6 +966,107 @@ body.dark-mode .editor-header {
     background-color: var(--dark-lighter);
     border-bottom-color: var(--dark-light-gray);
 }
+
+
+/* --- NEW CUSTOM EDITOR STYLES --- */
+.custom-toolbar {
+    background: var(--lighter);
+    border: 1px solid var(--light-gray);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xs);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+.toolbar-group {
+    display: flex;
+    align-items: center;
+    border-right: 1px solid var(--light-gray);
+    padding-right: var(--space-sm);
+    margin-right: var(--space-sm);
+}
+.toolbar-group:last-child {
+    border-right: none;
+    margin-right: 0;
+    padding-right: 0;
+}
+.toolbar-button, .toolbar-select {
+    background: transparent;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    color: var(--medium);
+    cursor: pointer;
+    font-size: var(--text-base);
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.toolbar-button:hover, .toolbar-button.active {
+    background: var(--light);
+    color: var(--dark);
+}
+.toolbar-select {
+    width: auto;
+    padding: 0 var(--space-sm);
+    font-size: var(--text-sm);
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: none;
+}
+.custom-editor-area {
+    flex-grow: 1;
+    background: var(--lighter);
+    border: 1px solid var(--light-gray);
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+    outline: none;
+    overflow-y: auto;
+    line-height: 1.7;
+    color: var(--dark);
+    font-size: 16px;
+}
+.custom-editor-area:focus {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-primary);
+}
+.custom-editor-area > *:first-child { margin-top: 0; }
+.custom-editor-area img { max-width: 100%; height: auto; border-radius: var(--radius-md); }
+.custom-editor-area blockquote { border-left: 3px solid var(--light-gray); padding-left: var(--space-md); margin-left: 0; font-style: italic; color: var(--medium); }
+
+body.dark-mode .custom-toolbar {
+    background: var(--dark-lighter);
+    border-color: var(--dark-light-gray);
+}
+body.dark-mode .toolbar-group {
+    border-right-color: var(--dark-light-gray);
+}
+body.dark-mode .toolbar-button {
+    color: var(--dark-medium);
+}
+body.dark-mode .toolbar-button:hover, body.dark-mode .toolbar-button.active {
+    background: var(--dark-light-gray);
+    color: var(--light);
+}
+body.dark-mode .custom-editor-area {
+    background: var(--dark-lighter);
+    border-color: var(--dark-light-gray);
+    color: var(--dark-medium);
+}
+body.dark-mode .custom-editor-area h1,
+body.dark-mode .custom-editor-area h2,
+body.dark-mode .custom-editor-area h3 {
+    color: white;
+}
+/* --- END CUSTOM EDITOR STYLES --- */
+
 
 /* Pinned Posts Styles */
 #pinned-posts-header {
@@ -1344,6 +1440,7 @@ body.dark-mode .input-group label {
     .header-content { flex-direction: column; align-items: flex-start; gap: var(--space-md); }
     .search-container { max-width: 100%; }
     .modal-content { padding: var(--space-lg); max-width: 90%; }
+    .custom-toolbar { flex-wrap: nowrap; overflow-x: auto; }
 }
 @media (max-width: 480px) {
     .modal-content { padding: var(--space-lg); }
@@ -1355,7 +1452,7 @@ body.dark-mode .input-group label {
     .topbar-button { padding: 6px; width: 36px; height: 36px; justify-content: center; border-radius: 50%; }
     .editor-header { padding: var(--space-sm) var(--space-md); }
     .editor-content { padding: var(--space-md); }
-
+    .toolbar-group { padding-right: var(--space-xs); margin-right: var(--space-xs); }
 }
 
 /* Mobile menu toggle */
@@ -1603,7 +1700,49 @@ body.dark-mode .input-group label {
                 <input type="text" id="announcement-title" placeholder=" ">
                 <label>Announcement Title</label>
             </div>
-            <textarea id="announcement-content"></textarea>
+            
+            <!-- NEW CUSTOM TOOLBAR -->
+            <div class="custom-toolbar" id="custom-toolbar">
+                <div class="toolbar-group">
+                    <button class="toolbar-button" data-command="undo" title="Undo"><i class="fas fa-undo"></i></button>
+                    <button class="toolbar-button" data-command="redo" title="Redo"><i class="fas fa-redo"></i></button>
+                </div>
+                <div class="toolbar-group">
+                    <select class="toolbar-select" data-command="formatBlock" title="Format">
+                        <option value="p">Paragraph</option>
+                        <option value="h2">Heading 1</option>
+                        <option value="h3">Heading 2</option>
+                        <option value="h4">Heading 3</option>
+                        <option value="blockquote">Quote</option>
+                    </select>
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-button" data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
+                    <button class="toolbar-button" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
+                    <button class="toolbar-button" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
+                    <button class="toolbar-button" data-command="strikeThrough" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-button" data-command="justifyLeft" title="Align Left"><i class="fas fa-align-left"></i></button>
+                    <button class="toolbar-button" data-command="justifyCenter" title="Align Center"><i class="fas fa-align-center"></i></button>
+                    <button class="toolbar-button" data-command="justifyRight" title="Align Right"><i class="fas fa-align-right"></i></button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-button" data-command="insertUnorderedList" title="Bulleted List"><i class="fas fa-list-ul"></i></button>
+                    <button class="toolbar-button" data-command="insertOrderedList" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-button" data-command="createLink" title="Insert Link"><i class="fas fa-link"></i></button>
+                    <button class="toolbar-button" data-command="embedContent" title="Embed Media"><i class="fas fa-code"></i></button>
+                </div>
+                 <div class="toolbar-group">
+                    <button class="toolbar-button" data-command="removeFormat" title="Clear Formatting"><i class="fas fa-eraser"></i></button>
+                </div>
+            </div>
+            
+            <!-- NEW CONTENTEDITABLE DIV -->
+            <div id="announcement-content" class="custom-editor-area" contenteditable="true"></div>
+
         </div>
     </div>
 
@@ -1632,6 +1771,23 @@ body.dark-mode .input-group label {
             <div class="modal-buttons" style="justify-content: center;">
                 <button class="button secondary" id="cancel-confirmation-btn">Cancel</button>
                 <button class="button danger" id="confirm-delete-btn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Embed Modal -->
+    <div id="embed-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeEmbedModal()">×</span>
+            <h2>Embed Media</h2>
+            <p style="font-size: var(--text-sm); color: var(--medium); margin-bottom: var(--space-md);">Paste a YouTube, Google Docs, or Google Slides share URL.</p>
+            <div class="input-group">
+                <input type="text" id="embed-url-input" placeholder=" ">
+                <label>Share URL</label>
+            </div>
+            <div class="modal-buttons">
+                <button class="button secondary" onclick="closeEmbedModal()">Cancel</button>
+                <button class="button" onclick="saveEmbed()">Embed</button>
             </div>
         </div>
     </div>
@@ -1718,6 +1874,7 @@ body.dark-mode .input-group label {
         const unpinnedPostsFeed = document.getElementById('unpinned-posts-feed');
         const pinnedPostsHeader = document.getElementById('pinned-posts-header');
         const announcementTitleInput = document.getElementById('announcement-title');
+        const announcementContentEditor = document.getElementById('announcement-content');
         const saveAnnouncementButton = document.getElementById('save-announcement-button');
         const remindersList = document.getElementById('reminders-list');
         const announcementSearchInput = document.getElementById('announcement-search');
@@ -1726,6 +1883,7 @@ body.dark-mode .input-group label {
         const sidebar = document.getElementById('sidebar');
         const darkModeToggle = document.querySelector('.dark-mode-toggle');
         const profileDropdown = document.querySelector('.profile-dropdown');
+        const embedModal = document.getElementById('embed-modal');
 
         let tabs = [];
         let currentTabId = null;
@@ -1749,7 +1907,7 @@ body.dark-mode .input-group label {
             setupMobileMenu();
             setupDarkMode();
             setupProfileDropdown();
-            initializeEditor();
+            setupCustomEditor(); // New function for custom editor
             UndoManager.init();
             if (isAdmin) {
                 setupSidebarDragAndDrop();
@@ -1763,49 +1921,84 @@ body.dark-mode .input-group label {
                 }
             });
         });
+        
+        // --- NEW CUSTOM EDITOR LOGIC ---
+        function setupCustomEditor() {
+            const toolbar = document.getElementById('custom-toolbar');
+            toolbar.addEventListener('click', e => {
+                const button = e.target.closest('.toolbar-button');
+                if (!button) return;
 
-        function initializeEditor() {
-            const EDITOR_STYLES = `
-                body {
-                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-                    line-height: 1.7;
-                    color: var(--medium);
-                }
-                h1, h2, h3, h4 { 
-                    font-weight: 600;
-                    color: var(--dark);
-                    margin-bottom: var(--space-md);
-                    line-height: 1.25;
-                    margin-top: var(--space-lg);
-                }
-                h1 { font-size: var(--text-3xl); }
-                h2 { font-size: var(--text-2xl); }
-                h3 { font-size: var(--text-xl); }
-                h4 { font-size: var(--text-lg); }
-                p { margin-bottom: var(--space-lg); }
-                ul, ol { margin-left: var(--space-lg); margin-bottom: var(--space-lg); }
-                blockquote {
-                    border-left: 4px solid var(--light-gray);
-                    padding-left: var(--space-md);
-                    margin: var(--space-lg) 0;
-                    font-style: italic;
-                }
-            `;
+                e.preventDefault();
+                const command = button.dataset.command;
 
-            tinymce.init({
-                selector: '#announcement-content',
-                plugins: 'lists link image table media code help wordcount',
-                toolbar: 'undo redo | blocks | bold italic underline | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media table | removeformat | help',
-                content_css: false, 
-                content_style: EDITOR_STYLES,
-                height: "100%",
-                menubar: false,
-                statusbar: false,
-                z_index: 3000, // KEY FIX: Ensures TinyMCE dialogs appear over our overlay
-                skin: (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'oxide-dark' : 'oxide',
-                content_css: (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'default',
+                if (command === 'createLink') {
+                    const url = prompt('Enter the URL:');
+                    if (url) {
+                        document.execCommand('createLink', false, url);
+                    }
+                } else if (command === 'embedContent') {
+                    openEmbedModal();
+                } else {
+                    document.execCommand(command, false, null);
+                }
+                announcementContentEditor.focus();
+            });
+
+            toolbar.addEventListener('change', e => {
+                const select = e.target.closest('.toolbar-select');
+                if (select) {
+                    const command = select.dataset.command;
+                    const value = select.value;
+                    document.execCommand(command, false, value);
+                }
             });
         }
+        
+        function openEmbedModal() {
+            document.getElementById('embed-url-input').value = '';
+            embedModal.style.display = 'flex';
+        }
+
+        function closeEmbedModal() {
+            embedModal.style.display = 'none';
+        }
+
+        function saveEmbed() {
+            const url = document.getElementById('embed-url-input').value.trim();
+            if (!url) return;
+
+            let embedUrl = '';
+
+            // YouTube
+            if (url.includes('youtube.com/watch?v=')) {
+                const videoId = new URL(url).searchParams.get('v');
+                embedUrl = `https://www.youtube.com/embed/${videoId}`;
+            } else if (url.includes('youtu.be/')) {
+                const videoId = new URL(url).pathname.slice(1);
+                embedUrl = `https://www.youtube.com/embed/${videoId}`;
+            }
+            // Google Slides
+            else if (url.includes('docs.google.com/presentation/d/')) {
+                embedUrl = url.replace('/edit', '/embed').replace(/\/pub\?/, '/embed?');
+            }
+            // Google Docs
+            else if (url.includes('docs.google.com/document/d/')) {
+                embedUrl = url.replace('/edit', '/pub?embedded=true');
+            }
+
+            if (embedUrl) {
+                const embedHtml = `<div class="embed-container"><iframe src="${embedUrl}" frameborder="0" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe></div>`;
+                announcementContentEditor.focus();
+                document.execCommand('insertHTML', false, embedHtml);
+            } else {
+                alert('Invalid URL. Please use a valid share URL from YouTube, Google Docs, or Google Slides.');
+            }
+
+            closeEmbedModal();
+        }
+
+        // --- END CUSTOM EDITOR LOGIC ---
 
         function checkUserProfile() {
             const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
@@ -2169,14 +2362,14 @@ body.dark-mode .input-group label {
             saveBtn.onclick = isEditing ? () => saveEditedAnnouncement(id) : postAnnouncement;
             
             announcementTitleInput.value = '';
-            tinymce.get('announcement-content').setContent('');
+            announcementContentEditor.innerHTML = '';
             
             if (isEditing) {
                 announcementsRef.child(currentTabId).child(id).once('value').then(s => {
                     const ann = s.val();
                     if(ann) { 
                         announcementTitleInput.value = ann.title; 
-                        tinymce.get('announcement-content').setContent(ann.content || ''); 
+                        announcementContentEditor.innerHTML = ann.content || ''; 
                     }
                 });
             }
@@ -2193,7 +2386,7 @@ body.dark-mode .input-group label {
         function postAnnouncement() {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
-            const content = tinymce.get('announcement-content').getContent();
+            const content = announcementContentEditor.innerHTML;
 
             if (!title) return alert('Please enter a title.');
             
@@ -2211,7 +2404,7 @@ body.dark-mode .input-group label {
         function saveEditedAnnouncement(id) {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
-            const content = tinymce.get('announcement-content').getContent();
+            const content = announcementContentEditor.innerHTML;
 
             if (!title) return alert('Please enter a title.');
 
@@ -2459,7 +2652,9 @@ body.dark-mode .input-group label {
 
         function setupModalCloseHandlers() {
             window.onclick = e => {
-                if (e.target.classList.contains('modal')) e.target.style.display = 'none';
+                if (e.target.classList.contains('modal')) {
+                    e.target.style.display = 'none';
+                }
             };
         }
     </script>
