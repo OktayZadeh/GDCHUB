@@ -96,8 +96,8 @@
             --health-color: #f72585;
             
             /* Card Dimensions */
-            --card-width: 280px; /* MODIFIED: Set a fixed width */
-            --card-height: 450px; /* MODIFIED: Set a fixed height */
+            --card-width: 300px;
+            --card-height: 480px;
             --card-media-height: 160px;
         }
 
@@ -143,10 +143,12 @@
             z-index: -2;
         }
 
+        /* REMOVED .hover-effect logic to keep background static */
         body::after {
             background-color: rgba(0, 0, 0, 0.5);
         }
 
+        /* REMOVED background-video styles as it's no longer used */
         #background-video {
             display: none;
         }
@@ -377,9 +379,9 @@
         .subject-card {
             width: var(--card-width);
             min-width: var(--card-width);
-            height: var(--card-height); /* MODIFIED: Use fixed height */
             background: rgba(255, 255, 255, 0.98);
             border-radius: 16px;
+            /* CRITICAL FIX: overflow:hidden removed from here */
             position: relative;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
@@ -390,6 +392,7 @@
             opacity: 0;
             transform: translateY(20px);
             animation: fadeInUp 0.6s forwards;
+            height: var(--card-height);
             -webkit-tap-highlight-color: transparent;
             transform-style: preserve-3d;
             backface-visibility: hidden;
@@ -414,18 +417,21 @@
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
         }
 
+        /* FIX: Adds an invisible buffer at the bottom of the card to prevent hover flickering */
         .subject-card::after {
             content: '';
             position: absolute;
             left: 0;
             right: 0;
-            bottom: -8px; 
-            height: 8px;
+            bottom: -8px; /* Extends below the card by the same amount as the hover transform */
+            height: 8px; /* Creates an invisible hoverable area */
         }
 
+        /* Card Media */
         .card-media-container {
             height: var(--card-media-height);
             position: relative;
+            /* CRITICAL FIX: overflow:hidden moved here to clip video */
             overflow: hidden;
             transform: translateZ(0);
             border-radius: 16px 16px 0 0;
@@ -460,6 +466,7 @@
             opacity: 1;
         }
 
+        /* Card Content */
         .card-content {
             padding: 20px;
             display: flex;
@@ -510,6 +517,7 @@
             min-height: 60px;
         }
 
+        /* Year Selection */
         .year-selection {
             margin-top: auto;
             display: flex;
@@ -595,6 +603,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
+        /* ========== MYP Dropdown Menu Styles REVISED ========== */
         .year-dropdown {
             position: relative;
         }
@@ -619,16 +628,20 @@
         
         .year-dropdown-menu {
             position: absolute;
+            /* CRITICAL FIX: Positioned from the BOTTOM of the parent */
             bottom: calc(100% + 8px); 
             left: 50%;
             width: 140px;
+            /* CRITICAL FIX: High z-index to appear over other cards */
             z-index: 100;
+            
             background: var(--glass);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border-radius: 8px;
             border: 1px solid var(--glass-border);
             box-shadow: var(--glass-shadow);
+            
             overflow: hidden;
             opacity: 0;
             visibility: hidden;
@@ -721,12 +734,12 @@
             }
 
             .year-buttons {
-                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); /* MODIFIED: Adjusted for fixed card size */
+                grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
                 gap: 8px;
             }
 
             .year-button {
-                padding: 8px 0; /* MODIFIED: Adjusted for fixed card size */
+                padding: 10px 0;
                 min-height: 38px;
             }
 
@@ -738,12 +751,24 @@
                 display: none;
             }
         }
-        
-        /* REMOVED: Landscape mode styles to ensure consistent sizing */
 
+        /* Landscape mode for mobile devices */
+        @media screen and (max-width: 768px) and (orientation: landscape) {
+            .subject-card {
+                width: 250px;
+                min-width: 250px;
+                height: 440px;
+            }
+            
+            .card-media-container {
+                height: 140px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Background Video element removed as it is no longer used -->
+    
     <!-- Top Navigation Bar -->
     <div class="topbar" id="topbar">
         <div class="topbar-content">
@@ -780,6 +805,16 @@
             <!-- MYP Card -->
             <div class="subject-card myp-card">
                 <div class="card-media-container">
+                    <!-- 
+                    ============================================================
+                    FIX 2: VIDEO PRELOADING OPTIMIZED
+                    ------------------------------------------------------------
+                    Changed preload="auto" to preload="metadata". This prevents
+                    the browser from downloading the entire video on page load.
+                    It will only fetch basic info like the first frame, saving
+                    bandwidth and speeding up the initial load time.
+                    ============================================================
+                    -->
                     <video class="card-media" loop muted playsinline preload="metadata">
                         <source src="https://i.imgur.com/zw3viPp.mp4" type="video/mp4">
                         Your browser does not support the video tag.
@@ -903,6 +938,8 @@
 
 <script>
 // ========== PAGE FUNCTIONALITY SCRIPT ==========
+// This script now only contains the logic needed to make the page interactive.
+// The core authentication logic has been moved to the <head>.
 document.addEventListener('DOMContentLoaded', function() {
     const USER_INFO_KEY = "googleUserInfo";
     const AUTH_TOKEN_KEY = "gdcAuthToken";
@@ -912,12 +949,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const dropdownContent = document.getElementById('dropdown-content');
     const logoutButton = document.getElementById('logout-button');
 
+    // These functions can remain here, as they only run after the page is confirmed to be authenticated and loaded.
     function clearAuthData() {
         localStorage.removeItem(USER_INFO_KEY);
         localStorage.removeItem(AUTH_TOKEN_KEY);
         document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     }
 
+    // This logic ensures the browser doesn't go back to a cached, unauthenticated state
     window.history.replaceState(null, null, window.location.href);
     window.addEventListener('popstate', () => window.history.forward());
     
@@ -951,6 +990,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function setupDropdowns() {
+        // Profile dropdown
         profilePicElement.addEventListener('click', (e) => {
             e.stopPropagation();
             const isExpanded = dropdownContent.classList.toggle('show');
@@ -961,11 +1001,13 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = LOGIN_PAGE;
         });
 
+        // MYP dropdowns for mobile
         if (isMobileDevice()) {
             document.querySelectorAll('.year-dropdown').forEach(dropdown => {
                 dropdown.querySelector('.dropdown-toggle').addEventListener('click', (e) => {
                     e.preventDefault();
                     const wasOpen = dropdown.classList.contains('show');
+                    // Close all other dropdowns first
                     document.querySelectorAll('.year-dropdown.show').forEach(d => d.classList.remove('show'));
                     if (!wasOpen) {
                         dropdown.classList.add('show');
@@ -973,7 +1015,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             });
         }
-        
+         // Global click listener to close dropdowns when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.profile-dropdown')) {
                 dropdownContent.classList.remove('show');
@@ -986,13 +1028,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function initializeCardVideos() {
+        // This function handles the playing of videos INSIDE the cards
         if (isMobileDevice()) {
+            // On mobile, videos will autoplay muted
             document.querySelectorAll('.card-media').forEach(v => {
                 v.setAttribute('autoplay', '');
                 v.setAttribute('playsinline', '');
                 v.muted = true;
             });
         } else {
+            // On desktop, videos play on hover
             document.querySelectorAll('.subject-card').forEach(card => {
                 const video = card.querySelector('.card-media');
                 if (video) {
@@ -1006,6 +1051,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Initialization calls
     handleProfilePicture();
     setupDropdowns();
     initializeCardVideos();
