@@ -1314,6 +1314,58 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
     animation: spin 1s ease-in-out infinite; margin-right: var(--space-sm);
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Undo Snackbar Styles */
+.snackbar {
+    visibility: hidden;
+    min-width: 250px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    position: fixed;
+    z-index: 1001;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 30px;
+    font-size: var(--text-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+.snackbar.show {
+    visibility: visible;
+    animation: snackbar-fadein 0.5s, snackbar-fadeout 0.5s 5.5s;
+}
+
+#undo-button {
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: var(--text-sm);
+    padding: var(--space-xs);
+    text-transform: uppercase;
+}
+body.dark-mode .snackbar {
+    background-color: var(--dark-dark-gray);
+    color: var(--dark-medium);
+}
+
+@keyframes snackbar-fadein {
+    from {bottom: 0; opacity: 0;}
+    to {bottom: 30px; opacity: 1;}
+}
+
+@keyframes snackbar-fadeout {
+    from {bottom: 30px; opacity: 1;}
+    to {bottom: 0; opacity: 0;}
+}
+
     </style>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
@@ -1482,6 +1534,13 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         </div>
     </div>
 
+    <!-- Undo Snackbar -->
+    <div id="undo-snackbar" class="snackbar">
+        <span id="undo-message"></span>
+        <button id="undo-button">Undo</button>
+    </div>
+
+
     <script>
         // AUTH CHECK
         (function() {
@@ -1586,6 +1645,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             setupDarkMode();
             setupProfileDropdown();
             initializeSunEditor();
+            setupUndoSystem();
             if (isAdmin) {
                 setupSidebarDragAndDrop();
                 setupPostsDragAndDrop();
@@ -1687,7 +1747,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     return titleMatch || contentMatch;
                 });
             }
-
             renderAnnouncements(announcementsToRender, suppressPostAnimation);
             suppressPostAnimation = false; // Reset flag after any render
         }
@@ -1924,12 +1983,15 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             closeTabEditor();
         }
         function editTab(event, id) { event.stopPropagation(); openTabEditor(id); }
-        function deleteTab(event, id) {
+        
+        window.deleteTab = (event, id) => {
             event.stopPropagation();
-            if (isAdmin && confirm('Are you sure you want to delete this tab and all its announcements?')) {
+            if (!isAdmin) return;
+            const commitDelete = () => {
                 tabsRef.child(id).remove();
                 announcementsRef.child(id).remove();
-            }
+            };
+            showUndo('Tab and its posts deleted.', commitDelete);
         }
 
         function openAnnouncementEditor(id = null) {
@@ -1996,42 +2058,33 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         }
         
         window.editAnnouncement = id => openAnnouncementEditor(id);
+        
         window.deleteAnnouncement = id => {
-            if (isAdmin && confirm('Are you sure you want to delete this announcement?')) {
-                announcementsRef.child(currentTabId).child(id).remove().then(() => {
-                    if (expandedPost && expandedPost.dataset.id === id) collapsePost(expandedPost);
-                });
-            }
+            if (!isAdmin) return;
+            const commitDelete = () => announcementsRef.child(currentTabId).child(id).remove().then(() => {
+                if (expandedPost && expandedPost.dataset.id === id) collapsePost(expandedPost);
+            });
+            showUndo('Announcement deleted.', commitDelete);
         };
 
         function setupPostsDragAndDrop() {
-            let draggedPost = null;
-            let postPlaceholder = null;
-            let sourceContainer = null;
+            let draggedPost = null, postPlaceholder = null, sourceContainer = null;
 
             classroomInfo.addEventListener('dragstart', e => {
                 draggedPost = e.target.closest('.post-card[draggable="true"]');
                 if (!draggedPost) return;
-
                 sourceContainer = draggedPost.parentElement;
                 e.dataTransfer.effectAllowed = 'move';
-                
                 postPlaceholder = document.createElement('div');
                 postPlaceholder.className = 'post-placeholder';
                 postPlaceholder.style.height = `${draggedPost.offsetHeight}px`;
-
-                setTimeout(() => {
-                    if (draggedPost) draggedPost.classList.add('dragging');
-                }, 0);
+                setTimeout(() => { if (draggedPost) draggedPost.classList.add('dragging'); }, 0);
             });
 
             classroomInfo.addEventListener('dragover', e => {
                 if (!draggedPost || !sourceContainer) return;
-                
                 const currentContainer = e.target.closest('.posts-feed');
-                if (currentContainer !== sourceContainer) {
-                    return; // Prevent dragging between pinned and unpinned
-                }
+                if (currentContainer !== sourceContainer) return;
 
                 e.preventDefault();
                 const overElement = e.target.closest('.post-card');
@@ -2052,9 +2105,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const endDrag = () => {
                 if(draggedPost) draggedPost.classList.remove('dragging');
                 if(postPlaceholder) postPlaceholder.remove();
-                draggedPost = null;
-                postPlaceholder = null;
-                sourceContainer = null;
+                draggedPost = null; postPlaceholder = null; sourceContainer = null;
             };
 
             classroomInfo.addEventListener('dragend', endDrag);
@@ -2062,10 +2113,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             classroomInfo.addEventListener('drop', e => {
                 e.preventDefault();
                 if (!postPlaceholder || !postPlaceholder.parentNode || !draggedPost || !sourceContainer) {
-                    endDrag();
-                    return;
+                    endDrag(); return;
                 }
-
                 postPlaceholder.parentNode.insertBefore(draggedPost, postPlaceholder);
                 
                 const updates = {};
@@ -2073,22 +2122,15 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 const orderedIds = Array.from(sourceContainer.querySelectorAll('.post-card')).map(p => p.dataset.id);
 
                 if (isPinnedList) {
-                    orderedIds.forEach((id, index) => {
-                        updates[`${id}/order`] = index;
-                    });
+                    orderedIds.forEach((id, index) => { updates[`${id}/order`] = index; });
                 } else {
-                    orderedIds.forEach((id, index) => {
-                        // For unpinned, we sort by timestamp descending, so a higher order means newer.
-                        // We reverse the array index to maintain this.
-                        updates[`${id}/order`] = Date.now() - index;
-                    });
+                    orderedIds.forEach((id, index) => { updates[`${id}/order`] = Date.now() - index; });
                 }
                 
                 if (Object.keys(updates).length > 0) {
-                    suppressPostAnimation = true; // Set flag to prevent animation on re-render
+                    suppressPostAnimation = true;
                     announcementsRef.child(currentTabId).update(updates);
                 }
-
                 endDrag();
             });
         }
@@ -2131,11 +2173,55 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         }
         
         window.editReminder = (event, id) => { event.stopPropagation(); openReminderEditor(id); };
+        
         window.deleteReminder = (event, id) => { 
             event.stopPropagation(); 
-            if (isAdmin && confirm('Are you sure?')) database.ref('reminders/' + id).remove(); 
+            if (!isAdmin) return;
+            const commitDelete = () => database.ref('reminders/' + id).remove();
+            showUndo('Reminder deleted.', commitDelete);
         };
         
+        // --- UNDO SNACKBAR SYSTEM ---
+        let undoAction = null;
+        let undoTimeout = null;
+        
+        function setupUndoSystem() {
+            const undoSnackbar = document.getElementById('undo-snackbar');
+            const undoButton = document.getElementById('undo-button');
+
+            undoButton.addEventListener('click', () => {
+                if (undoTimeout) clearTimeout(undoTimeout);
+                undoAction = null; // Cancel the pending action
+                undoSnackbar.classList.remove('show');
+            });
+        }
+
+        function showUndo(message, commitCallback) {
+            const undoSnackbar = document.getElementById('undo-snackbar');
+            const undoMessage = document.getElementById('undo-message');
+
+            // If an undo is already pending, commit it immediately before showing the new one
+            if (undoTimeout) {
+                clearTimeout(undoTimeout);
+                if (undoAction) undoAction.commit();
+            }
+
+            // Set up the new undo action
+            undoAction = { commit: commitCallback };
+            undoMessage.textContent = message;
+            undoSnackbar.className = "snackbar show";
+
+            // Set a timer to commit the deletion if not undone
+            undoTimeout = setTimeout(() => {
+                if (undoAction) {
+                    undoAction.commit();
+                }
+                undoSnackbar.className = undoSnackbar.className.replace("show", "");
+                undoAction = null;
+                undoTimeout = null;
+            }, 6000); // 6-second window to undo
+        }
+
         function setupModalCloseHandlers() {
             window.onclick = e => {
                 if (e.target.classList.contains('modal')) e.target.style.display = 'none';
