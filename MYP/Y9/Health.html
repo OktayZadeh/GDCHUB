@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classroom Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&family=Lato:wght@400;700&family=Montserrat:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -1036,7 +1036,7 @@ body.dark-mode .custom-toolbar-container {
     color: var(--primary-dark);
 }
 
-/* Custom Dropdown for Formatting */
+/* Custom Dropdown (Base) */
 .toolbar-dropdown { position: relative; }
 .toolbar-dropdown-toggle {
     width: auto;
@@ -1075,10 +1075,30 @@ body.dark-mode .custom-toolbar-container {
     cursor: pointer;
 }
 .toolbar-dropdown-item:hover { background: var(--light); }
-.toolbar-dropdown-item[data-value="h2"] { font-size: var(--text-xl); font-weight: 600; }
-.toolbar-dropdown-item[data-value="h3"] { font-size: var(--text-lg); font-weight: 600; }
-.toolbar-dropdown-item[data-value="h4"] { font-size: var(--text-base); font-weight: 600; }
-.toolbar-dropdown-item[data-value="blockquote"] { border-left: 3px solid var(--primary); padding-left: var(--space-sm); font-style: italic; }
+
+/* Specific Dropdown Styles (Format & Font) */
+#format-block-menu .toolbar-dropdown-item[data-value="h2"] { font-size: var(--text-xl); font-weight: 600; }
+#format-block-menu .toolbar-dropdown-item[data-value="h3"] { font-size: var(--text-lg); font-weight: 600; }
+#format-block-menu .toolbar-dropdown-item[data-value="h4"] { font-size: var(--text-base); font-weight: 600; }
+#format-block-menu .toolbar-dropdown-item[data-value="blockquote"] { border-left: 3px solid var(--primary); padding-left: var(--space-sm); font-style: italic; }
+
+/* Color Picker Dropdown */
+#color-picker-menu {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-xs);
+    padding: var(--space-sm);
+    min-width: auto;
+}
+.color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all var(--transition-fast);
+}
+.color-swatch:hover { border-color: var(--primary); transform: scale(1.15); }
 
 .custom-editor-area {
     flex-grow: 1;
@@ -1528,7 +1548,7 @@ body.dark-mode .input-group label {
     position: fixed;
     z-index: 3000;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, 100px);
     bottom: 30px;
     font-size: var(--text-base);
     display: flex;
@@ -1536,11 +1556,12 @@ body.dark-mode .input-group label {
     gap: var(--space-md);
     box-shadow: var(--shadow-xl);
     overflow: hidden; /* Important for progress bar */
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .snackbar.show {
     visibility: visible;
-    animation: snackbar-fadein 0.5s, snackbar-fadeout 0.5s 5.5s forwards;
+    transform: translate(-50%, 0);
 }
 
 .snackbar i {
@@ -1574,20 +1595,7 @@ body.dark-mode .input-group label {
     width: 100%;
     background-color: var(--primary);
     transform-origin: left;
-}
-
-.snackbar.show .snackbar-progress {
-    animation: shrink 6s linear forwards;
-}
-
-@keyframes snackbar-fadein {
-    from {bottom: 0; opacity: 0;}
-    to {bottom: 30px; opacity: 1;}
-}
-
-@keyframes snackbar-fadeout {
-    from {bottom: 30px; opacity: 1;}
-    to {bottom: 0; opacity: 0;}
+    animation: shrink 5s linear forwards;
 }
 
 @keyframes shrink {
@@ -1744,6 +1752,12 @@ body.dark-mode .input-group label {
                         <button class="toolbar-button" data-command="redo" title="Redo"><i class="fas fa-redo"></i></button>
                     </div>
                     <div class="toolbar-group">
+                         <div class="toolbar-dropdown" id="font-name-dropdown">
+                            <button class="toolbar-dropdown-toggle" id="font-name-toggle">Inter <i class="fas fa-chevron-down"></i></button>
+                            <div class="toolbar-dropdown-menu" id="font-name-menu"></div>
+                        </div>
+                    </div>
+                    <div class="toolbar-group">
                          <div class="toolbar-dropdown" id="format-block-dropdown">
                             <button class="toolbar-dropdown-toggle" id="format-block-toggle">Paragraph <i class="fas fa-chevron-down"></i></button>
                             <div class="toolbar-dropdown-menu" id="format-block-menu">
@@ -1760,6 +1774,16 @@ body.dark-mode .input-group label {
                         <button class="toolbar-button" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
                         <button class="toolbar-button" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
                         <button class="toolbar-button" data-command="strikeThrough" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
+                    </div>
+                    <div class="toolbar-group">
+                        <div class="toolbar-dropdown" id="font-color-dropdown">
+                            <button class="toolbar-dropdown-toggle" title="Text Color"><i class="fas fa-font"></i></button>
+                            <div class="toolbar-dropdown-menu" id="font-color-menu"></div>
+                        </div>
+                        <div class="toolbar-dropdown" id="highlight-color-dropdown">
+                            <button class="toolbar-dropdown-toggle" title="Highlight Color"><i class="fas fa-highlighter"></i></button>
+                            <div class="toolbar-dropdown-menu" id="highlight-color-menu"></div>
+                        </div>
                     </div>
                     <div class="toolbar-group">
                         <button class="toolbar-button" data-command="justifyLeft" title="Align Left"><i class="fas fa-align-left"></i></button>
@@ -1966,66 +1990,98 @@ body.dark-mode .input-group label {
         // --- UI REWORK: High-End Custom Editor Logic ---
         function setupCustomEditor() {
             const toolbar = document.getElementById('custom-toolbar');
-            const formatDropdown = document.getElementById('format-block-dropdown');
-            const formatToggle = document.getElementById('format-block-toggle');
             
-            toolbar.addEventListener('click', e => {
-                const button = e.target.closest('.toolbar-button');
-                if (!button || button.parentElement.id === 'format-block-dropdown') return;
+            // Populate dropdowns
+            populateFontDropdown();
+            populateColorPickers();
 
+            toolbar.addEventListener('click', e => {
+                const button = e.target.closest('.toolbar-button, .toolbar-dropdown-toggle');
+                if (!button) return;
+
+                const dropdown = button.closest('.toolbar-dropdown');
+                if(dropdown) {
+                    // Toggle the clicked dropdown and close others
+                    const wasOpen = dropdown.classList.contains('open');
+                    document.querySelectorAll('.toolbar-dropdown.open').forEach(d => d.classList.remove('open'));
+                    if(!wasOpen) dropdown.classList.add('open');
+                    e.stopPropagation();
+                    return;
+                }
+                
                 e.preventDefault();
                 const command = button.dataset.command;
-
+                
                 if (command === 'createLink') {
                     const url = prompt('Enter the URL:');
                     if (url) document.execCommand('createLink', false, url);
                 } else if (command === 'embedContent') {
                     const selection = window.getSelection();
-                    if (selection.rangeCount > 0) {
-                        savedEditorSelection = selection.getRangeAt(0);
-                    }
+                    if (selection.rangeCount > 0) savedEditorSelection = selection.getRangeAt(0);
                     openEmbedModal();
                 } else {
                     document.execCommand(command, false, null);
                 }
+                
                 announcementContentEditor.focus();
                 updateToolbarState();
             });
 
-            formatToggle.addEventListener('click', (e) => {
-                 e.stopPropagation();
-                 formatDropdown.classList.toggle('open');
-            });
+            // Handle dropdown item clicks
+            document.getElementById('format-block-menu').addEventListener('click', e => handleDropdownSelection(e, 'formatBlock', '#format-block-toggle', true));
+            document.getElementById('font-name-menu').addEventListener('click', e => handleDropdownSelection(e, 'fontName', '#font-name-toggle', true));
+            document.getElementById('font-color-menu').addEventListener('click', e => handleDropdownSelection(e, 'foreColor', '#font-color-dropdown', false));
+            document.getElementById('highlight-color-menu').addEventListener('click', e => handleDropdownSelection(e, 'hiliteColor', '#highlight-color-dropdown', false));
 
-            document.getElementById('format-block-menu').addEventListener('click', e => {
-                const item = e.target.closest('.toolbar-dropdown-item');
-                if(item) {
-                    e.preventDefault();
-                    const value = item.dataset.value;
-                    document.execCommand('formatBlock', false, value);
-                    formatToggle.innerHTML = `${item.textContent} <i class="fas fa-chevron-down"></i>`;
-                    formatDropdown.classList.remove('open');
-                    announcementContentEditor.focus();
-                }
-            });
-            
-            document.addEventListener('click', () => {
-                if (formatDropdown.classList.contains('open')) {
-                    formatDropdown.classList.remove('open');
+            // Close all dropdowns when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.toolbar-dropdown')) {
+                    document.querySelectorAll('.toolbar-dropdown.open').forEach(d => d.classList.remove('open'));
                 }
             });
             
             announcementContentEditor.addEventListener('keyup', updateToolbarState);
             announcementContentEditor.addEventListener('mouseup', updateToolbarState);
         }
+
+        function handleDropdownSelection(e, command, toggleSelector, updateText) {
+            const item = e.target.closest('[data-value]');
+            if(item) {
+                e.preventDefault();
+                const value = item.dataset.value;
+                document.execCommand(command, false, value);
+                if(updateText) {
+                    document.querySelector(toggleSelector).innerHTML = `${item.textContent} <i class="fas fa-chevron-down"></i>`;
+                }
+                item.closest('.toolbar-dropdown').classList.remove('open');
+                announcementContentEditor.focus();
+            }
+        }
+        
+        function populateFontDropdown() {
+            const fonts = { 'Inter': 'Inter, sans-serif', 'Roboto': 'Roboto, sans-serif', 'Lato': 'Lato, sans-serif', 'Montserrat': 'Montserrat, sans-serif', 'Open Sans': 'Open Sans, sans-serif', 'Georgia': 'Georgia, serif', 'Courier New': 'Courier New, monospace' };
+            const menu = document.getElementById('font-name-menu');
+            menu.innerHTML = Object.entries(fonts).map(([name, value]) => 
+                `<a href="#" class="toolbar-dropdown-item" data-value="${value}" style="font-family: ${value};">${name}</a>`
+            ).join('');
+        }
+
+        function populateColorPickers() {
+            const colors = [ '#000000', '#4D4D4D', '#999999', '#FFFFFF', '#E6E6E6', '#2D7D78', '#F56565', '#ED8936', '#4A89DC', '#4CC9F0' ];
+            const fontColorMenu = document.getElementById('font-color-menu');
+            const highlightColorMenu = document.getElementById('highlight-color-menu');
+            const swatchHTML = colors.map(color => `<div class="color-swatch" data-value="${color}" style="background-color: ${color};"></div>`).join('');
+            fontColorMenu.innerHTML = swatchHTML;
+            highlightColorMenu.innerHTML = swatchHTML;
+            fontColorMenu.classList.add('color-picker-grid');
+            highlightColorMenu.classList.add('color-picker-grid');
+        }
         
         function updateToolbarState() {
             const commands = ['bold', 'italic', 'underline', 'strikeThrough', 'justifyLeft', 'justifyCenter', 'justifyRight', 'insertUnorderedList', 'insertOrderedList'];
             commands.forEach(command => {
                 const button = document.querySelector(`.toolbar-button[data-command="${command}"]`);
-                if (button) {
-                    button.classList.toggle('active', document.queryCommandState(command));
-                }
+                if (button) button.classList.toggle('active', document.queryCommandState(command));
             });
         }
         
@@ -2046,15 +2102,9 @@ body.dark-mode .input-group label {
             let embedUrl = '';
             const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
             const youtubeMatch = url.match(youtubeRegex);
-            if (youtubeMatch) {
-                embedUrl = `https://www.youtube.com/embed/${youtubeMatch[1]}`;
-            }
-            else if (url.includes('docs.google.com/presentation/d/')) {
-                embedUrl = url.replace('/edit', '/embed').replace(/\/pub\?/, '/embed?');
-            }
-            else if (url.includes('docs.google.com/document/d/')) {
-                embedUrl = url.replace('/edit', '/pub?embedded=true');
-            }
+            if (youtubeMatch) embedUrl = `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+            else if (url.includes('docs.google.com/presentation/d/')) embedUrl = url.replace('/edit', '/embed').replace(/\/pub\?/, '/embed?');
+            else if (url.includes('docs.google.com/document/d/')) embedUrl = url.replace('/edit', '/pub?embedded=true');
 
             if (embedUrl) {
                 announcementContentEditor.focus();
@@ -2063,14 +2113,10 @@ body.dark-mode .input-group label {
                     selection.removeAllRanges();
                     selection.addRange(savedEditorSelection);
                 }
-
                 const embedHtml = `<div class="embed-container"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><p><br></p>`;
                 document.execCommand('insertHTML', false, embedHtml);
-                
                 const selection = window.getSelection();
-                if (selection.rangeCount > 0) {
-                   savedEditorSelection = selection.getRangeAt(0);
-                }
+                if (selection.rangeCount > 0) savedEditorSelection = selection.getRangeAt(0);
 
                 urlInput.value = ''; 
                 const embedButton = document.getElementById('embed-action-button');
@@ -2079,7 +2125,6 @@ body.dark-mode .input-group label {
                     embedButton.textContent = 'Embed';
                     urlInput.focus();
                 }, 1200);
-
             } else {
                 alert('Invalid URL. Please use a valid share URL from YouTube, Google Docs, or Google Slides.');
             }
@@ -2091,14 +2136,8 @@ body.dark-mode .input-group label {
             const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
             if (userInfo && userInfo.email) {
                 profilePicElement.src = userInfo.picture || '';
-                
                 isAdmin = ADMIN_EMAILS.includes(userInfo.email.toLowerCase());
-
-                if (isAdmin) {
-                    document.body.classList.remove('non-admin');
-                } else {
-                    document.body.classList.add('non-admin');
-                }
+                document.body.classList.toggle('non-admin', !isAdmin);
             } else {
                 isAdmin = false;
                 document.body.classList.add('non-admin');
@@ -2462,14 +2501,12 @@ body.dark-mode .input-group label {
             }
             
             announcementEditorOverlay.classList.add('visible');
-            // CRITICAL FIX: Disable scrolling on the main page
             document.documentElement.style.overflow = 'hidden';
             document.body.style.overflow = 'hidden';
         }
 
         function closeAnnouncementEditor() { 
             announcementEditorOverlay.classList.remove('visible');
-             // CRITICAL FIX: Re-enable scrolling on the main page
             document.documentElement.style.overflow = '';
             document.body.style.overflow = '';
         }
@@ -2677,31 +2714,54 @@ body.dark-mode .input-group label {
             });
         };
         
-        // --- UNDO SNACKBAR SYSTEM ---
+        // --- MULTI-LEVEL UNDO MANAGER ---
         const UndoManager = {
-            snackbar: null, messageEl: null, button: null, undoCallback: null, timeout: null,
-
+            queue: [],
+            isShowing: false,
             init() {
-                this.snackbar = document.getElementById('undo-snackbar');
-                this.messageEl = document.getElementById('undo-message');
-                this.button = document.getElementById('undo-button');
-                this.button.addEventListener('click', () => this.performUndo());
+                // The manager is now queue-based, no specific init needed for elements
             },
             show(message, undoCallback) {
-                if (this.timeout) clearTimeout(this.timeout);
-                this.undoCallback = undoCallback;
-                this.messageEl.textContent = message;
-                this.snackbar.className = "snackbar show";
-                this.timeout = setTimeout(() => this.hide(), 6000);
+                this.queue.push({ message, undoCallback });
+                this.processQueue();
             },
-            performUndo() {
-                if (this.undoCallback) this.undoCallback();
-                this.hide();
+            processQueue() {
+                if (this.isShowing || this.queue.length === 0) return;
+
+                this.isShowing = true;
+                const { message, undoCallback } = this.queue.shift();
+
+                // Create a new snackbar for each item
+                const snackbar = document.createElement('div');
+                snackbar.className = 'snackbar';
+                snackbar.innerHTML = `
+                    <i class="fas fa-check-circle"></i>
+                    <span>${message}</span>
+                    <button class="undo-btn">UNDO</button>
+                    <div class="snackbar-progress"></div>
+                `;
+                document.body.appendChild(snackbar);
+
+                const undoButton = snackbar.querySelector('.undo-btn');
+                undoButton.style.cssText = document.getElementById('undo-button').style.cssText; // Clone styles
+                undoButton.onclick = () => {
+                    undoCallback();
+                    this.hide(snackbar);
+                };
+
+                // Show and set hide timeout
+                setTimeout(() => snackbar.classList.add('show'), 50);
+                setTimeout(() => this.hide(snackbar), 5000);
             },
-            hide() {
-                if (this.timeout) clearTimeout(this.timeout);
-                this.timeout = null; this.undoCallback = null;
-                this.snackbar.className = "snackbar";
+            hide(snackbar) {
+                if (!snackbar) return;
+                snackbar.classList.remove('show');
+                // Remove from DOM after transition and process next item
+                setTimeout(() => {
+                    snackbar.remove();
+                    this.isShowing = false;
+                    this.processQueue();
+                }, 500);
             }
         };
 
