@@ -7,8 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- NEW: TinyMCE Script -->
-    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <!-- FIXED: TinyMCE Script with a valid API key -->
+    <script src="https://cdn.tiny.cloud/1/qag2qx461z6abk63t8m6g63vxv2i83rqj2r2kxgla5sbj5cm/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 
     <style>
 :root {
@@ -949,10 +949,17 @@ body.dark-mode .add-tab-header-button:hover {
     flex-grow: 1;
     overflow-y: auto;
     padding: var(--space-xl);
+    display: flex;
+    flex-direction: column;
 }
 .editor-content .input-group {
     margin-top: 0;
+    margin-bottom: var(--space-xl);
 }
+.editor-content .tox-tinymce {
+    flex-grow: 1;
+}
+
 body.dark-mode #announcement-editor-overlay {
     background-color: var(--dark-light);
 }
@@ -1802,17 +1809,14 @@ body.dark-mode .input-group label {
             if (userInfo && userInfo.email) {
                 profilePicElement.src = userInfo.picture || '';
                 
-                // Determine if the user is an admin
                 isAdmin = ADMIN_EMAILS.includes(userInfo.email.toLowerCase());
 
-                // Explicitly set the class based on admin status
                 if (isAdmin) {
                     document.body.classList.remove('non-admin');
                 } else {
                     document.body.classList.add('non-admin');
                 }
             } else {
-                // If there's no user info, they are definitely not an admin
                 isAdmin = false;
                 document.body.classList.add('non-admin');
             }
