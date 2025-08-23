@@ -1645,7 +1645,7 @@ body.dark-mode .snackbar {
             setupDarkMode();
             setupProfileDropdown();
             initializeSunEditor();
-            setupUndoSystem();
+            UndoManager.init();
             if (isAdmin) {
                 setupSidebarDragAndDrop();
                 setupPostsDragAndDrop();
@@ -1987,12 +1987,31 @@ body.dark-mode .snackbar {
         window.deleteTab = (event, id) => {
             event.stopPropagation();
             if (!isAdmin) return;
-            const commitDelete = () => {
+            
+            // Backup both the tab and its announcements
+            Promise.all([
+                tabsRef.child(id).once('value'),
+                announcementsRef.child(id).once('value')
+            ]).then(([tabSnapshot, announcementsSnapshot]) => {
+                const tabData = tabSnapshot.val();
+                const announcementsData = announcementsSnapshot.val();
+
+                if (!tabData) return;
+
+                // Perform optimistic delete
                 tabsRef.child(id).remove();
                 announcementsRef.child(id).remove();
-            };
-            showUndo('Tab and its posts deleted.', commitDelete);
-        }
+
+                // Show undo with a callback to restore both
+                const undo = () => {
+                    tabsRef.child(id).set(tabData);
+                    if (announcementsData) {
+                        announcementsRef.child(id).set(announcementsData);
+                    }
+                };
+                UndoManager.show('Tab deleted.', undo);
+            });
+        };
 
         function openAnnouncementEditor(id = null) {
             if (!isAdmin || !currentTabId) return;
@@ -2038,7 +2057,6 @@ body.dark-mode .snackbar {
             announcementsRef.child(currentTabId).child(id).update({ pinned: newPinnedStatus });
         };
 
-
         function expandPost(postElement) {
             if (expandedPost) collapsePost(expandedPost);
             postElement.classList.add('expanded');
@@ -2059,12 +2077,19 @@ body.dark-mode .snackbar {
         
         window.editAnnouncement = id => openAnnouncementEditor(id);
         
-        window.deleteAnnouncement = id => {
+        window.deleteAnnouncement = (id) => {
             if (!isAdmin) return;
-            const commitDelete = () => announcementsRef.child(currentTabId).child(id).remove().then(() => {
-                if (expandedPost && expandedPost.dataset.id === id) collapsePost(expandedPost);
+            announcementsRef.child(currentTabId).child(id).once('value').then(snapshot => {
+                const data = snapshot.val();
+                if (!data) return;
+                
+                announcementsRef.child(currentTabId).child(id).remove().then(() => {
+                    if (expandedPost && expandedPost.dataset.id === id) collapsePost(expandedPost);
+                });
+                
+                const undo = () => announcementsRef.child(currentTabId).child(id).set(data);
+                UndoManager.show('Announcement deleted.', undo);
             });
-            showUndo('Announcement deleted.', commitDelete);
         };
 
         function setupPostsDragAndDrop() {
@@ -2139,7 +2164,7 @@ body.dark-mode .snackbar {
             remindersList.innerHTML = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date)).map(rem => {
                 if (!rem || !rem.id) return '';
                 const actionsHtml = isAdmin ? `<div class="reminder-actions"><button class="reminder-action-btn" onclick="editReminder(event, '${rem.id}')">✏️</button><button class="reminder-action-btn" onclick="deleteReminder(event, '${rem.id}')">🗑️</button></div>` : '';
-                return `<div class="reminder-card ${rem.type || 'trip'}">${actionsHtml}<div class="reminder-title">${rem.title}</div><div class="reminder-date">${formatDate(rem.date)}</div>${rem.description ? `<div class="reminder-description">${rem.description}</div>` : ''}</div>`;
+                return `<div class="reminder-card ${rem.type || 'trip'}" data-id="${rem.id}">${actionsHtml}<div class="reminder-title">${rem.title}</div><div class="reminder-date">${formatDate(rem.date)}</div>${rem.description ? `<div class="reminder-description">${rem.description}</div>` : ''}</div>`;
             }).join('');
         }
         function formatDate(dateString) { try { return new Date(dateString).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }); } catch { return "Invalid Date"; } }
@@ -2174,53 +2199,59 @@ body.dark-mode .snackbar {
         
         window.editReminder = (event, id) => { event.stopPropagation(); openReminderEditor(id); };
         
-        window.deleteReminder = (event, id) => { 
-            event.stopPropagation(); 
+        window.deleteReminder = (event, id) => {
+            event.stopPropagation();
             if (!isAdmin) return;
-            const commitDelete = () => database.ref('reminders/' + id).remove();
-            showUndo('Reminder deleted.', commitDelete);
+            remindersRef.child(id).once('value').then(snapshot => {
+                const data = snapshot.val();
+                if (!data) return;
+                remindersRef.child(id).remove();
+                const undo = () => remindersRef.child(id).set(data);
+                UndoManager.show('Reminder deleted.', undo);
+            });
         };
         
         // --- UNDO SNACKBAR SYSTEM ---
-        let undoAction = null;
-        let undoTimeout = null;
-        
-        function setupUndoSystem() {
-            const undoSnackbar = document.getElementById('undo-snackbar');
-            const undoButton = document.getElementById('undo-button');
+        const UndoManager = {
+            snackbar: null,
+            messageEl: null,
+            button: null,
+            undoCallback: null,
+            timeout: null,
 
-            undoButton.addEventListener('click', () => {
-                if (undoTimeout) clearTimeout(undoTimeout);
-                undoAction = null; // Cancel the pending action
-                undoSnackbar.classList.remove('show');
-            });
-        }
+            init() {
+                this.snackbar = document.getElementById('undo-snackbar');
+                this.messageEl = document.getElementById('undo-message');
+                this.button = document.getElementById('undo-button');
+                this.button.addEventListener('click', () => this.performUndo());
+            },
 
-        function showUndo(message, commitCallback) {
-            const undoSnackbar = document.getElementById('undo-snackbar');
-            const undoMessage = document.getElementById('undo-message');
+            show(message, undoCallback) {
+                if (this.timeout) clearTimeout(this.timeout);
 
-            // If an undo is already pending, commit it immediately before showing the new one
-            if (undoTimeout) {
-                clearTimeout(undoTimeout);
-                if (undoAction) undoAction.commit();
-            }
+                this.undoCallback = undoCallback;
+                this.messageEl.textContent = message;
+                this.snackbar.className = "snackbar show";
 
-            // Set up the new undo action
-            undoAction = { commit: commitCallback };
-            undoMessage.textContent = message;
-            undoSnackbar.className = "snackbar show";
+                this.timeout = setTimeout(() => {
+                    this.hide();
+                }, 6000); // 6-second window to undo
+            },
 
-            // Set a timer to commit the deletion if not undone
-            undoTimeout = setTimeout(() => {
-                if (undoAction) {
-                    undoAction.commit();
+            performUndo() {
+                if (this.undoCallback) {
+                    this.undoCallback();
                 }
-                undoSnackbar.className = undoSnackbar.className.replace("show", "");
-                undoAction = null;
-                undoTimeout = null;
-            }, 6000); // 6-second window to undo
-        }
+                this.hide();
+            },
+
+            hide() {
+                if (this.timeout) clearTimeout(this.timeout);
+                this.timeout = null;
+                this.undoCallback = null;
+                this.snackbar.className = "snackbar";
+            }
+        };
 
         function setupModalCloseHandlers() {
             window.onclick = e => {
