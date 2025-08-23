@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- FIXED: TinyMCE Script with YOUR valid API key -->
+    <!-- TinyMCE Script with your valid API key -->
     <script src="https://cdn.tiny.cloud/1/ay97lghbygwk64o8kb20mpyu2ochdhommyrstgszzss65gy2/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
 
     <style>
@@ -971,9 +971,6 @@ body.dark-mode .editor-header {
     background-color: var(--dark-lighter);
     border-bottom-color: var(--dark-light-gray);
 }
-body.dark-mode .editor-content #custom-editor-container {
-    border-color: var(--dark-light-gray);
-}
 
 /* Pinned Posts Styles */
 #pinned-posts-header {
@@ -1799,16 +1796,17 @@ body.dark-mode .input-group label {
                 selector: '#announcement-content',
                 plugins: 'lists link image table media code help wordcount',
                 toolbar: 'undo redo | blocks | bold italic underline | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media table | removeformat | help',
-                content_css: false,
+                content_css: false, 
                 content_style: EDITOR_STYLES,
                 height: "100%",
                 menubar: false,
                 statusbar: false,
+                z_index: 3000, // KEY FIX: Ensures TinyMCE dialogs appear over our overlay
                 skin: (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'oxide-dark' : 'oxide',
                 content_css: (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'default',
             });
         }
-        
+
         function checkUserProfile() {
             const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
             if (userInfo && userInfo.email) {
