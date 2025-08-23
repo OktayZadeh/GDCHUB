@@ -359,6 +359,16 @@
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
         }
 
+        /* FIX: Adds an invisible buffer at the bottom of the card to prevent hover flickering */
+        .subject-card::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -8px; /* Extends below the card by the same amount as the hover transform */
+            height: 8px; /* Creates an invisible hoverable area */
+        }
+
         /* Card Media */
         .card-media-container {
             height: var(--card-media-height);
