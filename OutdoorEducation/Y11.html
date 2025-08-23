@@ -6,6 +6,9 @@
     <title>Classroom Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- FIXED: TinyMCE Script with YOUR valid API key -->
+    <script src="https://cdn.tiny.cloud/1/ay97lghbygwk64o8kb20mpyu2ochdhommyrstgszzss65gy2/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
 
     <style>
 :root {
@@ -953,12 +956,12 @@ body.dark-mode .add-tab-header-button:hover {
     margin-top: 0;
     margin-bottom: var(--space-xl);
 }
-.editor-content #custom-editor-container {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--light-gray);
-    border-radius: var(--radius-md);
+.editor-content .tox-tinymce {
+    flex-grow: 1 !important;
+    border-radius: var(--radius-md) !important;
+}
+.tox .tox-edit-area__iframe {
+    background-color: var(--lighter) !important;
 }
 
 body.dark-mode #announcement-editor-overlay {
@@ -971,113 +974,6 @@ body.dark-mode .editor-header {
 body.dark-mode .editor-content #custom-editor-container {
     border-color: var(--dark-light-gray);
 }
-
-/* Custom Editor Styles */
-.custom-editor-toolbar {
-    flex-shrink: 0;
-    padding: var(--space-xs);
-    background-color: var(--light);
-    border-bottom: 1px solid var(--light-gray);
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-xs);
-    align-items: center;
-    border-radius: var(--radius-md) var(--radius-md) 0 0;
-}
-.custom-editor-toolbar button, .custom-editor-toolbar select, .custom-editor-toolbar label {
-    background: transparent;
-    border: 1px solid transparent;
-    cursor: pointer;
-    height: 34px;
-    border-radius: var(--radius-sm);
-    color: var(--dark);
-    font-family: var(--font-main);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 var(--space-xs);
-}
-.custom-editor-toolbar button {
-    width: 34px;
-    font-size: var(--text-base);
-}
-.custom-editor-toolbar select {
-    padding: 0 var(--space-xs);
-}
-.custom-editor-toolbar input[type="color"] {
-   opacity: 0;
-   width: 0;
-   height: 0;
-   position: absolute;
-}
-.custom-editor-toolbar label {
-    width: 34px;
-}
-
-.custom-editor-toolbar button:hover, .custom-editor-toolbar select:hover, .custom-editor-toolbar label:hover {
-    background-color: var(--light-gray);
-    border-color: var(--medium);
-}
-.custom-editor-toolbar .toolbar-separator {
-    width: 1px;
-    height: 20px;
-    background: var(--light-gray);
-    margin: 0 var(--space-xs);
-}
-.toolbar-group {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-}
-
-#custom-editable-content {
-    flex-grow: 1;
-    padding: var(--space-md);
-    outline: none;
-    overflow-y: auto;
-    background-color: var(--lighter);
-    border-radius: 0 0 var(--radius-md) var(--radius-md);
-    line-height: 1.7;
-    color: var(--medium);
-}
-body.dark-mode .custom-editor-toolbar {
-    background-color: var(--dark-dark-gray);
-    border-bottom-color: var(--dark-light-gray);
-}
-body.dark-mode .custom-editor-toolbar button, body.dark-mode .custom-editor-toolbar select, body.dark-mode .custom-editor-toolbar label {
-    color: var(--dark-medium);
-}
-body.dark-mode .custom-editor-toolbar button:hover, body.dark-mode .custom-editor-toolbar select:hover, body.dark-mode .custom-editor-toolbar label:hover {
-    background-color: var(--dark-light-gray);
-    border-color: var(--dark-medium);
-}
-body.dark-mode #custom-editable-content {
-    background-color: var(--dark-lighter);
-    color: var(--dark-medium);
-}
-/* Styles to make the custom editor look like post-content */
-#custom-editable-content h1, #custom-editable-content h2, #custom-editable-content h3, #custom-editable-content h4 { 
-    margin-top: var(--space-lg);
-    font-weight: 600;
-    color: var(--dark);
-    line-height: 1.25;
-}
-#custom-editable-content h1 { font-size: var(--text-3xl); }
-#custom-editable-content h2 { font-size: var(--text-2xl); }
-#custom-editable-content h3 { font-size: var(--text-xl); }
-#custom-editable-content h4 { font-size: var(--text-lg); }
-
-#custom-editable-content ul, #custom-editable-content ol { 
-    margin-left: var(--space-lg); 
-    margin-bottom: var(--space-lg); 
-}
-#custom-editable-content blockquote { 
-    border-left: 4px solid var(--light-gray); 
-    padding-left: var(--space-md); 
-    margin: var(--space-lg) 0; 
-    font-style: italic; 
-}
-
 
 /* Pinned Posts Styles */
 #pinned-posts-header {
@@ -1710,62 +1606,10 @@ body.dark-mode .input-group label {
                 <input type="text" id="announcement-title" placeholder=" ">
                 <label>Announcement Title</label>
             </div>
-            <!-- Custom Editor -->
-            <div id="custom-editor-container">
-                <div class="custom-editor-toolbar">
-                    <div class="toolbar-group">
-                        <button onclick="formatDoc('bold');" title="Bold"><i class="fas fa-bold"></i></button>
-                        <button onclick="formatDoc('italic');" title="Italic"><i class="fas fa-italic"></i></button>
-                        <button onclick="formatDoc('underline');" title="Underline"><i class="fas fa-underline"></i></button>
-                    </div>
-                    <div class="toolbar-separator"></div>
-                    <div class="toolbar-group">
-                        <select onchange="formatDoc('fontName', this.value);" title="Font Family">
-                            <option value="Inter, sans-serif" selected>Inter</option>
-                            <option value="Roboto, sans-serif">Roboto</option>
-                            <option value="Arial, sans-serif">Arial</option>
-                            <option value="'Courier New', Courier, monospace">Courier</option>
-                            <option value="Georgia, serif">Georgia</option>
-                            <option value="'Times New Roman', Times, serif">Times New Roman</option>
-                            <option value="Verdana, sans-serif">Verdana</option>
-                        </select>
-                        <select onchange="formatDoc('fontSize', this.value);" title="Font Size">
-                            <option value="2">Small</option>
-                            <option value="3" selected>Normal</option>
-                            <option value="5">Large</option>
-                            <option value="6">Heading</option>
-                        </select>
-                    </div>
-                    <div class="toolbar-separator"></div>
-                    <div class="toolbar-group">
-                         <label for="foreColor" class="toolbar-label" title="Text Color">
-                            <i class="fas fa-font"></i>
-                            <input type="color" id="foreColor" onchange="formatDoc('foreColor', this.value);">
-                        </label>
-                         <label for="backColor" class="toolbar-label" title="Highlight Color">
-                            <i class="fas fa-fill-drip"></i>
-                            <input type="color" id="backColor" onchange="formatDoc('backColor', this.value);">
-                        </label>
-                    </div>
-                    <div class="toolbar-separator"></div>
-                    <div class="toolbar-group">
-                        <button onclick="formatDoc('insertUnorderedList');" title="Bulleted List"><i class="fas fa-list-ul"></i></button>
-                        <button onclick="formatDoc('insertOrderedList');" title="Numbered List"><i class="fas fa-list-ol"></i></button>
-                        <button onclick="formatDoc('justifyLeft');" title="Align Left"><i class="fas fa-align-left"></i></button>
-                        <button onclick="formatDoc('justifyCenter');" title="Align Center"><i class="fas fa-align-center"></i></button>
-                        <button onclick="formatDoc('justifyRight');" title="Align Right"><i class="fas fa-align-right"></i></button>
-                    </div>
-                    <div class="toolbar-separator"></div>
-                    <div class="toolbar-group">
-                        <button onclick="addLink();" title="Add Link"><i class="fas fa-link"></i></button>
-                        <button onclick="embedVideo();" title="Embed YouTube Video"><i class="fab fa-youtube"></i></button>
-                        <button onclick="embedGoogleDrive();" title="Embed Google Drive File"><i class="fab fa-google-drive"></i></button>
-                    </div>
-                </div>
-                <div id="custom-editable-content" contenteditable="true" class="post-content"></div>
-            </div>
+            <textarea id="announcement-content"></textarea>
         </div>
     </div>
+
 
     <!-- Tab Editor Modal -->
     <div id="tab-editor-modal" class="modal">
@@ -1872,7 +1716,6 @@ body.dark-mode .input-group label {
         const profilePicElement = document.getElementById('profile-pic');
         const currentTabTitleElement = document.getElementById('current-tab-title');
         const announcementEditorOverlay = document.getElementById('announcement-editor-overlay');
-        const customEditableContent = document.getElementById('custom-editable-content'); // Custom editor area
         const classroomInfo = document.getElementById('classroom-info');
         const pinnedPostsFeed = document.getElementById('pinned-posts-feed');
         const unpinnedPostsFeed = document.getElementById('unpinned-posts-feed');
@@ -1909,6 +1752,7 @@ body.dark-mode .input-group label {
             setupMobileMenu();
             setupDarkMode();
             setupProfileDropdown();
+            initializeEditor();
             UndoManager.init();
             if (isAdmin) {
                 setupSidebarDragAndDrop();
@@ -1923,62 +1767,48 @@ body.dark-mode .input-group label {
             });
         });
 
-        // --- Custom Editor Functions ---
-        function formatDoc(command, value = null) {
-            document.execCommand(command, false, value);
-            customEditableContent.focus();
-        }
-
-        function addLink() {
-            const url = prompt('Enter the link URL:');
-            if (url) {
-                formatDoc('createLink', url);
-            }
-        }
-
-        function embedVideo() {
-            const url = prompt('Enter the YouTube video URL:');
-            if (url) {
-                const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/;
-                const youtubeMatch = url.match(youtubeRegex);
-                if (youtubeMatch && youtubeMatch[1]) {
-                    const embedHtml = `<div class="embed-container" contenteditable="false"><iframe src="https://www.youtube.com/embed/${youtubeMatch[1]}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><p><br></p>`;
-                    formatDoc('insertHTML', embedHtml);
-                } else {
-                    alert('Invalid YouTube URL. Please use a valid link.');
+        function initializeEditor() {
+            const EDITOR_STYLES = `
+                body {
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                    line-height: 1.7;
+                    color: var(--medium);
                 }
-            }
+                h1, h2, h3, h4 { 
+                    font-weight: 600;
+                    color: var(--dark);
+                    margin-bottom: var(--space-md);
+                    line-height: 1.25;
+                    margin-top: var(--space-lg);
+                }
+                h1 { font-size: var(--text-3xl); }
+                h2 { font-size: var(--text-2xl); }
+                h3 { font-size: var(--text-xl); }
+                h4 { font-size: var(--text-lg); }
+                p { margin-bottom: var(--space-lg); }
+                ul, ol { margin-left: var(--space-lg); margin-bottom: var(--space-lg); }
+                blockquote {
+                    border-left: 4px solid var(--light-gray);
+                    padding-left: var(--space-md);
+                    margin: var(--space-lg) 0;
+                    font-style: italic;
+                }
+            `;
+
+            tinymce.init({
+                selector: '#announcement-content',
+                plugins: 'lists link image table media code help wordcount',
+                toolbar: 'undo redo | blocks | bold italic underline | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media table | removeformat | help',
+                content_css: false,
+                content_style: EDITOR_STYLES,
+                height: "100%",
+                menubar: false,
+                statusbar: false,
+                skin: (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'oxide-dark' : 'oxide',
+                content_css: (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'default',
+            });
         }
         
-        function embedGoogleDrive() {
-            const url = prompt('Enter the Google Drive file URL (Docs, Sheets, or Slides):');
-            if (!url) return;
-
-            let embedHtml = '';
-            const idRegex = /\/d\/([a-zA-Z0-9_-]+)/;
-            const matches = url.match(idRegex);
-
-            if (matches && matches[1]) {
-                const fileId = matches[1];
-                if (url.includes('/presentation/')) {
-                    embedHtml = `<div class="embed-container" contenteditable="false"><iframe src="https://docs.google.com/presentation/d/${fileId}/embed?start=false&loop=false&delayms=3000" frameborder="0" allowfullscreen></iframe></div><p><br></p>`;
-                } else if (url.includes('/document/')) {
-                    embedHtml = `<div class="embed-container" style="padding-bottom: 141.42%;" contenteditable="false"><iframe src="https://docs.google.com/document/d/${fileId}/preview" frameborder="0" allowfullscreen></iframe></div><p><br></p>`;
-                } else if (url.includes('/spreadsheets/')) {
-                    embedHtml = `<div class="embed-container" contenteditable="false"><iframe src="https://docs.google.com/spreadsheets/d/${fileId}/pubhtml?widget=true&amp;headers=false"></iframe></div><p><br></p>`
-                }
-            }
-
-            if (embedHtml) {
-                formatDoc('insertHTML', embedHtml);
-            } else {
-                alert('Invalid or unsupported Google Drive URL. Please use a valid link for Docs, Sheets, or Slides.');
-            }
-        }
-        
-        // --- End Custom Editor Functions ---
-
-
         function checkUserProfile() {
             const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
             if (userInfo && userInfo.email) {
@@ -2091,6 +1921,25 @@ body.dark-mode .input-group label {
             });
         }
         
+        function autoEmbed(htmlContent) {
+            if (!htmlContent) return '';
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+
+            const iframes = tempDiv.querySelectorAll('iframe');
+            iframes.forEach(iframe => {
+                if (!iframe.parentElement.classList.contains('embed-container')) {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'embed-container';
+                    iframe.parentNode.insertBefore(wrapper, iframe);
+                    wrapper.appendChild(iframe);
+                }
+            });
+
+            return tempDiv.innerHTML;
+        }
+
         function renderAnnouncements(announcements, skipAnimation = false) {
             const pinned = announcements.filter(a => a.pinned).sort((a, b) => (a.order || 0) - (b.order || 0));
             const unpinned = announcements.filter(a => !a.pinned).sort((a, b) => (b.order || 0) - (a.order || 0));
@@ -2125,6 +1974,7 @@ body.dark-mode .input-group label {
                 </div>` : '';
 
             const rawContent = announcement.content || '';
+            const expandedContent = autoEmbed(rawContent);
             const tempDiv = document.createElement("div");
             tempDiv.innerHTML = rawContent;
             const collapsedText = tempDiv.textContent || "";
@@ -2139,7 +1989,7 @@ body.dark-mode .input-group label {
                     <h3>${announcement.title}</h3>
                     <div class="collapsed-content">${collapsedText}</div>
                     <div class="post-details">
-                        <div class="post-content">${rawContent}</div>
+                        <div class="post-content">${expandedContent}</div>
                         <div class="post-meta">Posted on ${postDate}</div>
                     </div>
                 </div>`;
@@ -2321,14 +2171,14 @@ body.dark-mode .input-group label {
             saveBtn.onclick = isEditing ? () => saveEditedAnnouncement(id) : postAnnouncement;
             
             announcementTitleInput.value = '';
-            customEditableContent.innerHTML = '';
+            tinymce.get('announcement-content').setContent('');
             
             if (isEditing) {
                 announcementsRef.child(currentTabId).child(id).once('value').then(s => {
                     const ann = s.val();
                     if(ann) { 
                         announcementTitleInput.value = ann.title; 
-                        customEditableContent.innerHTML = ann.content || ''; 
+                        tinymce.get('announcement-content').setContent(ann.content || ''); 
                     }
                 });
             }
@@ -2345,7 +2195,7 @@ body.dark-mode .input-group label {
         function postAnnouncement() {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
-            const content = customEditableContent.innerHTML;
+            const content = tinymce.get('announcement-content').getContent();
 
             if (!title) return alert('Please enter a title.');
             
@@ -2363,7 +2213,7 @@ body.dark-mode .input-group label {
         function saveEditedAnnouncement(id) {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
-            const content = customEditableContent.innerHTML;
+            const content = tinymce.get('announcement-content').getContent();
 
             if (!title) return alert('Please enter a title.');
 
