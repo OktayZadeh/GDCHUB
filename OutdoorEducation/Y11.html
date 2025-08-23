@@ -1573,6 +1573,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         let isAdmin = false;
         let currentAnnouncementBeingEdited = null;
         let currentTabAnnouncements = [];
+        let suppressPostAnimation = false;
         
         const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
 
@@ -1675,22 +1676,25 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function filterAnnouncements() {
             const searchTerm = announcementSearchInput.value.toLowerCase().trim();
             searchClearButton.style.display = searchTerm ? 'block' : 'none';
-            if (!searchTerm) return renderAnnouncements(currentTabAnnouncements);
-            
-            const tempDiv = document.createElement('div');
-            const filtered = currentTabAnnouncements.filter(ann => {
-                const titleMatch = ann.title.toLowerCase().includes(searchTerm);
-                tempDiv.innerHTML = ann.content;
-                const contentMatch = (tempDiv.textContent || "").toLowerCase().includes(searchTerm);
-                return titleMatch || contentMatch;
-            });
-            renderAnnouncements(filtered);
+
+            let announcementsToRender = currentTabAnnouncements;
+            if (searchTerm) {
+                const tempDiv = document.createElement('div');
+                announcementsToRender = currentTabAnnouncements.filter(ann => {
+                    const titleMatch = ann.title.toLowerCase().includes(searchTerm);
+                    tempDiv.innerHTML = ann.content;
+                    const contentMatch = (tempDiv.textContent || "").toLowerCase().includes(searchTerm);
+                    return titleMatch || contentMatch;
+                });
+            }
+
+            renderAnnouncements(announcementsToRender, suppressPostAnimation);
+            suppressPostAnimation = false; // Reset flag after any render
         }
 
         function clearSearch() {
             announcementSearchInput.value = '';
-            searchClearButton.style.display = 'none';
-            renderAnnouncements(currentTabAnnouncements);
+            filterAnnouncements();
         }
 
         function setupFirebaseListeners() {
@@ -1727,13 +1731,14 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             return processedContent;
         }
 
-        function renderAnnouncements(announcements) {
+        function renderAnnouncements(announcements, skipAnimation = false) {
             const pinned = announcements.filter(a => a.pinned).sort((a, b) => (a.order || 0) - (b.order || 0));
             const unpinned = announcements.filter(a => !a.pinned).sort((a, b) => (b.order || 0) - (a.order || 0));
 
             pinnedPostsHeader.style.display = pinned.length > 0 ? 'flex' : 'none';
-            pinnedPostsFeed.innerHTML = pinned.map(createPostElement).join('');
-            unpinnedPostsFeed.innerHTML = unpinned.map(createPostElement).join('');
+            pinnedPostsFeed.innerHTML = pinned.map(ann => createPostElement(ann, skipAnimation)).join('');
+            unpinnedPostsFeed.innerHTML = unpinned.map(ann => createPostElement(ann, skipAnimation)).join('');
+            
             if (announcements.length === 0) {
                 unpinnedPostsFeed.innerHTML = '<p>No announcements found for this tab.</p>';
             }
@@ -1746,7 +1751,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             document.querySelectorAll('.post-actions button').forEach(button => button.addEventListener('click', e => e.stopPropagation()));
         }
 
-        function createPostElement(announcement) {
+        function createPostElement(announcement, skipAnimation = false) {
             const postDate = new Date(announcement.order).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
             const pinButtonText = announcement.pinned ? 'Unpin' : 'Pin';
             const pinIcon = announcement.pinned ? `<div class="pin-icon"><i class="fas fa-thumbtack"></i></div>` : '';
@@ -1760,9 +1765,10 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             tempDiv.innerHTML = announcement.content;
             const collapsedText = tempDiv.textContent || "";
             const finalContent = autoEmbed(announcement.content);
+            const animationStyle = skipAnimation ? 'style="animation: none; opacity: 1;"' : '';
 
             return `
-                <div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" draggable="${isAdmin}">
+                <div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" draggable="${isAdmin}" ${animationStyle}>
                     <span class="post-card-drag-handle move-handle">☰</span>
                     ${pinIcon}
                     ${actionsHtml}
@@ -1821,7 +1827,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 placeholder = document.createElement('li');
                 placeholder.className = 'sidebar-placeholder';
                 
-                //
                 setTimeout(() => {
                     if(draggedItem) draggedItem.classList.add('dragging');
                 }, 0);
@@ -2025,7 +2030,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 
                 const currentContainer = e.target.closest('.posts-feed');
                 if (currentContainer !== sourceContainer) {
-                    return;
+                    return; // Prevent dragging between pinned and unpinned
                 }
 
                 e.preventDefault();
@@ -2073,13 +2078,18 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     });
                 } else {
                     orderedIds.forEach((id, index) => {
+                        // For unpinned, we sort by timestamp descending, so a higher order means newer.
+                        // We reverse the array index to maintain this.
                         updates[`${id}/order`] = Date.now() - index;
                     });
                 }
                 
                 if (Object.keys(updates).length > 0) {
+                    suppressPostAnimation = true; // Set flag to prevent animation on re-render
                     announcementsRef.child(currentTabId).update(updates);
                 }
+
+                endDrag();
             });
         }
         
