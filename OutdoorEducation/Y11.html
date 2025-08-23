@@ -1532,6 +1532,12 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 <input type="text" id="announcement-title" placeholder=" ">
                 <label>Announcement Title</label>
             </div>
+
+            <!-- NEW: Dedicated input for embed URL -->
+            <div class="input-group">
+                <input type="text" id="announcement-embed-url" placeholder=" ">
+                <label>Embed Link (Optional: YouTube, Google Slides/Docs)</label>
+            </div>
             
             <textarea id="announcement-content" style="display: none;"></textarea>
             
@@ -1701,7 +1707,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
         function initializeSunEditor() {
             announcementEditorInstance = SUNEDITOR.create('announcement-content', {
-                height: 'auto', minHeight: '350px',
+                height: 'auto', minHeight: '250px',
                 charCounter: true,
                 pasteTagsWhitelist: "p, a, img, h1, h2, h3, h4, h5, h6, blockquote, ul, ol, li, br, hr, b, strong, i, em, u, s, span, div, table, thead, tbody, tr, th, td",
                 buttonList: [
@@ -1818,23 +1824,35 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         }
         
-        function autoEmbed(htmlContent) {
-            if (!htmlContent) return '';
-            let processedContent = htmlContent;
+        /**
+         * Takes a single URL and converts it into the appropriate iframe embed code.
+         * Returns an empty string if the URL is not a recognized embeddable format.
+         */
+        function generateEmbedFromUrl(url) {
+            if (!url) return '';
             
-            // Regex for YouTube: finds a link and replaces it with an iframe
-            const youtubeRegex = /<a href="(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11}))(?:.*)?".*?>.*?<\/a>/g;
-            processedContent = processedContent.replace(youtubeRegex, (match, url, videoId) => `<div class="embed-container"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`);
-            
-            // Regex for Google Slides: finds a link and replaces it with an iframe
-            const gSlidesRegex = /<a href="(https?:\/\/docs\.google\.com\/presentation\/d\/(?:e\/)?([a-zA-Z0-9_-]+)\/pub(?:.*?))".*?>.*?<\/a>/g;
-            processedContent = processedContent.replace(gSlidesRegex, (match, url, id) => `<div class="embed-container"><iframe src="https://docs.google.com/presentation/d/${id}/embed?start=false&loop=false&delayms=3000" frameborder="0" allowfullscreen></iframe></div>`);
+            // YouTube
+            const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/;
+            const youtubeMatch = url.match(youtubeRegex);
+            if (youtubeMatch && youtubeMatch[1]) {
+                return `<div class="embed-container"><iframe src="https://www.youtube.com/embed/${youtubeMatch[1]}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+            }
 
-            // Regex for Google Docs: finds a link and replaces it with an iframe
-            const gDocsRegex = /<a href="(https?:\/\/docs\.google\.com\/document\/d\/(?:e\/)?([a-zA-Z0-9_-]+)\/pub(?:.*?))".*?>.*?<\/a>/g;
-            processedContent = processedContent.replace(gDocsRegex, (match, url, id) => `<div class="embed-container" style="padding-bottom: 141.42%;"><iframe src="https://docs.google.com/document/d/${id}/preview" frameborder="0" allowfullscreen></iframe></div>`);
-            
-            return processedContent;
+            // Google Slides
+            const gSlidesRegex = /https:\/\/docs\.google\.com\/presentation\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
+            const gSlidesMatch = url.match(gSlidesRegex);
+            if (gSlidesMatch && gSlidesMatch[1]) {
+                return `<div class="embed-container"><iframe src="https://docs.google.com/presentation/d/${gSlidesMatch[1]}/embed?start=false&loop=false&delayms=3000" frameborder="0" allowfullscreen></iframe></div>`;
+            }
+
+            // Google Docs
+            const gDocsRegex = /https:\/\/docs\.google\.com\/document\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
+            const gDocsMatch = url.match(gDocsRegex);
+            if (gDocsMatch && gDocsMatch[1]) {
+                return `<div class="embed-container" style="padding-bottom: 141.42%;"><iframe src="https://docs.google.com/document/d/${gDocsMatch[1]}/preview" frameborder="0" allowfullscreen></iframe></div>`;
+            }
+
+            return ''; // Return empty if no match
         }
 
         function renderAnnouncements(announcements, skipAnimation = false) {
@@ -1859,12 +1877,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             document.querySelectorAll('.post-actions button').forEach(button => button.addEventListener('click', e => e.stopPropagation()));
         }
 
-        /**
-         * Creates the HTML for a post card.
-         * This function now generates both the collapsed (plain text) and expanded (rich content)
-         * views from the start. CSS is used to toggle which view is visible.
-         * This is a more reliable method than injecting HTML on click.
-         */
         function createPostElement(announcement, skipAnimation = false) {
             const postDate = new Date(announcement.order).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
             const pinButtonText = announcement.pinned ? 'Unpin' : 'Pin';
@@ -1876,13 +1888,16 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     <button class="button small delete-button" onclick="deleteAnnouncement(event, '${announcement.id}')">Delete</button>
                 </div>` : '';
 
-            // Create a temporary div to reliably strip all HTML for the collapsed view.
-            const tempDiv = document.createElement("div");
-            tempDiv.innerHTML = announcement.content;
-            const collapsedText = tempDiv.textContent || "";
+            // 1. Generate the embed HTML from the dedicated `embedUrl` field.
+            const embedHtml = generateEmbedFromUrl(announcement.embedUrl);
 
-            // Create the rich, embeddable content for the expanded view.
-            const expandedContent = autoEmbed(announcement.content);
+            // 2. Get the main rich text content.
+            const mainContent = announcement.content || '';
+
+            // 3. Create a plain-text summary for the collapsed view.
+            const tempDiv = document.createElement("div");
+            tempDiv.innerHTML = mainContent;
+            const collapsedText = tempDiv.textContent || "";
             
             const animationStyle = skipAnimation ? 'style="animation: none; opacity: 1;"' : '';
 
@@ -1898,7 +1913,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
                     <!-- View #2: Expanded (Rich Content with Embeds), hidden by default by CSS -->
                     <div class="post-details">
-                        <div class="post-content">${expandedContent}</div>
+                        ${embedHtml} <!-- The embed goes here -->
+                        <div class="post-content">${mainContent}</div> <!-- The main text goes here -->
                         <div class="post-meta">Posted on ${postDate}</div>
                     </div>
                 </div>`;
@@ -2083,13 +2099,20 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const isEditing = !!id;
             saveAnnouncementButton.textContent = isEditing ? 'Save Changes' : 'Post Announcement';
             saveAnnouncementButton.onclick = isEditing ? () => saveEditedAnnouncement(id) : postAnnouncement;
+            
+            // Clear all fields
             announcementTitleInput.value = '';
+            document.getElementById('announcement-embed-url').value = '';
             announcementEditorInstance.setContents('');
             
             if (isEditing) {
                 announcementsRef.child(currentTabId).child(id).once('value').then(s => {
                     const ann = s.val();
-                    if(ann) { announcementTitleInput.value = ann.title; announcementEditorInstance.setContents(ann.content); }
+                    if(ann) { 
+                        announcementTitleInput.value = ann.title; 
+                        document.getElementById('announcement-embed-url').value = ann.embedUrl || '';
+                        announcementEditorInstance.setContents(ann.content); 
+                    }
                 });
             }
         }
@@ -2099,9 +2122,19 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
             const content = announcementEditorInstance.getContents(true);
-            if (!title || !content) return alert('Please enter a title and content.');
+            const embedUrl = document.getElementById('announcement-embed-url').value.trim();
+
+            if (!title) return alert('Please enter a title.');
+            
             const newAnnRef = announcementsRef.child(currentTabId).push();
-            const newAnn = { id: newAnnRef.key, title, content, pinned: false, order: Date.now() };
+            const newAnn = { 
+                id: newAnnRef.key, 
+                title, 
+                content, 
+                embedUrl, // Save the new field
+                pinned: false, 
+                order: Date.now() 
+            };
             newAnnRef.set(newAnn).then(closeAnnouncementEditor);
         }
 
@@ -2109,8 +2142,15 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
             const content = announcementEditorInstance.getContents(true);
-            if (!title || !content) return alert('Please enter a title and content.');
-            announcementsRef.child(currentTabId).child(id).update({ title, content }).then(closeAnnouncementEditor);
+            const embedUrl = document.getElementById('announcement-embed-url').value.trim();
+
+            if (!title) return alert('Please enter a title.');
+
+            announcementsRef.child(currentTabId).child(id).update({ 
+                title, 
+                content,
+                embedUrl // Save the new field on edit
+            }).then(closeAnnouncementEditor);
         }
         
         window.togglePin = (id) => {
