@@ -1947,23 +1947,62 @@ body.dark-mode .input-group label {
             });
         }
         
+        // UPGRADED: This function now handles both pasted links AND iframes from the video button.
         function autoEmbed(htmlContent) {
             if (!htmlContent) return '';
-            let processedContent = htmlContent;
             
-            // YouTube Regex: Finds ALL `<a>` tags pointing to YouTube and replaces them.
-            const youtubeRegex = /<a href="(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11}))(?:.*)?".*?>.*?<\/a>/g;
-            processedContent = processedContent.replace(youtubeRegex, (match, url, videoId) => `<div class="embed-container"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`);
-            
-            // Google Slides Regex: Finds ALL `<a>` tags pointing to Google Slides and replaces them.
-            const gSlidesRegex = /<a href="(https?:\/\/docs\.google\.com\/presentation\/d\/(?:e\/)?([a-zA-Z0-9_-]+)\/pub(?:.*?))".*?>.*?<\/a>/g;
-            processedContent = processedContent.replace(gSlidesRegex, (match, url, id) => `<div class="embed-container"><iframe src="https://docs.google.com/presentation/d/${id}/embed?start=false&loop=false&delayms=3000" frameborder="0" allowfullscreen></iframe></div>`);
+            // 1. Create a temporary DOM element to safely manipulate the content
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
 
-            // Google Docs Regex: Finds ALL `<a>` tags pointing to Google Docs and replaces them.
-            const gDocsRegex = /<a href="(https?:\/\/docs\.google\.com\/document\/d\/(?:e\/)?([a-zA-Z0-9_-]+)\/pub(?:.*?))".*?>.*?<\/a>/g;
-            processedContent = processedContent.replace(gDocsRegex, (match, url, id) => `<div class="embed-container" style="padding-bottom: 141.42%;"><iframe src="https://docs.google.com/document/d/${id}/preview" frameborder="0" allowfullscreen></iframe></div>`);
-            
-            return processedContent;
+            // 2. Handle links that need to be turned into embeds
+            const links = tempDiv.querySelectorAll('a');
+            links.forEach(link => {
+                const url = link.href;
+                let embedHtml = '';
+
+                // YouTube
+                const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/;
+                const youtubeMatch = url.match(youtubeRegex);
+                if (youtubeMatch && youtubeMatch[1]) {
+                    embedHtml = `<div class="embed-container"><iframe src="https://www.youtube.com/embed/${youtubeMatch[1]}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+                }
+
+                // Google Slides
+                const gSlidesRegex = /https:\/\/docs\.google\.com\/presentation\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
+                const gSlidesMatch = url.match(gSlidesRegex);
+                if (gSlidesMatch && gSlidesMatch[1]) {
+                    embedHtml = `<div class="embed-container"><iframe src="https://docs.google.com/presentation/d/${gSlidesMatch[1]}/embed?start=false&loop=false&delayms=3000" frameborder="0" allowfullscreen></iframe></div>`;
+                }
+
+                // Google Docs
+                const gDocsRegex = /https:\/\/docs\.google\.com\/document\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
+                const gDocsMatch = url.match(gDocsRegex);
+                if (gDocsMatch && gDocsMatch[1]) {
+                     embedHtml = `<div class="embed-container" style="padding-bottom: 141.42%;"><iframe src="https://docs.google.com/document/d/${gDocsMatch[1]}/preview" frameborder="0" allowfullscreen></iframe></div>`;
+                }
+                
+                // If a match was found, replace the <a> tag with the new embed HTML
+                if (embedHtml) {
+                    const embedWrapper = document.createElement('div');
+                    embedWrapper.innerHTML = embedHtml;
+                    link.parentNode.replaceChild(embedWrapper.firstChild, link);
+                }
+            });
+
+            // 3. Handle iframes (from the video button) that are not already in a responsive wrapper
+            const iframes = tempDiv.querySelectorAll('iframe');
+            iframes.forEach(iframe => {
+                // Check if the parent is already the kind of container we want
+                if (!iframe.parentElement.classList.contains('embed-container')) {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'embed-container';
+                    iframe.parentNode.insertBefore(wrapper, iframe);
+                    wrapper.appendChild(iframe);
+                }
+            });
+
+            return tempDiv.innerHTML;
         }
 
         function renderAnnouncements(announcements, skipAnimation = false) {
