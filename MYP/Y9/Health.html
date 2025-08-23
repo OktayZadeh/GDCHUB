@@ -1980,7 +1980,6 @@ body.dark-mode .input-group label {
                     const url = prompt('Enter the URL:');
                     if (url) document.execCommand('createLink', false, url);
                 } else if (command === 'embedContent') {
-                    // Save the selection right before opening the modal
                     const selection = window.getSelection();
                     if (selection.rangeCount > 0) {
                         savedEditorSelection = selection.getRangeAt(0);
@@ -2059,7 +2058,6 @@ body.dark-mode .input-group label {
 
             if (embedUrl) {
                 announcementContentEditor.focus();
-                // Restore the saved cursor position before inserting
                 if (savedEditorSelection) {
                     const selection = window.getSelection();
                     selection.removeAllRanges();
@@ -2069,13 +2067,12 @@ body.dark-mode .input-group label {
                 const embedHtml = `<div class="embed-container"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><p><br></p>`;
                 document.execCommand('insertHTML', false, embedHtml);
                 
-                // Update the saved selection to be *after* the newly inserted content
                 const selection = window.getSelection();
                 if (selection.rangeCount > 0) {
                    savedEditorSelection = selection.getRangeAt(0);
                 }
 
-                urlInput.value = ''; // Clear input for next embed
+                urlInput.value = ''; 
                 const embedButton = document.getElementById('embed-action-button');
                 embedButton.textContent = 'Embedded!';
                 setTimeout(() => {
@@ -2465,11 +2462,15 @@ body.dark-mode .input-group label {
             }
             
             announcementEditorOverlay.classList.add('visible');
+            // CRITICAL FIX: Disable scrolling on the main page
+            document.documentElement.style.overflow = 'hidden';
             document.body.style.overflow = 'hidden';
         }
 
         function closeAnnouncementEditor() { 
             announcementEditorOverlay.classList.remove('visible');
+             // CRITICAL FIX: Re-enable scrolling on the main page
+            document.documentElement.style.overflow = '';
             document.body.style.overflow = '';
         }
 
