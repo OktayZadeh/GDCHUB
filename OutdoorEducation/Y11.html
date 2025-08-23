@@ -862,7 +862,7 @@ body.dark-mode .add-tab-header-button:hover {
     box-shadow: var(--shadow-md);
 }
 
-/* Modal Styles */
+/* Modal Styles (for confirmation and simple forms) */
 .modal {
     display: none;
     position: fixed;
@@ -888,12 +888,6 @@ body.dark-mode .add-tab-header-button:hover {
     overflow-y: auto;
     box-shadow: var(--shadow-xl);
     animation: modalSlideIn var(--transition-normal) forwards;
-}
-
-#announcement-editor .modal-content {
-    max-width: 800px; /* Wider for the rich text editor */
-    display: flex;
-    flex-direction: column;
 }
 
 @keyframes modalFadeIn {
@@ -939,6 +933,58 @@ body.dark-mode .add-tab-header-button:hover {
     margin-top: var(--space-lg);
     gap: var(--space-sm);
 }
+
+/* NEW: Full-Screen Editor Overlay Styles */
+#announcement-editor-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--light);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    visibility: hidden;
+    transition: transform var(--transition-normal), visibility var(--transition-normal);
+}
+#announcement-editor-overlay.visible {
+    transform: translateY(0);
+    visibility: visible;
+}
+.editor-header {
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm) var(--space-xl);
+    background-color: var(--lighter);
+    border-bottom: 1px solid var(--light-gray);
+    box-shadow: var(--shadow-sm);
+    z-index: 10;
+}
+.editor-header h2 {
+    margin: 0;
+}
+.editor-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: var(--space-xl);
+}
+.editor-content .input-group {
+    margin-top: 0;
+}
+body.dark-mode #announcement-editor-overlay {
+    background-color: var(--dark-light);
+}
+body.dark-mode .editor-header {
+    background-color: var(--dark-lighter);
+    border-bottom-color: var(--dark-light-gray);
+}
+
 
 /* Pinned Posts Styles */
 #pinned-posts-header {
@@ -1286,6 +1332,9 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
     .topbar { padding: 0 var(--space-sm); }
     .topbar-title, .topbar-button span { display: none; }
     .topbar-button { padding: 6px; width: 36px; height: 36px; justify-content: center; border-radius: 50%; }
+    .editor-header { padding: var(--space-sm) var(--space-md); }
+    .editor-content { padding: var(--space-md); }
+
 }
 
 /* Mobile menu toggle */
@@ -1523,24 +1572,24 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         </div>
     </div>
     
-    <!-- Announcement Editor Modal -->
-    <div id="announcement-editor" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeAnnouncementEditor()">×</span>
-            <h2>Create New Announcement</h2>
-            <div class="input-group">
-                <input type="text" id="announcement-title" placeholder=" ">
-                <label>Announcement Title</label>
-            </div>
-            
-            <textarea id="announcement-content" style="display: none;"></textarea>
-            
+    <!-- NEW: Full-Screen Announcement Editor -->
+    <div id="announcement-editor-overlay">
+        <div class="editor-header">
+            <h2 id="announcement-editor-title">Create New Announcement</h2>
             <div class="modal-buttons">
                 <button class="button secondary" onclick="closeAnnouncementEditor()">Cancel</button>
                 <button class="button" id="save-announcement-button">Post Announcement</button>
             </div>
         </div>
+        <div class="editor-content">
+            <div class="input-group">
+                <input type="text" id="announcement-title" placeholder=" ">
+                <label>Announcement Title</label>
+            </div>
+            <textarea id="announcement-content" style="display: none;"></textarea>
+        </div>
     </div>
+
 
     <!-- Tab Editor Modal -->
     <div id="tab-editor-modal" class="modal">
@@ -1646,7 +1695,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         const tabNameInput = document.getElementById('tab-name-input');
         const profilePicElement = document.getElementById('profile-pic');
         const currentTabTitleElement = document.getElementById('current-tab-title');
-        const announcementEditor = document.getElementById('announcement-editor');
+        const announcementEditorOverlay = document.getElementById('announcement-editor-overlay'); // NEW: Reference to the overlay
         const classroomInfo = document.getElementById('classroom-info');
         const pinnedPostsFeed = document.getElementById('pinned-posts-feed');
         const unpinnedPostsFeed = document.getElementById('unpinned-posts-feed');
@@ -1702,9 +1751,9 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function initializeSunEditor() {
             announcementEditorInstance = SUNEDITOR.create('announcement-content', {
                 height: 'auto', 
-                minHeight: '350px',
+                minHeight: '50vh', // Generous default height
                 charCounter: true,
-                pasteTagsWhitelist: "p, a, img, h1, h2, h3, h4, h5, h6, blockquote, ul, ol, li, br, hr, b, strong, i, em, u, s, span, div, table, thead, tbody, tr, th, td",
+                pasteTagsWhitelist: "p, a, img, h1, h2, h3, h4, h5, h6, blockquote, ul, ol, li, br, hr, b, strong, i, em, u, s, span, div, table, thead, tbody, tr, th, td, iframe",
                 // UPGRADED: A much more powerful, "Google Docs-like" button list
                 buttonList: [
                     ['undo', 'redo'],
@@ -1826,10 +1875,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         }
         
-        /**
-         * Takes a block of HTML content and replaces all recognized links with their
-         * corresponding iframe embed code. This now uses a global regex to find ALL links.
-         */
         function autoEmbed(htmlContent) {
             if (!htmlContent) return '';
             let processedContent = htmlContent;
@@ -2085,13 +2130,19 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         };
 
+        // --- REWORKED Editor Opening/Closing ---
         function openAnnouncementEditor(id = null) {
             if (!isAdmin || !currentTabId) return;
-            announcementEditor.style.display = 'flex';
+            
             currentAnnouncementBeingEdited = id;
             const isEditing = !!id;
-            saveAnnouncementButton.textContent = isEditing ? 'Save Changes' : 'Post Announcement';
-            saveAnnouncementButton.onclick = isEditing ? () => saveEditedAnnouncement(id) : postAnnouncement;
+
+            const titleEl = announcementEditorOverlay.querySelector('#announcement-editor-title');
+            const saveBtn = announcementEditorOverlay.querySelector('#save-announcement-button');
+            
+            titleEl.textContent = isEditing ? 'Edit Announcement' : 'Create New Announcement';
+            saveBtn.textContent = isEditing ? 'Save Changes' : 'Post Announcement';
+            saveBtn.onclick = isEditing ? () => saveEditedAnnouncement(id) : postAnnouncement;
             
             // Clear all fields
             announcementTitleInput.value = '';
@@ -2102,12 +2153,20 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     const ann = s.val();
                     if(ann) { 
                         announcementTitleInput.value = ann.title; 
-                        announcementEditorInstance.setContents(ann.content); 
+                        announcementEditorInstance.setContents(ann.content || ''); 
                     }
                 });
             }
+            
+            announcementEditorOverlay.classList.add('visible');
+            document.body.style.overflow = 'hidden'; // Lock background scroll
         }
-        function closeAnnouncementEditor() { announcementEditor.style.display = 'none'; }
+
+        function closeAnnouncementEditor() { 
+            announcementEditorOverlay.classList.remove('visible');
+            document.body.style.overflow = ''; // Unlock background scroll
+        }
+
 
         function postAnnouncement() {
             if (!isAdmin || !currentTabId) return;
@@ -2385,4 +2444,4 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         }
     </script>
 </body>
-</html>
+</html>```
