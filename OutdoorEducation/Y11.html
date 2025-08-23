@@ -1874,13 +1874,10 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     <button class="button small delete-button" onclick="deleteAnnouncement(event, '${announcement.id}')">Delete</button>
                 </div>` : '';
 
-            // Create clean text for collapsed view by stripping HTML tags
+            // Create clean text for collapsed view by stripping HTML tags from the raw content.
             const tempDiv = document.createElement("div");
             tempDiv.innerHTML = announcement.content;
             const collapsedText = tempDiv.textContent || "";
-
-            // Create the rich content with embeds for the expanded view
-            const finalContentForExpandedView = autoEmbed(announcement.content);
             
             const animationStyle = skipAnimation ? 'style="animation: none; opacity: 1;"' : '';
 
@@ -1892,9 +1889,11 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     <h3>${announcement.title}</h3>
                     <div class="collapsed-content">${collapsedText}</div>
                     <div class="post-details">
-                        <div class="post-content">${finalContentForExpandedView}</div>
+                        <div class="post-content"></div> <!-- Initially empty -->
                         <div class="post-meta">Posted on ${postDate}</div>
                     </div>
+                    <!-- Store raw content here to be processed on expand -->
+                    <template class="raw-content">${announcement.content}</template>
                 </div>`;
         }
         
@@ -2116,6 +2115,17 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
         function expandPost(postElement) {
             if (expandedPost) collapsePost(expandedPost);
+
+            // Process content on first expansion only
+            const postContentDiv = postElement.querySelector('.post-content');
+            if (postContentDiv && !postContentDiv.innerHTML.trim()) {
+                const rawContentTemplate = postElement.querySelector('.raw-content');
+                if (rawContentTemplate) {
+                    const rawHtml = rawContentTemplate.innerHTML;
+                    postContentDiv.innerHTML = autoEmbed(rawHtml);
+                }
+            }
+
             postElement.classList.add('expanded');
             expandedPost = postElement;
             const controls = document.getElementById('expanded-post-controls');
