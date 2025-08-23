@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-
     <style>
 :root {
     /* Modern Color palette */
@@ -852,6 +851,11 @@ body.dark-mode .add-tab-header-button:hover {
     animation: modalFadeIn var(--transition-fast) forwards;
 }
 
+/* BUG FIX: Ensure embed modal is on top */
+#embed-modal {
+    z-index: 2100;
+}
+
 .modal-content {
     background-color: white;
     padding: var(--space-xl);
@@ -908,13 +912,10 @@ body.dark-mode .add-tab-header-button:hover {
     gap: var(--space-sm);
 }
 
-/* Full-Screen Editor Overlay Styles */
+/* --- UI REWORK: Full-Screen Editor --- */
 #announcement-editor-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    top: 0; left: 0; width: 100vw; height: 100vh;
     background-color: var(--light);
     z-index: 2000;
     display: flex;
@@ -929,46 +930,56 @@ body.dark-mode .add-tab-header-button:hover {
 }
 .editor-header {
     flex-shrink: 0;
-    position: sticky;
-    top: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: var(--space-sm) var(--space-xl);
     background-color: var(--lighter);
     border-bottom: 1px solid var(--light-gray);
-    box-shadow: var(--shadow-sm);
     z-index: 10;
 }
-.editor-header h2 {
-    margin: 0;
-}
+.editor-header h2 { margin: 0; }
+
 .editor-content {
     flex-grow: 1;
     overflow-y: auto;
-    padding: var(--space-xl);
+    padding: var(--space-md) var(--space-xl) var(--space-2xl);
     display: flex;
     flex-direction: column;
-    max-width: 800px; /* Optimal reading width */
+    max-width: 900px;
     width: 100%;
     margin: 0 auto;
 }
-.editor-content .input-group {
-    margin-top: 0;
-    margin-bottom: var(--space-xl);
+#announcement-title { /* Reworked Title */
+    font-size: var(--text-4xl);
+    font-weight: 700;
+    border: none;
+    background: transparent;
+    padding: var(--space-lg) 0;
+    margin-bottom: var(--space-md);
+    color: var(--dark);
+    width: 100%;
+    font-family: var(--font-main);
 }
-
-
-body.dark-mode #announcement-editor-overlay {
-    background-color: var(--dark-light);
+#announcement-title:focus {
+    outline: none;
+    box-shadow: none;
 }
-body.dark-mode .editor-header {
-    background-color: var(--dark-lighter);
-    border-bottom-color: var(--dark-light-gray);
+#announcement-title::placeholder {
+    color: var(--light-gray);
 }
+.editor-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 0;
+}
+body.dark-mode #announcement-editor-overlay { background-color: var(--dark-dark); }
+body.dark-mode .editor-header { background-color: var(--dark-dark-gray); border-bottom-color: var(--dark-dark); }
+body.dark-mode #announcement-title { color: white; }
+body.dark-mode #announcement-title::placeholder { color: var(--dark-light-gray); }
 
-
-/* --- NEW CUSTOM EDITOR STYLES --- */
+/* --- UI REWORK: High-End Custom Toolbar --- */
 .custom-toolbar {
     background: var(--lighter);
     border: 1px solid var(--light-gray);
@@ -977,10 +988,12 @@ body.dark-mode .editor-header {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-xs);
-    margin-bottom: var(--space-md);
-    position: sticky;
+    margin-bottom: var(--space-lg);
+    position: sticky; /* Sticky inside the scrolling container */
     top: 0;
     z-index: 5;
+    box-shadow: var(--shadow-md);
+    flex-shrink: 0;
 }
 .toolbar-group {
     display: flex;
@@ -989,84 +1002,101 @@ body.dark-mode .editor-header {
     padding-right: var(--space-sm);
     margin-right: var(--space-sm);
 }
-.toolbar-group:last-child {
-    border-right: none;
-    margin-right: 0;
-    padding-right: 0;
-}
-.toolbar-button, .toolbar-select {
+.toolbar-group:last-child { border-right: none; margin-right: 0; padding-right: 0; }
+
+.toolbar-button, .toolbar-dropdown-toggle {
     background: transparent;
     border: none;
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     border-radius: var(--radius-md);
     color: var(--medium);
     cursor: pointer;
-    font-size: var(--text-base);
+    font-size: 15px;
     transition: all var(--transition-fast);
     display: inline-flex;
     align-items: center;
     justify-content: center;
 }
-.toolbar-button:hover, .toolbar-button.active {
+.toolbar-button:hover, .toolbar-dropdown-toggle:hover {
     background: var(--light);
     color: var(--dark);
 }
-.toolbar-select {
+.toolbar-button.active {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+/* Custom Dropdown for Formatting */
+.toolbar-dropdown { position: relative; }
+.toolbar-dropdown-toggle {
     width: auto;
     padding: 0 var(--space-sm);
     font-size: var(--text-sm);
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-image: none;
+    font-weight: 500;
 }
+.toolbar-dropdown-toggle .fa-chevron-down {
+    margin-left: var(--space-xs);
+    font-size: 10px;
+    transition: transform var(--transition-fast);
+}
+.toolbar-dropdown.open .toolbar-dropdown-toggle .fa-chevron-down {
+    transform: rotate(180deg);
+}
+.toolbar-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    background: var(--lighter);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--light-gray);
+    padding: var(--space-xs) 0;
+    min-width: 160px;
+    z-index: 10;
+}
+.toolbar-dropdown.open .toolbar-dropdown-menu { display: block; }
+.toolbar-dropdown-item {
+    display: block;
+    padding: var(--space-sm) var(--space-md);
+    color: var(--dark);
+    font-size: var(--text-sm);
+    text-decoration: none;
+    cursor: pointer;
+}
+.toolbar-dropdown-item:hover { background: var(--light); }
+.toolbar-dropdown-item[data-value="h2"] { font-size: var(--text-xl); font-weight: 600; }
+.toolbar-dropdown-item[data-value="h3"] { font-size: var(--text-lg); font-weight: 600; }
+.toolbar-dropdown-item[data-value="h4"] { font-size: var(--text-base); font-weight: 600; }
+.toolbar-dropdown-item[data-value="blockquote"] { border-left: 3px solid var(--primary); padding-left: var(--space-sm); font-style: italic; }
+
 .custom-editor-area {
     flex-grow: 1;
-    background: var(--lighter);
-    border: 1px solid var(--light-gray);
     padding: var(--space-lg);
-    border-radius: var(--radius-lg);
     outline: none;
-    overflow-y: auto;
     line-height: 1.7;
     color: var(--dark);
     font-size: 16px;
-}
-.custom-editor-area:focus {
-    border-color: var(--primary);
-    box-shadow: var(--shadow-primary);
+    min-height: 300px;
 }
 .custom-editor-area > *:first-child { margin-top: 0; }
+.custom-editor-area:focus-within { border-color: transparent; box-shadow: none; }
 .custom-editor-area img { max-width: 100%; height: auto; border-radius: var(--radius-md); }
 .custom-editor-area blockquote { border-left: 3px solid var(--light-gray); padding-left: var(--space-md); margin-left: 0; font-style: italic; color: var(--medium); }
 
-body.dark-mode .custom-toolbar {
-    background: var(--dark-lighter);
-    border-color: var(--dark-light-gray);
-}
-body.dark-mode .toolbar-group {
-    border-right-color: var(--dark-light-gray);
-}
-body.dark-mode .toolbar-button {
-    color: var(--dark-medium);
-}
-body.dark-mode .toolbar-button:hover, body.dark-mode .toolbar-button.active {
-    background: var(--dark-light-gray);
-    color: var(--light);
-}
-body.dark-mode .custom-editor-area {
-    background: var(--dark-lighter);
-    border-color: var(--dark-light-gray);
-    color: var(--dark-medium);
-}
-body.dark-mode .custom-editor-area h1,
-body.dark-mode .custom-editor-area h2,
-body.dark-mode .custom-editor-area h3 {
-    color: white;
-}
-/* --- END CUSTOM EDITOR STYLES --- */
-
+/* Dark Mode Toolbar */
+body.dark-mode .custom-toolbar { background: var(--dark-dark-gray); border-color: var(--dark-light); }
+body.dark-mode .toolbar-group { border-right-color: var(--dark-light); }
+body.dark-mode .toolbar-button, body.dark-mode .toolbar-dropdown-toggle { color: var(--dark-medium); }
+body.dark-mode .toolbar-button:hover, body.dark-mode .toolbar-dropdown-toggle:hover { background: var(--dark-light-gray); color: var(--light); }
+body.dark-mode .toolbar-button.active { background: var(--dark-primary-light); color: var(--primary); }
+body.dark-mode .custom-editor-area { color: var(--dark-medium); }
+body.dark-mode .custom-editor-area h1, body.dark-mode .custom-editor-area h2, body.dark-mode .custom-editor-area h3 { color: white; }
+body.dark-mode .toolbar-dropdown-menu { background: var(--dark-lighter); border-color: var(--dark-light); }
+body.dark-mode .toolbar-dropdown-item { color: var(--dark-medium); }
+body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray); }
+/* --- END EDITOR UI REWORK --- */
 
 /* Pinned Posts Styles */
 #pinned-posts-header {
@@ -1453,6 +1483,7 @@ body.dark-mode .input-group label {
     .editor-header { padding: var(--space-sm) var(--space-md); }
     .editor-content { padding: var(--space-md); }
     .toolbar-group { padding-right: var(--space-xs); margin-right: var(--space-xs); }
+    #announcement-title { font-size: var(--text-2xl); }
 }
 
 /* Mobile menu toggle */
@@ -1696,53 +1727,54 @@ body.dark-mode .input-group label {
             </div>
         </div>
         <div class="editor-content">
-            <div class="input-group">
-                <input type="text" id="announcement-title" placeholder=" ">
-                <label>Announcement Title</label>
-            </div>
+            <input type="text" id="announcement-title" placeholder="Announcement Title...">
             
-            <!-- NEW CUSTOM TOOLBAR -->
-            <div class="custom-toolbar" id="custom-toolbar">
-                <div class="toolbar-group">
-                    <button class="toolbar-button" data-command="undo" title="Undo"><i class="fas fa-undo"></i></button>
-                    <button class="toolbar-button" data-command="redo" title="Redo"><i class="fas fa-redo"></i></button>
+            <div class="editor-wrapper">
+                 <!-- NEW CUSTOM TOOLBAR -->
+                <div class="custom-toolbar" id="custom-toolbar">
+                    <div class="toolbar-group">
+                        <button class="toolbar-button" data-command="undo" title="Undo"><i class="fas fa-undo"></i></button>
+                        <button class="toolbar-button" data-command="redo" title="Redo"><i class="fas fa-redo"></i></button>
+                    </div>
+                    <div class="toolbar-group">
+                         <div class="toolbar-dropdown" id="format-block-dropdown">
+                            <button class="toolbar-dropdown-toggle" id="format-block-toggle">Paragraph <i class="fas fa-chevron-down"></i></button>
+                            <div class="toolbar-dropdown-menu" id="format-block-menu">
+                                <a href="#" class="toolbar-dropdown-item" data-value="p">Paragraph</a>
+                                <a href="#" class="toolbar-dropdown-item" data-value="h2">Heading 1</a>
+                                <a href="#" class="toolbar-dropdown-item" data-value="h3">Heading 2</a>
+                                <a href="#" class="toolbar-dropdown-item" data-value="h4">Heading 3</a>
+                                <a href="#" class="toolbar-dropdown-item" data-value="blockquote">Quote</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="toolbar-group">
+                        <button class="toolbar-button" data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
+                        <button class="toolbar-button" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
+                        <button class="toolbar-button" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
+                        <button class="toolbar-button" data-command="strikeThrough" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
+                    </div>
+                    <div class="toolbar-group">
+                        <button class="toolbar-button" data-command="justifyLeft" title="Align Left"><i class="fas fa-align-left"></i></button>
+                        <button class="toolbar-button" data-command="justifyCenter" title="Align Center"><i class="fas fa-align-center"></i></button>
+                        <button class="toolbar-button" data-command="justifyRight" title="Align Right"><i class="fas fa-align-right"></i></button>
+                    </div>
+                    <div class="toolbar-group">
+                        <button class="toolbar-button" data-command="insertUnorderedList" title="Bulleted List"><i class="fas fa-list-ul"></i></button>
+                        <button class="toolbar-button" data-command="insertOrderedList" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                    </div>
+                    <div class="toolbar-group">
+                        <button class="toolbar-button" data-command="createLink" title="Insert Link"><i class="fas fa-link"></i></button>
+                        <button class="toolbar-button" data-command="embedContent" title="Embed Media"><i class="fas fa-code"></i></button>
+                    </div>
+                     <div class="toolbar-group">
+                        <button class="toolbar-button" data-command="removeFormat" title="Clear Formatting"><i class="fas fa-eraser"></i></button>
+                    </div>
                 </div>
-                <div class="toolbar-group">
-                    <select class="toolbar-select" data-command="formatBlock" title="Format">
-                        <option value="p">Paragraph</option>
-                        <option value="h2">Heading 1</option>
-                        <option value="h3">Heading 2</option>
-                        <option value="h4">Heading 3</option>
-                        <option value="blockquote">Quote</option>
-                    </select>
-                </div>
-                <div class="toolbar-group">
-                    <button class="toolbar-button" data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
-                    <button class="toolbar-button" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
-                    <button class="toolbar-button" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
-                    <button class="toolbar-button" data-command="strikeThrough" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
-                </div>
-                <div class="toolbar-group">
-                    <button class="toolbar-button" data-command="justifyLeft" title="Align Left"><i class="fas fa-align-left"></i></button>
-                    <button class="toolbar-button" data-command="justifyCenter" title="Align Center"><i class="fas fa-align-center"></i></button>
-                    <button class="toolbar-button" data-command="justifyRight" title="Align Right"><i class="fas fa-align-right"></i></button>
-                </div>
-                <div class="toolbar-group">
-                    <button class="toolbar-button" data-command="insertUnorderedList" title="Bulleted List"><i class="fas fa-list-ul"></i></button>
-                    <button class="toolbar-button" data-command="insertOrderedList" title="Numbered List"><i class="fas fa-list-ol"></i></button>
-                </div>
-                <div class="toolbar-group">
-                    <button class="toolbar-button" data-command="createLink" title="Insert Link"><i class="fas fa-link"></i></button>
-                    <button class="toolbar-button" data-command="embedContent" title="Embed Media"><i class="fas fa-code"></i></button>
-                </div>
-                 <div class="toolbar-group">
-                    <button class="toolbar-button" data-command="removeFormat" title="Clear Formatting"><i class="fas fa-eraser"></i></button>
-                </div>
+                
+                <!-- NEW CONTENTEDITABLE DIV -->
+                <div id="announcement-content" class="custom-editor-area" contenteditable="true"></div>
             </div>
-            
-            <!-- NEW CONTENTEDITABLE DIV -->
-            <div id="announcement-content" class="custom-editor-area" contenteditable="true"></div>
-
         </div>
     </div>
 
@@ -1907,7 +1939,7 @@ body.dark-mode .input-group label {
             setupMobileMenu();
             setupDarkMode();
             setupProfileDropdown();
-            setupCustomEditor(); // New function for custom editor
+            setupCustomEditor();
             UndoManager.init();
             if (isAdmin) {
                 setupSidebarDragAndDrop();
@@ -1922,35 +1954,71 @@ body.dark-mode .input-group label {
             });
         });
         
-        // --- NEW CUSTOM EDITOR LOGIC ---
+        // --- UI REWORK: High-End Custom Editor Logic ---
         function setupCustomEditor() {
             const toolbar = document.getElementById('custom-toolbar');
+            const formatDropdown = document.getElementById('format-block-dropdown');
+            const formatToggle = document.getElementById('format-block-toggle');
+            
+            // Handle standard button clicks
             toolbar.addEventListener('click', e => {
                 const button = e.target.closest('.toolbar-button');
-                if (!button) return;
+                if (!button || button.parentElement.id === 'format-block-dropdown') return;
 
                 e.preventDefault();
                 const command = button.dataset.command;
 
                 if (command === 'createLink') {
                     const url = prompt('Enter the URL:');
-                    if (url) {
-                        document.execCommand('createLink', false, url);
-                    }
+                    if (url) document.execCommand('createLink', false, url);
                 } else if (command === 'embedContent') {
                     openEmbedModal();
                 } else {
                     document.execCommand(command, false, null);
                 }
                 announcementContentEditor.focus();
+                updateToolbarState();
             });
 
-            toolbar.addEventListener('change', e => {
-                const select = e.target.closest('.toolbar-select');
-                if (select) {
-                    const command = select.dataset.command;
-                    const value = select.value;
-                    document.execCommand(command, false, value);
+            // Handle custom dropdown logic
+            formatToggle.addEventListener('click', (e) => {
+                 e.stopPropagation();
+                 formatDropdown.classList.toggle('open');
+            });
+
+            document.getElementById('format-block-menu').addEventListener('click', e => {
+                const item = e.target.closest('.toolbar-dropdown-item');
+                if(item) {
+                    const value = item.dataset.value;
+                    document.execCommand('formatBlock', false, value);
+                    formatToggle.innerHTML = `${item.textContent} <i class="fas fa-chevron-down"></i>`;
+                    formatDropdown.classList.remove('open');
+                    announcementContentEditor.focus();
+                }
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                if (formatDropdown.classList.contains('open')) {
+                    formatDropdown.classList.remove('open');
+                }
+            });
+            
+            // Update toolbar state based on cursor position
+            announcementContentEditor.addEventListener('keyup', updateToolbarState);
+            announcementContentEditor.addEventListener('mouseup', updateToolbarState);
+        }
+        
+        function updateToolbarState() {
+            const commands = ['bold', 'italic', 'underline', 'strikeThrough', 'justifyLeft', 'justifyCenter', 'justifyRight', 'insertUnorderedList', 'insertOrderedList'];
+            commands.forEach(command => {
+                const button = document.querySelector(`.toolbar-button[data-command="${command}"]`);
+                if (button) {
+                    if (document.queryCommandState(command)) {
+                        button.classList.add('active');
+                    } else {
+                        button.classList.remove('active');
+                    }
                 }
             });
         }
@@ -1969,14 +2037,11 @@ body.dark-mode .input-group label {
             if (!url) return;
 
             let embedUrl = '';
-
-            // YouTube
-            if (url.includes('youtube.com/watch?v=')) {
-                const videoId = new URL(url).searchParams.get('v');
-                embedUrl = `https://www.youtube.com/embed/${videoId}`;
-            } else if (url.includes('youtu.be/')) {
-                const videoId = new URL(url).pathname.slice(1);
-                embedUrl = `https://www.youtube.com/embed/${videoId}`;
+            // YouTube: handles watch, short, and embed URLs
+            const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            const youtubeMatch = url.match(youtubeRegex);
+            if (youtubeMatch) {
+                embedUrl = `https://www.youtube.com/embed/${youtubeMatch[1]}`;
             }
             // Google Slides
             else if (url.includes('docs.google.com/presentation/d/')) {
@@ -1988,13 +2053,12 @@ body.dark-mode .input-group label {
             }
 
             if (embedUrl) {
-                const embedHtml = `<div class="embed-container"><iframe src="${embedUrl}" frameborder="0" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe></div>`;
+                const embedHtml = `<div class="embed-container"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><p></p>`;
                 announcementContentEditor.focus();
                 document.execCommand('insertHTML', false, embedHtml);
             } else {
                 alert('Invalid URL. Please use a valid share URL from YouTube, Google Docs, or Google Slides.');
             }
-
             closeEmbedModal();
         }
 
