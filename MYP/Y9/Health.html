@@ -972,12 +972,7 @@ body.dark-mode .add-tab-header-button:hover {
 #announcement-title::placeholder {
     color: var(--light-gray);
 }
-.editor-wrapper {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    min-height: 0;
-}
+
 body.dark-mode #announcement-editor-overlay { background-color: var(--dark-dark); }
 body.dark-mode .editor-header { background-color: var(--dark-dark-gray); border-bottom-color: var(--dark-light); }
 body.dark-mode #announcement-title { color: white; }
@@ -990,7 +985,7 @@ body.dark-mode #announcement-title::placeholder { color: var(--dark-light-gray);
     z-index: 5;
     background-color: var(--light); /* Match editor background */
     padding: var(--space-md) 0;
-    margin: 0 calc(-1 * var(--space-xl)); /* Negative margin to span full width */
+    margin-bottom: var(--space-md);
 }
 body.dark-mode .custom-toolbar-container {
     background-color: var(--dark-dark);
@@ -1087,7 +1082,7 @@ body.dark-mode .custom-toolbar-container {
 
 .custom-editor-area {
     flex-grow: 1;
-    padding: var(--space-lg) 0;
+    padding: 0;
     outline: none;
     line-height: 1.7;
     color: var(--dark);
@@ -1742,7 +1737,7 @@ body.dark-mode .input-group label {
             </div>
         </div>
         <div class="editor-content">
-            <div class="custom-toolbar-container">
+             <div class="custom-toolbar-container">
                 <div class="custom-toolbar" id="custom-toolbar">
                      <div class="toolbar-group">
                         <button class="toolbar-button" data-command="undo" title="Undo"><i class="fas fa-undo"></i></button>
@@ -1832,7 +1827,7 @@ body.dark-mode .input-group label {
             </div>
             <div class="modal-buttons">
                 <button class="button secondary" onclick="closeEmbedModal()">Done</button>
-                <button class="button" onclick="saveEmbed()">Embed</button>
+                <button class="button" id="embed-action-button" onclick="saveEmbed()">Embed</button>
             </div>
         </div>
     </div>
@@ -1940,6 +1935,7 @@ body.dark-mode .input-group label {
         let currentAnnouncementBeingEdited = null;
         let currentTabAnnouncements = [];
         let suppressPostAnimation = false;
+        let savedEditorSelection = null; // For cursor-perfect embedding
         
         const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
 
@@ -1984,6 +1980,11 @@ body.dark-mode .input-group label {
                     const url = prompt('Enter the URL:');
                     if (url) document.execCommand('createLink', false, url);
                 } else if (command === 'embedContent') {
+                    // Save the selection right before opening the modal
+                    const selection = window.getSelection();
+                    if (selection.rangeCount > 0) {
+                        savedEditorSelection = selection.getRangeAt(0);
+                    }
                     openEmbedModal();
                 } else {
                     document.execCommand(command, false, null);
@@ -2057,13 +2058,25 @@ body.dark-mode .input-group label {
             }
 
             if (embedUrl) {
-                const embedHtml = `<div class="embed-container"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><p><br></p>`;
                 announcementContentEditor.focus();
+                // Restore the saved cursor position before inserting
+                if (savedEditorSelection) {
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(savedEditorSelection);
+                }
+
+                const embedHtml = `<div class="embed-container"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><p><br></p>`;
                 document.execCommand('insertHTML', false, embedHtml);
                 
-                // MULTI-EMBED LOGIC
+                // Update the saved selection to be *after* the newly inserted content
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                   savedEditorSelection = selection.getRangeAt(0);
+                }
+
                 urlInput.value = ''; // Clear input for next embed
-                const embedButton = embedModal.querySelector('.button:not(.secondary)');
+                const embedButton = document.getElementById('embed-action-button');
                 embedButton.textContent = 'Embedded!';
                 setTimeout(() => {
                     embedButton.textContent = 'Embed';
@@ -2073,7 +2086,6 @@ body.dark-mode .input-group label {
             } else {
                 alert('Invalid URL. Please use a valid share URL from YouTube, Google Docs, or Google Slides.');
             }
-            // Do NOT close the modal automatically
         }
 
         // --- END CUSTOM EDITOR LOGIC ---
