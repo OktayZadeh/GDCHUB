@@ -1760,7 +1760,7 @@ body.dark-mode .input-group label {
         const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
 
         document.addEventListener('DOMContentLoaded', () => {
-            checkUserProfile();
+            checkUserProfile(); // This MUST run first to set up admin access
             setupFirebaseListeners();
             setupModalCloseHandlers();
             setupConfirmationModal();
@@ -1842,6 +1842,28 @@ body.dark-mode .input-group label {
             });
         }
 
+        // --- FIXED Admin Check ---
+        function checkUserProfile() {
+            const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
+            if (userInfo && userInfo.email) {
+                profilePicElement.src = userInfo.picture || '';
+                
+                // Determine if the user is an admin
+                isAdmin = ADMIN_EMAILS.includes(userInfo.email.toLowerCase());
+
+                // Explicitly set the class based on admin status
+                if (isAdmin) {
+                    document.body.classList.remove('non-admin');
+                } else {
+                    document.body.classList.add('non-admin');
+                }
+            } else {
+                // If there's no user info, they are definitely not an admin
+                isAdmin = false;
+                document.body.classList.add('non-admin');
+            }
+        }
+
         function setupProfileDropdown() {
             let dropdownHoverTimeout;
             const content = document.querySelector('.profile-dropdown-content');
@@ -1883,17 +1905,6 @@ body.dark-mode .input-group label {
                 const icon = darkModeToggle.querySelector('i');
                 icon.classList.replace('fa-moon', 'fa-sun');
                 darkModeToggle.querySelector('span').textContent = 'Light Mode';
-            }
-        }
-
-        function checkUserProfile() {
-            const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
-            if (userInfo && userInfo.picture) {
-                profilePicElement.src = userInfo.picture;
-                isAdmin = userInfo.email && ADMIN_EMAILS.includes(userInfo.email.toLowerCase());
-                document.body.classList.toggle('non-admin', !isAdmin);
-            } else {
-                document.body.classList.add('non-admin');
             }
         }
 
@@ -1947,42 +1958,35 @@ body.dark-mode .input-group label {
             });
         }
         
-        // UPGRADED: This function now handles both pasted links AND iframes from the video button.
         function autoEmbed(htmlContent) {
             if (!htmlContent) return '';
             
-            // 1. Create a temporary DOM element to safely manipulate the content
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = htmlContent;
 
-            // 2. Handle links that need to be turned into embeds
             const links = tempDiv.querySelectorAll('a');
             links.forEach(link => {
                 const url = link.href;
                 let embedHtml = '';
 
-                // YouTube
                 const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/;
                 const youtubeMatch = url.match(youtubeRegex);
                 if (youtubeMatch && youtubeMatch[1]) {
                     embedHtml = `<div class="embed-container"><iframe src="https://www.youtube.com/embed/${youtubeMatch[1]}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
                 }
 
-                // Google Slides
                 const gSlidesRegex = /https:\/\/docs\.google\.com\/presentation\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
                 const gSlidesMatch = url.match(gSlidesRegex);
                 if (gSlidesMatch && gSlidesMatch[1]) {
                     embedHtml = `<div class="embed-container"><iframe src="https://docs.google.com/presentation/d/${gSlidesMatch[1]}/embed?start=false&loop=false&delayms=3000" frameborder="0" allowfullscreen></iframe></div>`;
                 }
 
-                // Google Docs
                 const gDocsRegex = /https:\/\/docs\.google\.com\/document\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
                 const gDocsMatch = url.match(gDocsRegex);
                 if (gDocsMatch && gDocsMatch[1]) {
                      embedHtml = `<div class="embed-container" style="padding-bottom: 141.42%;"><iframe src="https://docs.google.com/document/d/${gDocsMatch[1]}/preview" frameborder="0" allowfullscreen></iframe></div>`;
                 }
                 
-                // If a match was found, replace the <a> tag with the new embed HTML
                 if (embedHtml) {
                     const embedWrapper = document.createElement('div');
                     embedWrapper.innerHTML = embedHtml;
@@ -1990,10 +1994,8 @@ body.dark-mode .input-group label {
                 }
             });
 
-            // 3. Handle iframes (from the video button) that are not already in a responsive wrapper
             const iframes = tempDiv.querySelectorAll('iframe');
             iframes.forEach(iframe => {
-                // Check if the parent is already the kind of container we want
                 if (!iframe.parentElement.classList.contains('embed-container')) {
                     const wrapper = document.createElement('div');
                     wrapper.className = 'embed-container';
@@ -2038,13 +2040,8 @@ body.dark-mode .input-group label {
                     <button class="button small delete-button" onclick="deleteAnnouncement(event, '${announcement.id}')">Delete</button>
                 </div>` : '';
 
-            // 1. Get the raw, rich content from Firebase.
             const rawContent = announcement.content || '';
-
-            // 2. Create the expanded view by processing the raw content for embeds.
             const expandedContent = autoEmbed(rawContent);
-
-            // 3. Create the collapsed view by stripping all HTML from the raw content.
             const tempDiv = document.createElement("div");
             tempDiv.innerHTML = rawContent;
             const collapsedText = tempDiv.textContent || "";
@@ -2057,11 +2054,7 @@ body.dark-mode .input-group label {
                     ${pinIcon}
                     ${actionsHtml}
                     <h3>${announcement.title}</h3>
-
-                    <!-- View #1: Collapsed (Plain Text Only) -->
                     <div class="collapsed-content">${collapsedText}</div>
-
-                    <!-- View #2: Expanded (Rich Content with Embeds), hidden by default by CSS -->
                     <div class="post-details">
                         <div class="post-content">${expandedContent}</div>
                         <div class="post-meta">Posted on ${postDate}</div>
@@ -2555,4 +2548,4 @@ body.dark-mode .input-group label {
         }
     </script>
 </body>
-</html>
+</html>```
