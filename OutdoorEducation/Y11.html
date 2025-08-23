@@ -1793,7 +1793,7 @@ body.dark-mode .input-group label {
                 selector: '#announcement-content',
                 plugins: 'lists link image table media code help wordcount',
                 toolbar: 'undo redo | blocks | bold italic underline | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media table | removeformat | help',
-                content_css: false, // We provide our own styles
+                content_css: false,
                 content_style: EDITOR_STYLES,
                 height: "100%",
                 menubar: false,
@@ -1803,7 +1803,6 @@ body.dark-mode .input-group label {
             });
         }
 
-        // --- FIXED Admin Check ---
         function checkUserProfile() {
             const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
             if (userInfo && userInfo.email) {
