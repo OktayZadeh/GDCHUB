@@ -495,10 +495,6 @@
         .year-buttons {
             display: grid;
             gap: 8px;
-        }
-
-        /* Default year buttons layout */
-        .year-buttons {
             grid-template-columns: repeat(auto-fit, minmax(65px, 1fr));
         }
 
@@ -552,11 +548,77 @@
             transform: translateY(0) translateZ(0);
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        
+        /* ========== NEW: MYP Dropdown Menu Styles ========== */
+        .year-dropdown {
+            position: relative;
+        }
+
+        .dropdown-toggle::after {
+            content: '▾';
+            font-size: 12px;
+            margin-left: 8px;
+            opacity: 0.7;
+            transition: transform 0.3s ease;
+        }
+        
+        .year-dropdown:hover .dropdown-toggle::after,
+        .year-dropdown.show .dropdown-toggle::after {
+            transform: rotate(180deg);
+        }
+        
+        .year-dropdown-menu {
+            position: absolute;
+            bottom: 110%; /* Position above the button */
+            left: 0;
+            width: 100%;
+            background: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+            z-index: 10;
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.25s ease;
+        }
+        
+        .year-dropdown:hover .year-dropdown-menu,
+        .year-dropdown.show .year-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .year-dropdown-item {
+            display: block;
+            padding: 12px 16px;
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .year-dropdown-item:hover {
+            background-color: var(--subject-light);
+            color: var(--subject-color);
+        }
+        
+        .year-dropdown-item:first-child {
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
 
         /* ========== Subject Specific Styles ========== */
         .myp-card {
             --subject-color: var(--myp-color);
             --subject-light: rgba(76, 201, 240, 0.1);
+        }
+        
+        .myp-card .year-buttons {
+            grid-template-columns: 1fr 1fr;
         }
 
         .pe-card {
@@ -573,33 +635,12 @@
             --subject-color: var(--health-color);
             --subject-light: rgba(247, 37, 133, 0.1);
         }
-
+        
         /* Health card specific year buttons layout */
         .health-card .year-buttons {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 10px;
+             grid-template-columns: repeat(3, 1fr);
         }
 
-        .health-card .year-buttons .year-button:nth-child(1) {
-            grid-column: 1 / span 2;
-        }
-        .health-card .year-buttons .year-button:nth-child(2) {
-            grid-column: 3 / span 2;
-        }
-        .health-card .year-buttons .year-button:nth-child(3) {
-            grid-column: 5 / span 2;
-        }
-        .health-card .year-buttons .year-button:nth-child(4) {
-            grid-column: 1 / span 3;
-            width: calc(100% - 5px);
-            justify-self: end;
-        }
-        .health-card .year-buttons .year-button:nth-child(5) {
-            grid-column: 4 / span 3;
-            width: calc(100% - 5px);
-            justify-self: start;
-        }
 
         /* ========== Responsive Styles ========== */
         @media (max-width: 768px) {
@@ -637,16 +678,6 @@
             .year-button {
                 padding: 10px 0;
                 min-height: 38px;
-            }
-
-            /* Health card adjustments for mobile */
-            .health-card .year-buttons {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            /* Single button full width */
-            .health-card .year-buttons .year-button:nth-last-child(1):first-child {
-                grid-column: 1 / -1;
             }
 
             /* Adjust dropdown for mobile */
@@ -728,8 +759,22 @@
                     <div class="year-selection">
                         <div class="year-selection-title">Select Year Level</div>
                         <div class="year-buttons">
-                            <a href="https://oktayzadeh.github.io/GDCHUB/MYP/Y9.html" class="year-button">Year 9</a>
-                            <a href="https://oktayzadeh.github.io/GDCHUB/MYP/Y10.html" class="year-button">Year 10</a>
+                            <!-- Year 9 Dropdown -->
+                            <div class="year-dropdown">
+                                <button class="year-button dropdown-toggle">Year 9</button>
+                                <div class="year-dropdown-menu">
+                                    <a href="https://oktayzadeh.github.io/GDCHUB/MYP/Y9-SportsScience.html" class="year-dropdown-item">Sports Science</a>
+                                    <a href="https://oktayzadeh.github.io/GDCHUB/MYP/Y9-Health.html" class="year-dropdown-item">Health</a>
+                                </div>
+                            </div>
+                            <!-- Year 10 Dropdown -->
+                            <div class="year-dropdown">
+                                <button class="year-button dropdown-toggle">Year 10</button>
+                                <div class="year-dropdown-menu">
+                                    <a href="https://oktayzadeh.github.io/GDCHUB/MYP/Y10-SportsScience.html" class="year-dropdown-item">Sports Science</a>
+                                    <a href="https://oktayzadeh.github.io/GDCHUB/MYP/Y10-Health.html" class="year-dropdown-item">Health</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -805,8 +850,6 @@
                     <div class="year-selection">
                         <div class="year-selection-title">Select Year Level</div>
                         <div class="year-buttons">
-                            <a href="https://oktayzadeh.github.io/GDCHUB/Health/Y9.html" class="year-button">Year 9</a>
-                            <a href="https://oktayzadeh.github.io/GDCHUB/Health/Y10.html" class="year-button">Year 10</a>
                             <a href="https://oktayzadeh.github.io/GDCHUB/Health/Y11.html" class="year-button">Year 11</a>
                             <a href="https://oktayzadeh.github.io/GDCHUB/Health/Y12.html" class="year-button">Year 12</a>
                             <a href="https://oktayzadeh.github.io/GDCHUB/Health/Y13.html" class="year-button">Year 13</a>
@@ -1031,6 +1074,37 @@
             }, { passive: true });
         });
     }
+    
+    // NEW: MYP Dropdown for Mobile
+    function setupYearDropdownsForMobile() {
+        if (!isMobileDevice()) return;
+
+        const dropdowns = document.querySelectorAll('.year-dropdown');
+        
+        dropdowns.forEach(dropdown => {
+            const toggle = dropdown.querySelector('.dropdown-toggle');
+            toggle.addEventListener('click', (e) => {
+                e.preventDefault(); // Prevent navigation if it was a link
+                // Close other open dropdowns
+                dropdowns.forEach(otherDropdown => {
+                    if (otherDropdown !== dropdown) {
+                        otherDropdown.classList.remove('show');
+                    }
+                });
+                // Toggle the current one
+                dropdown.classList.toggle('show');
+            });
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.year-dropdown')) {
+                dropdowns.forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
+            }
+        });
+    }
 
     // Initialize Videos
     function initializeVideos() {
@@ -1073,8 +1147,9 @@
         handleProfilePicture();
         setupDropdownMenu();
         setupCardHoverEffects();
+        setupYearDropdownsForMobile(); // Initialize the new dropdown functionality
     });
 })();
 </script>
 </body>
-</html>
+</html>```
