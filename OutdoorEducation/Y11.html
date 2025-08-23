@@ -7,8 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- SunEditor WYSIWYG Editor CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/css/suneditor.min.css" rel="stylesheet">
+    <!-- NEW: TinyMCE Script -->
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 
     <style>
 :root {
@@ -215,30 +215,6 @@ body.dark-mode .expanded-post-controls {
 body.dark-mode .post-card.expanded h3 {
     color: white;
     border-bottom-color: var(--dark-light-gray);
-}
-
-/* Dark mode for SunEditor */
-body.dark-mode .sun-editor {
-    background-color: var(--dark-lighter) !important;
-    color: var(--dark-medium) !important;
-    border-color: var(--dark-light-gray) !important;
-}
-body.dark-mode .sun-editor .se-toolbar {
-    background-color: var(--dark-lighter) !important;
-    border-bottom-color: var(--dark-light-gray) !important;
-}
-body.dark-mode .sun-editor .se-toolbar button {
-    color: var(--dark-medium) !important;
-}
-body.dark-mode .sun-editor .se-toolbar button:hover {
-    background-color: var(--dark-light-gray) !important;
-}
-body.dark-mode .sun-editor .se-wrapper .se-wrapper-inner {
-    background-color: var(--dark-lighter) !important;
-    color: var(--dark-medium) !important;
-}
-body.dark-mode .sun-editor .se-resizing-bar {
-    background-color: var(--dark-dark-gray) !important;
 }
 
 /* Base Styles */
@@ -934,7 +910,7 @@ body.dark-mode .add-tab-header-button:hover {
     gap: var(--space-sm);
 }
 
-/* NEW: Full-Screen Editor Overlay Styles */
+/* Full-Screen Editor Overlay Styles */
 #announcement-editor-overlay {
     position: fixed;
     top: 0;
@@ -1476,11 +1452,7 @@ body.dark-mode .input-group label {
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
-    <!-- SunEditor WYSIWYG Editor JS -->
-    <script src="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/suneditor.min.js"></script>
-    <!-- SunEditor plugins -->
-    <script src="https://cdn.jsdelivr.net/npm/suneditor@latest/src/plugins/"></script>
-
+    
 </head>
 <body class="non-admin">
     <!-- Top Navigation Bar -->
@@ -1607,7 +1579,7 @@ body.dark-mode .input-group label {
         </div>
     </div>
     
-    <!-- NEW: Full-Screen Announcement Editor -->
+    <!-- Full-Screen Announcement Editor -->
     <div id="announcement-editor-overlay">
         <div class="editor-header">
             <h2 id="announcement-editor-title">Create New Announcement</h2>
@@ -1621,7 +1593,7 @@ body.dark-mode .input-group label {
                 <input type="text" id="announcement-title" placeholder=" ">
                 <label>Announcement Title</label>
             </div>
-            <textarea id="announcement-content" style="display: none;"></textarea>
+            <textarea id="announcement-content"></textarea>
         </div>
     </div>
 
@@ -1730,7 +1702,7 @@ body.dark-mode .input-group label {
         const tabNameInput = document.getElementById('tab-name-input');
         const profilePicElement = document.getElementById('profile-pic');
         const currentTabTitleElement = document.getElementById('current-tab-title');
-        const announcementEditorOverlay = document.getElementById('announcement-editor-overlay'); // NEW: Reference to the overlay
+        const announcementEditorOverlay = document.getElementById('announcement-editor-overlay');
         const classroomInfo = document.getElementById('classroom-info');
         const pinnedPostsFeed = document.getElementById('pinned-posts-feed');
         const unpinnedPostsFeed = document.getElementById('unpinned-posts-feed');
@@ -1748,7 +1720,6 @@ body.dark-mode .input-group label {
         let tabs = [];
         let currentTabId = null;
         let currentTabBeingEdited = null;
-        let announcementEditorInstance = null;
         let expandedPost = null;
         let reminders = [];
         let currentReminderBeingEdited = null;
@@ -1760,7 +1731,7 @@ body.dark-mode .input-group label {
         const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
 
         document.addEventListener('DOMContentLoaded', () => {
-            checkUserProfile(); // This MUST run first to set up admin access
+            checkUserProfile();
             setupFirebaseListeners();
             setupModalCloseHandlers();
             setupConfirmationModal();
@@ -1768,7 +1739,7 @@ body.dark-mode .input-group label {
             setupMobileMenu();
             setupDarkMode();
             setupProfileDropdown();
-            initializeSunEditor();
+            initializeEditor(); // Use the new editor initializer
             UndoManager.init();
             if (isAdmin) {
                 setupSidebarDragAndDrop();
@@ -1783,62 +1754,45 @@ body.dark-mode .input-group label {
             });
         });
 
-        function initializeSunEditor() {
-            // NEW: Define a unified stylesheet for the editor that matches the main page's post content styles.
+        function initializeEditor() {
             const EDITOR_STYLES = `
                 body {
                     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-                    font-size: 1rem;
                     line-height: 1.7;
-                    color: #718096;
-                    margin: 0;
-                    padding: 16px;
+                    color: var(--medium);
                 }
-                h1, h2, h3, h4 {
+                h1, h2, h3, h4 { 
                     font-weight: 600;
-                    color: #1A202C;
-                    margin-bottom: 1rem;
+                    color: var(--dark);
+                    margin-bottom: var(--space-md);
                     line-height: 1.25;
-                    margin-top: 1.5rem;
+                    margin-top: var(--space-lg);
                 }
-                h1 { font-size: 1.875rem; }
-                h2 { font-size: 1.5rem; }
-                h3 { font-size: 1.25rem; }
-                p { margin-bottom: 1.5rem; }
-                ul, ol { margin-left: 1.5rem; margin-bottom: 1.5rem; }
+                h1 { font-size: var(--text-3xl); }
+                h2 { font-size: var(--text-2xl); }
+                h3 { font-size: var(--text-xl); }
+                h4 { font-size: var(--text-lg); }
+                p { margin-bottom: var(--space-lg); }
+                ul, ol { margin-left: var(--space-lg); margin-bottom: var(--space-lg); }
                 blockquote {
-                    border-left: 4px solid #E2E8F0;
-                    padding-left: 1rem;
-                    margin: 1.5rem 0;
+                    border-left: 4px solid var(--light-gray);
+                    padding-left: var(--space-md);
+                    margin: var(--space-lg) 0;
                     font-style: italic;
-                }
-                img {
-                    max-width: 100%;
-                    height: auto;
-                    border-radius: 6px;
-                    margin: 1.5rem 0;
-                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
                 }
             `;
 
-            announcementEditorInstance = SUNEDITOR.create('announcement-content', {
-                height: 'auto', 
-                minHeight: '50vh', // Generous default height
-                charCounter: true,
-                pasteTagsWhitelist: "p, a, img, h1, h2, h3, h4, h5, h6, blockquote, ul, ol, li, br, hr, b, strong, i, em, u, s, span, div, table, thead, tbody, tr, th, td, iframe",
-                styles: [ EDITOR_STYLES ], // KEY FIX: Inject the styles here
-                buttonList: [
-                    ['undo', 'redo'],
-                    ['font', 'fontSize', 'formatBlock'],
-                    ['paragraphStyle', 'blockquote'],
-                    ['bold', 'underline', 'italic', 'strike', 'subscript', 'superscript'],
-                    ['fontColor', 'hiliteColor', 'textStyle'],
-                    ['removeFormat'],
-                    ['outdent', 'indent'],
-                    ['align', 'horizontalRule', 'list', 'lineHeight'],
-                    ['table', 'link', 'image', 'video'],
-                    ['fullScreen', 'showBlocks', 'codeView']
-                ]
+            tinymce.init({
+                selector: '#announcement-content',
+                plugins: 'lists link image table media code help wordcount',
+                toolbar: 'undo redo | blocks | bold italic underline | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media table | removeformat | help',
+                content_css: false, // We provide our own styles
+                content_style: EDITOR_STYLES,
+                height: "100%",
+                menubar: false,
+                statusbar: false,
+                skin: (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'oxide-dark' : 'oxide',
+                content_css: (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'default',
             });
         }
 
@@ -1928,7 +1882,7 @@ body.dark-mode .input-group label {
                 });
             }
             renderAnnouncements(announcementsToRender, suppressPostAnimation);
-            suppressPostAnimation = false; // Reset flag after any render
+            suppressPostAnimation = false;
         }
 
         function clearSearch() {
@@ -1940,7 +1894,7 @@ body.dark-mode .input-group label {
             tabsRef.on('value', snapshot => {
                 const tabsData = snapshot.val();
                 tabs = tabsData ? Object.values(tabsData) : [];
-                tabs.sort((a, b) => (a.order || 0) - (b.order || 0)); // Client-side sort for robustness
+                tabs.sort((a, b) => (a.order || 0) - (b.order || 0));
                 renderTabs();
                 if (tabs.length > 0 && (!currentTabId || !tabs.some(t => t.id === currentTabId))) {
                     setActiveTab(tabs[0].id);
@@ -1963,36 +1917,6 @@ body.dark-mode .input-group label {
             
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = htmlContent;
-
-            const links = tempDiv.querySelectorAll('a');
-            links.forEach(link => {
-                const url = link.href;
-                let embedHtml = '';
-
-                const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/;
-                const youtubeMatch = url.match(youtubeRegex);
-                if (youtubeMatch && youtubeMatch[1]) {
-                    embedHtml = `<div class="embed-container"><iframe src="https://www.youtube.com/embed/${youtubeMatch[1]}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
-                }
-
-                const gSlidesRegex = /https:\/\/docs\.google\.com\/presentation\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
-                const gSlidesMatch = url.match(gSlidesRegex);
-                if (gSlidesMatch && gSlidesMatch[1]) {
-                    embedHtml = `<div class="embed-container"><iframe src="https://docs.google.com/presentation/d/${gSlidesMatch[1]}/embed?start=false&loop=false&delayms=3000" frameborder="0" allowfullscreen></iframe></div>`;
-                }
-
-                const gDocsRegex = /https:\/\/docs\.google\.com\/document\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
-                const gDocsMatch = url.match(gDocsRegex);
-                if (gDocsMatch && gDocsMatch[1]) {
-                     embedHtml = `<div class="embed-container" style="padding-bottom: 141.42%;"><iframe src="https://docs.google.com/document/d/${gDocsMatch[1]}/preview" frameborder="0" allowfullscreen></iframe></div>`;
-                }
-                
-                if (embedHtml) {
-                    const embedWrapper = document.createElement('div');
-                    embedWrapper.innerHTML = embedHtml;
-                    link.parentNode.replaceChild(embedWrapper.firstChild, link);
-                }
-            });
 
             const iframes = tempDiv.querySelectorAll('iframe');
             iframes.forEach(iframe => {
@@ -2102,21 +2026,15 @@ body.dark-mode .input-group label {
             sidebarMenu.addEventListener('dragstart', e => {
                 draggedItem = e.target.closest('.sidebar-item');
                 if (!draggedItem) return;
-
                 e.dataTransfer.effectAllowed = 'move';
-                
                 placeholder = document.createElement('li');
                 placeholder.className = 'sidebar-placeholder';
-                
-                setTimeout(() => {
-                    if(draggedItem) draggedItem.classList.add('dragging');
-                }, 0);
+                setTimeout(() => { if(draggedItem) draggedItem.classList.add('dragging'); }, 0);
             });
 
             sidebarMenu.addEventListener('dragover', e => {
                 e.preventDefault();
                 if (!draggedItem) return;
-
                 const overElement = e.target.closest('.sidebar-item');
                 if (overElement && overElement !== draggedItem) {
                     const rect = overElement.getBoundingClientRect();
@@ -2149,13 +2067,10 @@ body.dark-mode .input-group label {
                 
                 const originalIndex = tabs.findIndex(t => t.id === draggedItem.dataset.tabId);
                 const [movedTab] = tabs.splice(originalIndex, 1);
-
                 const newIndex = Array.from(sidebarMenu.children).indexOf(draggedItem);
                 tabs.splice(newIndex, 0, movedTab);
                 
-                tabs.forEach((tab, index) => {
-                    tab.order = index;
-                });
+                tabs.forEach((tab, index) => { tab.order = index; });
                 
                 saveTabs();
                 endDrag();
@@ -2178,7 +2093,6 @@ body.dark-mode .input-group label {
                 });
             }
         }
-
 
         function openTabEditor(tabId = null) {
             if (!isAdmin) return;
@@ -2234,7 +2148,6 @@ body.dark-mode .input-group label {
             });
         };
 
-        // --- REWORKED Editor Opening/Closing ---
         function openAnnouncementEditor(id = null) {
             if (!isAdmin || !currentTabId) return;
             
@@ -2248,34 +2161,32 @@ body.dark-mode .input-group label {
             saveBtn.textContent = isEditing ? 'Save Changes' : 'Post Announcement';
             saveBtn.onclick = isEditing ? () => saveEditedAnnouncement(id) : postAnnouncement;
             
-            // Clear all fields
             announcementTitleInput.value = '';
-            announcementEditorInstance.setContents('');
+            tinymce.get('announcement-content').setContent('');
             
             if (isEditing) {
                 announcementsRef.child(currentTabId).child(id).once('value').then(s => {
                     const ann = s.val();
                     if(ann) { 
                         announcementTitleInput.value = ann.title; 
-                        announcementEditorInstance.setContents(ann.content || ''); 
+                        tinymce.get('announcement-content').setContent(ann.content || ''); 
                     }
                 });
             }
             
             announcementEditorOverlay.classList.add('visible');
-            document.body.style.overflow = 'hidden'; // Lock background scroll
+            document.body.style.overflow = 'hidden';
         }
 
         function closeAnnouncementEditor() { 
             announcementEditorOverlay.classList.remove('visible');
-            document.body.style.overflow = ''; // Unlock background scroll
+            document.body.style.overflow = '';
         }
-
 
         function postAnnouncement() {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
-            const content = announcementEditorInstance.getContents(true);
+            const content = tinymce.get('announcement-content').getContent();
 
             if (!title) return alert('Please enter a title.');
             
@@ -2293,7 +2204,7 @@ body.dark-mode .input-group label {
         function saveEditedAnnouncement(id) {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
-            const content = announcementEditorInstance.getContents(true);
+            const content = tinymce.get('announcement-content').getContent();
 
             if (!title) return alert('Please enter a title.');
 
@@ -2311,12 +2222,10 @@ body.dark-mode .input-group label {
         };
 
         function expandPost(postElement) {
-            // If another post is already open, close it first.
             if (expandedPost && expandedPost !== postElement) {
                 collapsePost(expandedPost);
             }
 
-            // The core logic is now just toggling the class.
             postElement.classList.add('expanded');
             expandedPost = postElement;
 
@@ -2548,4 +2457,4 @@ body.dark-mode .input-group label {
         }
     </script>
 </body>
-</html>```
+</html>
