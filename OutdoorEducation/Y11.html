@@ -1400,6 +1400,9 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <!-- SunEditor WYSIWYG Editor JS -->
     <script src="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/suneditor.min.js"></script>
+    <!-- SunEditor plugins -->
+    <script src="https://cdn.jsdelivr.net/npm/suneditor@latest/src/plugins/"></script>
+
 </head>
 <body class="non-admin">
     <!-- Top Navigation Bar -->
@@ -1704,15 +1707,15 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
         function initializeSunEditor() {
             announcementEditorInstance = SUNEDITOR.create('announcement-content', {
-                height: 'auto', minHeight: '250px',
-                defaultStyle: "font-family: Arial; font-size: 16px;",
+                height: 'auto', minHeight: '350px',
+                charCounter: true,
+                pasteTagsWhitelist: "p, a, img, h1, h2, h3, h4, h5, h6, blockquote, ul, ol, li, br, hr, b, strong, i, em, u, s, span, div, table, thead, tbody, tr, th, td",
                 buttonList: [
                     ['undo', 'redo'], ['font', 'fontSize', 'formatBlock'], ['paragraphStyle', 'blockquote'],
-                    ['bold', 'underline', 'italic', 'strike'], ['fontColor', 'hiliteColor', 'textStyle'],
+                    ['bold', 'underline', 'italic', 'strike', 'subscript', 'superscript'], ['fontColor', 'hiliteColor', 'textStyle'],
                     ['removeFormat'], ['outdent', 'indent'], ['align', 'horizontalRule', 'list', 'lineHeight'],
                     ['table', 'link', 'image', 'video'], ['fullScreen', 'showBlocks', 'codeView']
-                ],
-                imageUploadSizeLimit: 5 * 1024 * 1024,
+                ]
             });
         }
 
@@ -1824,11 +1827,18 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function autoEmbed(htmlContent) {
             if (!htmlContent) return '';
             let processedContent = htmlContent;
-            const youtubeRegex = /<p.*?>\s*<a href="(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11}))(?:.*)?".*?>.*?<\/a>\s*<\/p>/g;
+            
+            // Regex for YouTube
+            const youtubeRegex = /<a href="(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11}))(?:.*)?".*?>.*?<\/a>/g;
             processedContent = processedContent.replace(youtubeRegex, (match, url, videoId) => `<div class="embed-container"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe></div>`);
             
-            const gSlidesRegex = /<p.*?>\s*<a href="(https?:\/\/docs\.google\.com\/presentation\/d\/e\/([a-zA-Z0-9_-]+)\/pub(?:.*?))".*?>.*?<\/a>\s*<\/p>/g;
+            // Regex for Google Slides
+            const gSlidesRegex = /<a href="(https?:\/\/docs\.google\.com\/presentation\/d\/e\/([a-zA-Z0-9_-]+)\/pub(?:.*?))".*?>.*?<\/a>/g;
             processedContent = processedContent.replace(gSlidesRegex, (match, url) => `<div class="embed-container"><iframe src="${url.replace('/pub', '/embed')}" frameborder="0" allowfullscreen></iframe></div>`);
+
+            // Regex for Google Docs
+            const gDocsRegex = /<a href="(https?:\/\/docs\.google\.com\/document\/d\/e\/([a-zA-Z0-9_-]+)\/pub(?:.*?))".*?>.*?<\/a>/g;
+            processedContent = processedContent.replace(gDocsRegex, (match, url) => `<div class="embed-container" style="padding-bottom: 141.42%;"><iframe src="${url.replace('/pub', '/embed')}" frameborder="0" allowfullscreen></iframe></div>`);
             
             return processedContent;
         }
@@ -1860,7 +1870,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const actionsHtml = isAdmin ? `
                 <div class="post-actions">
                     <button class="button small secondary" onclick="togglePin('${announcement.id}')">${pinButtonText}</button>
-                    <button class="button small" onclick="editAnnouncement('${announcement.id}')">Edit</button>
+                    <button class="button small" onclick="editAnnouncement(event, '${announcement.id}')">Edit</button>
                     <button class="button small delete-button" onclick="deleteAnnouncement(event, '${announcement.id}')">Delete</button>
                 </div>` : '';
             const tempDiv = document.createElement("div");
