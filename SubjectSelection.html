@@ -12,6 +12,64 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
+    <!--
+    ============================================================================
+    FIX 1: AUTHENTICATION SCRIPT MOVED TO <HEAD>
+    ----------------------------------------------------------------------------
+    By placing this script in the <head>, we can check for authentication before
+    the browser starts rendering the <body>. If authentication fails, we use
+    document.write() to immediately replace the page content with the redirect
+    message. This completely prevents the "flash of unauthenticated content."
+    ============================================================================
+    -->
+    <script>
+        (function() {
+            // Configuration constants
+            const USER_INFO_KEY = "googleUserInfo";
+            const AUTH_TOKEN_KEY = "gdcAuthToken";
+            const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
+
+            // Helper function to get the authentication cookie
+            function getCookieToken() {
+                const cookie = document.cookie.split('; ')
+                    .find(row => row.startsWith('gdcAuth='));
+                return cookie ? cookie.split('=')[1] : null;
+            }
+
+            // Perform the authentication check
+            try {
+                const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+                const cookieToken = getCookieToken();
+                if (!authToken || !cookieToken || authToken !== cookieToken) {
+                    // If check fails, stop the page and write the redirect message
+                    document.write(`
+                        <style>
+                            body { margin: 0; padding: 0; }
+                            @keyframes progress { to { transform: translateX(100%); } }
+                        </style>
+                        <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Poppins',sans-serif;z-index:9999;">
+                            <div style="text-align:center;padding:30px;max-width:400px;">
+                                <h2 style="color:#2b2d42;margin-bottom:20px;">Authentication Required</h2>
+                                <p style="color:#5f6a7d;margin-bottom:25px;">Please sign in to access this content. Redirecting...</p>
+                                <div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;overflow:hidden;"><div style="width:100%;height:100%;background:#4361ee;border-radius:2px;animation:progress 2s ease-in-out infinite;transform:translateX(-100%);"></div></div>
+                            </div>
+                        </div>`);
+                    setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
+                    // Throw an error to halt any further script execution on the page
+                    throw new Error("Authentication required");
+                }
+            } catch (error) {
+                // If the check throws an error (e.g., from localStorage access), redirect as a failsafe
+                console.error("Auth check error:", error.message);
+                if (error.message !== "Authentication required") {
+                    window.location.href = LOGIN_PAGE;
+                }
+                // We re-throw the error to ensure the script execution is stopped.
+                throw error;
+            }
+        })();
+    </script>
+    
     <style>
         /* ========== CSS Variables ========== */
         :root {
@@ -747,7 +805,17 @@
             <!-- MYP Card -->
             <div class="subject-card myp-card">
                 <div class="card-media-container">
-                    <video class="card-media" loop muted playsinline preload="auto">
+                    <!-- 
+                    ============================================================
+                    FIX 2: VIDEO PRELOADING OPTIMIZED
+                    ------------------------------------------------------------
+                    Changed preload="auto" to preload="metadata". This prevents
+                    the browser from downloading the entire video on page load.
+                    It will only fetch basic info like the first frame, saving
+                    bandwidth and speeding up the initial load time.
+                    ============================================================
+                    -->
+                    <video class="card-media" loop muted playsinline preload="metadata">
                         <source src="https://i.imgur.com/zw3viPp.mp4" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
@@ -786,7 +854,7 @@
             <!-- Physical Education Card -->
             <div class="subject-card pe-card">
                 <div class="card-media-container">
-                    <video class="card-media" loop muted playsinline preload="auto">
+                    <video class="card-media" loop muted playsinline preload="metadata">
                         <source src="https://i.imgur.com/DH39YQe.mp4" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
@@ -812,7 +880,7 @@
             <!-- Outdoor Education Card -->
             <div class="subject-card outdoor-card">
                 <div class="card-media-container">
-                    <video class="card-media" loop muted playsinline preload="auto">
+                    <video class="card-media" loop muted playsinline preload="metadata">
                         <source src="https://i.imgur.com/baeEc27.mp4" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
@@ -838,7 +906,7 @@
             <!-- Health Card -->
             <div class="subject-card health-card">
                 <div class="card-media-container">
-                    <video class="card-media" loop muted playsinline preload="auto">
+                    <video class="card-media" loop muted playsinline preload="metadata">
                         <source src="https://i.imgur.com/1s0hopX.mp4" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
@@ -869,166 +937,125 @@
     </div>
 
 <script>
-// ========== PERSISTENT AUTHENTICATION SYSTEM ==========
-(function() {
-    // Configuration constants
+// ========== PAGE FUNCTIONALITY SCRIPT ==========
+// This script now only contains the logic needed to make the page interactive.
+// The core authentication logic has been moved to the <head>.
+document.addEventListener('DOMContentLoaded', function() {
     const USER_INFO_KEY = "googleUserInfo";
     const AUTH_TOKEN_KEY = "gdcAuthToken";
     const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
 
-    // Token management functions
+    const profilePicElement = document.getElementById('profile-pic');
+    const dropdownContent = document.getElementById('dropdown-content');
+    const logoutButton = document.getElementById('logout-button');
+
+    // These functions can remain here, as they only run after the page is confirmed to be authenticated and loaded.
     function clearAuthData() {
         localStorage.removeItem(USER_INFO_KEY);
         localStorage.removeItem(AUTH_TOKEN_KEY);
         document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     }
 
-    function getCookieToken() {
-        const cookie = document.cookie.split('; ')
-            .find(row => row.startsWith('gdcAuth='));
-        return cookie ? cookie.split('=')[1] : null;
+    // This logic ensures the browser doesn't go back to a cached, unauthenticated state
+    window.history.replaceState(null, null, window.location.href);
+    window.addEventListener('popstate', () => window.history.forward());
+    
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
-    function checkAuthStatus() {
+    function forceVideoPlay(video) {
+        if (video && video.paused) {
+            const promise = video.play();
+            if (promise !== undefined) {
+                promise.catch(() => {
+                    video.muted = true;
+                    video.play().catch(e => console.error("Video play error:", e));
+                });
+            }
+        }
+    }
+
+    function handleProfilePicture() {
         try {
-            const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-            const cookieToken = getCookieToken();
-            if (!authToken || !cookieToken || authToken !== cookieToken) {
-                clearAuthData();
-                return false;
-            }
-            return true;
-        } catch (error) {
-            console.error("Auth check error:", error);
-            clearAuthData();
-            return false;
-        }
-    }
-
-    // Main authentication check
-    if (!checkAuthStatus()) {
-        document.body.innerHTML = `
-            <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Poppins',sans-serif;z-index:9999;">
-                <div style="text-align:center;padding:30px;max-width:400px;">
-                    <h2 style="color:#2b2d42;margin-bottom:20px;">Authentication Required</h2>
-                    <p style="color:#5f6a7d;margin-bottom:25px;">Please sign in to access this content. Redirecting...</p>
-                    <div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;overflow:hidden;"><div style="width:100%;height:100%;background:#4361ee;border-radius:2px;animation:progress 2s ease-in-out infinite;transform:translateX(-100%);"></div></div>
-                </div>
-            </div>
-            <style>@keyframes progress {to{transform:translateX(100%);}}</style>`;
-        setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
-        throw new Error("Authentication required");
-    } else {
-        window.history.replaceState(null, null, window.location.href);
-        window.addEventListener('popstate', () => window.history.forward());
-    }
-
-    // ========== PAGE FUNCTIONALITY ==========
-    document.addEventListener('DOMContentLoaded', function() {
-        const profilePicElement = document.getElementById('profile-pic');
-        const dropdownContent = document.getElementById('dropdown-content');
-        const logoutButton = document.getElementById('logout-button');
-
-        function isMobileDevice() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        }
-
-        function forceVideoPlay(video) {
-            if (video && video.paused) {
-                const promise = video.play();
-                if (promise !== undefined) {
-                    promise.catch(() => {
-                        video.muted = true;
-                        video.play().catch(e => console.error("Video play error:", e));
-                    });
-                }
-            }
-        }
-
-        function handleProfilePicture() {
-            try {
-                const userInfo = JSON.parse(localStorage.getItem(USER_INFO_KEY));
-                if (userInfo?.picture) {
-                    profilePicElement.src = userInfo.picture;
-                } else {
-                    throw new Error("No picture found");
-                }
-            } catch {
-                profilePicElement.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234361ee'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
-            }
-        }
-
-        function setupDropdowns() {
-            // Profile dropdown
-            profilePicElement.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const isExpanded = dropdownContent.classList.toggle('show');
-                profilePicElement.setAttribute('aria-expanded', isExpanded);
-            });
-            logoutButton.addEventListener('click', () => {
-                clearAuthData();
-                window.location.href = LOGIN_PAGE;
-            });
-
-            // MYP dropdowns for mobile
-            if (isMobileDevice()) {
-                document.querySelectorAll('.year-dropdown').forEach(dropdown => {
-                    dropdown.querySelector('.dropdown-toggle').addEventListener('click', (e) => {
-                        e.preventDefault();
-                        const wasOpen = dropdown.classList.contains('show');
-                        // Close all other dropdowns first
-                        document.querySelectorAll('.year-dropdown.show').forEach(d => d.classList.remove('show'));
-                        if (!wasOpen) {
-                            dropdown.classList.add('show');
-                        }
-                    });
-                });
-            }
-             // Global click listener to close dropdowns when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('.profile-dropdown')) {
-                    dropdownContent.classList.remove('show');
-                    profilePicElement.setAttribute('aria-expanded', 'false');
-                }
-                if (isMobileDevice() && !e.target.closest('.year-dropdown')) {
-                    document.querySelectorAll('.year-dropdown.show').forEach(d => d.classList.remove('show'));
-                }
-            });
-        }
-        
-        // This function is no longer needed as background transition is disabled.
-        // function setupCardHoverEffects() { ... }
-
-        function initializeCardVideos() {
-            // This function handles the playing of videos INSIDE the cards
-            if (isMobileDevice()) {
-                // On mobile, videos will autoplay muted
-                document.querySelectorAll('.card-media').forEach(v => {
-                    v.setAttribute('autoplay', '');
-                    v.setAttribute('playsinline', '');
-                    v.muted = true;
-                });
+            const userInfo = JSON.parse(localStorage.getItem(USER_INFO_KEY));
+            if (userInfo?.picture) {
+                profilePicElement.src = userInfo.picture;
             } else {
-                // On desktop, videos play on hover
-                document.querySelectorAll('.subject-card').forEach(card => {
-                    const video = card.querySelector('.card-media');
-                    if (video) {
-                        card.addEventListener('mouseenter', () => forceVideoPlay(video));
-                        card.addEventListener('mouseleave', () => { 
-                            video.pause(); 
-                            video.currentTime = 0; 
-                        });
+                throw new Error("No picture found");
+            }
+        } catch {
+            profilePicElement.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234361ee'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
+        }
+    }
+
+    function setupDropdowns() {
+        // Profile dropdown
+        profilePicElement.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isExpanded = dropdownContent.classList.toggle('show');
+            profilePicElement.setAttribute('aria-expanded', isExpanded);
+        });
+        logoutButton.addEventListener('click', () => {
+            clearAuthData();
+            window.location.href = LOGIN_PAGE;
+        });
+
+        // MYP dropdowns for mobile
+        if (isMobileDevice()) {
+            document.querySelectorAll('.year-dropdown').forEach(dropdown => {
+                dropdown.querySelector('.dropdown-toggle').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const wasOpen = dropdown.classList.contains('show');
+                    // Close all other dropdowns first
+                    document.querySelectorAll('.year-dropdown.show').forEach(d => d.classList.remove('show'));
+                    if (!wasOpen) {
+                        dropdown.classList.add('show');
                     }
                 });
-            }
+            });
         }
+         // Global click listener to close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.profile-dropdown')) {
+                dropdownContent.classList.remove('show');
+                profilePicElement.setAttribute('aria-expanded', 'false');
+            }
+            if (isMobileDevice() && !e.target.closest('.year-dropdown')) {
+                document.querySelectorAll('.year-dropdown.show').forEach(d => d.classList.remove('show'));
+            }
+        });
+    }
+    
+    function initializeCardVideos() {
+        // This function handles the playing of videos INSIDE the cards
+        if (isMobileDevice()) {
+            // On mobile, videos will autoplay muted
+            document.querySelectorAll('.card-media').forEach(v => {
+                v.setAttribute('autoplay', '');
+                v.setAttribute('playsinline', '');
+                v.muted = true;
+            });
+        } else {
+            // On desktop, videos play on hover
+            document.querySelectorAll('.subject-card').forEach(card => {
+                const video = card.querySelector('.card-media');
+                if (video) {
+                    card.addEventListener('mouseenter', () => forceVideoPlay(video));
+                    card.addEventListener('mouseleave', () => { 
+                        video.pause(); 
+                        video.currentTime = 0; 
+                    });
+                }
+            });
+        }
+    }
 
-        // Initialization calls
-        handleProfilePicture();
-        setupDropdowns();
-        initializeCardVideos(); // Replaces setupCardHoverEffects
-    });
-})();
+    // Initialization calls
+    handleProfilePicture();
+    setupDropdowns();
+    initializeCardVideos();
+});
 </script>
 </body>
 </html>
