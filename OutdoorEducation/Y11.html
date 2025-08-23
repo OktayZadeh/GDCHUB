@@ -1532,12 +1532,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 <input type="text" id="announcement-title" placeholder=" ">
                 <label>Announcement Title</label>
             </div>
-
-            <!-- NEW: Dedicated input for embed URL -->
-            <div class="input-group">
-                <input type="text" id="announcement-embed-url" placeholder=" ">
-                <label>Embed Link (Optional: YouTube, Google Slides/Docs)</label>
-            </div>
             
             <textarea id="announcement-content" style="display: none;"></textarea>
             
@@ -1707,14 +1701,22 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
         function initializeSunEditor() {
             announcementEditorInstance = SUNEDITOR.create('announcement-content', {
-                height: 'auto', minHeight: '250px',
+                height: 'auto', 
+                minHeight: '350px',
                 charCounter: true,
                 pasteTagsWhitelist: "p, a, img, h1, h2, h3, h4, h5, h6, blockquote, ul, ol, li, br, hr, b, strong, i, em, u, s, span, div, table, thead, tbody, tr, th, td",
+                // UPGRADED: A much more powerful, "Google Docs-like" button list
                 buttonList: [
-                    ['undo', 'redo'], ['font', 'fontSize', 'formatBlock'], ['paragraphStyle', 'blockquote'],
-                    ['bold', 'underline', 'italic', 'strike', 'subscript', 'superscript'], ['fontColor', 'hiliteColor', 'textStyle'],
-                    ['removeFormat'], ['outdent', 'indent'], ['align', 'horizontalRule', 'list', 'lineHeight'],
-                    ['table', 'link', 'image', 'video'], ['fullScreen', 'showBlocks', 'codeView']
+                    ['undo', 'redo'],
+                    ['font', 'fontSize', 'formatBlock'],
+                    ['paragraphStyle', 'blockquote'],
+                    ['bold', 'underline', 'italic', 'strike', 'subscript', 'superscript'],
+                    ['fontColor', 'hiliteColor', 'textStyle'],
+                    ['removeFormat'],
+                    ['outdent', 'indent'],
+                    ['align', 'horizontalRule', 'list', 'lineHeight'],
+                    ['table', 'link', 'image', 'video'], // Admins can now add images, etc.
+                    ['fullScreen', 'showBlocks', 'codeView']
                 ]
             });
         }
@@ -1825,34 +1827,26 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         }
         
         /**
-         * Takes a single URL and converts it into the appropriate iframe embed code.
-         * Returns an empty string if the URL is not a recognized embeddable format.
+         * Takes a block of HTML content and replaces all recognized links with their
+         * corresponding iframe embed code. This now uses a global regex to find ALL links.
          */
-        function generateEmbedFromUrl(url) {
-            if (!url) return '';
+        function autoEmbed(htmlContent) {
+            if (!htmlContent) return '';
+            let processedContent = htmlContent;
             
-            // YouTube
-            const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/;
-            const youtubeMatch = url.match(youtubeRegex);
-            if (youtubeMatch && youtubeMatch[1]) {
-                return `<div class="embed-container"><iframe src="https://www.youtube.com/embed/${youtubeMatch[1]}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
-            }
+            // YouTube Regex: Finds ALL `<a>` tags pointing to YouTube and replaces them.
+            const youtubeRegex = /<a href="(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11}))(?:.*)?".*?>.*?<\/a>/g;
+            processedContent = processedContent.replace(youtubeRegex, (match, url, videoId) => `<div class="embed-container"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`);
+            
+            // Google Slides Regex: Finds ALL `<a>` tags pointing to Google Slides and replaces them.
+            const gSlidesRegex = /<a href="(https?:\/\/docs\.google\.com\/presentation\/d\/(?:e\/)?([a-zA-Z0-9_-]+)\/pub(?:.*?))".*?>.*?<\/a>/g;
+            processedContent = processedContent.replace(gSlidesRegex, (match, url, id) => `<div class="embed-container"><iframe src="https://docs.google.com/presentation/d/${id}/embed?start=false&loop=false&delayms=3000" frameborder="0" allowfullscreen></iframe></div>`);
 
-            // Google Slides
-            const gSlidesRegex = /https:\/\/docs\.google\.com\/presentation\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
-            const gSlidesMatch = url.match(gSlidesRegex);
-            if (gSlidesMatch && gSlidesMatch[1]) {
-                return `<div class="embed-container"><iframe src="https://docs.google.com/presentation/d/${gSlidesMatch[1]}/embed?start=false&loop=false&delayms=3000" frameborder="0" allowfullscreen></iframe></div>`;
-            }
-
-            // Google Docs
-            const gDocsRegex = /https:\/\/docs\.google\.com\/document\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
-            const gDocsMatch = url.match(gDocsRegex);
-            if (gDocsMatch && gDocsMatch[1]) {
-                return `<div class="embed-container" style="padding-bottom: 141.42%;"><iframe src="https://docs.google.com/document/d/${gDocsMatch[1]}/preview" frameborder="0" allowfullscreen></iframe></div>`;
-            }
-
-            return ''; // Return empty if no match
+            // Google Docs Regex: Finds ALL `<a>` tags pointing to Google Docs and replaces them.
+            const gDocsRegex = /<a href="(https?:\/\/docs\.google\.com\/document\/d\/(?:e\/)?([a-zA-Z0-9_-]+)\/pub(?:.*?))".*?>.*?<\/a>/g;
+            processedContent = processedContent.replace(gDocsRegex, (match, url, id) => `<div class="embed-container" style="padding-bottom: 141.42%;"><iframe src="https://docs.google.com/document/d/${id}/preview" frameborder="0" allowfullscreen></iframe></div>`);
+            
+            return processedContent;
         }
 
         function renderAnnouncements(announcements, skipAnimation = false) {
@@ -1888,15 +1882,15 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     <button class="button small delete-button" onclick="deleteAnnouncement(event, '${announcement.id}')">Delete</button>
                 </div>` : '';
 
-            // 1. Generate the embed HTML from the dedicated `embedUrl` field.
-            const embedHtml = generateEmbedFromUrl(announcement.embedUrl);
+            // 1. Get the raw, rich content from Firebase.
+            const rawContent = announcement.content || '';
 
-            // 2. Get the main rich text content.
-            const mainContent = announcement.content || '';
+            // 2. Create the expanded view by processing the raw content for embeds.
+            const expandedContent = autoEmbed(rawContent);
 
-            // 3. Create a plain-text summary for the collapsed view.
+            // 3. Create the collapsed view by stripping all HTML from the raw content.
             const tempDiv = document.createElement("div");
-            tempDiv.innerHTML = mainContent;
+            tempDiv.innerHTML = rawContent;
             const collapsedText = tempDiv.textContent || "";
             
             const animationStyle = skipAnimation ? 'style="animation: none; opacity: 1;"' : '';
@@ -1913,8 +1907,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
                     <!-- View #2: Expanded (Rich Content with Embeds), hidden by default by CSS -->
                     <div class="post-details">
-                        ${embedHtml} <!-- The embed goes here -->
-                        <div class="post-content">${mainContent}</div> <!-- The main text goes here -->
+                        <div class="post-content">${expandedContent}</div>
                         <div class="post-meta">Posted on ${postDate}</div>
                     </div>
                 </div>`;
@@ -2102,7 +2095,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             
             // Clear all fields
             announcementTitleInput.value = '';
-            document.getElementById('announcement-embed-url').value = '';
             announcementEditorInstance.setContents('');
             
             if (isEditing) {
@@ -2110,7 +2102,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     const ann = s.val();
                     if(ann) { 
                         announcementTitleInput.value = ann.title; 
-                        document.getElementById('announcement-embed-url').value = ann.embedUrl || '';
                         announcementEditorInstance.setContents(ann.content); 
                     }
                 });
@@ -2122,7 +2113,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
             const content = announcementEditorInstance.getContents(true);
-            const embedUrl = document.getElementById('announcement-embed-url').value.trim();
 
             if (!title) return alert('Please enter a title.');
             
@@ -2131,7 +2121,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 id: newAnnRef.key, 
                 title, 
                 content, 
-                embedUrl, // Save the new field
                 pinned: false, 
                 order: Date.now() 
             };
@@ -2142,14 +2131,12 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
             const content = announcementEditorInstance.getContents(true);
-            const embedUrl = document.getElementById('announcement-embed-url').value.trim();
 
             if (!title) return alert('Please enter a title.');
 
             announcementsRef.child(currentTabId).child(id).update({ 
                 title, 
-                content,
-                embedUrl // Save the new field on edit
+                content
             }).then(closeAnnouncementEditor);
         }
         
