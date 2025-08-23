@@ -972,7 +972,7 @@ body.dark-mode .editor-content #custom-editor-container {
     border-color: var(--dark-light-gray);
 }
 
-/* NEW: Custom Editor Styles */
+/* Custom Editor Styles */
 .custom-editor-toolbar {
     flex-shrink: 0;
     padding: var(--space-xs);
@@ -981,21 +981,44 @@ body.dark-mode .editor-content #custom-editor-container {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-xs);
+    align-items: center;
     border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
-.custom-editor-toolbar button {
+.custom-editor-toolbar button, .custom-editor-toolbar select, .custom-editor-toolbar input {
     background: transparent;
     border: none;
     cursor: pointer;
-    width: 32px;
     height: 32px;
     border-radius: var(--radius-sm);
     color: var(--dark);
+    font-family: var(--font-main);
+}
+.custom-editor-toolbar button {
+    width: 32px;
     font-size: var(--text-base);
 }
-.custom-editor-toolbar button:hover {
+.custom-editor-toolbar select {
+    padding: 0 var(--space-xs);
+}
+.custom-editor-toolbar input[type="color"] {
+    width: 32px;
+    padding: 2px;
+    border: 1px solid transparent;
+}
+.custom-editor-toolbar input[type="color"]:hover {
+    border-color: var(--light-gray);
+}
+
+.custom-editor-toolbar button:hover, .custom-editor-toolbar select:hover {
     background-color: var(--light-gray);
 }
+.custom-editor-toolbar .toolbar-separator {
+    width: 1px;
+    height: 20px;
+    background: var(--light-gray);
+    margin: 0 var(--space-xs);
+}
+
 #custom-editable-content {
     flex-grow: 1;
     padding: var(--space-md);
@@ -1010,10 +1033,10 @@ body.dark-mode .custom-editor-toolbar {
     background-color: var(--dark-dark-gray);
     border-bottom-color: var(--dark-light-gray);
 }
-body.dark-mode .custom-editor-toolbar button {
+body.dark-mode .custom-editor-toolbar button, body.dark-mode .custom-editor-toolbar select {
     color: var(--dark-medium);
 }
-body.dark-mode .custom-editor-toolbar button:hover {
+body.dark-mode .custom-editor-toolbar button:hover, body.dark-mode .custom-editor-toolbar select:hover {
     background-color: var(--dark-light-gray);
 }
 body.dark-mode #custom-editable-content {
@@ -1678,18 +1701,42 @@ body.dark-mode .input-group label {
             <!-- Custom Editor -->
             <div id="custom-editor-container">
                 <div class="custom-editor-toolbar">
-                    <button onclick="formatDoc('bold');"><i class="fas fa-bold"></i></button>
-                    <button onclick="formatDoc('italic');"><i class="fas fa-italic"></i></button>
-                    <button onclick="formatDoc('underline');"><i class="fas fa-underline"></i></button>
-                    <button onclick="formatDoc('insertUnorderedList');"><i class="fas fa-list-ul"></i></button>
-                    <button onclick="formatDoc('insertOrderedList');"><i class="fas fa-list-ol"></i></button>
-                    <button onclick="formatDoc('justifyLeft');"><i class="fas fa-align-left"></i></button>
-                    <button onclick="formatDoc('justifyCenter');"><i class="fas fa-align-center"></i></button>
-                    <button onclick="formatDoc('justifyRight');"><i class="fas fa-align-right"></i></button>
-                    <button onclick="addLink();"><i class="fas fa-link"></i></button>
-                    <button onclick="embedVideo();"><i class="fas fa-video"></i></button>
+                    <button onclick="formatDoc('bold');" title="Bold"><i class="fas fa-bold"></i></button>
+                    <button onclick="formatDoc('italic');" title="Italic"><i class="fas fa-italic"></i></button>
+                    <button onclick="formatDoc('underline');" title="Underline"><i class="fas fa-underline"></i></button>
+                    <span class="toolbar-separator"></span>
+                    <select onchange="formatDoc('fontName', this.value);" title="Font Family">
+                        <option value="Inter">Inter</option>
+                        <option value="Roboto">Roboto</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Courier New">Courier New</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                    </select>
+                    <select onchange="formatDoc('fontSize', this.value);" title="Font Size">
+                        <option value="3">Normal</option>
+                        <option value="5">Large</option>
+                        <option value="6">Heading</option>
+                        <option value="7">Title</option>
+                    </select>
+                    <span class="toolbar-separator"></span>
+                    <label for="foreColor" class="toolbar-label" title="Text Color">
+                        <i class="fas fa-font" style="margin: 0 8px;"></i>
+                        <input type="color" id="foreColor" onchange="formatDoc('foreColor', this.value);" style="width:0; height:0; padding:0; border:none; visibility: hidden;">
+                    </label>
+                     <label for="backColor" class="toolbar-label" title="Highlight Color">
+                        <i class="fas fa-fill-drip" style="margin: 0 8px;"></i>
+                        <input type="color" id="backColor" onchange="formatDoc('backColor', this.value);" style="width:0; height:0; padding:0; border:none; visibility: hidden;">
+                    </label>
+                    <span class="toolbar-separator"></span>
+                    <button onclick="formatDoc('insertUnorderedList');" title="Bulleted List"><i class="fas fa-list-ul"></i></button>
+                    <button onclick="formatDoc('insertOrderedList');" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                    <span class="toolbar-separator"></span>
+                    <button onclick="addLink();" title="Add Link"><i class="fas fa-link"></i></button>
+                    <button onclick="embedVideo();" title="Embed YouTube Video"><i class="fab fa-youtube"></i></button>
+                    <button onclick="embedGoogleDrive();" title="Embed Google Drive File"><i class="fab fa-google-drive"></i></button>
                 </div>
-                <div id="custom-editable-content" contenteditable="true"></div>
+                <div id="custom-editable-content" contenteditable="true" class="post-content"></div>
             </div>
         </div>
     </div>
@@ -1854,6 +1901,7 @@ body.dark-mode .input-group label {
         // --- Custom Editor Functions ---
         function formatDoc(command, value = null) {
             document.execCommand(command, false, value);
+            customEditableContent.focus();
         }
 
         function addLink() {
@@ -1866,8 +1914,10 @@ body.dark-mode .input-group label {
         function embedVideo() {
             const url = prompt('Enter the YouTube video URL:');
             if (url) {
-                const embedHtml = generateEmbedFromUrl(url);
-                if (embedHtml) {
+                const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/;
+                const youtubeMatch = url.match(youtubeRegex);
+                if (youtubeMatch && youtubeMatch[1]) {
+                    const embedHtml = `<div class="embed-container" contenteditable="false"><iframe src="https://www.youtube.com/embed/${youtubeMatch[1]}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><p><br></p>`;
                     formatDoc('insertHTML', embedHtml);
                 } else {
                     alert('Invalid YouTube URL. Please use a valid link.');
@@ -1875,14 +1925,38 @@ body.dark-mode .input-group label {
             }
         }
         
-        function generateEmbedFromUrl(url) {
-             if (!url) return '';
-            const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/;
-            const youtubeMatch = url.match(youtubeRegex);
-            if (youtubeMatch && youtubeMatch[1]) {
-                return `<div class="embed-container" contenteditable="false"><iframe src="https://www.youtube.com/embed/${youtubeMatch[1]}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+        function embedGoogleDrive() {
+            const url = prompt('Enter the Google Drive file URL (Docs, Sheets, or Slides):');
+            if (!url) return;
+
+            let embedHtml = '';
+
+            // Google Slides
+            const gSlidesRegex = /https:\/\/docs\.google\.com\/presentation\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
+            const gSlidesMatch = url.match(gSlidesRegex);
+            if (gSlidesMatch && gSlidesMatch[1]) {
+                embedHtml = `<div class="embed-container" contenteditable="false"><iframe src="https://docs.google.com/presentation/d/${gSlidesMatch[1]}/embed?start=false&loop=false&delayms=3000" frameborder="0" allowfullscreen></iframe></div><p><br></p>`;
             }
-            return '';
+
+            // Google Docs
+            const gDocsRegex = /https:\/\/docs\.google\.com\/document\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
+            const gDocsMatch = url.match(gDocsRegex);
+            if (gDocsMatch && gDocsMatch[1]) {
+                 embedHtml = `<div class="embed-container" style="padding-bottom: 141.42%;" contenteditable="false"><iframe src="https://docs.google.com/document/d/${gDocsMatch[1]}/preview" frameborder="0" allowfullscreen></iframe></div><p><br></p>`;
+            }
+            
+            // Google Sheets
+            const gSheetsRegex = /https:\/\/docs\.google\.com\/spreadsheets\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
+            const gSheetsMatch = url.match(gSheetsRegex);
+            if(gSheetsMatch && gSheetsMatch[1]) {
+                embedHtml = `<div class="embed-container" contenteditable="false"><iframe src="https://docs.google.com/spreadsheets/d/${gSheetsMatch[1]}/edit?usp=sharing" frameborder="0" allowfullscreen></iframe></div><p><br></p>`
+            }
+
+            if (embedHtml) {
+                formatDoc('insertHTML', embedHtml);
+            } else {
+                alert('Invalid or unsupported Google Drive URL. Please use a valid link for Docs, Sheets, or Slides.');
+            }
         }
         
         // --- End Custom Editor Functions ---
@@ -2000,25 +2074,6 @@ body.dark-mode .input-group label {
             });
         }
         
-        function autoEmbed(htmlContent) {
-            if (!htmlContent) return '';
-            
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = htmlContent;
-
-            const iframes = tempDiv.querySelectorAll('iframe');
-            iframes.forEach(iframe => {
-                if (!iframe.parentElement.classList.contains('embed-container')) {
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'embed-container';
-                    iframe.parentNode.insertBefore(wrapper, iframe);
-                    wrapper.appendChild(iframe);
-                }
-            });
-
-            return tempDiv.innerHTML;
-        }
-
         function renderAnnouncements(announcements, skipAnimation = false) {
             const pinned = announcements.filter(a => a.pinned).sort((a, b) => (a.order || 0) - (b.order || 0));
             const unpinned = announcements.filter(a => !a.pinned).sort((a, b) => (b.order || 0) - (a.order || 0));
