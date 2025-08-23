@@ -6,7 +6,7 @@
     <title>Classroom Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <style>
 :root {
     /* Modern Color palette */
@@ -953,8 +953,12 @@ body.dark-mode .add-tab-header-button:hover {
     margin-top: 0;
     margin-bottom: var(--space-xl);
 }
-.editor-content .tox-tinymce {
+.editor-content #custom-editor-container {
     flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--light-gray);
+    border-radius: var(--radius-md);
 }
 
 body.dark-mode #announcement-editor-overlay {
@@ -963,6 +967,80 @@ body.dark-mode #announcement-editor-overlay {
 body.dark-mode .editor-header {
     background-color: var(--dark-lighter);
     border-bottom-color: var(--dark-light-gray);
+}
+body.dark-mode .editor-content #custom-editor-container {
+    border-color: var(--dark-light-gray);
+}
+
+/* NEW: Custom Editor Styles */
+.custom-editor-toolbar {
+    flex-shrink: 0;
+    padding: var(--space-xs);
+    background-color: var(--light);
+    border-bottom: 1px solid var(--light-gray);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+.custom-editor-toolbar button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    color: var(--dark);
+    font-size: var(--text-base);
+}
+.custom-editor-toolbar button:hover {
+    background-color: var(--light-gray);
+}
+#custom-editable-content {
+    flex-grow: 1;
+    padding: var(--space-md);
+    outline: none;
+    overflow-y: auto;
+    background-color: var(--lighter);
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    line-height: 1.7;
+    color: var(--medium);
+}
+body.dark-mode .custom-editor-toolbar {
+    background-color: var(--dark-dark-gray);
+    border-bottom-color: var(--dark-light-gray);
+}
+body.dark-mode .custom-editor-toolbar button {
+    color: var(--dark-medium);
+}
+body.dark-mode .custom-editor-toolbar button:hover {
+    background-color: var(--dark-light-gray);
+}
+body.dark-mode #custom-editable-content {
+    background-color: var(--dark-lighter);
+    color: var(--dark-medium);
+}
+/* Styles to make the custom editor look like post-content */
+#custom-editable-content h1, #custom-editable-content h2, #custom-editable-content h3, #custom-editable-content h4 { 
+    margin-top: var(--space-lg);
+    font-weight: 600;
+    color: var(--dark);
+    line-height: 1.25;
+}
+#custom-editable-content h1 { font-size: var(--text-3xl); }
+#custom-editable-content h2 { font-size: var(--text-2xl); }
+#custom-editable-content h3 { font-size: var(--text-xl); }
+#custom-editable-content h4 { font-size: var(--text-lg); }
+
+#custom-editable-content ul, #custom-editable-content ol { 
+    margin-left: var(--space-lg); 
+    margin-bottom: var(--space-lg); 
+}
+#custom-editable-content blockquote { 
+    border-left: 4px solid var(--light-gray); 
+    padding-left: var(--space-md); 
+    margin: var(--space-lg) 0; 
+    font-style: italic; 
 }
 
 
@@ -1583,7 +1661,7 @@ body.dark-mode .input-group label {
         </div>
     </div>
     
-    <!-- Full-Screen Announcement Editor -->
+    <!-- Full-Screen Editor -->
     <div id="announcement-editor-overlay">
         <div class="editor-header">
             <h2 id="announcement-editor-title">Create New Announcement</h2>
@@ -1597,10 +1675,24 @@ body.dark-mode .input-group label {
                 <input type="text" id="announcement-title" placeholder=" ">
                 <label>Announcement Title</label>
             </div>
-            <textarea id="announcement-content"></textarea>
+            <!-- Custom Editor -->
+            <div id="custom-editor-container">
+                <div class="custom-editor-toolbar">
+                    <button onclick="formatDoc('bold');"><i class="fas fa-bold"></i></button>
+                    <button onclick="formatDoc('italic');"><i class="fas fa-italic"></i></button>
+                    <button onclick="formatDoc('underline');"><i class="fas fa-underline"></i></button>
+                    <button onclick="formatDoc('insertUnorderedList');"><i class="fas fa-list-ul"></i></button>
+                    <button onclick="formatDoc('insertOrderedList');"><i class="fas fa-list-ol"></i></button>
+                    <button onclick="formatDoc('justifyLeft');"><i class="fas fa-align-left"></i></button>
+                    <button onclick="formatDoc('justifyCenter');"><i class="fas fa-align-center"></i></button>
+                    <button onclick="formatDoc('justifyRight');"><i class="fas fa-align-right"></i></button>
+                    <button onclick="addLink();"><i class="fas fa-link"></i></button>
+                    <button onclick="embedVideo();"><i class="fas fa-video"></i></button>
+                </div>
+                <div id="custom-editable-content" contenteditable="true"></div>
+            </div>
         </div>
     </div>
-
 
     <!-- Tab Editor Modal -->
     <div id="tab-editor-modal" class="modal">
@@ -1707,6 +1799,7 @@ body.dark-mode .input-group label {
         const profilePicElement = document.getElementById('profile-pic');
         const currentTabTitleElement = document.getElementById('current-tab-title');
         const announcementEditorOverlay = document.getElementById('announcement-editor-overlay');
+        const customEditableContent = document.getElementById('custom-editable-content'); // Custom editor area
         const classroomInfo = document.getElementById('classroom-info');
         const pinnedPostsFeed = document.getElementById('pinned-posts-feed');
         const unpinnedPostsFeed = document.getElementById('unpinned-posts-feed');
@@ -1743,7 +1836,7 @@ body.dark-mode .input-group label {
             setupMobileMenu();
             setupDarkMode();
             setupProfileDropdown();
-            initializeEditor(); // Use the new editor initializer
+            // No editor to initialize anymore!
             UndoManager.init();
             if (isAdmin) {
                 setupSidebarDragAndDrop();
@@ -1758,47 +1851,42 @@ body.dark-mode .input-group label {
             });
         });
 
-        function initializeEditor() {
-            const EDITOR_STYLES = `
-                body {
-                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-                    line-height: 1.7;
-                    color: var(--medium);
-                }
-                h1, h2, h3, h4 { 
-                    font-weight: 600;
-                    color: var(--dark);
-                    margin-bottom: var(--space-md);
-                    line-height: 1.25;
-                    margin-top: var(--space-lg);
-                }
-                h1 { font-size: var(--text-3xl); }
-                h2 { font-size: var(--text-2xl); }
-                h3 { font-size: var(--text-xl); }
-                h4 { font-size: var(--text-lg); }
-                p { margin-bottom: var(--space-lg); }
-                ul, ol { margin-left: var(--space-lg); margin-bottom: var(--space-lg); }
-                blockquote {
-                    border-left: 4px solid var(--light-gray);
-                    padding-left: var(--space-md);
-                    margin: var(--space-lg) 0;
-                    font-style: italic;
-                }
-            `;
-
-            tinymce.init({
-                selector: '#announcement-content',
-                plugins: 'lists link image table media code help wordcount',
-                toolbar: 'undo redo | blocks | bold italic underline | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media table | removeformat | help',
-                content_css: false, // We provide our own styles
-                content_style: EDITOR_STYLES,
-                height: "100%",
-                menubar: false,
-                statusbar: false,
-                skin: (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'oxide-dark' : 'oxide',
-                content_css: (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'default',
-            });
+        // --- Custom Editor Functions ---
+        function formatDoc(command, value = null) {
+            document.execCommand(command, false, value);
         }
+
+        function addLink() {
+            const url = prompt('Enter the link URL:');
+            if (url) {
+                formatDoc('createLink', url);
+            }
+        }
+
+        function embedVideo() {
+            const url = prompt('Enter the YouTube video URL:');
+            if (url) {
+                const embedHtml = generateEmbedFromUrl(url);
+                if (embedHtml) {
+                    formatDoc('insertHTML', embedHtml);
+                } else {
+                    alert('Invalid YouTube URL. Please use a valid link.');
+                }
+            }
+        }
+        
+        function generateEmbedFromUrl(url) {
+             if (!url) return '';
+            const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/;
+            const youtubeMatch = url.match(youtubeRegex);
+            if (youtubeMatch && youtubeMatch[1]) {
+                return `<div class="embed-container" contenteditable="false"><iframe src="https://www.youtube.com/embed/${youtubeMatch[1]}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+            }
+            return '';
+        }
+        
+        // --- End Custom Editor Functions ---
+
 
         function checkUserProfile() {
             const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
@@ -1965,7 +2053,6 @@ body.dark-mode .input-group label {
                 </div>` : '';
 
             const rawContent = announcement.content || '';
-            const expandedContent = autoEmbed(rawContent);
             const tempDiv = document.createElement("div");
             tempDiv.innerHTML = rawContent;
             const collapsedText = tempDiv.textContent || "";
@@ -1980,7 +2067,7 @@ body.dark-mode .input-group label {
                     <h3>${announcement.title}</h3>
                     <div class="collapsed-content">${collapsedText}</div>
                     <div class="post-details">
-                        <div class="post-content">${expandedContent}</div>
+                        <div class="post-content">${rawContent}</div>
                         <div class="post-meta">Posted on ${postDate}</div>
                     </div>
                 </div>`;
@@ -2162,14 +2249,14 @@ body.dark-mode .input-group label {
             saveBtn.onclick = isEditing ? () => saveEditedAnnouncement(id) : postAnnouncement;
             
             announcementTitleInput.value = '';
-            tinymce.get('announcement-content').setContent('');
+            customEditableContent.innerHTML = '';
             
             if (isEditing) {
                 announcementsRef.child(currentTabId).child(id).once('value').then(s => {
                     const ann = s.val();
                     if(ann) { 
                         announcementTitleInput.value = ann.title; 
-                        tinymce.get('announcement-content').setContent(ann.content || ''); 
+                        customEditableContent.innerHTML = ann.content || ''; 
                     }
                 });
             }
@@ -2186,7 +2273,7 @@ body.dark-mode .input-group label {
         function postAnnouncement() {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
-            const content = tinymce.get('announcement-content').getContent();
+            const content = customEditableContent.innerHTML;
 
             if (!title) return alert('Please enter a title.');
             
@@ -2204,7 +2291,7 @@ body.dark-mode .input-group label {
         function saveEditedAnnouncement(id) {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
-            const content = tinymce.get('announcement-content').getContent();
+            const content = customEditableContent.innerHTML;
 
             if (!title) return alert('Please enter a title.');
 
@@ -2457,4 +2544,4 @@ body.dark-mode .input-group label {
         }
     </script>
 </body>
-</html>```
+</html>
