@@ -1721,12 +1721,13 @@ body.dark-mode .input-group label {
                     <div class="toolbar-separator"></div>
                     <div class="toolbar-group">
                         <select onchange="formatDoc('fontName', this.value);" title="Font Family">
-                            <option value="Inter" selected>Inter</option>
-                            <option value="Roboto">Roboto</option>
-                            <option value="Arial">Arial</option>
-                            <option value="Courier New">Courier</option>
-                            <option value="Georgia">Georgia</option>
-                            <option value="Times New Roman">Times New Roman</option>
+                            <option value="Inter, sans-serif" selected>Inter</option>
+                            <option value="Roboto, sans-serif">Roboto</option>
+                            <option value="Arial, sans-serif">Arial</option>
+                            <option value="'Courier New', Courier, monospace">Courier</option>
+                            <option value="Georgia, serif">Georgia</option>
+                            <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                            <option value="Verdana, sans-serif">Verdana</option>
                         </select>
                         <select onchange="formatDoc('fontSize', this.value);" title="Font Size">
                             <option value="2">Small</option>
@@ -1954,23 +1955,18 @@ body.dark-mode .input-group label {
             if (!url) return;
 
             let embedHtml = '';
+            const idRegex = /\/d\/([a-zA-Z0-9_-]+)/;
+            const matches = url.match(idRegex);
 
-            const gSlidesRegex = /https:\/\/docs\.google\.com\/presentation\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
-            const gSlidesMatch = url.match(gSlidesRegex);
-            if (gSlidesMatch && gSlidesMatch[1]) {
-                embedHtml = `<div class="embed-container" contenteditable="false"><iframe src="https://docs.google.com/presentation/d/${gSlidesMatch[1]}/embed?start=false&loop=false&delayms=3000" frameborder="0" allowfullscreen></iframe></div><p><br></p>`;
-            }
-
-            const gDocsRegex = /https:\/\/docs\.google\.com\/document\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
-            const gDocsMatch = url.match(gDocsRegex);
-            if (gDocsMatch && gDocsMatch[1]) {
-                 embedHtml = `<div class="embed-container" style="padding-bottom: 141.42%;" contenteditable="false"><iframe src="https://docs.google.com/document/d/${gDocsMatch[1]}/preview" frameborder="0" allowfullscreen></iframe></div><p><br></p>`;
-            }
-            
-            const gSheetsRegex = /https:\/\/docs\.google\.com\/spreadsheets\/d\/(?:e\/)?([a-zA-Z0-9_-]+)/;
-            const gSheetsMatch = url.match(gSheetsRegex);
-            if(gSheetsMatch && gSheetsMatch[1]) {
-                embedHtml = `<div class="embed-container" contenteditable="false"><iframe src="https://docs.google.com/spreadsheets/d/${gSheetsMatch[1]}/pubhtml?widget=true&amp;headers=false"></iframe></div><p><br></p>`
+            if (matches && matches[1]) {
+                const fileId = matches[1];
+                if (url.includes('/presentation/')) {
+                    embedHtml = `<div class="embed-container" contenteditable="false"><iframe src="https://docs.google.com/presentation/d/${fileId}/embed?start=false&loop=false&delayms=3000" frameborder="0" allowfullscreen></iframe></div><p><br></p>`;
+                } else if (url.includes('/document/')) {
+                    embedHtml = `<div class="embed-container" style="padding-bottom: 141.42%;" contenteditable="false"><iframe src="https://docs.google.com/document/d/${fileId}/preview" frameborder="0" allowfullscreen></iframe></div><p><br></p>`;
+                } else if (url.includes('/spreadsheets/')) {
+                    embedHtml = `<div class="embed-container" contenteditable="false"><iframe src="https://docs.google.com/spreadsheets/d/${fileId}/pubhtml?widget=true&amp;headers=false"></iframe></div><p><br></p>`;
+                }
             }
 
             if (embedHtml) {
