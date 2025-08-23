@@ -1277,19 +1277,54 @@ body.non-admin .post-card-drag-handle {
 body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
 /* Typography for rendered rich content */
-.post-content { font-size: var(--text-base); line-height: 1.7; color: var(--medium); word-wrap: break-word; }
-.post-content p { margin-bottom: var(--space-lg); }
-.post-content h1, .post-content h2, .post-content h3 { margin-top: var(--space-lg); }
-.post-content ul, .post-content ol { margin-left: var(--space-lg); margin-bottom: var(--space-lg); }
-.post-content blockquote { border-left: 4px solid var(--light-gray); padding-left: var(--space-md); margin: var(--space-lg) 0; font-style: italic; }
-.post-content img { max-width: 100%; height: auto; border-radius: var(--radius-md); margin: var(--space-lg) 0; box-shadow: var(--shadow-md); }
+.post-content { 
+    font-size: var(--text-base); 
+    line-height: 1.7; 
+    color: var(--medium); 
+    word-wrap: break-word; 
+}
+.post-content p { 
+    margin-bottom: var(--space-lg); 
+}
+.post-content h1, .post-content h2, .post-content h3, .post-content h4 { 
+    margin-top: var(--space-lg);
+    font-weight: 600;
+    color: var(--dark);
+    line-height: 1.25;
+}
+.post-content h1 { font-size: var(--text-3xl); }
+.post-content h2 { font-size: var(--text-2xl); }
+.post-content h3 { font-size: var(--text-xl); }
+.post-content h4 { font-size: var(--text-lg); }
+
+.post-content ul, .post-content ol { 
+    margin-left: var(--space-lg); 
+    margin-bottom: var(--space-lg); 
+}
+.post-content blockquote { 
+    border-left: 4px solid var(--light-gray); 
+    padding-left: var(--space-md); 
+    margin: var(--space-lg) 0; 
+    font-style: italic; 
+}
+.post-content img { 
+    max-width: 100%; 
+    height: auto; 
+    border-radius: var(--radius-md); 
+    margin: var(--space-lg) 0; 
+    box-shadow: var(--shadow-md); 
+}
 
 /* Input Styles */
 .input-group { position: relative; margin: var(--space-lg) 0; }
 .input-group label {
     position: absolute; top: var(--space-sm); left: var(--space-md); color: var(--medium);
     pointer-events: none; transition: all var(--transition-fast); font-size: var(--text-sm);
-    background: white; padding: 0 var(--space-xs); transform-origin: left center;
+    background: var(--lighter); /* Use var to support dark mode */
+    padding: 0 var(--space-xs); transform-origin: left center;
+}
+body.dark-mode .input-group label {
+    background: var(--dark-lighter);
 }
 .input-group input:focus + label, .input-group input:not(:placeholder-shown) + label,
 .input-group textarea:focus + label, .input-group textarea:not(:placeholder-shown) + label {
@@ -1749,12 +1784,49 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         });
 
         function initializeSunEditor() {
+            // NEW: Define a unified stylesheet for the editor that matches the main page's post content styles.
+            const EDITOR_STYLES = `
+                body {
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                    font-size: 1rem;
+                    line-height: 1.7;
+                    color: #718096;
+                    margin: 0;
+                    padding: 16px;
+                }
+                h1, h2, h3, h4 {
+                    font-weight: 600;
+                    color: #1A202C;
+                    margin-bottom: 1rem;
+                    line-height: 1.25;
+                    margin-top: 1.5rem;
+                }
+                h1 { font-size: 1.875rem; }
+                h2 { font-size: 1.5rem; }
+                h3 { font-size: 1.25rem; }
+                p { margin-bottom: 1.5rem; }
+                ul, ol { margin-left: 1.5rem; margin-bottom: 1.5rem; }
+                blockquote {
+                    border-left: 4px solid #E2E8F0;
+                    padding-left: 1rem;
+                    margin: 1.5rem 0;
+                    font-style: italic;
+                }
+                img {
+                    max-width: 100%;
+                    height: auto;
+                    border-radius: 6px;
+                    margin: 1.5rem 0;
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                }
+            `;
+
             announcementEditorInstance = SUNEDITOR.create('announcement-content', {
                 height: 'auto', 
                 minHeight: '50vh', // Generous default height
                 charCounter: true,
                 pasteTagsWhitelist: "p, a, img, h1, h2, h3, h4, h5, h6, blockquote, ul, ol, li, br, hr, b, strong, i, em, u, s, span, div, table, thead, tbody, tr, th, td, iframe",
-                // UPGRADED: A much more powerful, "Google Docs-like" button list
+                styles: [ EDITOR_STYLES ], // KEY FIX: Inject the styles here
                 buttonList: [
                     ['undo', 'redo'],
                     ['font', 'fontSize', 'formatBlock'],
@@ -1764,7 +1836,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     ['removeFormat'],
                     ['outdent', 'indent'],
                     ['align', 'horizontalRule', 'list', 'lineHeight'],
-                    ['table', 'link', 'image', 'video'], // Admins can now add images, etc.
+                    ['table', 'link', 'image', 'video'],
                     ['fullScreen', 'showBlocks', 'codeView']
                 ]
             });
@@ -2444,4 +2516,4 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         }
     </script>
 </body>
-</html>```
+</html>
