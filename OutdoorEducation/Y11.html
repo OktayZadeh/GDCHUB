@@ -1828,17 +1828,17 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             if (!htmlContent) return '';
             let processedContent = htmlContent;
             
-            // Regex for YouTube
+            // Regex for YouTube: finds a link and replaces it with an iframe
             const youtubeRegex = /<a href="(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11}))(?:.*)?".*?>.*?<\/a>/g;
-            processedContent = processedContent.replace(youtubeRegex, (match, url, videoId) => `<div class="embed-container"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe></div>`);
+            processedContent = processedContent.replace(youtubeRegex, (match, url, videoId) => `<div class="embed-container"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`);
             
-            // Regex for Google Slides
-            const gSlidesRegex = /<a href="(https?:\/\/docs\.google\.com\/presentation\/d\/e\/([a-zA-Z0-9_-]+)\/pub(?:.*?))".*?>.*?<\/a>/g;
-            processedContent = processedContent.replace(gSlidesRegex, (match, url) => `<div class="embed-container"><iframe src="${url.replace('/pub', '/embed')}" frameborder="0" allowfullscreen></iframe></div>`);
+            // Regex for Google Slides: finds a link and replaces it with an iframe
+            const gSlidesRegex = /<a href="(https?:\/\/docs\.google\.com\/presentation\/d\/(?:e\/)?([a-zA-Z0-9_-]+)\/pub(?:.*?))".*?>.*?<\/a>/g;
+            processedContent = processedContent.replace(gSlidesRegex, (match, url, id) => `<div class="embed-container"><iframe src="https://docs.google.com/presentation/d/${id}/embed?start=false&loop=false&delayms=3000" frameborder="0" allowfullscreen></iframe></div>`);
 
-            // Regex for Google Docs
-            const gDocsRegex = /<a href="(https?:\/\/docs\.google\.com\/document\/d\/e\/([a-zA-Z0-9_-]+)\/pub(?:.*?))".*?>.*?<\/a>/g;
-            processedContent = processedContent.replace(gDocsRegex, (match, url) => `<div class="embed-container" style="padding-bottom: 141.42%;"><iframe src="${url.replace('/pub', '/embed')}" frameborder="0" allowfullscreen></iframe></div>`);
+            // Regex for Google Docs: finds a link and replaces it with an iframe
+            const gDocsRegex = /<a href="(https?:\/\/docs\.google\.com\/document\/d\/(?:e\/)?([a-zA-Z0-9_-]+)\/pub(?:.*?))".*?>.*?<\/a>/g;
+            processedContent = processedContent.replace(gDocsRegex, (match, url, id) => `<div class="embed-container" style="padding-bottom: 141.42%;"><iframe src="https://docs.google.com/document/d/${id}/preview" frameborder="0" allowfullscreen></iframe></div>`);
             
             return processedContent;
         }
@@ -1857,7 +1857,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
             document.querySelectorAll('.post-card').forEach(card => {
                 card.addEventListener('click', (e) => {
-                    if (!e.target.closest('button, .move-handle, .post-card-drag-handle')) expandPost(card);
+                    if (!e.target.closest('button, .move-handle, .post-card-drag-handle, a, iframe')) expandPost(card);
                 });
             });
             document.querySelectorAll('.post-actions button').forEach(button => button.addEventListener('click', e => e.stopPropagation()));
@@ -1873,10 +1873,15 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     <button class="button small" onclick="editAnnouncement(event, '${announcement.id}')">Edit</button>
                     <button class="button small delete-button" onclick="deleteAnnouncement(event, '${announcement.id}')">Delete</button>
                 </div>` : '';
+
+            // Create clean text for collapsed view by stripping HTML tags
             const tempDiv = document.createElement("div");
             tempDiv.innerHTML = announcement.content;
             const collapsedText = tempDiv.textContent || "";
-            const finalContent = autoEmbed(announcement.content);
+
+            // Create the rich content with embeds for the expanded view
+            const finalContentForExpandedView = autoEmbed(announcement.content);
+            
             const animationStyle = skipAnimation ? 'style="animation: none; opacity: 1;"' : '';
 
             return `
@@ -1887,7 +1892,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     <h3>${announcement.title}</h3>
                     <div class="collapsed-content">${collapsedText}</div>
                     <div class="post-details">
-                        <div class="post-content">${finalContent}</div>
+                        <div class="post-content">${finalContentForExpandedView}</div>
                         <div class="post-meta">Posted on ${postDate}</div>
                     </div>
                 </div>`;
