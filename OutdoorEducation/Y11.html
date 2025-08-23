@@ -1054,11 +1054,6 @@ body.dark-mode .add-tab-header-button:hover {
     gap: var(--space-sm);
 }
 
-.post-details {
-    display: none;
-    margin-top: var(--space-lg);
-}
-
 .embed-container {
     position: relative;
     padding-bottom: 56.25%; /* 16:9 aspect ratio */
@@ -1089,14 +1084,13 @@ body.dark-mode .add-tab-header-button:hover {
     color: var(--medium);
 }
 
-.post-card:not(.expanded) .post-content img,
-.post-card:not(.expanded) .post-content iframe,
-.post-card:not(.expanded) .post-content .embed-container {
+.post-card.expanded .collapsed-content {
     display: none;
 }
 
-.post-card.expanded .collapsed-content {
+.post-card .post-details {
     display: none;
+    margin-top: var(--space-lg);
 }
 
 .post-card.expanded .post-details {
@@ -1857,12 +1851,20 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
             document.querySelectorAll('.post-card').forEach(card => {
                 card.addEventListener('click', (e) => {
-                    if (!e.target.closest('button, .move-handle, .post-card-drag-handle, a, iframe')) expandPost(card);
+                    if (!e.target.closest('button, .move-handle, .post-card-drag-handle, a, iframe')) {
+                        expandPost(card);
+                    }
                 });
             });
             document.querySelectorAll('.post-actions button').forEach(button => button.addEventListener('click', e => e.stopPropagation()));
         }
 
+        /**
+         * Creates the HTML for a post card.
+         * This function now generates both the collapsed (plain text) and expanded (rich content)
+         * views from the start. CSS is used to toggle which view is visible.
+         * This is a more reliable method than injecting HTML on click.
+         */
         function createPostElement(announcement, skipAnimation = false) {
             const postDate = new Date(announcement.order).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
             const pinButtonText = announcement.pinned ? 'Unpin' : 'Pin';
@@ -1874,10 +1876,13 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     <button class="button small delete-button" onclick="deleteAnnouncement(event, '${announcement.id}')">Delete</button>
                 </div>` : '';
 
-            // Create clean text for collapsed view by stripping HTML tags from the raw content.
+            // Create a temporary div to reliably strip all HTML for the collapsed view.
             const tempDiv = document.createElement("div");
             tempDiv.innerHTML = announcement.content;
             const collapsedText = tempDiv.textContent || "";
+
+            // Create the rich, embeddable content for the expanded view.
+            const expandedContent = autoEmbed(announcement.content);
             
             const animationStyle = skipAnimation ? 'style="animation: none; opacity: 1;"' : '';
 
@@ -1887,13 +1892,15 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     ${pinIcon}
                     ${actionsHtml}
                     <h3>${announcement.title}</h3>
+
+                    <!-- View #1: Collapsed (Plain Text Only) -->
                     <div class="collapsed-content">${collapsedText}</div>
+
+                    <!-- View #2: Expanded (Rich Content with Embeds), hidden by default by CSS -->
                     <div class="post-details">
-                        <div class="post-content"></div> <!-- Initially empty -->
+                        <div class="post-content">${expandedContent}</div>
                         <div class="post-meta">Posted on ${postDate}</div>
                     </div>
-                    <!-- Store raw content here to be processed on expand -->
-                    <template class="raw-content">${announcement.content}</template>
                 </div>`;
         }
         
@@ -2114,20 +2121,15 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         };
 
         function expandPost(postElement) {
-            if (expandedPost) collapsePost(expandedPost);
-
-            // Process content on first expansion only
-            const postContentDiv = postElement.querySelector('.post-content');
-            if (postContentDiv && !postContentDiv.innerHTML.trim()) {
-                const rawContentTemplate = postElement.querySelector('.raw-content');
-                if (rawContentTemplate) {
-                    const rawHtml = rawContentTemplate.innerHTML;
-                    postContentDiv.innerHTML = autoEmbed(rawHtml);
-                }
+            // If another post is already open, close it first.
+            if (expandedPost && expandedPost !== postElement) {
+                collapsePost(expandedPost);
             }
 
+            // The core logic is now just toggling the class.
             postElement.classList.add('expanded');
             expandedPost = postElement;
+
             const controls = document.getElementById('expanded-post-controls');
             const actions = postElement.querySelector('.post-actions');
             document.getElementById('expanded-actions-container').innerHTML = actions ? actions.innerHTML : '';
@@ -2139,7 +2141,9 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             if (!postElement) return;
             postElement.classList.remove('expanded');
             document.getElementById('expanded-post-controls').style.display = 'none';
-            if (expandedPost === postElement) expandedPost = null;
+            if (expandedPost === postElement) {
+                expandedPost = null;
+            }
         }
         
         window.editAnnouncement = (event, id) => { event.stopPropagation(); openAnnouncementEditor(id); }
