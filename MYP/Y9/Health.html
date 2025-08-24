@@ -410,7 +410,7 @@ body.dark-mode .editor-header { background-color: var(--dark-lighter); border-bo
 body.dark-mode #announcement-title { color: white; }
 body.dark-mode #announcement-title::placeholder { color: var(--dark-light); }
 
-/* --- REFINED: Custom Toolbar --- */
+/* --- Cleaned Toolbar --- */
 .custom-toolbar-container {
     position: sticky; top: 0; z-index: 5; background-color: var(--light);
     padding: var(--space-md) 0; margin-bottom: var(--space-md);
@@ -455,29 +455,6 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
 #format-block-menu .toolbar-dropdown-item[data-value="h4"] { font-size: var(--text-base); font-weight: 600; }
 #format-block-menu .toolbar-dropdown-item[data-value="blockquote"] { border-left: 3px solid var(--primary); padding-left: var(--space-sm); font-style: italic; }
 
-/* REFINED: Color Picker Dropdown */
-.color-preview {
-    position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%);
-    width: 60%; height: 3px; border-radius: var(--radius-full);
-    background-color: var(--dark); transition: all var(--transition-fast);
-}
-.toolbar-dropdown-toggle:hover .color-preview { width: 80%; }
-.color-picker-menu {
-    padding: var(--space-sm); display: grid; grid-template-columns: repeat(6, 1fr);
-    gap: var(--space-xs); max-width: 180px;
-}
-.color-swatch {
-    width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
-    border: 2px solid transparent; transition: all var(--transition-fast);
-    display: flex; align-items: center; justify-content: center;
-}
-.color-swatch:hover { transform: scale(1.15); border-color: var(--primary-light); }
-.color-swatch.selected { border-color: var(--primary); }
-.color-swatch.reset {
-    background-color: var(--light);
-    background-image: linear-gradient(135deg, transparent 48%, var(--danger) 48%, var(--danger) 52%, transparent 52%);
-}
-
 .custom-editor-area {
     flex-grow: 1; padding: 0; outline: none; line-height: 1.7; color: var(--dark); font-size: 16px; min-height: 300px;
 }
@@ -497,11 +474,8 @@ body.dark-mode .custom-editor-area h1, body.dark-mode .custom-editor-area h2, bo
 body.dark-mode .toolbar-dropdown-menu { background: var(--dark-lighter); border-color: var(--dark-light); }
 body.dark-mode .toolbar-dropdown-item { color: var(--dark-medium); }
 body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray); }
-body.dark-mode .color-preview { background-color: var(--dark-medium); }
-body.dark-mode .color-swatch.reset { background-color: var(--dark-light-gray); }
 
-
-/* --- END EDITOR FIXES --- */
+/* --- END EDITOR --- */
 
 /* Pinned Posts Styles */
 #pinned-posts-header { margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 2px solid var(--primary); color: var(--primary-dark); display: flex; align-items: center; gap: var(--space-sm); }
@@ -562,7 +536,6 @@ body.dark-mode .color-swatch.reset { background-color: var(--dark-light-gray); }
 }
 .reminder-card {
     background: var(--lighter);
-    /* --- CHANGE: Thicker border --- */
     border-left: 5px solid var(--primary);
     padding: var(--space-md);
     border-radius: var(--radius-md); position: relative; transition: all var(--transition-normal);
@@ -870,22 +843,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                         <button class="toolbar-button" data-command="strikeThrough" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
                     </div>
                     <div class="toolbar-group">
-                        <div class="toolbar-dropdown" id="font-color-dropdown">
-                            <button class="toolbar-dropdown-toggle" title="Text Color">
-                                <i class="fas fa-font"></i>
-                                <div class="color-preview" id="font-color-preview" style="background-color: #1A202C;"></div>
-                            </button>
-                            <div class="toolbar-dropdown-menu color-picker-menu" id="font-color-menu"></div>
-                        </div>
-                        <div class="toolbar-dropdown" id="highlight-color-dropdown">
-                            <button class="toolbar-dropdown-toggle" title="Highlight Color">
-                                <i class="fas fa-highlighter"></i>
-                                <div class="color-preview" id="highlight-color-preview" style="background-color: #FFFFFF;"></div>
-                            </button>
-                            <div class="toolbar-dropdown-menu color-picker-menu" id="highlight-color-menu"></div>
-                        </div>
-                    </div>
-                    <div class="toolbar-group">
                         <button class="toolbar-button" data-command="justifyLeft" title="Align Left"><i class="fas fa-align-left"></i></button>
                         <button class="toolbar-button" data-command="justifyCenter" title="Align Center"><i class="fas fa-align-center"></i></button>
                         <button class="toolbar-button" data-command="justifyRight" title="Align Right"><i class="fas fa-align-right"></i></button>
@@ -1087,22 +1044,22 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         });
         
-        // --- REFINED: Custom Editor Logic ---
+        // --- Cleaned Editor Logic ---
         function setupCustomEditor() {
             const toolbar = document.getElementById('custom-toolbar');
             const editor = document.getElementById('announcement-content');
 
             populateFontDropdown();
-            populateColorPickers();
-
-            // Prevent mousedown on dropdowns from stealing focus from the editor
+            
+            // The single most important fix: prevent mousedown on dropdowns from stealing editor focus.
             const preventFocusSteal = (e) => e.preventDefault();
             document.querySelectorAll('.toolbar-dropdown-menu').forEach(menu => {
                 menu.addEventListener('mousedown', preventFocusSteal);
             });
 
+            // Single, robust click handler for the entire toolbar.
             toolbar.addEventListener('click', e => {
-                const button = e.target.closest('.toolbar-button, .toolbar-dropdown-toggle, .toolbar-dropdown-item, .color-swatch');
+                const button = e.target.closest('.toolbar-button, .toolbar-dropdown-toggle, .toolbar-dropdown-item');
                 if (!button) return;
 
                 const dropdown = button.closest('.toolbar-dropdown');
@@ -1114,8 +1071,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     if (!wasOpen) dropdown.classList.add('open');
                     return;
                 }
-                
-                editor.focus(); // Restore focus to the editor
+
+                editor.focus();
                 if (savedEditorSelection) {
                     const selection = window.getSelection();
                     selection.removeAllRanges();
@@ -1136,21 +1093,12 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     }
                 }
                 
-                // Handle UI updates for dropdown items
                 if (dropdown) {
-                    if (button.classList.contains('toolbar-dropdown-item')) {
+                    if (button.classList.contains('toolbar-dropdown-item') && (command === 'formatBlock' || command === 'fontName')) {
                        const toggle = dropdown.querySelector('.toolbar-dropdown-toggle');
-                       if (toggle && (command === 'formatBlock' || command === 'fontName')) {
+                       if (toggle) {
                            toggle.innerHTML = `${button.textContent} <i class="fas fa-chevron-down"></i>`;
                        }
-                    }
-                    if (button.classList.contains('color-swatch')) {
-                        const preview = dropdown.querySelector('.color-preview');
-                        if (preview) {
-                             preview.style.backgroundColor = value === 'transparent' || value === 'initial' ? 'var(--medium)' : value;
-                        }
-                        dropdown.querySelectorAll('.color-swatch.selected').forEach(s => s.classList.remove('selected'));
-                        button.classList.add('selected');
                     }
                     dropdown.classList.remove('open');
                 }
@@ -1168,7 +1116,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 const selection = window.getSelection();
                 if (selection.rangeCount > 0) {
                    const range = selection.getRangeAt(0);
-                   // Ensure the selection is within the editor before saving
                    if (editor.contains(range.commonAncestorContainer)) {
                        savedEditorSelection = range;
                    }
@@ -1178,7 +1125,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             editor.addEventListener('keyup', updateToolbarState);
             editor.addEventListener('mouseup', () => { saveSelection(); updateToolbarState(); });
             editor.addEventListener('focus', updateToolbarState);
-            editor.addEventListener('blur', saveSelection); // Save selection when editor loses focus
+            editor.addEventListener('blur', saveSelection);
         }
         
         function populateFontDropdown() {
@@ -1189,30 +1136,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             ).join('');
         }
 
-        function populateColorPickers() {
-            const colors = [
-                '#000000', '#4A5568', '#718096', '#E53E3E', '#ED8936', '#D69E2E',
-                '#48BB78', '#38B2AC', '#4299E1', '#667EEA', '#9F7AEA', '#ED64A6',
-                '#FFFFFF', '#E2E8F0', '#CBD5E0', '#F56565', '#F6AD55', '#F6E05E',
-                '#68D391', '#4FD1C5', '#63B3ED', '#7F9CF5', '#B794F4', '#F687B3'
-            ];
-            const fontColorMenu = document.getElementById('font-color-menu');
-            const highlightColorMenu = document.getElementById('highlight-color-menu');
-            
-            const fontSwatchHTML = `<div class="color-swatch reset" data-command="foreColor" data-value="initial" title="Default Color"></div>` +
-                colors.map(color => `<div class="color-swatch" data-command="foreColor" data-value="${color}" style="background-color: ${color};"></div>`).join('');
-            
-            const highlightSwatchHTML = `<div class="color-swatch reset" data-command="backColor" data-value="transparent" title="No Highlight"></div>` +
-                colors.map(color => `<div class="color-swatch" data-command="backColor" data-value="${color}" style="background-color: ${color};"></div>`).join('');
-
-            fontColorMenu.innerHTML = fontSwatchHTML;
-            highlightColorMenu.innerHTML = highlightSwatchHTML;
-        }
-        
         function updateToolbarState() {
-            // This function is kept simple because complex state tracking like current color
-            // is difficult and unreliable with execCommand. The visual feedback from the color
-            // preview on the button is often sufficient.
             const commands = ['bold', 'italic', 'underline', 'strikeThrough', 'justifyLeft', 'justifyCenter', 'justifyRight', 'insertUnorderedList', 'insertOrderedList'];
             commands.forEach(command => {
                 const button = document.querySelector(`.toolbar-button[data-command="${command}"]`);
@@ -1221,7 +1145,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
         }
-        // --- END OF REFINED EDITOR LOGIC ---
         
         function openEmbedModal() { document.getElementById('embed-url-input').value = ''; embedModal.style.display = 'flex'; }
         function closeEmbedModal() { embedModal.style.display = 'none'; }
@@ -1649,11 +1572,3 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
     </script>
 </body>
 </html>
-```
-217.9s
-ThinkingThoughts
-(experimental)
-Auto
-Expand to view model thoughts
-
-chevron_right
