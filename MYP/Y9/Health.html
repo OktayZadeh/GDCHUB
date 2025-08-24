@@ -1063,36 +1063,44 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         });
         
-        // --- REBUILT & FIXED Custom Editor Logic ---
+        // --- NEW/FIXED: Custom Editor Logic ---
         function setupCustomEditor() {
             const toolbar = document.getElementById('custom-toolbar');
-            
+            const editor = document.getElementById('announcement-content');
+
             populateFontDropdown();
             populateColorPickers();
 
-            // --- THE FIX: Prevent focus loss on mousedown for color pickers ---
-            const preventDefaultMousedown = (e) => e.preventDefault();
-            document.getElementById('font-color-menu').addEventListener('mousedown', preventDefaultMousedown);
-            document.getElementById('highlight-color-menu').addEventListener('mousedown', preventDefaultMousedown);
+            // The key to fixing color pickers: prevent the mousedown event from stealing focus from the editor.
+            const preventFocusSteal = (e) => e.preventDefault();
+            document.getElementById('font-color-menu').addEventListener('mousedown', preventFocusSteal);
+            document.getElementById('highlight-color-menu').addEventListener('mousedown', preventFocusSteal);
 
+            // A single, robust click handler for the entire toolbar.
             toolbar.addEventListener('click', e => {
                 const button = e.target.closest('.toolbar-button, .toolbar-dropdown-toggle, .toolbar-dropdown-item, .color-swatch');
                 if (!button) return;
 
                 const dropdown = button.closest('.toolbar-dropdown');
-                
+
+                // Handle dropdown toggling
                 if (button.classList.contains('toolbar-dropdown-toggle')) {
                     const wasOpen = dropdown.classList.contains('open');
+                    // Close all other dropdowns first
                     document.querySelectorAll('.toolbar-dropdown.open').forEach(d => d.classList.remove('open'));
                     if (!wasOpen) dropdown.classList.add('open');
-                    e.stopPropagation();
-                    return;
+                    return; // Stop further execution
                 }
-                
+
+                // Handle command execution
                 const command = button.dataset.command;
                 const value = button.dataset.value || null;
-                
+
                 if (command) {
+                    // Restore focus to the editor before executing a command.
+                    // This is crucial for commands that rely on a selection.
+                    editor.focus();
+
                     if (command === 'createLink') {
                         const url = prompt('Enter the URL:');
                         if (url) document.execCommand('createLink', false, url);
@@ -1101,32 +1109,36 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                         if (selection.rangeCount > 0) savedEditorSelection = selection.getRangeAt(0);
                         openEmbedModal();
                     } else {
+                        // This handles all other commands, including 'foreColor' and 'backColor'.
                         document.execCommand(command, false, value);
                     }
                 }
 
+                // If a button inside a dropdown was clicked, update the toggle's text and close it.
                 if (dropdown) {
                     if (button.classList.contains('toolbar-dropdown-item')) {
                        const toggle = dropdown.querySelector('.toolbar-dropdown-toggle');
-                       if (toggle) toggle.innerHTML = `${button.textContent} <i class="fas fa-chevron-down"></i>`;
+                       if (toggle && (command === 'formatBlock' || command === 'fontName')) {
+                           toggle.innerHTML = `${button.textContent} <i class="fas fa-chevron-down"></i>`;
+                       }
                     }
                     dropdown.classList.remove('open');
                 }
                 
-                if(!button.classList.contains('color-swatch')) {
-                    announcementContentEditor.focus();
-                }
                 updateToolbarState();
             });
 
+            // Close dropdowns if clicking outside the toolbar
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.toolbar-dropdown')) {
                     document.querySelectorAll('.toolbar-dropdown.open').forEach(d => d.classList.remove('open'));
                 }
             });
             
-            announcementContentEditor.addEventListener('keyup', updateToolbarState);
-            announcementContentEditor.addEventListener('mouseup', updateToolbarState);
+            // Update the toolbar's active state when the selection changes
+            editor.addEventListener('keyup', updateToolbarState);
+            editor.addEventListener('mouseup', updateToolbarState);
+            editor.addEventListener('focus', updateToolbarState);
         }
         
         function populateFontDropdown() {
@@ -1153,9 +1165,12 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const commands = ['bold', 'italic', 'underline', 'strikeThrough', 'justifyLeft', 'justifyCenter', 'justifyRight', 'insertUnorderedList', 'insertOrderedList'];
             commands.forEach(command => {
                 const button = document.querySelector(`.toolbar-button[data-command="${command}"]`);
-                if (button) button.classList.toggle('active', document.queryCommandState(command));
+                if (button) {
+                    button.classList.toggle('active', document.queryCommandState(command));
+                }
             });
         }
+        // --- END OF NEW EDITOR LOGIC ---
         
         function openEmbedModal() { document.getElementById('embed-url-input').value = ''; embedModal.style.display = 'flex'; }
         function closeEmbedModal() { embedModal.style.display = 'none'; }
@@ -1182,7 +1197,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 setTimeout(() => { embedButton.textContent = 'Embed'; urlInput.focus(); }, 1200);
             } else { alert('Invalid URL. Please use a valid share URL from YouTube, Google Docs, or Google Slides.'); }
         }
-        // --- END CUSTOM EDITOR LOGIC ---
 
         function checkUserProfile() {
             const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
