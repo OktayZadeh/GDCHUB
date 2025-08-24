@@ -1071,9 +1071,9 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             populateColorPickers();
 
             // --- THE FIX: Prevent focus loss on mousedown for color pickers ---
-            const preventFocusLoss = (e) => e.preventDefault();
-            document.getElementById('font-color-menu').addEventListener('mousedown', preventFocusLoss);
-            document.getElementById('highlight-color-menu').addEventListener('mousedown', preventFocusLoss);
+            const preventDefaultMousedown = (e) => e.preventDefault();
+            document.getElementById('font-color-menu').addEventListener('mousedown', preventDefaultMousedown);
+            document.getElementById('highlight-color-menu').addEventListener('mousedown', preventDefaultMousedown);
 
             toolbar.addEventListener('click', e => {
                 const button = e.target.closest('.toolbar-button, .toolbar-dropdown-toggle, .toolbar-dropdown-item, .color-swatch');
@@ -1081,7 +1081,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
                 const dropdown = button.closest('.toolbar-dropdown');
                 
-                // Handle opening/closing dropdowns
                 if (button.classList.contains('toolbar-dropdown-toggle')) {
                     const wasOpen = dropdown.classList.contains('open');
                     document.querySelectorAll('.toolbar-dropdown.open').forEach(d => d.classList.remove('open'));
@@ -1090,24 +1089,18 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     return;
                 }
                 
-                // For all other buttons, prevent default browser action
-                e.preventDefault();
                 const command = button.dataset.command;
                 const value = button.dataset.value || null;
                 
                 if (command) {
                     if (command === 'createLink') {
                         const url = prompt('Enter the URL:');
-                        // Restore focus before showing prompt
-                        announcementContentEditor.focus();
                         if (url) document.execCommand('createLink', false, url);
                     } else if (command === 'embedContent') {
-                        // Save selection for embed, as it's a multi-step process
                         const selection = window.getSelection();
                         if (selection.rangeCount > 0) savedEditorSelection = selection.getRangeAt(0);
                         openEmbedModal();
                     } else {
-                        // Direct command execution (works for colors now!)
                         document.execCommand(command, false, value);
                     }
                 }
@@ -1120,7 +1113,9 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     dropdown.classList.remove('open');
                 }
                 
-                announcementContentEditor.focus();
+                if(!button.classList.contains('color-swatch')) {
+                    announcementContentEditor.focus();
+                }
                 updateToolbarState();
             });
 
