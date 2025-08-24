@@ -433,7 +433,13 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
 }
 .toolbar-button:hover, .toolbar-dropdown-toggle:hover { background: var(--light); color: var(--dark); transform: scale(1.1); }
 .toolbar-button.active { background: var(--primary-light); color: var(--primary-dark); }
-
+/* --- NEW: Color Indicator Underline --- */
+.color-indicator {
+    position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+    width: 16px; height: 3px; border-radius: 2px;
+    background-color: var(--dark); /* Default color */
+    transition: background-color var(--transition-fast);
+}
 /* Toolbar Dropdown */
 .toolbar-dropdown { position: relative; }
 .toolbar-dropdown-toggle { width: auto; padding: 0 var(--space-sm); font-size: var(--text-sm); font-weight: 500; }
@@ -454,6 +460,17 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
 #format-block-menu .toolbar-dropdown-item[data-value="h3"] { font-size: var(--text-lg); font-weight: 600; }
 #format-block-menu .toolbar-dropdown-item[data-value="h4"] { font-size: var(--text-base); font-weight: 600; }
 #format-block-menu .toolbar-dropdown-item[data-value="blockquote"] { border-left: 3px solid var(--primary); padding-left: var(--space-sm); font-style: italic; }
+/* --- NEW: Color Picker Styles --- */
+.color-picker-menu {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-xs); padding: var(--space-sm);
+    min-width: auto;
+}
+.color-swatch {
+    width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+    border: 1px solid rgba(0,0,0,0.1); transition: transform var(--transition-fast);
+}
+.color-swatch:hover { transform: scale(1.15); box-shadow: var(--shadow-sm); }
+.color-swatch.active { border: 2px solid var(--primary); }
 
 .custom-editor-area {
     flex-grow: 1; padding: 0; outline: none; line-height: 1.7; color: var(--dark); font-size: 16px; min-height: 300px;
@@ -474,6 +491,7 @@ body.dark-mode .custom-editor-area h1, body.dark-mode .custom-editor-area h2, bo
 body.dark-mode .toolbar-dropdown-menu { background: var(--dark-lighter); border-color: var(--dark-light); }
 body.dark-mode .toolbar-dropdown-item { color: var(--dark-medium); }
 body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray); }
+body.dark-mode .color-indicator { background-color: var(--dark-medium); }
 
 /* --- END EDITOR --- */
 
@@ -842,6 +860,27 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                         <button class="toolbar-button" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
                         <button class="toolbar-button" data-command="strikeThrough" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
                     </div>
+                     <!-- NEW: Color Pickers Group -->
+                    <div class="toolbar-group">
+                        <div class="toolbar-dropdown" id="text-color-dropdown">
+                            <button class="toolbar-dropdown-toggle" id="text-color-toggle" title="Text Color">
+                                <i class="fas fa-font"></i>
+                                <div class="color-indicator" id="text-color-indicator"></div>
+                            </button>
+                            <div class="toolbar-dropdown-menu color-picker-menu" id="text-color-menu">
+                                <!-- Color swatches will be populated by JS -->
+                            </div>
+                        </div>
+                        <div class="toolbar-dropdown" id="highlight-color-dropdown">
+                            <button class="toolbar-dropdown-toggle" id="highlight-color-toggle" title="Highlight Color">
+                                <i class="fas fa-highlighter"></i>
+                                <div class="color-indicator" id="highlight-color-indicator" style="background-color: #FFFF00;"></div>
+                            </button>
+                            <div class="toolbar-dropdown-menu color-picker-menu" id="highlight-color-menu">
+                                <!-- Color swatches will be populated by JS -->
+                            </div>
+                        </div>
+                    </div>
                     <div class="toolbar-group">
                         <button class="toolbar-button" data-command="justifyLeft" title="Align Left"><i class="fas fa-align-left"></i></button>
                         <button class="toolbar-button" data-command="justifyCenter" title="Align Center"><i class="fas fa-align-center"></i></button>
@@ -1050,6 +1089,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const editor = document.getElementById('announcement-content');
 
             populateFontDropdown();
+            // NEW: Populate color pickers
+            populateColorPickers();
             
             // The single most important fix: prevent mousedown on dropdowns from stealing editor focus.
             const preventFocusSteal = (e) => e.preventDefault();
@@ -1059,7 +1100,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
             // Single, robust click handler for the entire toolbar.
             toolbar.addEventListener('click', e => {
-                const button = e.target.closest('.toolbar-button, .toolbar-dropdown-toggle, .toolbar-dropdown-item');
+                const button = e.target.closest('.toolbar-button, .toolbar-dropdown-toggle, .toolbar-dropdown-item, .color-swatch');
                 if (!button) return;
 
                 const dropdown = button.closest('.toolbar-dropdown');
@@ -1089,7 +1130,14 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     } else if (command === 'embedContent') {
                         openEmbedModal();
                     } else {
-                        document.execCommand(command, false, value);
+                        // NEW: Use 'styleWithCSS' for highlights to use background-color instead of <font> tags
+                        if (command === 'hiliteColor') {
+                             document.execCommand('styleWithCSS', false, true);
+                             document.execCommand(command, false, value);
+                             document.execCommand('styleWithCSS', false, false);
+                        } else {
+                            document.execCommand(command, false, value);
+                        }
                     }
                 }
                 
@@ -1098,6 +1146,13 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                        const toggle = dropdown.querySelector('.toolbar-dropdown-toggle');
                        if (toggle) {
                            toggle.innerHTML = `${button.textContent} <i class="fas fa-chevron-down"></i>`;
+                       }
+                    }
+                     // NEW: Update color indicators when a color is picked
+                    if (button.classList.contains('color-swatch')) {
+                       const indicator = dropdown.querySelector('.color-indicator');
+                       if (indicator) {
+                           indicator.style.backgroundColor = value;
                        }
                     }
                     dropdown.classList.remove('open');
@@ -1135,6 +1190,29 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 `<button class="toolbar-dropdown-item" data-command="fontName" data-value="${value}" style="font-family: ${value};">${name}</button>`
             ).join('');
         }
+        
+        // NEW: Function to populate color pickers
+        function populateColorPickers() {
+            const colors = [
+                '#000000', '#444444', '#666666', '#999999', '#CCCCCC', '#FFFFFF',
+                '#FF0000', '#FF9900', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF',
+                '#9900FF', '#FF00FF', '#F44E3B', '#D33115', '#9F0500', '#E27300'
+            ];
+            const highlightColors = [
+                '#FFFF00', '#90EE90', '#ADD8E6', '#FFB6C1', '#FFA07A', '#FFFFFF'
+            ];
+
+            const textColorMenu = document.getElementById('text-color-menu');
+            const highlightColorMenu = document.getElementById('highlight-color-menu');
+
+            textColorMenu.innerHTML = colors.map(color => 
+                `<button class="color-swatch" data-command="foreColor" data-value="${color}" style="background-color: ${color};"></button>`
+            ).join('');
+
+            highlightColorMenu.innerHTML = highlightColors.map(color => 
+                `<button class="color-swatch" data-command="hiliteColor" data-value="${color}" style="background-color: ${color};"></button>`
+            ).join('');
+        }
 
         function updateToolbarState() {
             const commands = ['bold', 'italic', 'underline', 'strikeThrough', 'justifyLeft', 'justifyCenter', 'justifyRight', 'insertUnorderedList', 'insertOrderedList'];
@@ -1144,6 +1222,19 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     button.classList.toggle('active', document.queryCommandState(command));
                 }
             });
+
+            // NEW: Update color indicators based on selection
+            const textColor = document.queryCommandValue('foreColor');
+            const highlightColor = document.queryCommandValue('hiliteColor');
+            
+            document.getElementById('text-color-indicator').style.backgroundColor = textColor || 'var(--dark)';
+            // For highlight, we need to handle browsers returning rgb()
+            const highlightIndicator = document.getElementById('highlight-color-indicator');
+            try {
+                 highlightIndicator.style.backgroundColor = new Option().style.color = highlightColor;
+            } catch(e) {
+                 highlightIndicator.style.backgroundColor = '#FFFF00'; // fallback
+            }
         }
         
         function openEmbedModal() { document.getElementById('embed-url-input').value = ''; embedModal.style.display = 'flex'; }
@@ -1572,3 +1663,4 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
     </script>
 </body>
 </html>
+```
