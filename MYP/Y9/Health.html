@@ -130,7 +130,7 @@ body.dark-mode .expanded-post-controls {
     background-color: var(--dark-lighter);
 }
 
-/* --- NEW: 'Google Docs' Style Dark Mode Content --- */
+/* --- 'Google Docs' Style Dark Mode Content --- */
 body.dark-mode .post-card.expanded .post-details {
     background-color: #FFFFFF; /* Keep content background white */
     color: var(--dark);      /* Reset text color to dark for readability */
@@ -150,7 +150,7 @@ body.dark-mode .post-card.expanded .post-details h3,
 body.dark-mode .post-card.expanded .post-details h4 {
     color: var(--dark);
 }
-/* --- END NEW --- */
+/* --- END --- */
 
 
 body.dark-mode .sidebar-link { color: var(--dark-medium); }
@@ -543,7 +543,10 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
     display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-md);
 }
 .reminder-card {
-    background: var(--lighter); border-left: 4px solid var(--primary); padding: var(--space-md);
+    background: var(--lighter);
+    /* --- CHANGE: Thicker border --- */
+    border-left: 5px solid var(--primary);
+    padding: var(--space-md);
     border-radius: var(--radius-md); position: relative; transition: all var(--transition-normal);
     box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
 }
@@ -1060,12 +1063,17 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         });
         
-        // --- FIXED Custom Editor Logic ---
+        // --- REBUILT & FIXED Custom Editor Logic ---
         function setupCustomEditor() {
             const toolbar = document.getElementById('custom-toolbar');
             
             populateFontDropdown();
             populateColorPickers();
+
+            // --- THE FIX: Prevent focus loss on mousedown for color pickers ---
+            const preventFocusLoss = (e) => e.preventDefault();
+            document.getElementById('font-color-menu').addEventListener('mousedown', preventFocusLoss);
+            document.getElementById('highlight-color-menu').addEventListener('mousedown', preventFocusLoss);
 
             toolbar.addEventListener('click', e => {
                 const button = e.target.closest('.toolbar-button, .toolbar-dropdown-toggle, .toolbar-dropdown-item, .color-swatch');
@@ -1073,48 +1081,38 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
                 const dropdown = button.closest('.toolbar-dropdown');
                 
-                // Handle opening/closing dropdowns and saving selection for color pickers
+                // Handle opening/closing dropdowns
                 if (button.classList.contains('toolbar-dropdown-toggle')) {
                     const wasOpen = dropdown.classList.contains('open');
                     document.querySelectorAll('.toolbar-dropdown.open').forEach(d => d.classList.remove('open'));
-                    if (!wasOpen) {
-                        dropdown.classList.add('open');
-                        // IMPORTANT: Save selection when opening a color dropdown
-                        if (dropdown.id === 'font-color-dropdown' || dropdown.id === 'highlight-color-dropdown') {
-                             const selection = window.getSelection();
-                             if (selection.rangeCount > 0) savedEditorSelection = selection.getRangeAt(0);
-                        }
-                    }
+                    if (!wasOpen) dropdown.classList.add('open');
                     e.stopPropagation();
                     return;
                 }
                 
+                // For all other buttons, prevent default browser action
                 e.preventDefault();
                 const command = button.dataset.command;
                 const value = button.dataset.value || null;
-
-                // IMPORTANT: Restore selection before executing color commands
-                if ((command === 'foreColor' || command === 'backColor') && savedEditorSelection) {
-                    const selection = window.getSelection();
-                    selection.removeAllRanges();
-                    selection.addRange(savedEditorSelection);
-                }
                 
                 if (command) {
                     if (command === 'createLink') {
                         const url = prompt('Enter the URL:');
+                        // Restore focus before showing prompt
+                        announcementContentEditor.focus();
                         if (url) document.execCommand('createLink', false, url);
                     } else if (command === 'embedContent') {
+                        // Save selection for embed, as it's a multi-step process
                         const selection = window.getSelection();
                         if (selection.rangeCount > 0) savedEditorSelection = selection.getRangeAt(0);
                         openEmbedModal();
                     } else {
+                        // Direct command execution (works for colors now!)
                         document.execCommand(command, false, value);
                     }
                 }
 
                 if (dropdown) {
-                    // Update dropdown toggle text for font/format
                     if (button.classList.contains('toolbar-dropdown-item')) {
                        const toggle = dropdown.querySelector('.toolbar-dropdown-toggle');
                        if (toggle) toggle.innerHTML = `${button.textContent} <i class="fas fa-chevron-down"></i>`;
@@ -1294,7 +1292,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const postDate = new Date(announcement.order).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
             const pinButtonText = announcement.pinned ? 'Unpin' : 'Pin';
             const pinIcon = announcement.pinned ? `<div class="pin-icon"><i class="fas fa-thumbtack"></i></div>` : '';
-            const actionsHtml = isAdmin ? `<div class="post-actions"><button class="button small secondary" onclick="togglePin('${announcement.id}')">${pinButtonText}</button><button class="button small" onclick="editAnnouncement(event, '${announcement.id}')">Edit</button><button class="button small delete-button" onclick="deleteAnnouncement(event, '${announcement.id}')">Delete</button></div>` : '';
+            const actionsHtml = isAdmin ? `<div class="post-actions"><button class="button small secondary" onclick="togglePin(event, '${announcement.id}')">${pinButtonText}</button><button class="button small" onclick="editAnnouncement(event, '${announcement.id}')">Edit</button><button class="button small delete-button" onclick="deleteAnnouncement(event, '${announcement.id}')">Delete</button></div>` : '';
             const rawContent = announcement.content || '';
             const expandedContent = autoEmbed(rawContent);
             const tempDiv = document.createElement("div"); tempDiv.innerHTML = rawContent;
@@ -1427,7 +1425,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             announcementsRef.child(currentTabId).child(id).update({ title, content }).then(closeAnnouncementEditor);
         }
         
-        window.togglePin = (id) => {
+        window.togglePin = (event, id) => {
+            event.stopPropagation();
             const announcement = currentTabAnnouncements.find(a => a.id === id);
             if (!announcement) return;
             announcementsRef.child(currentTabId).child(id).update({ pinned: !announcement.pinned });
