@@ -123,10 +123,35 @@ body.dark-mode .modal-content {
     border-color: var(--dark-light);
 }
 
-body.dark-mode .post-card.expanded,
+body.dark-mode .post-card.expanded {
+    background-color: var(--dark-dark-gray); /* Dark backdrop */
+}
 body.dark-mode .expanded-post-controls {
     background-color: var(--dark-lighter);
 }
+
+/* --- NEW: 'Google Docs' Style Dark Mode Content --- */
+body.dark-mode .post-card.expanded .post-details {
+    background-color: #FFFFFF; /* Keep content background white */
+    color: var(--dark);      /* Reset text color to dark for readability */
+    padding: var(--space-xl);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    max-width: 900px; /* Optional: constrain width like a doc */
+    margin: var(--space-lg) auto;
+}
+body.dark-mode .post-card.expanded .post-details p,
+body.dark-mode .post-card.expanded .post-details li {
+    color: var(--dark);
+}
+body.dark-mode .post-card.expanded .post-details h1,
+body.dark-mode .post-card.expanded .post-details h2,
+body.dark-mode .post-card.expanded .post-details h3,
+body.dark-mode .post-card.expanded .post-details h4 {
+    color: var(--dark);
+}
+/* --- END NEW --- */
+
 
 body.dark-mode .sidebar-link { color: var(--dark-medium); }
 body.dark-mode .sidebar-link:hover { color: white; background-color: var(--dark-light); }
@@ -496,7 +521,7 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
 .post-card .collapsed-content { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; margin-bottom: 0; color: var(--medium); }
 .post-card.expanded .collapsed-content { display: none; }
 .post-card .post-details { display: none; margin-top: var(--space-lg); }
-.post-card.expanded .post-details { display: block; margin-top: var(--space-xl); font-size: var(--text-base); line-height: 1.6; color: var(--medium); }
+.post-card.expanded .post-details { display: block; margin-top: 0; font-size: var(--text-base); line-height: 1.6; color: var(--medium); }
 .post-card.expanded .post-details p { margin-bottom: var(--space-lg); }
 .post-card.expanded h3 { font-size: var(--text-2xl); color: var(--dark); margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 1px solid var(--light-gray); }
 .post-card:not(.expanded) .post-actions { display: none !important; }
@@ -809,11 +834,11 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                          <div class="toolbar-dropdown" id="format-block-dropdown">
                             <button class="toolbar-dropdown-toggle" id="format-block-toggle">Paragraph <i class="fas fa-chevron-down"></i></button>
                             <div class="toolbar-dropdown-menu" id="format-block-menu">
-                                <button class="toolbar-dropdown-item" data-value="p">Paragraph</button>
-                                <button class="toolbar-dropdown-item" data-value="h2">Heading 1</button>
-                                <button class="toolbar-dropdown-item" data-value="h3">Heading 2</button>
-                                <button class="toolbar-dropdown-item" data-value="h4">Heading 3</button>
-                                <button class="toolbar-dropdown-item" data-value="blockquote">Quote</button>
+                                <button class="toolbar-dropdown-item" data-command="formatBlock" data-value="p">Paragraph</button>
+                                <button class="toolbar-dropdown-item" data-command="formatBlock" data-value="h2">Heading 1</button>
+                                <button class="toolbar-dropdown-item" data-command="formatBlock" data-value="h3">Heading 2</button>
+                                <button class="toolbar-dropdown-item" data-command="formatBlock" data-value="h4">Heading 3</button>
+                                <button class="toolbar-dropdown-item" data-command="formatBlock" data-value="blockquote">Quote</button>
                             </div>
                         </div>
                     </div>
@@ -1047,18 +1072,34 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 if (!button) return;
 
                 const dropdown = button.closest('.toolbar-dropdown');
+                
+                // Handle opening/closing dropdowns and saving selection for color pickers
                 if (button.classList.contains('toolbar-dropdown-toggle')) {
                     const wasOpen = dropdown.classList.contains('open');
                     document.querySelectorAll('.toolbar-dropdown.open').forEach(d => d.classList.remove('open'));
-                    if (!wasOpen) dropdown.classList.add('open');
+                    if (!wasOpen) {
+                        dropdown.classList.add('open');
+                        // IMPORTANT: Save selection when opening a color dropdown
+                        if (dropdown.id === 'font-color-dropdown' || dropdown.id === 'highlight-color-dropdown') {
+                             const selection = window.getSelection();
+                             if (selection.rangeCount > 0) savedEditorSelection = selection.getRangeAt(0);
+                        }
+                    }
                     e.stopPropagation();
                     return;
                 }
                 
                 e.preventDefault();
                 const command = button.dataset.command;
-                const value = button.dataset.value;
+                const value = button.dataset.value || null;
 
+                // IMPORTANT: Restore selection before executing color commands
+                if ((command === 'foreColor' || command === 'backColor') && savedEditorSelection) {
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(savedEditorSelection);
+                }
+                
                 if (command) {
                     if (command === 'createLink') {
                         const url = prompt('Enter the URL:');
@@ -1068,14 +1109,15 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                         if (selection.rangeCount > 0) savedEditorSelection = selection.getRangeAt(0);
                         openEmbedModal();
                     } else {
-                        document.execCommand(command, false, value || null);
+                        document.execCommand(command, false, value);
                     }
                 }
 
                 if (dropdown) {
-                    if (button.closest('#font-name-dropdown') || button.closest('#format-block-dropdown')) {
-                        const toggle = dropdown.querySelector('.toolbar-dropdown-toggle');
-                        toggle.innerHTML = `${button.textContent} <i class="fas fa-chevron-down"></i>`;
+                    // Update dropdown toggle text for font/format
+                    if (button.classList.contains('toolbar-dropdown-item')) {
+                       const toggle = dropdown.querySelector('.toolbar-dropdown-toggle');
+                       if (toggle) toggle.innerHTML = `${button.textContent} <i class="fas fa-chevron-down"></i>`;
                     }
                     dropdown.classList.remove('open');
                 }
@@ -1385,7 +1427,17 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             announcementsRef.child(currentTabId).child(id).update({ title, content }).then(closeAnnouncementEditor);
         }
         
-        window.togglePin = (id) => { const announcement = currentTabAnnouncements.find(a => a.id === id); if (!announcement) return; announcementsRef.child(currentTabId).child(id).update({ pinned: !announcement.pinned }); };
+        window.togglePin = (id) => {
+            const announcement = currentTabAnnouncements.find(a => a.id === id);
+            if (!announcement) return;
+            announcementsRef.child(currentTabId).child(id).update({ pinned: !announcement.pinned });
+            
+            // --- FIX: Hide expanded controls after pinning/unpinning ---
+            if (expandedPost) {
+                collapsePost(expandedPost);
+            }
+        };
+
         function expandPost(postElement) {
             if (expandedPost && expandedPost !== postElement) { collapsePost(expandedPost); }
             postElement.classList.add('expanded'); expandedPost = postElement;
