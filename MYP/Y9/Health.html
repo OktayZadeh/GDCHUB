@@ -385,7 +385,7 @@ body.dark-mode .editor-header { background-color: var(--dark-lighter); border-bo
 body.dark-mode #announcement-title { color: white; }
 body.dark-mode #announcement-title::placeholder { color: var(--dark-light); }
 
-/* --- UI REWORK: High-End Custom Toolbar --- */
+/* --- FIXED & SIMPLIFIED Custom Toolbar --- */
 .custom-toolbar-container {
     position: sticky; top: 0; z-index: 5; background-color: var(--light);
     padding: var(--space-md) 0; margin-bottom: var(--space-md);
@@ -409,7 +409,7 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
 .toolbar-button:hover, .toolbar-dropdown-toggle:hover { background: var(--light); color: var(--dark); transform: scale(1.1); }
 .toolbar-button.active { background: var(--primary-light); color: var(--primary-dark); }
 
-/* REVAMPED Toolbar Dropdown */
+/* Toolbar Dropdown */
 .toolbar-dropdown { position: relative; }
 .toolbar-dropdown-toggle { width: auto; padding: 0 var(--space-sm); font-size: var(--text-sm); font-weight: 500; }
 .toolbar-dropdown-toggle .fa-chevron-down { margin-left: var(--space-xs); font-size: 10px; transition: transform var(--transition-fast); }
@@ -421,8 +421,8 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
 }
 .toolbar-dropdown.open .toolbar-dropdown-menu { display: block; }
 .toolbar-dropdown-item {
-    display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm) var(--space-md);
-    color: var(--dark); font-size: var(--text-sm); text-decoration: none; cursor: pointer; border-radius: var(--radius-sm);
+    display: block; width: 100%; padding: var(--space-sm) var(--space-md); color: var(--dark);
+    font-size: var(--text-sm); text-decoration: none; cursor: pointer; border: none; background: none; text-align: left;
 }
 .toolbar-dropdown-item:hover { background: var(--light); }
 #format-block-menu .toolbar-dropdown-item[data-value="h2"] { font-size: var(--text-xl); font-weight: 600; }
@@ -430,16 +430,13 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
 #format-block-menu .toolbar-dropdown-item[data-value="h4"] { font-size: var(--text-base); font-weight: 600; }
 #format-block-menu .toolbar-dropdown-item[data-value="blockquote"] { border-left: 3px solid var(--primary); padding-left: var(--space-sm); font-style: italic; }
 
-/* REVAMPED Color Picker Dropdown */
-.color-picker-grid {
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-xs); padding: var(--space-sm); min-width: auto;
-}
+/* Color Picker Dropdown */
+.color-picker-menu { padding: var(--space-sm); display: flex; flex-wrap: wrap; gap: var(--space-xs); max-width: 150px; }
 .color-swatch {
-    width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent;
-    transition: all var(--transition-fast); display: flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 1px solid var(--light-gray);
+    transition: all var(--transition-fast);
 }
 .color-swatch:hover { border-color: var(--primary); transform: scale(1.15); }
-.color-swatch.active { border-color: var(--primary-dark); }
 
 .custom-editor-area {
     flex-grow: 1; padding: 0; outline: none; line-height: 1.7; color: var(--dark); font-size: 16px; min-height: 300px;
@@ -461,7 +458,7 @@ body.dark-mode .toolbar-dropdown-menu { background: var(--dark-lighter); border-
 body.dark-mode .toolbar-dropdown-item { color: var(--dark-medium); }
 body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray); }
 
-/* --- END EDITOR UI REWORK --- */
+/* --- END EDITOR FIXES --- */
 
 /* Pinned Posts Styles */
 #pinned-posts-header { margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 2px solid var(--primary); color: var(--primary-dark); display: flex; align-items: center; gap: var(--space-sm); }
@@ -509,37 +506,32 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
 .post-actions .delete-button { background: var(--danger); }
 .post-actions .delete-button:hover { background: #E53E3E; }
 
-/* --- REMINDERS UI REDESIGN --- */
+/* --- REMINDERS UI - REVERTED & IMPROVED --- */
 .reminders-container {
     background: var(--lighter); border-radius: var(--radius-lg); padding: var(--space-lg);
     margin-bottom: var(--space-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
 }
 .reminders-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 1px solid var(--light-gray);
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);
 }
-body.dark-mode .reminders-header { border-bottom-color: var(--dark-light); }
-.reminders-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-lg); }
+.reminders-list {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-md);
+}
 .reminder-card {
-    background: var(--lighter); padding: var(--space-md); border-radius: var(--radius-lg); position: relative;
-    transition: all var(--transition-normal); box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
-    display: flex; gap: var(--space-md); align-items: flex-start;
+    background: var(--lighter); border-left: 4px solid var(--primary); padding: var(--space-md);
+    border-radius: var(--radius-md); position: relative; transition: all var(--transition-normal);
+    box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
 }
 .reminder-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
-.reminder-icon {
-    flex-shrink: 0; width: 40px; height: 40px; border-radius: var(--radius-md); display: flex;
-    align-items: center; justify-content: center; color: white; font-size: var(--text-lg);
-}
-.reminder-card.trip .reminder-icon { background-color: var(--success); }
-.reminder-card.test .reminder-icon { background-color: var(--danger); }
-.reminder-card.event .reminder-icon { background-color: var(--warning); }
-.reminder-card.deadline .reminder-icon { background-color: var(--secondary); }
-.reminder-content { flex-grow: 1; }
+.reminder-card.trip { border-left-color: var(--success); }
+.reminder-card.test { border-left-color: var(--danger); }
+.reminder-card.event { border-left-color: var(--warning); }
+.reminder-card.deadline { border-left-color: var(--secondary); }
 .reminder-title { font-weight: 600; margin-bottom: var(--space-xs); color: var(--dark); font-size: var(--text-base); }
 .reminder-date { font-size: var(--text-sm); color: var(--medium); margin-bottom: var(--space-sm); }
-.reminder-description { font-size: var(--text-sm); color: var(--medium); line-height: 1.5; margin-top: var(--space-xs); }
+.reminder-description { font-size: var(--text-sm); color: var(--medium); line-height: 1.5; }
 .reminder-actions {
-    position: absolute; top: var(--space-xs); right: var(--space-xs); display: flex; gap: var(--space-xs);
+    position: absolute; top: var(--space-sm); right: var(--space-sm); display: flex; gap: var(--space-xs);
     opacity: 0; pointer-events: none; transform: scale(0.9); transition: all var(--transition-fast);
 }
 .reminder-card:hover .reminder-actions { opacity: 1; pointer-events: auto; transform: scale(1); }
@@ -553,7 +545,7 @@ body.dark-mode .reminder-card { background-color: var(--dark-dark-gray); border-
 body.dark-mode .reminder-title { color: white; }
 body.dark-mode .reminder-action-btn { background: var(--dark-light); color: var(--dark-medium); }
 body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light); color: var(--primary); }
-/* --- END REMINDERS UI REDESIGN --- */
+/* --- END REMINDERS UI --- */
 
 /* Hide editing controls for non-admins */
 body.non-admin .add-tab-header-button, body.non-admin .button[onclick="openAnnouncementEditor()"],
@@ -720,7 +712,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
     <main class="main-content">
         <div class="reminders-container">
             <div class="reminders-header">
-                <h2>Upcoming</h2>
+                <h2>Upcoming Reminders</h2>
                 <button class="button" onclick="openReminderEditor()" id="add-reminder-btn">+ Add Reminder</button>
             </div>
             <div class="reminders-list" id="reminders-list">
@@ -817,11 +809,11 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                          <div class="toolbar-dropdown" id="format-block-dropdown">
                             <button class="toolbar-dropdown-toggle" id="format-block-toggle">Paragraph <i class="fas fa-chevron-down"></i></button>
                             <div class="toolbar-dropdown-menu" id="format-block-menu">
-                                <a href="#" class="toolbar-dropdown-item" data-value="p">Paragraph</a>
-                                <a href="#" class="toolbar-dropdown-item" data-value="h2">Heading 1</a>
-                                <a href="#" class="toolbar-dropdown-item" data-value="h3">Heading 2</a>
-                                <a href="#" class="toolbar-dropdown-item" data-value="h4">Heading 3</a>
-                                <a href="#" class="toolbar-dropdown-item" data-value="blockquote">Quote</a>
+                                <button class="toolbar-dropdown-item" data-value="p">Paragraph</button>
+                                <button class="toolbar-dropdown-item" data-value="h2">Heading 1</button>
+                                <button class="toolbar-dropdown-item" data-value="h3">Heading 2</button>
+                                <button class="toolbar-dropdown-item" data-value="h4">Heading 3</button>
+                                <button class="toolbar-dropdown-item" data-value="blockquote">Quote</button>
                             </div>
                         </div>
                     </div>
@@ -834,11 +826,11 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     <div class="toolbar-group">
                         <div class="toolbar-dropdown" id="font-color-dropdown">
                             <button class="toolbar-dropdown-toggle" title="Text Color"><i class="fas fa-font"></i></button>
-                            <div class="toolbar-dropdown-menu color-picker-grid" id="font-color-menu"></div>
+                            <div class="toolbar-dropdown-menu color-picker-menu" id="font-color-menu"></div>
                         </div>
                         <div class="toolbar-dropdown" id="highlight-color-dropdown">
                             <button class="toolbar-dropdown-toggle" title="Highlight Color"><i class="fas fa-highlighter"></i></button>
-                            <div class="toolbar-dropdown-menu color-picker-grid" id="highlight-color-menu"></div>
+                            <div class="toolbar-dropdown-menu color-picker-menu" id="highlight-color-menu"></div>
                         </div>
                     </div>
                     <div class="toolbar-group">
@@ -1043,7 +1035,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         });
         
-        // --- UI REWORK: High-End Custom Editor Logic ---
+        // --- FIXED Custom Editor Logic ---
         function setupCustomEditor() {
             const toolbar = document.getElementById('custom-toolbar');
             
@@ -1051,11 +1043,11 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             populateColorPickers();
 
             toolbar.addEventListener('click', e => {
-                const button = e.target.closest('.toolbar-button, .toolbar-dropdown-toggle');
+                const button = e.target.closest('.toolbar-button, .toolbar-dropdown-toggle, .toolbar-dropdown-item, .color-swatch');
                 if (!button) return;
 
                 const dropdown = button.closest('.toolbar-dropdown');
-                if (dropdown) {
+                if (button.classList.contains('toolbar-dropdown-toggle')) {
                     const wasOpen = dropdown.classList.contains('open');
                     document.querySelectorAll('.toolbar-dropdown.open').forEach(d => d.classList.remove('open'));
                     if (!wasOpen) dropdown.classList.add('open');
@@ -1065,27 +1057,32 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 
                 e.preventDefault();
                 const command = button.dataset.command;
-                
-                if (command === 'createLink') {
-                    const url = prompt('Enter the URL:');
-                    if (url) document.execCommand('createLink', false, url);
-                } else if (command === 'embedContent') {
-                    const selection = window.getSelection();
-                    if (selection.rangeCount > 0) savedEditorSelection = selection.getRangeAt(0);
-                    openEmbedModal();
-                } else {
-                    document.execCommand(command, false, null);
+                const value = button.dataset.value;
+
+                if (command) {
+                    if (command === 'createLink') {
+                        const url = prompt('Enter the URL:');
+                        if (url) document.execCommand('createLink', false, url);
+                    } else if (command === 'embedContent') {
+                        const selection = window.getSelection();
+                        if (selection.rangeCount > 0) savedEditorSelection = selection.getRangeAt(0);
+                        openEmbedModal();
+                    } else {
+                        document.execCommand(command, false, value || null);
+                    }
+                }
+
+                if (dropdown) {
+                    if (button.closest('#font-name-dropdown') || button.closest('#format-block-dropdown')) {
+                        const toggle = dropdown.querySelector('.toolbar-dropdown-toggle');
+                        toggle.innerHTML = `${button.textContent} <i class="fas fa-chevron-down"></i>`;
+                    }
+                    dropdown.classList.remove('open');
                 }
                 
                 announcementContentEditor.focus();
                 updateToolbarState();
             });
-
-            // Handle dropdown item clicks
-            document.getElementById('format-block-menu').addEventListener('click', e => handleDropdownSelection(e, 'formatBlock', '#format-block-toggle', true));
-            document.getElementById('font-name-menu').addEventListener('click', e => handleDropdownSelection(e, 'fontName', '#font-name-toggle', true));
-            document.getElementById('font-color-menu').addEventListener('click', e => handleDropdownSelection(e, 'foreColor', null, false));
-            document.getElementById('highlight-color-menu').addEventListener('click', e => handleDropdownSelection(e, 'backColor', null, false));
 
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.toolbar-dropdown')) {
@@ -1096,26 +1093,12 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             announcementContentEditor.addEventListener('keyup', updateToolbarState);
             announcementContentEditor.addEventListener('mouseup', updateToolbarState);
         }
-
-        function handleDropdownSelection(e, command, toggleSelector, updateText) {
-            const item = e.target.closest('[data-value]');
-            if(item) {
-                e.preventDefault();
-                const value = item.dataset.value;
-                document.execCommand(command, false, value);
-                if(updateText && toggleSelector) {
-                    document.querySelector(toggleSelector).innerHTML = `${item.textContent} <i class="fas fa-chevron-down"></i>`;
-                }
-                item.closest('.toolbar-dropdown').classList.remove('open');
-                announcementContentEditor.focus();
-            }
-        }
         
         function populateFontDropdown() {
             const fonts = { 'Inter': 'Inter, sans-serif', 'Roboto': 'Roboto, sans-serif', 'Lato': 'Lato, sans-serif', 'Montserrat': 'Montserrat, sans-serif', 'Open Sans': 'Open Sans, sans-serif', 'Georgia': 'Georgia, serif', 'Courier New': 'Courier New, monospace' };
             const menu = document.getElementById('font-name-menu');
             menu.innerHTML = Object.entries(fonts).map(([name, value]) => 
-                `<a href="#" class="toolbar-dropdown-item" data-value="${value}" style="font-family: ${value};">${name}</a>`
+                `<button class="toolbar-dropdown-item" data-command="fontName" data-value="${value}" style="font-family: ${value};">${name}</button>`
             ).join('');
         }
 
@@ -1123,9 +1106,12 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const colors = [ '#000000', '#4A5568', '#A0AEC0', '#FFFFFF', '#F56565', '#ED8936', '#48BB78', '#4299E1', '#38B2AC', '#9F7AEA' ];
             const fontColorMenu = document.getElementById('font-color-menu');
             const highlightColorMenu = document.getElementById('highlight-color-menu');
-            const swatchHTML = colors.map(color => `<div class="color-swatch" data-value="${color}" style="background-color: ${color}; border: 1px solid var(--light-gray);"></div>`).join('');
-            fontColorMenu.innerHTML = swatchHTML;
-            highlightColorMenu.innerHTML = swatchHTML;
+            
+            const fontSwatchHTML = colors.map(color => `<div class="color-swatch" data-command="foreColor" data-value="${color}" style="background-color: ${color};"></div>`).join('');
+            const highlightSwatchHTML = colors.map(color => `<div class="color-swatch" data-command="backColor" data-value="${color}" style="background-color: ${color};"></div>`).join('');
+
+            fontColorMenu.innerHTML = fontSwatchHTML;
+            highlightColorMenu.innerHTML = highlightSwatchHTML;
         }
         
         function updateToolbarState() {
@@ -1460,22 +1446,16 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         }
         
-        // --- UPDATED RENDER REMINDERS ---
         function renderReminders() {
-            const reminderIcons = { trip: 'fa-plane', test: 'fa-pencil-alt', event: 'fa-calendar-star', deadline: 'fa-clipboard-check' };
             remindersList.innerHTML = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date)).map(rem => {
                 if (!rem || !rem.id) return '';
-                const iconClass = reminderIcons[rem.type] || 'fa-bell';
                 const actionsHtml = isAdmin ? `<div class="reminder-actions"><button class="reminder-action-btn" onclick="editReminder(event, '${rem.id}')"><i class="fas fa-pencil-alt"></i></button><button class="reminder-action-btn" onclick="deleteReminder(event, '${rem.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
                 return `
                 <div class="reminder-card ${rem.type || 'trip'}" data-id="${rem.id}">
-                    <div class="reminder-icon"><i class="fas ${iconClass}"></i></div>
-                    <div class="reminder-content">
-                        <div class="reminder-title">${rem.title}</div>
-                        <div class="reminder-date">${formatDate(rem.date)}</div>
-                        ${rem.description ? `<div class="reminder-description">${rem.description}</div>` : ''}
-                    </div>
                     ${actionsHtml}
+                    <div class="reminder-title">${rem.title}</div>
+                    <div class="reminder-date">${formatDate(rem.date)}</div>
+                    ${rem.description ? `<div class="reminder-description">${rem.description}</div>` : ''}
                 </div>`;
             }).join('');
         }
