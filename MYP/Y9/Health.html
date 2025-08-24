@@ -410,7 +410,7 @@ body.dark-mode .editor-header { background-color: var(--dark-lighter); border-bo
 body.dark-mode #announcement-title { color: white; }
 body.dark-mode #announcement-title::placeholder { color: var(--dark-light); }
 
-/* --- FIXED & SIMPLIFIED Custom Toolbar --- */
+/* --- REFINED: Custom Toolbar --- */
 .custom-toolbar-container {
     position: sticky; top: 0; z-index: 5; background-color: var(--light);
     padding: var(--space-md) 0; margin-bottom: var(--space-md);
@@ -429,7 +429,7 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
 .toolbar-button, .toolbar-dropdown-toggle {
     background: transparent; border: none; width: 34px; height: 34px; border-radius: var(--radius-md); color: var(--medium);
     cursor: pointer; font-size: 15px; transition: all var(--transition-fast); display: inline-flex;
-    align-items: center; justify-content: center;
+    align-items: center; justify-content: center; position: relative;
 }
 .toolbar-button:hover, .toolbar-dropdown-toggle:hover { background: var(--light); color: var(--dark); transform: scale(1.1); }
 .toolbar-button.active { background: var(--primary-light); color: var(--primary-dark); }
@@ -455,13 +455,28 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
 #format-block-menu .toolbar-dropdown-item[data-value="h4"] { font-size: var(--text-base); font-weight: 600; }
 #format-block-menu .toolbar-dropdown-item[data-value="blockquote"] { border-left: 3px solid var(--primary); padding-left: var(--space-sm); font-style: italic; }
 
-/* Color Picker Dropdown */
-.color-picker-menu { padding: var(--space-sm); display: flex; flex-wrap: wrap; gap: var(--space-xs); max-width: 150px; }
-.color-swatch {
-    width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 1px solid var(--light-gray);
-    transition: all var(--transition-fast);
+/* REFINED: Color Picker Dropdown */
+.color-preview {
+    position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%);
+    width: 60%; height: 3px; border-radius: var(--radius-full);
+    background-color: var(--dark); transition: all var(--transition-fast);
 }
-.color-swatch:hover { border-color: var(--primary); transform: scale(1.15); }
+.toolbar-dropdown-toggle:hover .color-preview { width: 80%; }
+.color-picker-menu {
+    padding: var(--space-sm); display: grid; grid-template-columns: repeat(6, 1fr);
+    gap: var(--space-xs); max-width: 180px;
+}
+.color-swatch {
+    width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+    border: 2px solid transparent; transition: all var(--transition-fast);
+    display: flex; align-items: center; justify-content: center;
+}
+.color-swatch:hover { transform: scale(1.15); border-color: var(--primary-light); }
+.color-swatch.selected { border-color: var(--primary); }
+.color-swatch.reset {
+    background-color: var(--light);
+    background-image: linear-gradient(135deg, transparent 48%, var(--danger) 48%, var(--danger) 52%, transparent 52%);
+}
 
 .custom-editor-area {
     flex-grow: 1; padding: 0; outline: none; line-height: 1.7; color: var(--dark); font-size: 16px; min-height: 300px;
@@ -482,6 +497,9 @@ body.dark-mode .custom-editor-area h1, body.dark-mode .custom-editor-area h2, bo
 body.dark-mode .toolbar-dropdown-menu { background: var(--dark-lighter); border-color: var(--dark-light); }
 body.dark-mode .toolbar-dropdown-item { color: var(--dark-medium); }
 body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray); }
+body.dark-mode .color-preview { background-color: var(--dark-medium); }
+body.dark-mode .color-swatch.reset { background-color: var(--dark-light-gray); }
+
 
 /* --- END EDITOR FIXES --- */
 
@@ -853,11 +871,17 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     </div>
                     <div class="toolbar-group">
                         <div class="toolbar-dropdown" id="font-color-dropdown">
-                            <button class="toolbar-dropdown-toggle" title="Text Color"><i class="fas fa-font"></i></button>
+                            <button class="toolbar-dropdown-toggle" title="Text Color">
+                                <i class="fas fa-font"></i>
+                                <div class="color-preview" id="font-color-preview" style="background-color: #1A202C;"></div>
+                            </button>
                             <div class="toolbar-dropdown-menu color-picker-menu" id="font-color-menu"></div>
                         </div>
                         <div class="toolbar-dropdown" id="highlight-color-dropdown">
-                            <button class="toolbar-dropdown-toggle" title="Highlight Color"><i class="fas fa-highlighter"></i></button>
+                            <button class="toolbar-dropdown-toggle" title="Highlight Color">
+                                <i class="fas fa-highlighter"></i>
+                                <div class="color-preview" id="highlight-color-preview" style="background-color: #FFFFFF;"></div>
+                            </button>
                             <div class="toolbar-dropdown-menu color-picker-menu" id="highlight-color-menu"></div>
                         </div>
                     </div>
@@ -1063,7 +1087,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         });
         
-        // --- NEW/FIXED: Custom Editor Logic ---
+        // --- REFINED: Custom Editor Logic ---
         function setupCustomEditor() {
             const toolbar = document.getElementById('custom-toolbar');
             const editor = document.getElementById('announcement-content');
@@ -1071,12 +1095,12 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             populateFontDropdown();
             populateColorPickers();
 
-            // The key to fixing color pickers: prevent the mousedown event from stealing focus from the editor.
+            // Prevent mousedown on dropdowns from stealing focus from the editor
             const preventFocusSteal = (e) => e.preventDefault();
-            document.getElementById('font-color-menu').addEventListener('mousedown', preventFocusSteal);
-            document.getElementById('highlight-color-menu').addEventListener('mousedown', preventFocusSteal);
+            document.querySelectorAll('.toolbar-dropdown-menu').forEach(menu => {
+                menu.addEventListener('mousedown', preventFocusSteal);
+            });
 
-            // A single, robust click handler for the entire toolbar.
             toolbar.addEventListener('click', e => {
                 const button = e.target.closest('.toolbar-button, .toolbar-dropdown-toggle, .toolbar-dropdown-item, .color-swatch');
                 if (!button) return;
@@ -1086,35 +1110,33 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 // Handle dropdown toggling
                 if (button.classList.contains('toolbar-dropdown-toggle')) {
                     const wasOpen = dropdown.classList.contains('open');
-                    // Close all other dropdowns first
                     document.querySelectorAll('.toolbar-dropdown.open').forEach(d => d.classList.remove('open'));
                     if (!wasOpen) dropdown.classList.add('open');
-                    return; // Stop further execution
+                    return;
+                }
+                
+                editor.focus(); // Restore focus to the editor
+                if (savedEditorSelection) {
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(savedEditorSelection);
                 }
 
-                // Handle command execution
                 const command = button.dataset.command;
                 const value = button.dataset.value || null;
 
                 if (command) {
-                    // Restore focus to the editor before executing a command.
-                    // This is crucial for commands that rely on a selection.
-                    editor.focus();
-
                     if (command === 'createLink') {
                         const url = prompt('Enter the URL:');
                         if (url) document.execCommand('createLink', false, url);
                     } else if (command === 'embedContent') {
-                        const selection = window.getSelection();
-                        if (selection.rangeCount > 0) savedEditorSelection = selection.getRangeAt(0);
                         openEmbedModal();
                     } else {
-                        // This handles all other commands, including 'foreColor' and 'backColor'.
                         document.execCommand(command, false, value);
                     }
                 }
-
-                // If a button inside a dropdown was clicked, update the toggle's text and close it.
+                
+                // Handle UI updates for dropdown items
                 if (dropdown) {
                     if (button.classList.contains('toolbar-dropdown-item')) {
                        const toggle = dropdown.querySelector('.toolbar-dropdown-toggle');
@@ -1122,23 +1144,41 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                            toggle.innerHTML = `${button.textContent} <i class="fas fa-chevron-down"></i>`;
                        }
                     }
+                    if (button.classList.contains('color-swatch')) {
+                        const preview = dropdown.querySelector('.color-preview');
+                        if (preview) {
+                             preview.style.backgroundColor = value === 'transparent' || value === 'initial' ? 'var(--medium)' : value;
+                        }
+                        dropdown.querySelectorAll('.color-swatch.selected').forEach(s => s.classList.remove('selected'));
+                        button.classList.add('selected');
+                    }
                     dropdown.classList.remove('open');
                 }
                 
                 updateToolbarState();
             });
 
-            // Close dropdowns if clicking outside the toolbar
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.toolbar-dropdown')) {
                     document.querySelectorAll('.toolbar-dropdown.open').forEach(d => d.classList.remove('open'));
                 }
             });
             
-            // Update the toolbar's active state when the selection changes
+            const saveSelection = () => {
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                   const range = selection.getRangeAt(0);
+                   // Ensure the selection is within the editor before saving
+                   if (editor.contains(range.commonAncestorContainer)) {
+                       savedEditorSelection = range;
+                   }
+                }
+            };
+
             editor.addEventListener('keyup', updateToolbarState);
-            editor.addEventListener('mouseup', updateToolbarState);
+            editor.addEventListener('mouseup', () => { saveSelection(); updateToolbarState(); });
             editor.addEventListener('focus', updateToolbarState);
+            editor.addEventListener('blur', saveSelection); // Save selection when editor loses focus
         }
         
         function populateFontDropdown() {
@@ -1150,18 +1190,29 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         }
 
         function populateColorPickers() {
-            const colors = [ '#000000', '#4A5568', '#A0AEC0', '#FFFFFF', '#F56565', '#ED8936', '#48BB78', '#4299E1', '#38B2AC', '#9F7AEA' ];
+            const colors = [
+                '#000000', '#4A5568', '#718096', '#E53E3E', '#ED8936', '#D69E2E',
+                '#48BB78', '#38B2AC', '#4299E1', '#667EEA', '#9F7AEA', '#ED64A6',
+                '#FFFFFF', '#E2E8F0', '#CBD5E0', '#F56565', '#F6AD55', '#F6E05E',
+                '#68D391', '#4FD1C5', '#63B3ED', '#7F9CF5', '#B794F4', '#F687B3'
+            ];
             const fontColorMenu = document.getElementById('font-color-menu');
             const highlightColorMenu = document.getElementById('highlight-color-menu');
             
-            const fontSwatchHTML = colors.map(color => `<div class="color-swatch" data-command="foreColor" data-value="${color}" style="background-color: ${color};"></div>`).join('');
-            const highlightSwatchHTML = colors.map(color => `<div class="color-swatch" data-command="backColor" data-value="${color}" style="background-color: ${color};"></div>`).join('');
+            const fontSwatchHTML = `<div class="color-swatch reset" data-command="foreColor" data-value="initial" title="Default Color"></div>` +
+                colors.map(color => `<div class="color-swatch" data-command="foreColor" data-value="${color}" style="background-color: ${color};"></div>`).join('');
+            
+            const highlightSwatchHTML = `<div class="color-swatch reset" data-command="backColor" data-value="transparent" title="No Highlight"></div>` +
+                colors.map(color => `<div class="color-swatch" data-command="backColor" data-value="${color}" style="background-color: ${color};"></div>`).join('');
 
             fontColorMenu.innerHTML = fontSwatchHTML;
             highlightColorMenu.innerHTML = highlightSwatchHTML;
         }
         
         function updateToolbarState() {
+            // This function is kept simple because complex state tracking like current color
+            // is difficult and unreliable with execCommand. The visual feedback from the color
+            // preview on the button is often sufficient.
             const commands = ['bold', 'italic', 'underline', 'strikeThrough', 'justifyLeft', 'justifyCenter', 'justifyRight', 'insertUnorderedList', 'insertOrderedList'];
             commands.forEach(command => {
                 const button = document.querySelector(`.toolbar-button[data-command="${command}"]`);
@@ -1170,7 +1221,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
         }
-        // --- END OF NEW EDITOR LOGIC ---
+        // --- END OF REFINED EDITOR LOGIC ---
         
         function openEmbedModal() { document.getElementById('embed-url-input').value = ''; embedModal.style.display = 'flex'; }
         function closeEmbedModal() { embedModal.style.display = 'none'; }
@@ -1189,8 +1240,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 if (savedEditorSelection) { const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(savedEditorSelection); }
                 const embedHtml = `<div class="embed-container"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><p><br></p>`;
                 document.execCommand('insertHTML', false, embedHtml);
-                const selection = window.getSelection();
-                if (selection.rangeCount > 0) savedEditorSelection = selection.getRangeAt(0);
+                
                 urlInput.value = ''; 
                 const embedButton = document.getElementById('embed-action-button');
                 embedButton.textContent = 'Embedded!';
@@ -1440,7 +1490,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             if (!announcement) return;
             announcementsRef.child(currentTabId).child(id).update({ pinned: !announcement.pinned });
             
-            // --- FIX: Hide expanded controls after pinning/unpinning ---
             if (expandedPost) {
                 collapsePost(expandedPost);
             }
