@@ -535,7 +535,7 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
 }
 .reminder-card {
     background: var(--lighter);
-    border-left: 8px solid var(--primary); /* MODIFICATION: Increased from 5px */
+    border-left: 12px solid var(--primary); /* MODIFICATION: Increased from 8px */
     padding: var(--space-md);
     border-radius: var(--radius-md); position: relative; transition: all var(--transition-normal);
     box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
@@ -584,7 +584,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
     position: absolute; top: var(--space-sm); left: var(--space-md); color: var(--medium); pointer-events: none;
     transition: all var(--transition-fast); font-size: var(--text-sm); background: var(--lighter); padding: 0 var(--space-xs); transform-origin: left center;
 }
-/* MODIFICATION: Added selectors for <select> to fix label overlap */
 .input-group input:focus + label, .input-group input:not(:placeholder-shown) + label,
 .input-group textarea:focus + label, .input-group textarea:not(:placeholder-shown) + label,
 .input-group select:focus + label, .input-group select + label {
@@ -649,7 +648,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
     display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3);
     border-radius: var(--radius-full); border-top-color: white; animation: spin 1s ease-in-out infinite; margin-right: var(--space-sm);
 }
-@keyframes spin { to { transform: rotate(30deg); } }
+@keyframes spin { to { transform: rotate(360deg); } }
 /* Undo Snackbar Styles - IMPROVED */
 .snackbar {
     visibility: hidden; min-width: 300px; background-color: var(--dark-gray); color: var(--lighter); border-radius: var(--radius-lg);
