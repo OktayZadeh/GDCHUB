@@ -333,8 +333,8 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 .tab-action-btn i { font-size: 12px; }
 .tab-action-btn:hover { color: var(--primary); background: var(--primary-light); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
 .tab-action-btn.delete:hover { color: var(--danger); background: rgba(245, 101, 101, 0.1); }
-/* No longer need grab cursor for sidebar items */
-/* #sidebar-menu.sortable-admin .sidebar-item { cursor: grab; } */
+/* Make sidebar items draggable for admin */
+.sidebar-menu.sortable-admin .sidebar-item { cursor: grab; }
 
 /* Main Content Styles */
 .main-content {
@@ -537,8 +537,8 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
 .reminders-list {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-md);
 }
-/* No longer need grab cursor for reminder cards */
-/* #reminders-list.sortable-admin .reminder-card { cursor: grab; } */
+/* Make reminder cards draggable for admin */
+.reminders-list.sortable-admin .reminder-card { cursor: grab; }
 .reminder-card {
     background: var(--lighter);
     border-left: 12px solid var(--primary);
@@ -575,20 +575,30 @@ body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light
 /* --- DRAG AND DROP REFINEMENT STYLES --- */
 
 /* GHOST: The placeholder style for where the item will drop */
-.post-card.sortable-ghost {
+.sortable-ghost {
     opacity: 0.4;
     background: var(--primary-light);
     border: 2px dashed var(--primary);
 }
+.sidebar-item.sortable-ghost {
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-xxs);
+}
+.reminder-card.sortable-ghost {
+    box-shadow: none;
+}
+.post-card.sortable-ghost {
+    box-shadow: none;
+}
 
 /* CHOSEN: The style for the original item in the list after it's been picked up */
-.post-card.sortable-chosen {
+.sortable-chosen {
     cursor: grabbing;
     background-color: var(--primary-light);
 }
 
 /* DRAG: The style for the element clone being dragged by the cursor */
-.post-card.sortable-drag {
+.sortable-drag {
     opacity: 1 !important; /* Ensure dragged item is fully visible */
     box-shadow: var(--shadow-xl) !important;
     transform: scale(1.03) rotate(2deg); /* Lift and tilt effect */
@@ -1274,9 +1284,10 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     pinnedPostsFeed.innerHTML = ""; unpinnedPostsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
                 }
             });
-            remindersRef.orderByValue().on('value', snapshot => { 
+            remindersRef.orderByChild('order').on('value', snapshot => { 
                 const reminderData = snapshot.val();
-                reminders = reminderData ? Object.keys(reminderData).map(key => ({ id: key, ...reminderData[key] })).sort((a,b) => new Date(a.date) - new Date(b.date)) : [];
+                reminders = reminderData ? Object.keys(reminderData).map(key => ({ id: key, ...reminderData[key] })) : [];
+                // No need to sort client-side as we are using orderByChild
                 renderReminders(); 
             });
         }
@@ -1330,7 +1341,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         }
         
-        // --- [START] DRAG-AND-DROP FOR POSTS ONLY ---
+        // --- [START] DRAG-AND-DROP INITIALIZATION ---
         function initializeDragAndDrop() {
             if (!isAdmin) return; 
 
@@ -1344,10 +1355,35 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 onEnd: () => document.body.classList.remove('is-dragging'),
             };
 
-            // Drag-and-drop is now ONLY enabled for pinned and unpinned announcement posts.
-            // Sidebar and Reminders are no longer sortable.
+            // 1. Sidebar Tabs
+            sidebarMenu.classList.add('sortable-admin');
+            new Sortable(sidebarMenu, {
+                ...masterSortableConfig,
+                filter: '.tab-actions, button, a',
+                onEnd: (evt) => {
+                    const updates = {};
+                    evt.target.querySelectorAll('.sidebar-item').forEach((item, index) => {
+                        updates[`${item.dataset.tabId}/order`] = index;
+                    });
+                    tabsRef.update(updates);
+                }
+            });
 
-            // 1. Pinned Announcements
+            // 2. Reminders
+            remindersList.classList.add('sortable-admin');
+            new Sortable(remindersList, {
+                ...masterSortableConfig,
+                filter: '.reminder-actions, button',
+                onEnd: (evt) => {
+                    const updates = {};
+                    evt.target.querySelectorAll('.reminder-card').forEach((card, index) => {
+                        updates[`${card.dataset.id}/order`] = index;
+                    });
+                    remindersRef.update(updates);
+                }
+            });
+
+            // 3. Pinned Announcements
             pinnedPostsFeed.classList.add('sortable-admin');
             new Sortable(pinnedPostsFeed, {
                 ...masterSortableConfig,
@@ -1362,7 +1398,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
 
-            // 2. Unpinned Announcements
+            // 4. Unpinned Announcements
             unpinnedPostsFeed.classList.add('sortable-admin');
             new Sortable(unpinnedPostsFeed, {
                 ...masterSortableConfig,
@@ -1377,7 +1413,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
         }
-        // --- [END] DRAG-AND-DROP FOR POSTS ONLY ---
+        // --- [END] DRAG-AND-DROP INITIALIZATION ---
         
         function setActiveTab(tabId) {
             currentTabId = tabId; const tab = tabs.find(t => t.id === tabId);
@@ -1557,6 +1593,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             if (id) {
                 remindersRef.child(id).update(reminder).then(closeReminderEditor);
             } else {
+                const currentMaxOrder = reminders.length > 0 ? Math.max(...reminders.map(r => r.order || 0)) + 1 : 0;
+                reminder.order = currentMaxOrder;
                 remindersRef.push(reminder).then(closeReminderEditor);
             }
         }
