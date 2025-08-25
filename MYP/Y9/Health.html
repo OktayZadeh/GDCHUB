@@ -971,7 +971,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
     </div>
 
 
-       <script>
+      <script>
         // AUTH CHECK
         (function() {
             const USER_INFO_KEY = "googleUserInfo";
@@ -1340,78 +1340,69 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         }
         
-        // --- [START] REFACTORED DRAG-AND-DROP INITIALIZATION ---
+        // --- [START] REFINED DRAG-AND-DROP INITIALIZATION ---
         function initializeDragAndDrop() {
             if (!isAdmin) return; 
 
-            // A consistent, shared configuration for all sortable instances.
-            // forceFallback is necessary for the custom dragClass styling to work reliably.
+            // This shared configuration is the key to consistent, smooth drag-and-drop.
             const sharedSortableConfig = {
                 animation: 150,
-                ghostClass: 'sortable-ghost',   // Style for the placeholder
-                chosenClass: 'sortable-chosen', // Style for the item being dragged
-                dragClass: 'sortable-drag',     // Style for the clone of the item being dragged
-                forceFallback: true,            // Ensures custom styles are applied
-                onStart: () => document.body.classList.add('is-dragging'),    // Add global cursor style
-                onEnd: () => document.body.classList.remove('is-dragging'), // Remove global cursor style
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                forceFallback: true,
+                // **THE FIX**: This option appends the dragged item to the `<body>`.
+                // This prevents it from being trapped by the parent's CSS (e.g., `overflow` or `position: fixed`),
+                // ensuring it moves smoothly with the cursor across the entire page.
+                fallbackOnBody: true,
+                onStart: () => document.body.classList.add('is-dragging'),
+                onEnd: () => document.body.classList.remove('is-dragging'),
             };
 
-            // 1. Sidebar Tabs - REFACTORED
+            // 1. Sidebar Tabs
             sidebarMenu.classList.add('sortable-admin');
             new Sortable(sidebarMenu, {
                 ...sharedSortableConfig,
-                // The filter is now more specific, targeting only the action buttons.
-                // This prevents the filter from blocking the drag on the main link element.
                 filter: '.tab-action-btn', 
                 onEnd: (evt) => {
                     const updates = {};
-                    // Loop through the DOM elements in their new order
                     evt.target.querySelectorAll('.sidebar-item').forEach((item, index) => {
-                        // Prepare a batched update for Firebase with the new order index.
                         updates[`${item.dataset.tabId}/order`] = index;
                     });
-                    // Send the single update request to Firebase.
                     tabsRef.update(updates);
                 }
             });
 
-            // 2. Reminders - REFACTORED
+            // 2. Reminders
             remindersList.classList.add('sortable-admin');
             new Sortable(remindersList, {
                 ...sharedSortableConfig,
-                // More specific filter for reminder action buttons.
                 filter: '.reminder-action-btn',
                 onEnd: (evt) => {
                     const updates = {};
-                    // Loop through the DOM elements in their new order
                     evt.target.querySelectorAll('.reminder-card').forEach((card, index) => {
-                        // Prepare a batched update for Firebase with the new order index.
                         updates[`${card.dataset.id}/order`] = index;
                     });
-                    // Send the single update request to Firebase.
                     remindersRef.update(updates);
                 }
             });
 
-            // 3. Pinned Announcements (Working reference implementation)
+            // 3. Pinned Announcements
             pinnedPostsFeed.classList.add('sortable-admin');
             new Sortable(pinnedPostsFeed, {
                 ...sharedSortableConfig,
-                // This filter works because it targets specific interactive elements inside the post.
                 filter: '.post-actions, button, a, iframe',
                 onEnd: (evt) => {
-                    // Suppress the re-render animation to avoid visual glitches.
                     suppressPostAnimation = true;
                     const updates = {};
                     evt.target.querySelectorAll('.post-card').forEach((card, index) => {
-                        // Pinned items are ordered sequentially from 0.
                         updates[`${currentTabId}/${card.dataset.id}/order`] = index;
                     });
                     announcementsRef.update(updates);
                 }
             });
 
-            // 4. Unpinned Announcements (Working reference implementation)
+            // 4. Unpinned Announcements
             unpinnedPostsFeed.classList.add('sortable-admin');
             new Sortable(unpinnedPostsFeed, {
                 ...sharedSortableConfig,
@@ -1419,8 +1410,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 onEnd: (evt) => {
                     suppressPostAnimation = true;
                     const updates = {};
-                    // Unpinned items are ordered by timestamp (descending).
-                    // We simulate this by using a decreasing number based on the current time.
                     Array.from(evt.target.querySelectorAll('.post-card')).forEach((card, index) => {
                         updates[`${currentTabId}/${card.dataset.id}/order`] = Date.now() - index;
                     });
