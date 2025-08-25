@@ -1072,7 +1072,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             setupDarkMode();
             setupProfileDropdown();
             setupCustomEditor();
-            initializeDragAndDrop(); // Centralized D&D initialization
+            initializeDragAndDrop();
             UndoManager.init();
             
             tabNameInput.addEventListener('keydown', (event) => {
@@ -1332,7 +1332,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         }
         
-        // --- UNIFIED & REFINED: DRAG-AND-DROP INITIALIZATION ---
+        // --- UNIFIED & FINAL: DRAG-AND-DROP INITIALIZATION ---
         function initializeDragAndDrop() {
             if (!isAdmin) return; 
 
@@ -1347,7 +1347,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 onEnd: () => body.classList.remove('is-dragging'),
             };
 
-            // 1. Sidebar Tabs Sorting (Consistent Implementation)
+            // 1. Sidebar Tabs Sorting (REPLICATED LOGIC)
             sidebarMenu.classList.add('sortable-admin');
             new Sortable(sidebarMenu, {
                 ...commonSortableOptions,
@@ -1362,7 +1362,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
 
-            // 2. Reminders Sorting (Consistent Implementation)
+            // 2. Reminders Sorting (REPLICATED LOGIC)
             remindersList.classList.add('sortable-admin');
             new Sortable(remindersList, {
                 ...commonSortableOptions,
@@ -1377,7 +1377,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
 
-            // 3. Pinned Announcements Sorting
+            // 3. Pinned Announcements Sorting (The "Perfect" Implementation)
             pinnedPostsFeed.classList.add('sortable-admin');
             new Sortable(pinnedPostsFeed, {
                 ...commonSortableOptions,
@@ -1402,8 +1402,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     body.classList.remove('is-dragging');
                     suppressPostAnimation = true;
                     const updates = {};
-                    const items = Array.from(evt.target.querySelectorAll('.post-card'));
-                    items.forEach((card, index) => {
+                    Array.from(evt.target.querySelectorAll('.post-card')).forEach((card, index) => {
                         updates[`${card.dataset.id}/order`] = Date.now() - index;
                     });
                     announcementsRef.child(currentTabId).update(updates);
@@ -1586,7 +1585,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             
             const isEditing = !!currentReminderBeingEdited;
             const existingReminder = isEditing ? reminders.find(r => r.id === id) : null;
-            const order = isEditing && existingReminder && typeof existingReminder.order === 'number' ? existingReminder.order : reminders.length;
+            const order = isEditing && typeof existingReminder.order === 'number' ? existingReminder.order : reminders.length;
             
             const reminder = { id, title, description, date, type, order };
             database.ref('reminders/' + id).set(reminder).then(closeReminderEditor);
