@@ -305,7 +305,12 @@ select {
 body.dark-mode .add-tab-header-button { color: var(--dark-medium); }
 body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light-gray); color: var(--primary); }
 .sidebar-menu { list-style: none; padding: var(--space-sm) 0; margin: 0; flex-grow: 1; overflow-y: auto; }
-.sidebar-item { position: relative; margin-bottom: var(--space-xxs); padding: 0 var(--space-sm); transition: transform var(--transition-fast), opacity var(--transition-fast); }
+.sidebar-item { 
+    position: relative; 
+    margin-bottom: var(--space-xxs); 
+    padding: 0 var(--space-sm); 
+    transition: transform var(--transition-fast), opacity var(--transition-fast); 
+}
 .sidebar-link {
     display: flex; align-items: center; color: var(--medium); text-decoration: none; padding: var(--space-sm) var(--space-md);
     transition: all var(--transition-fast); border-radius: var(--radius-md); font-size: var(--text-sm); font-weight: 500;
@@ -327,8 +332,13 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 .tab-action-btn:hover { color: var(--primary); background: var(--primary-light); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
 .tab-action-btn.delete:hover { color: var(--danger); background: rgba(245, 101, 101, 0.1); }
 .move-handle { cursor: move; margin-right: var(--space-sm); color: var(--medium); opacity: 0.5; touch-action: none; }
-.sidebar-placeholder { background: var(--primary-light); border: 2px dashed var(--primary); border-radius: var(--radius-md); margin: 0 var(--space-sm) var(--space-xxs); height: 46px; }
-.sidebar-item.dragging { opacity: 0.4; background-color: var(--primary-light); transform: scale(1.02); box-shadow: var(--shadow-lg); }
+.sidebar-item.dragging { 
+    opacity: 0.5; 
+    background-color: var(--primary-light); 
+    transform: scale(1.03) rotate(1deg); 
+    box-shadow: var(--shadow-lg); 
+}
+
 
 /* Main Content Styles */
 .main-content {
@@ -497,7 +507,6 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
 
 /* Pinned Posts Styles */
 #pinned-posts-header { margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 2px solid var(--primary); color: var(--primary-dark); display: flex; align-items: center; gap: var(--space-sm); }
-.post-placeholder { background: var(--primary-light); border-radius: var(--radius-lg); margin-bottom: var(--space-lg); min-height: 100px; border: 2px dashed var(--primary); }
 
 /* Post Styles */
 .post-card {
@@ -506,7 +515,11 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
     animation: fadeIn var(--transition-normal) forwards; opacity: 0; border: 1px solid var(--light-gray);
 }
 .post-card.pinned { border-left: 4px solid var(--primary); }
-.post-card.dragging { opacity: 0.4; transform: scale(1.02); box-shadow: var(--shadow-lg); }
+.post-card.dragging { 
+    opacity: 0.5; 
+    transform: scale(1.02) rotate(1deg);
+    box-shadow: var(--shadow-lg); 
+}
 .pin-icon {
     position: absolute; top: var(--space-lg); left: -10px; color: var(--primary); background-color: var(--lighter);
     border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
@@ -556,7 +569,8 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
     background: var(--lighter);
     border-left: 5px solid var(--primary);
     padding: var(--space-md);
-    border-radius: var(--radius-md); position: relative; transition: all var(--transition-normal);
+    border-radius: var(--radius-md); position: relative; 
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
     box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
     cursor: grab;
 }
@@ -583,8 +597,12 @@ body.dark-mode .reminder-card { background-color: var(--dark-dark-gray); border-
 body.dark-mode .reminder-title { color: white; }
 body.dark-mode .reminder-action-btn { background: var(--dark-light); color: var(--dark-medium); }
 body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light); color: var(--primary); }
-.reminder-card.dragging { opacity: 0.4; transform: scale(1.05); box-shadow: var(--shadow-lg); cursor: grabbing; }
-.reminder-placeholder { background: var(--primary-light); border: 2px dashed var(--primary); border-radius: var(--radius-md); grid-column: span 1; grid-row: span 1; }
+.reminder-card.dragging { 
+    opacity: 0.5; 
+    transform: scale(1.05) rotate(2deg); 
+    box-shadow: var(--shadow-lg); 
+    cursor: grabbing;
+}
 
 /* --- END REMINDERS UI --- */
 
@@ -1397,34 +1415,84 @@ body.non-admin .reminder-card { cursor: default; }
             });
         }
         
-        function setupSidebarDragAndDrop() {
-            let draggedItem = null, placeholder = null;
-            sidebarMenu.addEventListener('dragstart', e => {
-                draggedItem = e.target.closest('.sidebar-item'); if (!draggedItem) return;
-                e.dataTransfer.effectAllowed = 'move'; placeholder = document.createElement('li'); placeholder.className = 'sidebar-placeholder';
-                setTimeout(() => { if(draggedItem) draggedItem.classList.add('dragging'); }, 0);
-            });
-            sidebarMenu.addEventListener('dragover', e => {
-                e.preventDefault(); if (!draggedItem) return;
-                const overElement = e.target.closest('.sidebar-item');
-                if (overElement && overElement !== draggedItem) {
-                    const rect = overElement.getBoundingClientRect(); const isBefore = e.clientY < rect.top + rect.height / 2;
-                    if (isBefore) { overElement.parentNode.insertBefore(placeholder, overElement); } else { overElement.parentNode.insertBefore(placeholder, overElement.nextSibling); }
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('[draggable="true"]:not(.dragging)')];
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
                 }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function setupSidebarDragAndDrop() {
+            let draggedItem = null;
+            
+            sidebarMenu.addEventListener('dragstart', e => {
+                draggedItem = e.target.closest('.sidebar-item');
+                if (!draggedItem) return;
+                // Use a short timeout to allow the browser to create the drag ghost image
+                setTimeout(() => {
+                    if (draggedItem) draggedItem.classList.add('dragging');
+                }, 0);
             });
-            const endDrag = () => { if(draggedItem) draggedItem.classList.remove('dragging'); if(placeholder) placeholder.remove(); draggedItem = null; placeholder = null; }
+
+            sidebarMenu.addEventListener('dragover', e => {
+                e.preventDefault();
+                if (!draggedItem) return;
+                
+                // --- Auto-scroll logic ---
+                const sidebarRect = sidebar.getBoundingClientRect();
+                const scrollZone = 50; // pixels from the edge
+                if (e.clientY < sidebarRect.top + scrollZone) {
+                    sidebar.scrollTop -= 10;
+                } else if (e.clientY > sidebarRect.bottom - scrollZone) {
+                    sidebar.scrollTop += 10;
+                }
+
+                const afterElement = getDragAfterElement(sidebarMenu, e.clientY);
+                const allItems = [...sidebarMenu.querySelectorAll('.sidebar-item:not(.dragging)')];
+                let isAfter = false;
+                
+                allItems.forEach(item => {
+                    if (item === afterElement) isAfter = true;
+                    const itemHeight = draggedItem.offsetHeight + 8; // Adjust for margin
+                    item.style.transform = isAfter ? `translateY(${itemHeight}px)` : 'translateY(0)';
+                });
+            });
+
+            const endDrag = () => {
+                if (draggedItem) draggedItem.classList.remove('dragging');
+                sidebarMenu.querySelectorAll('.sidebar-item').forEach(item => item.style.transform = '');
+                draggedItem = null;
+            };
+
             sidebarMenu.addEventListener('dragend', endDrag);
+
             sidebarMenu.addEventListener('drop', e => {
-                e.preventDefault(); if (!placeholder || !placeholder.parentNode || !draggedItem) { endDrag(); return; }
-                placeholder.parentNode.insertBefore(draggedItem, placeholder);
-                const originalIndex = tabs.findIndex(t => t.id === draggedItem.dataset.tabId);
-                const [movedTab] = tabs.splice(originalIndex, 1);
-                const newIndex = Array.from(sidebarMenu.children).indexOf(draggedItem);
-                tabs.splice(newIndex, 0, movedTab);
-                tabs.forEach((tab, index) => { tab.order = index; });
-                saveTabs(); endDrag();
+                e.preventDefault();
+                if (!draggedItem) return;
+
+                const afterElement = getDragAfterElement(sidebarMenu, e.clientY);
+                if (afterElement == null) {
+                    sidebarMenu.appendChild(draggedItem);
+                } else {
+                    sidebarMenu.insertBefore(draggedItem, afterElement);
+                }
+
+                // Update data order
+                const orderedIds = [...sidebarMenu.querySelectorAll('.sidebar-item')].map(item => item.dataset.tabId);
+                tabs.sort((a, b) => orderedIds.indexOf(a.id) - orderedIds.indexOf(b.id));
+                tabs.forEach((tab, index) => tab.order = index);
+                
+                saveTabs();
+                endDrag();
             });
         }
+
 
         function setActiveTab(tabId) {
             currentTabId = tabId; const tab = tabs.find(t => t.id === tabId);
@@ -1546,32 +1614,72 @@ body.non-admin .reminder-card { cursor: default; }
         };
 
         function setupPostsDragAndDrop() {
-            let draggedPost = null, postPlaceholder = null, sourceContainer = null;
+            let draggedPost = null, sourceContainer = null;
+            
             classroomInfo.addEventListener('dragstart', e => {
-                draggedPost = e.target.closest('.post-card[draggable="true"]'); if (!draggedPost) return;
-                sourceContainer = draggedPost.parentElement; e.dataTransfer.effectAllowed = 'move';
-                postPlaceholder = document.createElement('div'); postPlaceholder.className = 'post-placeholder';
-                postPlaceholder.style.height = `${draggedPost.offsetHeight}px`;
-                setTimeout(() => { if (draggedPost) draggedPost.classList.add('dragging'); }, 0);
+                draggedPost = e.target.closest('.post-card[draggable="true"]'); 
+                if (!draggedPost) return;
+                sourceContainer = draggedPost.parentElement;
+                setTimeout(() => { if(draggedPost) draggedPost.classList.add('dragging'); }, 0);
             });
+            
             classroomInfo.addEventListener('dragover', e => {
+                e.preventDefault();
                 if (!draggedPost || !sourceContainer) return;
-                const currentContainer = e.target.closest('.posts-feed'); if (currentContainer !== sourceContainer) return;
-                e.preventDefault(); const overElement = e.target.closest('.post-card');
-                if (overElement && overElement !== draggedPost) {
-                    const rect = overElement.getBoundingClientRect(); const isBefore = e.clientY < rect.top + rect.height / 2;
-                    if (isBefore) { sourceContainer.insertBefore(postPlaceholder, overElement); } else { sourceContainer.insertBefore(postPlaceholder, overElement.nextSibling); }
-                } else if (!overElement && !sourceContainer.contains(postPlaceholder)) { sourceContainer.appendChild(postPlaceholder); }
+                const currentContainer = e.target.closest('.posts-feed');
+                if (currentContainer !== sourceContainer) return;
+
+                const afterElement = getDragAfterElement(sourceContainer, e.clientY);
+                const allItems = [...sourceContainer.querySelectorAll('.post-card:not(.dragging)')];
+                let isAfter = false;
+
+                allItems.forEach(item => {
+                    if (item === afterElement) isAfter = true;
+                    item.style.transition = 'transform 0.2s ease-out'; // Add transition dynamically
+                    const itemHeight = draggedPost.offsetHeight + 16; // Adjust for margin-bottom
+                    item.style.transform = isAfter ? `translateY(${itemHeight}px)` : 'translateY(0)';
+                });
             });
-            const endDrag = () => { if(draggedPost) draggedPost.classList.remove('dragging'); if(postPlaceholder) postPlaceholder.remove(); draggedPost = null; postPlaceholder = null; sourceContainer = null; };
+
+            const endDrag = () => {
+                if (draggedPost) draggedPost.classList.remove('dragging');
+                if (sourceContainer) {
+                    sourceContainer.querySelectorAll('.post-card').forEach(item => {
+                        item.style.transform = '';
+                        item.style.transition = '';
+                    });
+                }
+                draggedPost = null;
+                sourceContainer = null;
+            };
+
             classroomInfo.addEventListener('dragend', endDrag);
+
             classroomInfo.addEventListener('drop', e => {
-                e.preventDefault(); if (!postPlaceholder || !postPlaceholder.parentNode || !draggedPost || !sourceContainer) { endDrag(); return; }
-                postPlaceholder.parentNode.insertBefore(draggedPost, postPlaceholder);
-                const updates = {}; const isPinnedList = sourceContainer.id === 'pinned-posts-feed';
+                e.preventDefault();
+                if (!draggedPost) return;
+
+                const afterElement = getDragAfterElement(sourceContainer, e.clientY);
+                if (afterElement) {
+                    sourceContainer.insertBefore(draggedPost, afterElement);
+                } else {
+                    sourceContainer.appendChild(draggedPost);
+                }
+
+                const updates = {}; 
+                const isPinnedList = sourceContainer.id === 'pinned-posts-feed';
                 const orderedIds = Array.from(sourceContainer.querySelectorAll('.post-card')).map(p => p.dataset.id);
-                if (isPinnedList) { orderedIds.forEach((id, index) => { updates[`${id}/order`] = index; }); } else { orderedIds.forEach((id, index) => { updates[`${id}/order`] = Date.now() - index; }); }
-                if (Object.keys(updates).length > 0) { suppressPostAnimation = true; announcementsRef.child(currentTabId).update(updates); }
+                
+                if (isPinnedList) { 
+                    orderedIds.forEach((id, index) => { updates[`${id}/order`] = index; }); 
+                } else { 
+                    orderedIds.forEach((id, index) => { updates[`${id}/order`] = Date.now() - index; }); 
+                }
+                
+                if (Object.keys(updates).length > 0) { 
+                    suppressPostAnimation = true; 
+                    announcementsRef.child(currentTabId).update(updates); 
+                }
                 endDrag();
             });
         }
@@ -1645,52 +1753,59 @@ body.non-admin .reminder-card { cursor: default; }
         };
 
         function setupRemindersDragAndDrop() {
-            let draggedItem = null, placeholder = null;
+            let draggedItem = null;
             const container = document.getElementById('reminders-list');
 
             container.addEventListener('dragstart', e => {
-                if (!e.target.classList.contains('reminder-card')) return;
-                draggedItem = e.target;
-                e.dataTransfer.effectAllowed = 'move';
-                placeholder = document.createElement('div');
-                placeholder.className = 'reminder-placeholder';
-                placeholder.style.height = `${draggedItem.offsetHeight}px`;
-                setTimeout(() => { if (draggedItem) draggedItem.classList.add('dragging'); }, 0);
+                const target = e.target.closest('.reminder-card');
+                if (!target) return;
+                draggedItem = target;
+                setTimeout(() => { if(draggedItem) draggedItem.classList.add('dragging'); }, 0);
             });
 
             container.addEventListener('dragover', e => {
                 e.preventDefault();
                 if (!draggedItem) return;
-                const overElement = e.target.closest('.reminder-card');
-                if (overElement && overElement !== draggedItem) {
-                    const rect = overElement.getBoundingClientRect();
-                    const isBefore = e.clientY < rect.top + rect.height / 2;
-                    if (isBefore) {
-                        overElement.parentNode.insertBefore(placeholder, overElement);
-                    } else {
-                        overElement.parentNode.insertBefore(placeholder, overElement.nextSibling);
-                    }
-                } else if (!overElement && !container.contains(placeholder)) {
-                    container.appendChild(placeholder);
+
+                // --- Auto-scroll logic ---
+                const mainContent = document.querySelector('.main-content');
+                const mainRect = mainContent.getBoundingClientRect();
+                const scrollZone = 80;
+                if (e.clientY < mainRect.top + scrollZone) {
+                    mainContent.scrollTop -= 15;
+                } else if (e.clientY > mainRect.bottom - scrollZone) {
+                    mainContent.scrollTop += 15;
                 }
+                
+                const afterElement = getDragAfterElement(container, e.clientY);
+                const allItems = [...container.querySelectorAll('.reminder-card:not(.dragging)')];
+                let isAfter = false;
+
+                allItems.forEach(item => {
+                    if (item === afterElement) isAfter = true;
+                    const itemHeight = draggedItem.offsetHeight + 16;
+                    item.style.transform = isAfter ? `translateY(${itemHeight}px)` : 'translateY(0)';
+                });
             });
 
             const endDrag = () => {
                 if (draggedItem) draggedItem.classList.remove('dragging');
-                if (placeholder) placeholder.remove();
+                container.querySelectorAll('.reminder-card').forEach(item => item.style.transform = '');
                 draggedItem = null;
-                placeholder = null;
             };
 
             container.addEventListener('dragend', endDrag);
 
             container.addEventListener('drop', e => {
                 e.preventDefault();
-                if (!placeholder || !placeholder.parentNode || !draggedItem) {
-                    endDrag();
-                    return;
+                if (!draggedItem) return;
+                
+                const afterElement = getDragAfterElement(container, e.clientY);
+                if (afterElement == null) {
+                    container.appendChild(draggedItem);
+                } else {
+                    container.insertBefore(draggedItem, afterElement);
                 }
-                placeholder.parentNode.insertBefore(draggedItem, placeholder);
                 
                 const updates = {};
                 const orderedCards = container.querySelectorAll('.reminder-card');
