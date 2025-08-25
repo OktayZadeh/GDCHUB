@@ -209,7 +209,6 @@ body {
     -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
     transition: background-color var(--transition-normal);
 }
-/* MODIFICATION: Added global cursor style for drag operations */
 body.is-dragging, body.is-dragging * {
     cursor: grabbing !important;
 }
@@ -330,7 +329,7 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 .tab-action-btn i { font-size: 12px; }
 .tab-action-btn:hover { color: var(--primary); background: var(--primary-light); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
 .tab-action-btn.delete:hover { color: var(--danger); background: rgba(245, 101, 101, 0.1); }
-.move-handle { cursor: move; margin-right: var(--space-sm); color: var(--medium); opacity: 0.5; touch-action: none; }
+.move-handle { cursor: grab; margin-right: var(--space-sm); color: var(--medium); opacity: 0.5; touch-action: none; }
 .sidebar-placeholder { background: var(--primary-light); border: 2px dashed var(--primary); border-radius: var(--radius-md); margin: 0 var(--space-sm) var(--space-xxs); height: 46px; }
 .sidebar-item.dragging { opacity: 0.4; background-color: var(--primary-light); transform: scale(1.02); box-shadow: var(--shadow-lg); }
 
@@ -1517,9 +1516,9 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             remindersList.innerHTML = [...reminders].sort((a, b) => (a.order || 0) - (b.order || 0)).map(rem => {
                 if (!rem || !rem.id) return '';
                 const actionsHtml = isAdmin ? `<div class="reminder-actions"><button class="reminder-action-btn" onclick="editReminder(event, '${rem.id}')"><i class="fas fa-pencil-alt"></i></button><button class="reminder-action-btn" onclick="deleteReminder(event, '${rem.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
-                const dragHandleHtml = isAdmin ? `<span class="reminder-card-drag-handle">☰</span>` : '';
+                const dragHandleHtml = isAdmin ? `<span class="reminder-card-drag-handle" draggable="true">☰</span>` : '';
                 return `
-                <div class="reminder-card ${rem.type || 'trip'}" data-id="${rem.id}" draggable="${isAdmin}">
+                <div class="reminder-card ${rem.type || 'trip'}" data-id="${rem.id}">
                     ${dragHandleHtml}
                     ${actionsHtml}
                     <div class="reminder-title">${rem.title}</div>
@@ -1562,85 +1561,94 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         
         // REFINED reminder drag-and-drop
         function setupRemindersDragAndDrop() {
-            let draggedReminder = null, placeholder = null;
+            let draggedEl = null;
 
             remindersList.addEventListener('dragstart', e => {
+                // Only allow dragging from the handle
                 if (!e.target.classList.contains('reminder-card-drag-handle')) {
                     e.preventDefault();
                     return;
                 }
                 
-                draggedReminder = e.target.closest('.reminder-card');
-                if (!draggedReminder) return;
-
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', null);
-
-                placeholder = document.createElement('div');
-                placeholder.className = 'reminder-placeholder';
-                placeholder.style.height = `${draggedReminder.offsetHeight}px`;
+                draggedEl = e.target.closest('.reminder-card');
+                if (!draggedEl) return;
                 
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', draggedEl.dataset.id); // Good practice
+
+                // Use setTimeout to allow the browser to paint the drag image before we change styles
                 setTimeout(() => {
-                    if (draggedReminder) {
-                        draggedReminder.classList.add('dragging');
+                    if(draggedEl) {
+                        draggedEl.classList.add('dragging');
                         document.body.classList.add('is-dragging');
                     }
                 }, 0);
             });
 
+            remindersList.addEventListener('dragend', () => {
+                if(draggedEl) {
+                    draggedEl.classList.remove('dragging');
+                }
+                document.body.classList.remove('is-dragging');
+                const placeholder = remindersList.querySelector('.reminder-placeholder');
+                if (placeholder) {
+                    placeholder.remove();
+                }
+                draggedEl = null;
+            });
+
             remindersList.addEventListener('dragover', e => {
                 e.preventDefault();
-                if (!draggedReminder) return;
+                const placeholder = remindersList.querySelector('.reminder-placeholder') || createPlaceholder();
+                const afterElement = getDragAfterElement(remindersList, e.clientY);
 
-                const overElement = e.target.closest('.reminder-card:not(.dragging)');
-                if (overElement && overElement !== placeholder) {
-                    const rect = overElement.getBoundingClientRect();
-                    const isBefore = e.clientY < rect.top + rect.height / 2;
+                if (afterElement == null) {
+                    if (!remindersList.contains(placeholder)) remindersList.appendChild(placeholder);
+                } else {
+                    if (!remindersList.contains(placeholder)) remindersList.insertBefore(placeholder, afterElement);
+                }
+            });
+            
+             remindersList.addEventListener('drop', e => {
+                e.preventDefault();
+                const placeholder = remindersList.querySelector('.reminder-placeholder');
+                if (placeholder && draggedEl) {
+                    remindersList.insertBefore(draggedEl, placeholder);
                     
-                    if (isBefore) {
-                        overElement.parentNode.insertBefore(placeholder, overElement);
-                    } else {
-                        overElement.parentNode.insertBefore(placeholder, overElement.nextSibling);
+                    const updates = {};
+                    const orderedCards = Array.from(remindersList.querySelectorAll('.reminder-card'));
+                    orderedCards.forEach((card, index) => {
+                        updates[`${card.dataset.id}/order`] = index;
+                    });
+
+                    if (Object.keys(updates).length > 0) {
+                        remindersRef.update(updates);
                     }
                 }
             });
 
-            const endDrag = () => {
-                if (draggedReminder) {
-                    draggedReminder.classList.remove('dragging');
+            function createPlaceholder() {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'reminder-placeholder';
+                if (draggedEl) {
+                     placeholder.style.height = `${draggedEl.offsetHeight}px`;
                 }
-                if (placeholder && placeholder.parentNode) {
-                    placeholder.remove();
-                }
-                document.body.classList.remove('is-dragging');
-                draggedReminder = null;
-                placeholder = null;
-            };
+                return placeholder;
+            }
+            
+            function getDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll('.reminder-card:not(.dragging)')];
 
-            remindersList.addEventListener('dragend', endDrag);
-
-            remindersList.addEventListener('drop', e => {
-                e.preventDefault();
-                if (!placeholder || !placeholder.parentNode || !draggedReminder) {
-                    endDrag();
-                    return;
-                }
-
-                placeholder.parentNode.insertBefore(draggedReminder, placeholder);
-                
-                const updates = {};
-                const orderedCards = Array.from(remindersList.querySelectorAll('.reminder-card'));
-                orderedCards.forEach((card, index) => {
-                    const reminderId = card.dataset.id;
-                    updates[`${reminderId}/order`] = index;
-                });
-
-                if (Object.keys(updates).length > 0) {
-                    remindersRef.update(updates);
-                }
-                
-                endDrag();
-            });
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
         }
 
         window.editReminder = (event, id) => { event.stopPropagation(); openReminderEditor(id); };
