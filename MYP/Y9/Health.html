@@ -209,6 +209,10 @@ body {
     -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
     transition: background-color var(--transition-normal);
 }
+/* MODIFICATION: Added global cursor style for drag operations */
+body.is-dragging, body.is-dragging * {
+    cursor: grabbing !important;
+}
 h1, h2, h3, h4 { font-weight: 600; color: var(--dark); margin-bottom: var(--space-md); line-height: 1.25; }
 h1 { font-size: var(--text-3xl); } h2 { font-size: var(--text-2xl); } h3 { font-size: var(--text-xl); } h4 { font-size: var(--text-lg); }
 p { margin-bottom: var(--space-md); color: var(--medium); line-height: 1.6; }
@@ -522,7 +526,7 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
 .post-actions .delete-button { background: var(--danger); }
 .post-actions .delete-button:hover { background: #E53E3E; }
 
-/* --- REMINDERS UI - REVERTED & IMPROVED --- */
+/* --- REMINDERS UI - REFINED DRAG & DROP --- */
 .reminders-container {
     background: var(--lighter); border-radius: var(--radius-lg); padding: var(--space-lg);
     margin-bottom: var(--space-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
@@ -540,29 +544,45 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
     border-radius: var(--radius-md); position: relative; transition: all var(--transition-normal);
     box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
 }
-/* MODIFICATION: Added styles for reminder drag-and-drop */
+/* REFINED Drag & Drop Styles */
 .reminder-card-drag-handle {
-    position: absolute; top: 12px; left: -2px; font-size: 16px;
-    cursor: move; color: var(--medium); opacity: 0;
-    transition: opacity var(--transition-fast); touch-action: none;
-    padding: var(--space-xs);
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--medium);
+    cursor: grab;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+    touch-action: none;
+    border-radius: 50%;
 }
 .reminder-card:hover .reminder-card-drag-handle { opacity: 0.6; }
-.reminder-card.dragging { opacity: 0.4; box-shadow: var(--shadow-lg); background-color: var(--primary-light); }
+.reminder-card-drag-handle:hover { background-color: var(--light-gray); opacity: 1; }
+.reminder-card.dragging {
+    opacity: 0.5;
+    transform: scale(1.05);
+    box-shadow: var(--shadow-lg);
+}
 .reminder-placeholder {
     background-color: var(--primary-light);
     border: 2px dashed var(--primary);
     border-radius: var(--radius-md);
-    min-height: 100px;
+    transition: none; /* Prevent transition on placeholder */
 }
 .reminder-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
 .reminder-card.trip { border-left-color: var(--success); }
 .reminder-card.test { border-left-color: var(--danger); }
 .reminder-card.event { border-left-color: var(--warning); }
 .reminder-card.deadline { border-left-color: var(--secondary); }
-.reminder-title { font-weight: 600; margin-bottom: var(--space-xs); color: var(--dark); font-size: var(--text-base); }
-.reminder-date { font-size: var(--text-sm); color: var(--medium); margin-bottom: var(--space-sm); }
-.reminder-description { font-size: var(--text-sm); color: var(--medium); line-height: 1.5; }
+.reminder-title { font-weight: 600; margin-bottom: var(--space-xs); color: var(--dark); font-size: var(--text-base); padding-left: 20px; }
+.reminder-date { font-size: var(--text-sm); color: var(--medium); margin-bottom: var(--space-sm); padding-left: 20px; }
+.reminder-description { font-size: var(--text-sm); color: var(--medium); line-height: 1.5; padding-left: 20px; }
 .reminder-actions {
     position: absolute; top: var(--space-sm); right: var(--space-sm); display: flex; gap: var(--space-xs);
     opacity: 0; pointer-events: none; transform: scale(0.9); transition: all var(--transition-fast);
@@ -578,6 +598,7 @@ body.dark-mode .reminder-card { background-color: var(--dark-dark-gray); border-
 body.dark-mode .reminder-title { color: white; }
 body.dark-mode .reminder-action-btn { background: var(--dark-light); color: var(--dark-medium); }
 body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light); color: var(--primary); }
+body.dark-mode .reminder-card-drag-handle:hover { background-color: var(--dark-light); }
 /* --- END REMINDERS UI --- */
 
 /* Hide editing controls for non-admins */
@@ -1050,7 +1071,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             if (isAdmin) {
                 setupSidebarDragAndDrop();
                 setupPostsDragAndDrop();
-                setupRemindersDragAndDrop(); // MODIFICATION: Initialize reminder drag-and-drop
+                setupRemindersDragAndDrop();
             }
 
             tabNameInput.addEventListener('keydown', (event) => {
@@ -1068,20 +1089,17 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
             populateFontDropdown();
             
-            // The single most important fix: prevent mousedown on dropdowns from stealing editor focus.
             const preventFocusSteal = (e) => e.preventDefault();
             document.querySelectorAll('.toolbar-dropdown-menu').forEach(menu => {
                 menu.addEventListener('mousedown', preventFocusSteal);
             });
 
-            // Single, robust click handler for the entire toolbar.
             toolbar.addEventListener('click', e => {
                 const button = e.target.closest('.toolbar-button, .toolbar-dropdown-toggle, .toolbar-dropdown-item');
                 if (!button) return;
 
                 const dropdown = button.closest('.toolbar-dropdown');
 
-                // Handle dropdown toggling
                 if (button.classList.contains('toolbar-dropdown-toggle')) {
                     const wasOpen = dropdown.classList.contains('open');
                     document.querySelectorAll('.toolbar-dropdown.open').forEach(d => d.classList.remove('open'));
@@ -1496,10 +1514,10 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         }
         
         function renderReminders() {
-            remindersList.innerHTML = [...reminders].sort((a, b) => (a.order || 0) - (b.order || 0)).map(rem => { // MODIFICATION: Sort by 'order'
+            remindersList.innerHTML = [...reminders].sort((a, b) => (a.order || 0) - (b.order || 0)).map(rem => {
                 if (!rem || !rem.id) return '';
                 const actionsHtml = isAdmin ? `<div class="reminder-actions"><button class="reminder-action-btn" onclick="editReminder(event, '${rem.id}')"><i class="fas fa-pencil-alt"></i></button><button class="reminder-action-btn" onclick="deleteReminder(event, '${rem.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
-                const dragHandleHtml = isAdmin ? `<span class="reminder-card-drag-handle move-handle">☰</span>` : ''; // MODIFICATION: Add drag handle
+                const dragHandleHtml = isAdmin ? `<span class="reminder-card-drag-handle">☰</span>` : '';
                 return `
                 <div class="reminder-card ${rem.type || 'trip'}" data-id="${rem.id}" draggable="${isAdmin}">
                     ${dragHandleHtml}
@@ -1534,7 +1552,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const type = document.getElementById('reminder-type').value;
             const id = currentReminderBeingEdited || database.ref().push().key;
             
-            // MODIFICATION: Preserve or create 'order' property
             const isEditing = !!currentReminderBeingEdited;
             const existingReminder = isEditing ? reminders.find(r => r.id === id) : null;
             const order = isEditing && existingReminder ? existingReminder.order : Date.now();
@@ -1543,21 +1560,31 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             database.ref('reminders/' + id).set(reminder).then(closeReminderEditor);
         }
         
-        // MODIFICATION: New function to handle reminder drag-and-drop
+        // REFINED reminder drag-and-drop
         function setupRemindersDragAndDrop() {
             let draggedReminder = null, placeholder = null;
 
             remindersList.addEventListener('dragstart', e => {
-                if (!e.target.classList.contains('reminder-card')) return;
-                draggedReminder = e.target;
-                e.dataTransfer.effectAllowed = 'move';
+                if (!e.target.classList.contains('reminder-card-drag-handle')) {
+                    e.preventDefault();
+                    return;
+                }
                 
+                draggedReminder = e.target.closest('.reminder-card');
+                if (!draggedReminder) return;
+
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', null);
+
                 placeholder = document.createElement('div');
                 placeholder.className = 'reminder-placeholder';
                 placeholder.style.height = `${draggedReminder.offsetHeight}px`;
-
+                
                 setTimeout(() => {
-                    if (draggedReminder) draggedReminder.classList.add('dragging');
+                    if (draggedReminder) {
+                        draggedReminder.classList.add('dragging');
+                        document.body.classList.add('is-dragging');
+                    }
                 }, 0);
             });
 
@@ -1565,29 +1592,27 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 e.preventDefault();
                 if (!draggedReminder) return;
 
-                const overElement = e.target.closest('.reminder-card');
-                if (overElement && overElement !== draggedReminder) {
-                     const rect = overElement.getBoundingClientRect();
-                     const isBefore = e.clientY < rect.top + rect.height / 2;
-                     if (isBefore) {
-                         remindersList.insertBefore(placeholder, overElement);
-                     } else {
-                         remindersList.insertBefore(placeholder, overElement.nextSibling);
-                     }
-                } else if (!remindersList.contains(placeholder)) {
-                    // This handles dragging into an empty space at the end
-                    const lastElement = remindersList.querySelector('.reminder-card:not(.dragging):last-of-type');
-                    if(lastElement) {
-                        remindersList.insertBefore(placeholder, lastElement.nextSibling);
+                const overElement = e.target.closest('.reminder-card:not(.dragging)');
+                if (overElement && overElement !== placeholder) {
+                    const rect = overElement.getBoundingClientRect();
+                    const isBefore = e.clientY < rect.top + rect.height / 2;
+                    
+                    if (isBefore) {
+                        overElement.parentNode.insertBefore(placeholder, overElement);
                     } else {
-                        remindersList.appendChild(placeholder);
+                        overElement.parentNode.insertBefore(placeholder, overElement.nextSibling);
                     }
                 }
             });
 
             const endDrag = () => {
-                if (draggedReminder) draggedReminder.classList.remove('dragging');
-                if (placeholder && placeholder.parentNode) placeholder.remove();
+                if (draggedReminder) {
+                    draggedReminder.classList.remove('dragging');
+                }
+                if (placeholder && placeholder.parentNode) {
+                    placeholder.remove();
+                }
+                document.body.classList.remove('is-dragging');
                 draggedReminder = null;
                 placeholder = null;
             };
@@ -1602,8 +1627,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
 
                 placeholder.parentNode.insertBefore(draggedReminder, placeholder);
-                endDrag();
-
+                
                 const updates = {};
                 const orderedCards = Array.from(remindersList.querySelectorAll('.reminder-card'));
                 orderedCards.forEach((card, index) => {
@@ -1614,9 +1638,10 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 if (Object.keys(updates).length > 0) {
                     remindersRef.update(updates);
                 }
+                
+                endDrag();
             });
         }
-
 
         window.editReminder = (event, id) => { event.stopPropagation(); openReminderEditor(id); };
         window.deleteReminder = (event, id) => {
