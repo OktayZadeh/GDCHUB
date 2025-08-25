@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classroom Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&family=Lato:wght@400;700&family=Montserrat:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/css/font-awesome/6.4.0/css/all.min.css">
     
     <style>
 :root {
@@ -329,7 +329,7 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 .tab-action-btn i { font-size: 12px; }
 .tab-action-btn:hover { color: var(--primary); background: var(--primary-light); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
 .tab-action-btn.delete:hover { color: var(--danger); background: rgba(245, 101, 101, 0.1); }
-.move-handle { cursor: grab; margin-right: var(--space-sm); color: var(--medium); opacity: 0.5; touch-action: none; }
+.sidebar-item[draggable="true"] { cursor: grab; }
 .sidebar-placeholder { background: var(--primary-light); border: 2px dashed var(--primary); border-radius: var(--radius-md); margin: 0 var(--space-sm) var(--space-xxs); height: 46px; }
 .sidebar-item.dragging { opacity: 0.4; background-color: var(--primary-light); transform: scale(1.02); box-shadow: var(--shadow-lg); }
 
@@ -489,6 +489,7 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
     cursor: pointer; transition: all var(--transition-normal) cubic-bezier(0.25, 0.8, 0.25, 1); position: relative;
     animation: fadeIn var(--transition-normal) forwards; opacity: 0; border: 1px solid var(--light-gray);
 }
+.post-card[draggable="true"] { cursor: grab; }
 .post-card.pinned { border-left: 4px solid var(--primary); }
 .post-card.dragging { opacity: 0.4; transform: scale(1.02); box-shadow: var(--shadow-lg); }
 .pin-icon {
@@ -496,8 +497,6 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
     border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
     box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
 }
-.post-card-drag-handle { position: absolute; top: var(--space-md); left: var(--space-md); padding: var(--space-xs); opacity: 0; transition: opacity var(--transition-fast); }
-.post-card:hover .post-card-drag-handle { opacity: 0.5; }
 .post-card.expanded {
     position: fixed; top: 54px; left: 260px; right: 0; bottom: 0; z-index: 100; overflow-y: auto; margin: 0;
     padding: var(--space-xl); padding-top: calc(68px + var(--space-lg)); background: white; border-radius: 0;
@@ -544,25 +543,7 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
     box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
 }
 /* REFINED Drag & Drop Styles */
-.reminder-card-drag-handle {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    color: var(--medium);
-    cursor: grab;
-    opacity: 0;
-    transition: opacity var(--transition-fast);
-    touch-action: none;
-    border-radius: 50%;
-}
-.reminder-card:hover .reminder-card-drag-handle { opacity: 0.6; }
-.reminder-card-drag-handle:hover { background-color: var(--light-gray); opacity: 1; }
+.reminder-card[draggable="true"] { cursor: grab; }
 .reminder-card.dragging {
     opacity: 0.4;
     transform: scale(1.02);
@@ -573,15 +554,17 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
     border: 2px dashed var(--primary);
     border-radius: var(--radius-md);
     transition: none;
+    grid-column: 1 / -1; /* Span full width if needed */
+    min-height: 100px;
 }
 .reminder-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
 .reminder-card.trip { border-left-color: var(--success); }
 .reminder-card.test { border-left-color: var(--danger); }
 .reminder-card.event { border-left-color: var(--warning); }
 .reminder-card.deadline { border-left-color: var(--secondary); }
-.reminder-title { font-weight: 600; margin-bottom: var(--space-xs); color: var(--dark); font-size: var(--text-base); padding-left: 20px; }
-.reminder-date { font-size: var(--text-sm); color: var(--medium); margin-bottom: var(--space-sm); padding-left: 20px; }
-.reminder-description { font-size: var(--text-sm); color: var(--medium); line-height: 1.5; padding-left: 20px; }
+.reminder-title { font-weight: 600; margin-bottom: var(--space-xs); color: var(--dark); font-size: var(--text-base); }
+.reminder-date { font-size: var(--text-sm); color: var(--medium); margin-bottom: var(--space-sm); }
+.reminder-description { font-size: var(--text-sm); color: var(--medium); line-height: 1.5; }
 .reminder-actions {
     position: absolute; top: var(--space-sm); right: var(--space-sm); display: flex; gap: var(--space-xs);
     opacity: 0; pointer-events: none; transform: scale(0.9); transition: all var(--transition-fast);
@@ -597,14 +580,13 @@ body.dark-mode .reminder-card { background-color: var(--dark-dark-gray); border-
 body.dark-mode .reminder-title { color: white; }
 body.dark-mode .reminder-action-btn { background: var(--dark-light); color: var(--dark-medium); }
 body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light); color: var(--primary); }
-body.dark-mode .reminder-card-drag-handle:hover { background-color: var(--dark-light); }
 /* --- END REMINDERS UI --- */
 
 /* Hide editing controls for non-admins */
 body.non-admin .add-tab-header-button, body.non-admin .button[onclick="openAnnouncementEditor()"],
-body.non-admin .tab-actions, body.non-admin .post-actions, body.non-admin #add-reminder-btn,
-body.non-admin .move-handle, body.non-admin .post-card-drag-handle, 
-body.non-admin .reminder-card-drag-handle { display: none !important; }
+body.non-admin .tab-actions, body.non-admin .post-actions, body.non-admin #add-reminder-btn {
+    display: none !important;
+}
 body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 /* Typography for rendered rich content */
 .post-content { font-size: var(--text-base); line-height: 1.7; color: var(--medium); word-wrap: break-word; }
@@ -1305,7 +1287,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             pinnedPostsFeed.innerHTML = pinned.map(ann => createPostElement(ann, skipAnimation)).join('');
             unpinnedPostsFeed.innerHTML = unpinned.map(ann => createPostElement(ann, skipAnimation)).join('');
             if (announcements.length === 0) { unpinnedPostsFeed.innerHTML = '<p>No announcements found for this tab.</p>'; }
-            document.querySelectorAll('.post-card').forEach(card => card.addEventListener('click', (e) => { if (!e.target.closest('button, .move-handle, .post-card-drag-handle, a, iframe')) { expandPost(card); } }));
+            document.querySelectorAll('.post-card').forEach(card => card.addEventListener('click', (e) => { if (!e.target.closest('button, a, iframe')) { expandPost(card); } }));
             document.querySelectorAll('.post-actions button').forEach(button => button.addEventListener('click', e => e.stopPropagation()));
         }
 
@@ -1319,7 +1301,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const tempDiv = document.createElement("div"); tempDiv.innerHTML = rawContent;
             const collapsedText = tempDiv.textContent || "";
             const animationStyle = skipAnimation ? 'style="animation: none; opacity: 1;"' : '';
-            return `<div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" draggable="${isAdmin}" ${animationStyle}><span class="post-card-drag-handle move-handle">☰</span>${pinIcon}${actionsHtml}<h3>${announcement.title}</h3><div class="collapsed-content">${collapsedText}</div><div class="post-details"><div class="post-content">${expandedContent}</div><div class="post-meta">Posted on ${postDate}</div></div></div>`;
+            const draggableAttr = isAdmin ? `draggable="true"` : '';
+            return `<div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" ${draggableAttr} ${animationStyle}>${pinIcon}${actionsHtml}<h3>${announcement.title}</h3><div class="collapsed-content">${collapsedText}</div><div class="post-details"><div class="post-content">${expandedContent}</div><div class="post-meta">Posted on ${postDate}</div></div></div>`;
         }
         
         function saveTabs() {
@@ -1331,25 +1314,24 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function renderTabs() {
             sidebarMenu.innerHTML = tabs.map(tab => {
                 const actionsHtml = isAdmin ? `<div class="tab-actions"><button class="tab-action-btn" title="Edit Tab" onclick="editTab(event, '${tab.id}')"><i class="fas fa-pencil-alt"></i></button><button class="tab-action-btn delete" title="Delete Tab" onclick="deleteTab(event, '${tab.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
-                return `<li class="sidebar-item" data-tab-id="${tab.id}"><a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}"><span class="move-handle" draggable="true">☰</span> ${tab.name}${actionsHtml}</a></li>`;
+                const draggableAttr = isAdmin ? 'draggable="true"' : '';
+                return `<li class="sidebar-item" data-tab-id="${tab.id}" ${draggableAttr}><a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}">${tab.name}${actionsHtml}</a></li>`;
             }).join('');
             document.querySelectorAll('.sidebar-item').forEach(item => {
-                item.addEventListener('click', e => { if (!e.target.closest('.tab-action-btn, .move-handle')) { e.preventDefault(); setActiveTab(item.dataset.tabId); if (window.innerWidth <= 768) sidebar.classList.remove('visible'); } });
+                item.addEventListener('click', e => { if (!e.target.closest('.tab-action-btn')) { e.preventDefault(); setActiveTab(item.dataset.tabId); if (window.innerWidth <= 768) sidebar.classList.remove('visible'); } });
             });
         }
         
-        // --- Sidebar Drag-and-Drop (Restored to stable version) ---
         function setupSidebarDragAndDrop() {
             let draggedItem = null, placeholder = null;
 
             sidebarMenu.addEventListener('dragstart', e => {
-                if (!e.target.classList.contains('move-handle')) {
+                draggedItem = e.target.closest('.sidebar-item[draggable="true"]');
+                if (!draggedItem) {
                     e.preventDefault();
                     return;
                 }
-                draggedItem = e.target.closest('.sidebar-item');
-                if (!draggedItem) return;
-
+                
                 e.dataTransfer.effectAllowed = 'move';
                 e.dataTransfer.setData('text/plain', draggedItem.dataset.tabId);
 
@@ -1530,7 +1512,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 sourceContainer = draggedPost.parentElement; e.dataTransfer.effectAllowed = 'move';
                 postPlaceholder = document.createElement('div'); postPlaceholder.className = 'post-placeholder';
                 postPlaceholder.style.height = `${draggedPost.offsetHeight}px`;
-                setTimeout(() => { if (draggedPost) draggedPost.classList.add('dragging'); }, 0);
+                setTimeout(() => { if (draggedPost) draggedPost.classList.add('dragging'); document.body.classList.add('is-dragging'); }, 0);
             });
             classroomInfo.addEventListener('dragover', e => {
                 if (!draggedPost || !sourceContainer) return;
@@ -1541,7 +1523,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     if (isBefore) { sourceContainer.insertBefore(postPlaceholder, overElement); } else { sourceContainer.insertBefore(postPlaceholder, overElement.nextSibling); }
                 } else if (!overElement && !sourceContainer.contains(postPlaceholder)) { sourceContainer.appendChild(postPlaceholder); }
             });
-            const endDrag = () => { if(draggedPost) draggedPost.classList.remove('dragging'); if(postPlaceholder) postPlaceholder.remove(); draggedPost = null; postPlaceholder = null; sourceContainer = null; };
+            const endDrag = () => { if(draggedPost) draggedPost.classList.remove('dragging'); if(postPlaceholder) postPlaceholder.remove(); document.body.classList.remove('is-dragging'); draggedPost = null; postPlaceholder = null; sourceContainer = null; };
             classroomInfo.addEventListener('dragend', endDrag);
             classroomInfo.addEventListener('drop', e => {
                 e.preventDefault(); if (!postPlaceholder || !postPlaceholder.parentNode || !draggedPost || !sourceContainer) { endDrag(); return; }
@@ -1558,10 +1540,9 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             remindersList.innerHTML = [...reminders].sort((a, b) => (a.order || 0) - (b.order || 0)).map(rem => {
                 if (!rem || !rem.id) return '';
                 const actionsHtml = isAdmin ? `<div class="reminder-actions"><button class="reminder-action-btn" onclick="editReminder(event, '${rem.id}')"><i class="fas fa-pencil-alt"></i></button><button class="reminder-action-btn" onclick="deleteReminder(event, '${rem.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
-                const dragHandleHtml = isAdmin ? `<span class="reminder-card-drag-handle" draggable="true">☰</span>` : '';
+                const draggableAttr = isAdmin ? 'draggable="true"' : '';
                 return `
-                <div class="reminder-card ${rem.type || 'trip'}" data-id="${rem.id}">
-                    ${dragHandleHtml}
+                <div class="reminder-card ${rem.type || 'trip'}" data-id="${rem.id}" ${draggableAttr}>
                     ${actionsHtml}
                     <div class="reminder-title">${rem.title}</div>
                     <div class="reminder-date">${formatDate(rem.date)}</div>
@@ -1601,17 +1582,15 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             database.ref('reminders/' + id).set(reminder).then(closeReminderEditor);
         }
         
-        // --- Reminder Drag-and-Drop (Modeled after stable sidebar version) ---
         function setupRemindersDragAndDrop() {
             let draggedItem = null, placeholder = null;
 
             remindersList.addEventListener('dragstart', e => {
-                if (!e.target.classList.contains('reminder-card-drag-handle')) {
+                draggedItem = e.target.closest('.reminder-card[draggable="true"]');
+                if (!draggedItem) {
                     e.preventDefault();
                     return;
                 }
-                draggedItem = e.target.closest('.reminder-card');
-                if (!draggedItem) return;
 
                 e.dataTransfer.effectAllowed = 'move';
                 e.dataTransfer.setData('text/plain', draggedItem.dataset.id);
@@ -1637,6 +1616,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     const rect = overElement.getBoundingClientRect();
                     const isBefore = e.clientY < rect.top + rect.height / 2;
                     overElement.parentNode.insertBefore(placeholder, isBefore ? overElement : overElement.nextSibling);
+                } else if (!overElement && !remindersList.contains(placeholder)) {
+                    remindersList.appendChild(placeholder);
                 }
             });
 
@@ -1735,4 +1716,3 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
     </script>
 </body>
 </html>
-```
