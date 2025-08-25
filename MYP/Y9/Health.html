@@ -1332,22 +1332,23 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         }
         
-        // --- [START] REBUILT DRAG-AND-DROP SYSTEM ---
+        // --- [START] REFINED DRAG-AND-DROP SYSTEM ---
         /**
-         * Rebuilt from scratch to ensure consistent, reliable, and smooth drag-and-drop
-         * functionality across the entire application.
+         * This refined system uses a master configuration to ensure consistent, reliable, 
+         * and smooth drag-and-drop functionality across the entire application.
+         * The `forceFallback: true` option is key to avoiding buggy native browser APIs.
          */
         function initializeDragAndDrop() {
             if (!isAdmin) return; 
 
-            // The "Golden Standard" configuration. This single object defines the behavior 
-            // for all draggable elements, ensuring they look and feel identical.
+            // The master configuration object. This defines the standard behavior and appearance 
+            // for all draggable elements, ensuring a consistent user experience.
             const masterSortableConfig = {
                 animation: 150,                   // A crisp and smooth animation speed.
                 ghostClass: 'sortable-ghost',     // The class for the light blue placeholder.
                 chosenClass: 'sortable-chosen',   // The class for the item you are currently holding.
-                dragClass: 'sortable-drag',       // The class for the "lift and tilt" clone that follows your cursor.
-                forceFallback: true,              // **THE MOST IMPORTANT SETTING**: This forces SortableJS to use its own JavaScript-based dragging instead of the browser's native, buggy API. This is the key to reliability and consistency.
+                dragClass: 'sortable-drag',       // The class for the "lift and tilt" clone that follows the cursor.
+                forceFallback: true,              // **MOST IMPORTANT**: This forces SortableJS to use its reliable JS-based dragging instead of the browser's buggy native API.
                 onStart: () => document.body.classList.add('is-dragging'),   // Instantly apply the 'grabbing' cursor to the whole page.
                 onEnd: () => document.body.classList.remove('is-dragging'), // Remove the 'grabbing' cursor when done.
             };
@@ -1412,7 +1413,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
         }
-        // --- [END] REBUILT DRAG-AND-DROP SYSTEM ---
+        // --- [END] REFINED DRAG-AND-DROP SYSTEM ---
         
         function setActiveTab(tabId) {
             currentTabId = tabId; const tab = tabs.find(t => t.id === tabId);
