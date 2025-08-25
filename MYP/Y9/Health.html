@@ -8,8 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&family=Lato:wght@400;700&family=Montserrat:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- SortableJS Library for smooth drag-and-drop -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <!-- SortableJS Library is no longer needed and has been removed -->
     
     <style>
 :root {
@@ -334,7 +333,9 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 .tab-action-btn:hover { color: var(--primary); background: var(--primary-light); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
 .tab-action-btn.delete:hover { color: var(--danger); background: rgba(245, 101, 101, 0.1); }
 /* Make sidebar items draggable for admin */
-.sidebar-menu.sortable-admin .sidebar-item { cursor: grab; }
+[draggable="true"] {
+    cursor: grab;
+}
 
 /* Main Content Styles */
 .main-content {
@@ -492,7 +493,6 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
     cursor: pointer; transition: all var(--transition-normal) cubic-bezier(0.25, 0.8, 0.25, 1); position: relative;
     animation: fadeIn var(--transition-normal) forwards; opacity: 0; border: 1px solid var(--light-gray);
 }
-.posts-feed.sortable-admin .post-card { cursor: grab; }
 .post-card.pinned { border-left: 4px solid var(--primary); }
 .pin-icon {
     position: absolute; top: var(--space-lg); left: -10px; color: var(--primary); background-color: var(--lighter);
@@ -537,8 +537,6 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
 .reminders-list {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-md);
 }
-/* Make reminder cards draggable for admin */
-.reminders-list.sortable-admin .reminder-card { cursor: grab; }
 .reminder-card {
     background: var(--lighter);
     border-left: 12px solid var(--primary);
@@ -572,39 +570,34 @@ body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light
 /* --- END REMINDERS UI --- */
 
 
-/* --- DRAG AND DROP REFINEMENT STYLES --- */
-
-/* GHOST: The placeholder style for where the item will drop */
-.sortable-ghost {
+/* --- NEW DRAG AND DROP STYLES --- */
+.sidebar-item.dragging, .reminder-card.dragging, .post-card.dragging {
     opacity: 0.4;
+}
+
+.drag-placeholder {
+    opacity: 1;
     background: var(--primary-light);
     border: 2px dashed var(--primary);
 }
-.sidebar-item.sortable-ghost {
+
+.sidebar-menu .drag-placeholder {
+    height: 44px; /* Matches sidebar item height */
     border-radius: var(--radius-md);
-    margin-bottom: var(--space-xxs);
-}
-.reminder-card.sortable-ghost {
-    box-shadow: none;
-}
-.post-card.sortable-ghost {
-    box-shadow: none;
+    margin: var(--space-xxs) var(--space-sm);
 }
 
-/* CHOSEN: The style for the original item in the list after it's been picked up */
-.sortable-chosen {
-    cursor: grabbing;
-    background-color: var(--primary-light);
+.reminders-list .drag-placeholder {
+    border-radius: var(--radius-md);
+    height: 90px; /* Approximate reminder card height */
 }
 
-/* DRAG: The style for the element clone being dragged by the cursor */
-.sortable-drag {
-    opacity: 1 !important; /* Ensure dragged item is fully visible */
-    box-shadow: var(--shadow-xl) !important;
-    transform: scale(1.03) rotate(2deg); /* Lift and tilt effect */
-    z-index: 9999;
+.posts-feed .drag-placeholder {
+    border-radius: var(--radius-lg);
+    min-height: 100px;
+    margin-bottom: var(--space-lg);
 }
-/* --- END DRAG AND DROP --- */
+/* --- END NEW DRAG AND DROP --- */
 
 
 /* Hide editing controls for non-admins */
@@ -612,6 +605,10 @@ body.non-admin .add-tab-header-button, body.non-admin .button[onclick="openAnnou
 body.non-admin .tab-actions, body.non-admin .post-actions, body.non-admin #add-reminder-btn {
     display: none !important;
 }
+body.non-admin [draggable="true"] {
+    cursor: default; /* Non-admins should not see the grab cursor */
+}
+
 body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 /* Typography for rendered rich content */
 .post-content { font-size: var(--text-base); line-height: 1.7; color: var(--medium); word-wrap: break-word; }
@@ -971,7 +968,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
     </div>
 
 
-      <script>
+    <script>
         // AUTH CHECK
         (function() {
             const USER_INFO_KEY = "googleUserInfo";
@@ -1078,7 +1075,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             setupDarkMode();
             setupProfileDropdown();
             setupCustomEditor();
-            initializeDragAndDrop();
+            initializeDragAndDrop(); // This will now set up the native drag and drop
             UndoManager.init();
             
             tabNameInput.addEventListener('keydown', (event) => {
@@ -1327,97 +1324,169 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const tempDiv = document.createElement("div"); tempDiv.innerHTML = rawContent;
             const collapsedText = tempDiv.textContent || "";
             const animationStyle = skipAnimation ? 'style="animation: none; opacity: 1;"' : '';
-            return `<div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" ${animationStyle}>${pinIcon}${actionsHtml}<h3>${announcement.title}</h3><div class="collapsed-content">${collapsedText}</div><div class="post-details"><div class="post-content">${expandedContent}</div><div class="post-meta">Posted on ${postDate}</div></div></div>`;
+            
+            // Add draggable="true" for admins
+            const draggableAttr = isAdmin ? 'draggable="true"' : 'draggable="false"';
+            return `<div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" ${animationStyle}" ${draggableAttr}>${pinIcon}${actionsHtml}<h3>${announcement.title}</h3><div class="collapsed-content">${collapsedText}</div><div class="post-details"><div class="post-content">${expandedContent}</div><div class="post-meta">Posted on ${postDate}</div></div></div>`;
         }
         
         function renderTabs() {
             sidebarMenu.innerHTML = tabs.map(tab => {
                 const actionsHtml = isAdmin ? `<div class="tab-actions"><button class="tab-action-btn" title="Edit Tab" onclick="editTab(event, '${tab.id}')"><i class="fas fa-pencil-alt"></i></button><button class="tab-action-btn delete" title="Delete Tab" onclick="deleteTab(event, '${tab.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
-                return `<li class="sidebar-item" data-tab-id="${tab.id}"><a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}">${tab.name}${actionsHtml}</a></li>`;
+                // Add draggable="true" for admins
+                const draggableAttr = isAdmin ? 'draggable="true"' : 'draggable="false"';
+                return `<li class="sidebar-item" data-tab-id="${tab.id}" ${draggableAttr}><a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}">${tab.name}${actionsHtml}</a></li>`;
             }).join('');
             document.querySelectorAll('.sidebar-item').forEach(item => {
                 item.addEventListener('click', e => { if (!e.target.closest('.tab-actions')) { e.preventDefault(); setActiveTab(item.dataset.tabId); if (window.innerWidth <= 768) sidebar.classList.remove('visible'); } });
             });
         }
         
-        // --- [START] REFINED DRAG-AND-DROP INITIALIZATION ---
+        // --- [START] NATIVE HTML5 DRAG-AND-DROP IMPLEMENTATION ---
         function initializeDragAndDrop() {
-            if (!isAdmin) return; 
+            if (!isAdmin) return;
 
-            // This shared configuration is the key to consistent, smooth drag-and-drop.
-            const sharedSortableConfig = {
-                animation: 150,
-                ghostClass: 'sortable-ghost',
-                chosenClass: 'sortable-chosen',
-                dragClass: 'sortable-drag',
-                forceFallback: true,
-                // **THE FIX**: This option appends the dragged item to the `<body>`.
-                // This prevents it from being trapped by the parent's CSS (e.g., `overflow` or `position: fixed`),
-                // ensuring it moves smoothly with the cursor across the entire page.
-                fallbackOnBody: true,
-                onStart: () => document.body.classList.add('is-dragging'),
-                onEnd: () => document.body.classList.remove('is-dragging'),
+            // This generic function sets up all drag-and-drop listeners for a container.
+            const setupDragSort = (container, itemSelector, onDropCallback) => {
+                let draggedItem = null;
+                let placeholder = null;
+
+                // Function to create a placeholder element
+                const createPlaceholder = (draggedEl) => {
+                    const p = document.createElement(draggedEl.tagName);
+                    p.className = 'drag-placeholder';
+                    p.style.height = `${draggedEl.offsetHeight}px`;
+                    if (draggedEl.tagName === 'LI') {
+                       // specific styling for sidebar
+                       p.style.margin = getComputedStyle(draggedEl).margin;
+                    }
+                    return p;
+                };
+
+                // Determine the next sibling to insert the placeholder before
+                const getDragAfterElement = (y) => {
+                    const draggableElements = [...container.querySelectorAll(`${itemSelector}:not(.dragging):not(.drag-placeholder)`)];
+                    return draggableElements.reduce((closest, child) => {
+                        const box = child.getBoundingClientRect();
+                        const offset = y - box.top - box.height / 2;
+                        if (offset < 0 && offset > closest.offset) {
+                            return { offset: offset, element: child };
+                        } else {
+                            return closest;
+                        }
+                    }, { offset: Number.NEGATIVE_INFINITY }).element;
+                };
+
+                // Event delegation for the start of a drag
+                container.addEventListener('dragstart', e => {
+                    const target = e.target.closest(itemSelector);
+                    if (!target || !target.draggable) return;
+
+                    draggedItem = target;
+                    // Using a timeout allows the browser to render the drag image before we change opacity
+                    setTimeout(() => {
+                        draggedItem.classList.add('dragging');
+                        placeholder = createPlaceholder(draggedItem);
+                    }, 0);
+                    
+                    e.dataTransfer.effectAllowed = 'move';
+                    // We need to set some data for Firefox to initiate the drag
+                    e.dataTransfer.setData('text/plain', target.dataset.id || 'drag-item');
+                });
+
+                // Event for when the dragged item is over the container
+                container.addEventListener('dragover', e => {
+                    e.preventDefault(); // This is crucial to allow dropping
+                    if (!draggedItem) return;
+
+                    const afterElement = getDragAfterElement(e.clientY);
+                    // Insert placeholder in the correct spot
+                    if (afterElement == null) {
+                        if (!container.contains(placeholder)) {
+                            container.appendChild(placeholder);
+                        }
+                    } else {
+                        if (container.contains(placeholder) && placeholder.nextSibling !== afterElement) {
+                             container.insertBefore(placeholder, afterElement);
+                        } else if (!container.contains(placeholder)) {
+                             container.insertBefore(placeholder, afterElement);
+                        }
+                    }
+                });
+                
+                // Cleanup when the dragged item leaves the container
+                container.addEventListener('dragleave', e => {
+                    if (e.target === container && placeholder && container.contains(placeholder)) {
+                        container.removeChild(placeholder);
+                    }
+                });
+
+                // The final drop event
+                container.addEventListener('drop', e => {
+                    e.preventDefault();
+                    if (!draggedItem || !placeholder || !container.contains(placeholder)) return;
+                    
+                    // Replace placeholder with the actual dragged item
+                    container.replaceChild(draggedItem, placeholder);
+                    onDropCallback(container); // Trigger the Firebase update
+                });
+
+                // Final cleanup when the drag operation ends (success or fail)
+                container.addEventListener('dragend', e => {
+                    if (draggedItem) {
+                        draggedItem.classList.remove('dragging');
+                        draggedItem = null;
+                    }
+                     if (placeholder && placeholder.parentElement) {
+                        placeholder.parentElement.removeChild(placeholder);
+                        placeholder = null;
+                    }
+                    document.body.classList.remove('is-dragging');
+                });
+            };
+            
+            // --- Define Callbacks for each container ---
+            const onTabDrop = (container) => {
+                const updates = {};
+                container.querySelectorAll('.sidebar-item').forEach((item, index) => {
+                    updates[`${item.dataset.tabId}/order`] = index;
+                });
+                tabsRef.update(updates);
             };
 
-            // 1. Sidebar Tabs
-            sidebarMenu.classList.add('sortable-admin');
-            new Sortable(sidebarMenu, {
-                ...sharedSortableConfig,
-                filter: '.tab-action-btn', 
-                onEnd: (evt) => {
-                    const updates = {};
-                    evt.target.querySelectorAll('.sidebar-item').forEach((item, index) => {
-                        updates[`${item.dataset.tabId}/order`] = index;
-                    });
-                    tabsRef.update(updates);
-                }
-            });
+            const onReminderDrop = (container) => {
+                const updates = {};
+                container.querySelectorAll('.reminder-card').forEach((card, index) => {
+                    updates[`${card.dataset.id}/order`] = index;
+                });
+                remindersRef.update(updates);
+            };
+            
+             const onPinnedPostDrop = (container) => {
+                suppressPostAnimation = true;
+                const updates = {};
+                container.querySelectorAll('.post-card').forEach((card, index) => {
+                    updates[`${currentTabId}/${card.dataset.id}/order`] = index;
+                });
+                announcementsRef.update(updates);
+            };
 
-            // 2. Reminders
-            remindersList.classList.add('sortable-admin');
-            new Sortable(remindersList, {
-                ...sharedSortableConfig,
-                filter: '.reminder-action-btn',
-                onEnd: (evt) => {
-                    const updates = {};
-                    evt.target.querySelectorAll('.reminder-card').forEach((card, index) => {
-                        updates[`${card.dataset.id}/order`] = index;
-                    });
-                    remindersRef.update(updates);
-                }
-            });
+            const onUnpinnedPostDrop = (container) => {
+                suppressPostAnimation = true;
+                const updates = {};
+                Array.from(container.querySelectorAll('.post-card')).forEach((card, index) => {
+                    updates[`${currentTabId}/${card.dataset.id}/order`] = Date.now() - index;
+                });
+                announcementsRef.update(updates);
+            };
 
-            // 3. Pinned Announcements
-            pinnedPostsFeed.classList.add('sortable-admin');
-            new Sortable(pinnedPostsFeed, {
-                ...sharedSortableConfig,
-                filter: '.post-actions, button, a, iframe',
-                onEnd: (evt) => {
-                    suppressPostAnimation = true;
-                    const updates = {};
-                    evt.target.querySelectorAll('.post-card').forEach((card, index) => {
-                        updates[`${currentTabId}/${card.dataset.id}/order`] = index;
-                    });
-                    announcementsRef.update(updates);
-                }
-            });
-
-            // 4. Unpinned Announcements
-            unpinnedPostsFeed.classList.add('sortable-admin');
-            new Sortable(unpinnedPostsFeed, {
-                ...sharedSortableConfig,
-                filter: '.post-actions, button, a, iframe',
-                onEnd: (evt) => {
-                    suppressPostAnimation = true;
-                    const updates = {};
-                    Array.from(evt.target.querySelectorAll('.post-card')).forEach((card, index) => {
-                        updates[`${currentTabId}/${card.dataset.id}/order`] = Date.now() - index;
-                    });
-                    announcementsRef.update(updates);
-                }
-            });
+            // --- Initialize drag-and-drop for all containers ---
+            setupDragSort(sidebarMenu, '.sidebar-item', onTabDrop);
+            setupDragSort(remindersList, '.reminder-card', onReminderDrop);
+            setupDragSort(pinnedPostsFeed, '.post-card', onPinnedPostDrop);
+            setupDragSort(unpinnedPostsFeed, '.post-card', onUnpinnedPostDrop);
         }
-        // --- [END] DRAG-AND-DROP INITIALIZATION ---
+        // --- [END] NATIVE HTML5 DRAG-AND-DROP IMPLEMENTATION ---
         
         function setActiveTab(tabId) {
             currentTabId = tabId; const tab = tabs.find(t => t.id === tabId);
@@ -1560,8 +1629,11 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             remindersList.innerHTML = reminders.map(rem => {
                 if (!rem || !rem.id) return '';
                 const actionsHtml = isAdmin ? `<div class="reminder-actions"><button class="reminder-action-btn" onclick="editReminder(event, '${rem.id}')"><i class="fas fa-pencil-alt"></i></button><button class="reminder-action-btn" onclick="deleteReminder(event, '${rem.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
+                
+                // Add draggable="true" for admins
+                const draggableAttr = isAdmin ? 'draggable="true"' : 'draggable="false"';
                 return `
-                <div class="reminder-card ${rem.type || 'trip'}" data-id="${rem.id}">
+                <div class="reminder-card ${rem.type || 'trip'}" data-id="${rem.id}" ${draggableAttr}>
                     ${actionsHtml}
                     <div class="reminder-title">${rem.title}</div>
                     <div class="reminder-date">${formatDate(rem.date)}</div>
