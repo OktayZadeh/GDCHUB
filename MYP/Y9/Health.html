@@ -4,12 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classroom Dashboard</title>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&family=Lato:wght@400;700&family=Montserrat:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
-    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- SortableJS Library - RE-INTRODUCED FOR A RELIABLE SOLUTION -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     
     <style>
 :root {
@@ -213,9 +209,6 @@ body {
     -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
     transition: background-color var(--transition-normal);
 }
-body.is-dragging, body.is-dragging * {
-    cursor: grabbing !important;
-}
 h1, h2, h3, h4 { font-weight: 600; color: var(--dark); margin-bottom: var(--space-md); line-height: 1.25; }
 h1 { font-size: var(--text-3xl); } h2 { font-size: var(--text-2xl); } h3 { font-size: var(--text-xl); } h4 { font-size: var(--text-lg); }
 p { margin-bottom: var(--space-md); color: var(--medium); line-height: 1.6; }
@@ -333,13 +326,9 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 .tab-action-btn i { font-size: 12px; }
 .tab-action-btn:hover { color: var(--primary); background: var(--primary-light); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
 .tab-action-btn.delete:hover { color: var(--danger); background: rgba(245, 101, 101, 0.1); }
-
-/* --- DRAG AND DROP CURSORS --- */
-.sidebar-menu.sortable-admin .sidebar-item,
-.reminders-list.sortable-admin .reminder-card,
-.posts-feed.sortable-admin .post-card {
-    cursor: grab;
-}
+.move-handle { cursor: move; margin-right: var(--space-sm); color: var(--medium); opacity: 0.5; touch-action: none; }
+.sidebar-placeholder { background: var(--primary-light); border: 2px dashed var(--primary); border-radius: var(--radius-md); margin: 0 var(--space-sm) var(--space-xxs); height: 46px; }
+.sidebar-item.dragging { opacity: 0.4; background-color: var(--primary-light); transform: scale(1.02); box-shadow: var(--shadow-lg); }
 
 /* Main Content Styles */
 .main-content {
@@ -444,6 +433,13 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
 }
 .toolbar-button:hover, .toolbar-dropdown-toggle:hover { background: var(--light); color: var(--dark); transform: scale(1.1); }
 .toolbar-button.active { background: var(--primary-light); color: var(--primary-dark); }
+/* --- NEW: Color Indicator Underline --- */
+.color-indicator {
+    position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+    width: 16px; height: 3px; border-radius: 2px;
+    background-color: var(--dark); /* Default color */
+    transition: background-color var(--transition-fast);
+}
 /* Toolbar Dropdown */
 .toolbar-dropdown { position: relative; }
 .toolbar-dropdown-toggle { width: auto; padding: 0 var(--space-sm); font-size: var(--text-sm); font-weight: 500; }
@@ -464,6 +460,17 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
 #format-block-menu .toolbar-dropdown-item[data-value="h3"] { font-size: var(--text-lg); font-weight: 600; }
 #format-block-menu .toolbar-dropdown-item[data-value="h4"] { font-size: var(--text-base); font-weight: 600; }
 #format-block-menu .toolbar-dropdown-item[data-value="blockquote"] { border-left: 3px solid var(--primary); padding-left: var(--space-sm); font-style: italic; }
+/* --- NEW: Color Picker Styles --- */
+.color-picker-menu {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-xs); padding: var(--space-sm);
+    min-width: auto;
+}
+.color-swatch {
+    width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+    border: 1px solid rgba(0,0,0,0.1); transition: transform var(--transition-fast);
+}
+.color-swatch:hover { transform: scale(1.15); box-shadow: var(--shadow-sm); }
+.color-swatch.active { border: 2px solid var(--primary); }
 
 .custom-editor-area {
     flex-grow: 1; padding: 0; outline: none; line-height: 1.7; color: var(--dark); font-size: 16px; min-height: 300px;
@@ -484,6 +491,7 @@ body.dark-mode .custom-editor-area h1, body.dark-mode .custom-editor-area h2, bo
 body.dark-mode .toolbar-dropdown-menu { background: var(--dark-lighter); border-color: var(--dark-light); }
 body.dark-mode .toolbar-dropdown-item { color: var(--dark-medium); }
 body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray); }
+body.dark-mode .color-indicator { background-color: var(--dark-medium); }
 
 /* --- END EDITOR --- */
 
@@ -498,11 +506,14 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
     animation: fadeIn var(--transition-normal) forwards; opacity: 0; border: 1px solid var(--light-gray);
 }
 .post-card.pinned { border-left: 4px solid var(--primary); }
+.post-card.dragging { opacity: 0.4; transform: scale(1.02); box-shadow: var(--shadow-lg); }
 .pin-icon {
     position: absolute; top: var(--space-lg); left: -10px; color: var(--primary); background-color: var(--lighter);
     border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
     box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
 }
+.post-card-drag-handle { position: absolute; top: var(--space-md); left: var(--space-md); padding: var(--space-xs); opacity: 0; transition: opacity var(--transition-fast); }
+.post-card:hover .post-card-drag-handle { opacity: 0.5; }
 .post-card.expanded {
     position: fixed; top: 54px; left: 260px; right: 0; bottom: 0; z-index: 100; overflow-y: auto; margin: 0;
     padding: var(--space-xl); padding-top: calc(68px + var(--space-lg)); background: white; border-radius: 0;
@@ -530,7 +541,7 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
 .post-actions .delete-button { background: var(--danger); }
 .post-actions .delete-button:hover { background: #E53E3E; }
 
-/* --- REMINDERS UI --- */
+/* --- REMINDERS UI - REVERTED & IMPROVED --- */
 .reminders-container {
     background: var(--lighter); border-radius: var(--radius-lg); padding: var(--space-lg);
     margin-bottom: var(--space-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
@@ -543,7 +554,7 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
 }
 .reminder-card {
     background: var(--lighter);
-    border-left: 12px solid var(--primary);
+    border-left: 5px solid var(--primary);
     padding: var(--space-md);
     border-radius: var(--radius-md); position: relative; transition: all var(--transition-normal);
     box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
@@ -573,37 +584,10 @@ body.dark-mode .reminder-action-btn { background: var(--dark-light); color: var(
 body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light); color: var(--primary); }
 /* --- END REMINDERS UI --- */
 
-
-/* --- DRAG AND DROP REFINEMENT STYLES --- */
-.sortable-ghost {
-    opacity: 0.4;
-    background: var(--primary-light);
-    border: 2px dashed var(--primary);
-}
-.sidebar-item.sortable-ghost {
-    border-radius: var(--radius-md);
-    margin-bottom: var(--space-xxs);
-}
-.reminder-card.sortable-ghost, .post-card.sortable-ghost {
-    box-shadow: none;
-}
-.sortable-chosen {
-    cursor: grabbing;
-}
-.sortable-drag {
-    opacity: 1 !important;
-    box-shadow: var(--shadow-xl) !important;
-    transform: scale(1.03) rotate(2deg);
-    z-index: 9999;
-}
-/* --- END DRAG AND DROP --- */
-
-
 /* Hide editing controls for non-admins */
 body.non-admin .add-tab-header-button, body.non-admin .button[onclick="openAnnouncementEditor()"],
-body.non-admin .tab-actions, body.non-admin .post-actions, body.non-admin #add-reminder-btn {
-    display: none !important;
-}
+body.non-admin .tab-actions, body.non-admin .post-actions, body.non-admin #add-reminder-btn,
+body.non-admin .move-handle, body.non-admin .post-card-drag-handle { display: none !important; }
 body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 /* Typography for rendered rich content */
 .post-content { font-size: var(--text-base); line-height: 1.7; color: var(--medium); word-wrap: break-word; }
@@ -620,8 +604,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
     transition: all var(--transition-fast); font-size: var(--text-sm); background: var(--lighter); padding: 0 var(--space-xs); transform-origin: left center;
 }
 .input-group input:focus + label, .input-group input:not(:placeholder-shown) + label,
-.input-group textarea:focus + label, .input-group textarea:not(:placeholder-shown) + label,
-.input-group select:focus + label, .input-group select + label {
+.input-group textarea:focus + label, .input-group textarea:not(:placeholder-shown) + label {
     top: -10px; font-size: var(--text-xs); color: var(--primary); transform: scale(0.85);
 }
 /* Animations */
@@ -700,13 +683,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 }
 #undo-button:hover { background-color: rgba(255, 255, 255, 0.1); }
 .snackbar-progress {
-    position: absolute; bottom: 0; left: 0; height: 4px; width: 100%;
-    background-color: transparent; /* Start transparent */
-}
-.snackbar.show .snackbar-progress {
-    background-color: var(--primary);
-    transform-origin: left;
-    animation: shrink 5s linear forwards;
+    position: absolute; bottom: 0; left: 0; height: 4px; width: 100%; background-color: var(--primary);
+    transform-origin: left; animation: shrink 5s linear forwards;
 }
 @keyframes shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
@@ -881,6 +859,27 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                         <button class="toolbar-button" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
                         <button class="toolbar-button" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
                         <button class="toolbar-button" data-command="strikeThrough" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
+                    </div>
+                     <!-- NEW: Color Pickers Group -->
+                    <div class="toolbar-group">
+                        <div class="toolbar-dropdown" id="text-color-dropdown">
+                            <button class="toolbar-dropdown-toggle" id="text-color-toggle" title="Text Color">
+                                <i class="fas fa-font"></i>
+                                <div class="color-indicator" id="text-color-indicator"></div>
+                            </button>
+                            <div class="toolbar-dropdown-menu color-picker-menu" id="text-color-menu">
+                                <!-- Color swatches will be populated by JS -->
+                            </div>
+                        </div>
+                        <div class="toolbar-dropdown" id="highlight-color-dropdown">
+                            <button class="toolbar-dropdown-toggle" id="highlight-color-toggle" title="Highlight Color">
+                                <i class="fas fa-highlighter"></i>
+                                <div class="color-indicator" id="highlight-color-indicator" style="background-color: #FFFF00;"></div>
+                            </button>
+                            <div class="toolbar-dropdown-menu color-picker-menu" id="highlight-color-menu">
+                                <!-- Color swatches will be populated by JS -->
+                            </div>
+                        </div>
                     </div>
                     <div class="toolbar-group">
                         <button class="toolbar-button" data-command="justifyLeft" title="Align Left"><i class="fas fa-align-left"></i></button>
@@ -1070,9 +1069,12 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             setupDarkMode();
             setupProfileDropdown();
             setupCustomEditor();
-            initializeDragAndDrop();
             UndoManager.init();
-            
+            if (isAdmin) {
+                setupSidebarDragAndDrop();
+                setupPostsDragAndDrop();
+            }
+
             tabNameInput.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter') {
                     event.preventDefault();
@@ -1087,18 +1089,23 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const editor = document.getElementById('announcement-content');
 
             populateFontDropdown();
+            // NEW: Populate color pickers
+            populateColorPickers();
             
+            // The single most important fix: prevent mousedown on dropdowns from stealing editor focus.
             const preventFocusSteal = (e) => e.preventDefault();
             document.querySelectorAll('.toolbar-dropdown-menu').forEach(menu => {
                 menu.addEventListener('mousedown', preventFocusSteal);
             });
 
+            // Single, robust click handler for the entire toolbar.
             toolbar.addEventListener('click', e => {
-                const button = e.target.closest('.toolbar-button, .toolbar-dropdown-toggle, .toolbar-dropdown-item');
+                const button = e.target.closest('.toolbar-button, .toolbar-dropdown-toggle, .toolbar-dropdown-item, .color-swatch');
                 if (!button) return;
 
                 const dropdown = button.closest('.toolbar-dropdown');
 
+                // Handle dropdown toggling
                 if (button.classList.contains('toolbar-dropdown-toggle')) {
                     const wasOpen = dropdown.classList.contains('open');
                     document.querySelectorAll('.toolbar-dropdown.open').forEach(d => d.classList.remove('open'));
@@ -1123,7 +1130,14 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     } else if (command === 'embedContent') {
                         openEmbedModal();
                     } else {
-                        document.execCommand(command, false, value);
+                        // NEW: Use 'styleWithCSS' for highlights to use background-color instead of <font> tags
+                        if (command === 'hiliteColor') {
+                             document.execCommand('styleWithCSS', false, true);
+                             document.execCommand(command, false, value);
+                             document.execCommand('styleWithCSS', false, false);
+                        } else {
+                            document.execCommand(command, false, value);
+                        }
                     }
                 }
                 
@@ -1132,6 +1146,13 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                        const toggle = dropdown.querySelector('.toolbar-dropdown-toggle');
                        if (toggle) {
                            toggle.innerHTML = `${button.textContent} <i class="fas fa-chevron-down"></i>`;
+                       }
+                    }
+                     // NEW: Update color indicators when a color is picked
+                    if (button.classList.contains('color-swatch')) {
+                       const indicator = dropdown.querySelector('.color-indicator');
+                       if (indicator) {
+                           indicator.style.backgroundColor = value;
                        }
                     }
                     dropdown.classList.remove('open');
@@ -1169,6 +1190,29 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 `<button class="toolbar-dropdown-item" data-command="fontName" data-value="${value}" style="font-family: ${value};">${name}</button>`
             ).join('');
         }
+        
+        // NEW: Function to populate color pickers
+        function populateColorPickers() {
+            const colors = [
+                '#000000', '#444444', '#666666', '#999999', '#CCCCCC', '#FFFFFF',
+                '#FF0000', '#FF9900', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF',
+                '#9900FF', '#FF00FF', '#F44E3B', '#D33115', '#9F0500', '#E27300'
+            ];
+            const highlightColors = [
+                '#FFFF00', '#90EE90', '#ADD8E6', '#FFB6C1', '#FFA07A', '#FFFFFF'
+            ];
+
+            const textColorMenu = document.getElementById('text-color-menu');
+            const highlightColorMenu = document.getElementById('highlight-color-menu');
+
+            textColorMenu.innerHTML = colors.map(color => 
+                `<button class="color-swatch" data-command="foreColor" data-value="${color}" style="background-color: ${color};"></button>`
+            ).join('');
+
+            highlightColorMenu.innerHTML = highlightColors.map(color => 
+                `<button class="color-swatch" data-command="hiliteColor" data-value="${color}" style="background-color: ${color};"></button>`
+            ).join('');
+        }
 
         function updateToolbarState() {
             const commands = ['bold', 'italic', 'underline', 'strikeThrough', 'justifyLeft', 'justifyCenter', 'justifyRight', 'insertUnorderedList', 'insertOrderedList'];
@@ -1178,6 +1222,19 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     button.classList.toggle('active', document.queryCommandState(command));
                 }
             });
+
+            // NEW: Update color indicators based on selection
+            const textColor = document.queryCommandValue('foreColor');
+            const highlightColor = document.queryCommandValue('hiliteColor');
+            
+            document.getElementById('text-color-indicator').style.backgroundColor = textColor || 'var(--dark)';
+            // For highlight, we need to handle browsers returning rgb()
+            const highlightIndicator = document.getElementById('highlight-color-indicator');
+            try {
+                 highlightIndicator.style.backgroundColor = new Option().style.color = highlightColor;
+            } catch(e) {
+                 highlightIndicator.style.backgroundColor = '#FFFF00'; // fallback
+            }
         }
         
         function openEmbedModal() { document.getElementById('embed-url-input').value = ''; embedModal.style.display = 'flex'; }
@@ -1265,9 +1322,10 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function clearSearch() { announcementSearchInput.value = ''; filterAnnouncements(); }
 
         function setupFirebaseListeners() {
-            tabsRef.orderByChild('order').on('value', snapshot => {
-                const tabData = snapshot.val();
-                tabs = tabData ? Object.keys(tabData).map(key => ({ id: key, ...tabData[key] })).sort((a,b) => (a.order || 0) - (b.order || 0)) : [];
+            tabsRef.on('value', snapshot => {
+                const tabsData = snapshot.val();
+                tabs = tabsData ? Object.values(tabsData) : [];
+                tabs.sort((a, b) => (a.order || 0) - (b.order || 0));
                 renderTabs();
                 if (tabs.length > 0 && (!currentTabId || !tabs.some(t => t.id === currentTabId))) {
                     setActiveTab(tabs[0].id);
@@ -1276,11 +1334,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     pinnedPostsFeed.innerHTML = ""; unpinnedPostsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
                 }
             });
-            remindersRef.orderByChild('order').on('value', snapshot => { 
-                const reminderData = snapshot.val();
-                reminders = reminderData ? Object.keys(reminderData).map(key => ({ id: key, ...reminderData[key] })) : [];
-                renderReminders(); 
-            });
+            remindersRef.on('value', snapshot => { reminders = snapshot.val() ? Object.values(snapshot.val()) : []; renderReminders(); });
         }
         
         function autoEmbed(htmlContent) {
@@ -1299,18 +1353,16 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function renderAnnouncements(announcements, skipAnimation = false) {
             const pinned = announcements.filter(a => a.pinned).sort((a, b) => (a.order || 0) - (b.order || 0));
             const unpinned = announcements.filter(a => !a.pinned).sort((a, b) => (b.order || 0) - (a.order || 0));
-            
             pinnedPostsHeader.style.display = pinned.length > 0 ? 'flex' : 'none';
             pinnedPostsFeed.innerHTML = pinned.map(ann => createPostElement(ann, skipAnimation)).join('');
             unpinnedPostsFeed.innerHTML = unpinned.map(ann => createPostElement(ann, skipAnimation)).join('');
             if (announcements.length === 0) { unpinnedPostsFeed.innerHTML = '<p>No announcements found for this tab.</p>'; }
-            
-            document.querySelectorAll('.post-card').forEach(card => card.addEventListener('click', (e) => { if (!e.target.closest('button, a, iframe, .post-actions')) { expandPost(card); } }));
+            document.querySelectorAll('.post-card').forEach(card => card.addEventListener('click', (e) => { if (!e.target.closest('button, .move-handle, .post-card-drag-handle, a, iframe')) { expandPost(card); } }));
             document.querySelectorAll('.post-actions button').forEach(button => button.addEventListener('click', e => e.stopPropagation()));
         }
 
         function createPostElement(announcement, skipAnimation = false) {
-            const postDate = new Date(announcement.timestamp || announcement.order).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
+            const postDate = new Date(announcement.order).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
             const pinButtonText = announcement.pinned ? 'Unpin' : 'Pin';
             const pinIcon = announcement.pinned ? `<div class="pin-icon"><i class="fas fa-thumbtack"></i></div>` : '';
             const actionsHtml = isAdmin ? `<div class="post-actions"><button class="button small secondary" onclick="togglePin(event, '${announcement.id}')">${pinButtonText}</button><button class="button small" onclick="editAnnouncement(event, '${announcement.id}')">Edit</button><button class="button small delete-button" onclick="deleteAnnouncement(event, '${announcement.id}')">Delete</button></div>` : '';
@@ -1319,106 +1371,54 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const tempDiv = document.createElement("div"); tempDiv.innerHTML = rawContent;
             const collapsedText = tempDiv.textContent || "";
             const animationStyle = skipAnimation ? 'style="animation: none; opacity: 1;"' : '';
-            return `<div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" ${animationStyle}>${pinIcon}${actionsHtml}<h3>${announcement.title}</h3><div class="collapsed-content">${collapsedText}</div><div class="post-details"><div class="post-content">${expandedContent}</div><div class="post-meta">Posted on ${postDate}</div></div></div>`;
+            return `<div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" draggable="${isAdmin}" ${animationStyle}><span class="post-card-drag-handle move-handle">☰</span>${pinIcon}${actionsHtml}<h3>${announcement.title}</h3><div class="collapsed-content">${collapsedText}</div><div class="post-details"><div class="post-content">${expandedContent}</div><div class="post-meta">Posted on ${postDate}</div></div></div>`;
         }
         
+        function saveTabs() {
+            if (!isAdmin) return;
+            const updates = tabs.reduce((acc, tab) => { acc[tab.id] = tab; return acc; }, {});
+            tabsRef.set(updates).catch(error => console.error("Error saving tabs:", error));
+        }
+
         function renderTabs() {
             sidebarMenu.innerHTML = tabs.map(tab => {
                 const actionsHtml = isAdmin ? `<div class="tab-actions"><button class="tab-action-btn" title="Edit Tab" onclick="editTab(event, '${tab.id}')"><i class="fas fa-pencil-alt"></i></button><button class="tab-action-btn delete" title="Delete Tab" onclick="deleteTab(event, '${tab.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
-                return `<li class="sidebar-item" data-tab-id="${tab.id}"><a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}">${tab.name}${actionsHtml}</a></li>`;
+                return `<li class="sidebar-item" data-tab-id="${tab.id}" draggable="${isAdmin}"><a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}"><span class="move-handle">☰</span> ${tab.name}${actionsHtml}</a></li>`;
             }).join('');
             document.querySelectorAll('.sidebar-item').forEach(item => {
-                item.addEventListener('click', e => { if (!e.target.closest('.tab-actions')) { e.preventDefault(); setActiveTab(item.dataset.tabId); if (window.innerWidth <= 768) sidebar.classList.remove('visible'); } });
+                item.addEventListener('click', e => { if (!e.target.closest('.tab-action-btn, .move-handle')) { e.preventDefault(); setActiveTab(item.dataset.tabId); if (window.innerWidth <= 768) sidebar.classList.remove('visible'); } });
             });
         }
         
-        // --- [START] RE-ENGINEERED DRAG-AND-DROP INITIALIZATION ---
-        function initializeDragAndDrop() {
-            if (!isAdmin) return;
-
-            // Define a single, robust configuration for all drag-and-drop instances.
-            // This is the key to a smooth, consistent experience.
-            const sharedSortableConfig = {
-                animation: 150,           // Smooth reordering animation
-                ghostClass: 'sortable-ghost', // Class for the drop placeholder
-                chosenClass: 'sortable-chosen', // Class for the item being dragged
-                dragClass: 'sortable-drag',     // Class for the clone of the item
-                forceFallback: true,        // Ensures custom styles are always applied
-                
-                // *** THE CORE FIX FOR A FLUID EXPERIENCE ***
-                // This combination ensures the dragged clone is not trapped by parent CSS
-                // and that containers with scrollbars will auto-scroll when dragging near the edge.
-                fallbackOnBody: true,
-                scroll: true,
-                scrollSensitivity: 50, // Pixels from edge to start scrolling
-                scrollSpeed: 10,       // Scroll speed
-
-                onStart: () => document.body.classList.add('is-dragging'),
-                onEnd: () => document.body.classList.remove('is-dragging'),
-            };
-
-            // --- Apply the configuration to each container ---
-
-            // 1. Sidebar Tabs
-            sidebarMenu.classList.add('sortable-admin');
-            new Sortable(sidebarMenu, {
-                ...sharedSortableConfig,
-                filter: '.tab-action-btn', // Ignore drags starting on action buttons
-                onEnd: (evt) => {
-                    const updates = {};
-                    evt.target.querySelectorAll('.sidebar-item').forEach((item, index) => {
-                        updates[`${item.dataset.tabId}/order`] = index;
-                    });
-                    tabsRef.update(updates);
+        function setupSidebarDragAndDrop() {
+            let draggedItem = null, placeholder = null;
+            sidebarMenu.addEventListener('dragstart', e => {
+                draggedItem = e.target.closest('.sidebar-item'); if (!draggedItem) return;
+                e.dataTransfer.effectAllowed = 'move'; placeholder = document.createElement('li'); placeholder.className = 'sidebar-placeholder';
+                setTimeout(() => { if(draggedItem) draggedItem.classList.add('dragging'); }, 0);
+            });
+            sidebarMenu.addEventListener('dragover', e => {
+                e.preventDefault(); if (!draggedItem) return;
+                const overElement = e.target.closest('.sidebar-item');
+                if (overElement && overElement !== draggedItem) {
+                    const rect = overElement.getBoundingClientRect(); const isBefore = e.clientY < rect.top + rect.height / 2;
+                    if (isBefore) { overElement.parentNode.insertBefore(placeholder, overElement); } else { overElement.parentNode.insertBefore(placeholder, overElement.nextSibling); }
                 }
             });
-
-            // 2. Reminders
-            remindersList.classList.add('sortable-admin');
-            new Sortable(remindersList, {
-                ...sharedSortableConfig,
-                filter: '.reminder-action-btn', // Ignore drags on action buttons
-                onEnd: (evt) => {
-                    const updates = {};
-                    evt.target.querySelectorAll('.reminder-card').forEach((card, index) => {
-                        updates[`${card.dataset.id}/order`] = index;
-                    });
-                    remindersRef.update(updates);
-                }
-            });
-
-            // 3. Pinned Announcements
-            pinnedPostsFeed.classList.add('sortable-admin');
-            new Sortable(pinnedPostsFeed, {
-                ...sharedSortableConfig,
-                filter: '.post-actions, button, a, iframe', // Ignore drags on interactive content
-                onEnd: (evt) => {
-                    suppressPostAnimation = true;
-                    const updates = {};
-                    evt.target.querySelectorAll('.post-card').forEach((card, index) => {
-                        updates[`${currentTabId}/${card.dataset.id}/order`] = index;
-                    });
-                    announcementsRef.update(updates);
-                }
-            });
-
-            // 4. Unpinned Announcements
-            unpinnedPostsFeed.classList.add('sortable-admin');
-            new Sortable(unpinnedPostsFeed, {
-                ...sharedSortableConfig,
-                filter: '.post-actions, button, a, iframe',
-                onEnd: (evt) => {
-                    suppressPostAnimation = true;
-                    const updates = {};
-                    Array.from(evt.target.querySelectorAll('.post-card')).forEach((card, index) => {
-                        updates[`${currentTabId}/${card.dataset.id}/order`] = Date.now() - index;
-                    });
-                    announcementsRef.update(updates);
-                }
+            const endDrag = () => { if(draggedItem) draggedItem.classList.remove('dragging'); if(placeholder) placeholder.remove(); draggedItem = null; placeholder = null; }
+            sidebarMenu.addEventListener('dragend', endDrag);
+            sidebarMenu.addEventListener('drop', e => {
+                e.preventDefault(); if (!placeholder || !placeholder.parentNode || !draggedItem) { endDrag(); return; }
+                placeholder.parentNode.insertBefore(draggedItem, placeholder);
+                const originalIndex = tabs.findIndex(t => t.id === draggedItem.dataset.tabId);
+                const [movedTab] = tabs.splice(originalIndex, 1);
+                const newIndex = Array.from(sidebarMenu.children).indexOf(draggedItem);
+                tabs.splice(newIndex, 0, movedTab);
+                tabs.forEach((tab, index) => { tab.order = index; });
+                saveTabs(); endDrag();
             });
         }
-        // --- [END] RE-ENGINEERED DRAG-AND-DROP INITIALIZATION ---
-        
+
         function setActiveTab(tabId) {
             currentTabId = tabId; const tab = tabs.find(t => t.id === tabId);
             if (tab) {
@@ -1426,12 +1426,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 document.querySelectorAll('.sidebar-link.active').forEach(l => l.classList.remove('active'));
                 const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
                 if (activeLink) activeLink.classList.add('active');
-                announcementsRef.child(tabId).off(); 
-                announcementsRef.child(tabId).on('value', snapshot => { 
-                    const annData = snapshot.val();
-                    currentTabAnnouncements = annData ? Object.keys(annData).map(key => ({ id: key, ...annData[key] })) : [];
-                    filterAnnouncements(); 
-                });
+                announcementsRef.child(tabId).off();
+                announcementsRef.child(tabId).on('value', snapshot => { currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : []; filterAnnouncements(); });
             }
         }
 
@@ -1448,12 +1444,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function saveTab() {
             if (!isAdmin) return;
             const name = tabNameInput.value.trim(); if (!name) return alert('Please enter a tab name');
-            if (currentTabBeingEdited) { 
-                tabsRef.child(currentTabBeingEdited).update({ name: name }); 
-            } else {
-                const newTabRef = tabsRef.push(); 
-                const currentMaxOrder = tabs.length > 0 ? Math.max(...tabs.map(t => t.order || 0)) + 1 : 0;
-                newTabRef.set({ name, order: currentMaxOrder });
+            if (currentTabBeingEdited) { tabsRef.child(currentTabBeingEdited).update({ name: name }); } else {
+                const newTabRef = tabsRef.push(); newTabRef.set({ id: newTabRef.key, name, order: tabs.length });
             }
             closeTabEditor();
         }
@@ -1496,8 +1488,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const title = announcementTitleInput.value.trim(); const content = announcementContentEditor.innerHTML;
             if (!title) return alert('Please enter a title.');
             const newAnnRef = announcementsRef.child(currentTabId).push();
-            const now = Date.now();
-            const newAnn = { title, content, pinned: false, order: now, timestamp: now };
+            const newAnn = { id: newAnnRef.key, title, content, pinned: false, order: Date.now() };
             newAnnRef.set(newAnn).then(closeAnnouncementEditor);
         }
         function saveEditedAnnouncement(id) {
@@ -1511,20 +1502,11 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             event.stopPropagation();
             const announcement = currentTabAnnouncements.find(a => a.id === id);
             if (!announcement) return;
-
-            const isNowPinned = !announcement.pinned;
-            const updates = { pinned: isNowPinned };
-
-            if (!isNowPinned) {
-                updates.order = Date.now();
-            } else {
-                const pinnedOrders = currentTabAnnouncements.filter(a => a.pinned && a.id !== id).map(a => a.order || 0);
-                const minOrder = pinnedOrders.length > 0 ? Math.min(...pinnedOrders) : 0;
-                updates.order = minOrder - 1;
+            announcementsRef.child(currentTabId).child(id).update({ pinned: !announcement.pinned });
+            
+            if (expandedPost) {
+                collapsePost(expandedPost);
             }
-
-            announcementsRef.child(currentTabId).child(id).update(updates);
-            if (expandedPost) collapsePost(expandedPost);
         };
 
         function expandPost(postElement) {
@@ -1555,9 +1537,40 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 });
             });
         };
+
+        function setupPostsDragAndDrop() {
+            let draggedPost = null, postPlaceholder = null, sourceContainer = null;
+            classroomInfo.addEventListener('dragstart', e => {
+                draggedPost = e.target.closest('.post-card[draggable="true"]'); if (!draggedPost) return;
+                sourceContainer = draggedPost.parentElement; e.dataTransfer.effectAllowed = 'move';
+                postPlaceholder = document.createElement('div'); postPlaceholder.className = 'post-placeholder';
+                postPlaceholder.style.height = `${draggedPost.offsetHeight}px`;
+                setTimeout(() => { if (draggedPost) draggedPost.classList.add('dragging'); }, 0);
+            });
+            classroomInfo.addEventListener('dragover', e => {
+                if (!draggedPost || !sourceContainer) return;
+                const currentContainer = e.target.closest('.posts-feed'); if (currentContainer !== sourceContainer) return;
+                e.preventDefault(); const overElement = e.target.closest('.post-card');
+                if (overElement && overElement !== draggedPost) {
+                    const rect = overElement.getBoundingClientRect(); const isBefore = e.clientY < rect.top + rect.height / 2;
+                    if (isBefore) { sourceContainer.insertBefore(postPlaceholder, overElement); } else { sourceContainer.insertBefore(postPlaceholder, overElement.nextSibling); }
+                } else if (!overElement && !sourceContainer.contains(postPlaceholder)) { sourceContainer.appendChild(postPlaceholder); }
+            });
+            const endDrag = () => { if(draggedPost) draggedPost.classList.remove('dragging'); if(postPlaceholder) postPlaceholder.remove(); draggedPost = null; postPlaceholder = null; sourceContainer = null; };
+            classroomInfo.addEventListener('dragend', endDrag);
+            classroomInfo.addEventListener('drop', e => {
+                e.preventDefault(); if (!postPlaceholder || !postPlaceholder.parentNode || !draggedPost || !sourceContainer) { endDrag(); return; }
+                postPlaceholder.parentNode.insertBefore(draggedPost, postPlaceholder);
+                const updates = {}; const isPinnedList = sourceContainer.id === 'pinned-posts-feed';
+                const orderedIds = Array.from(sourceContainer.querySelectorAll('.post-card')).map(p => p.dataset.id);
+                if (isPinnedList) { orderedIds.forEach((id, index) => { updates[`${id}/order`] = index; }); } else { orderedIds.forEach((id, index) => { updates[`${id}/order`] = Date.now() - index; }); }
+                if (Object.keys(updates).length > 0) { suppressPostAnimation = true; announcementsRef.child(currentTabId).update(updates); }
+                endDrag();
+            });
+        }
         
         function renderReminders() {
-            remindersList.innerHTML = reminders.map(rem => {
+            remindersList.innerHTML = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date)).map(rem => {
                 if (!rem || !rem.id) return '';
                 const actionsHtml = isAdmin ? `<div class="reminder-actions"><button class="reminder-action-btn" onclick="editReminder(event, '${rem.id}')"><i class="fas fa-pencil-alt"></i></button><button class="reminder-action-btn" onclick="deleteReminder(event, '${rem.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
                 return `
@@ -1591,18 +1604,11 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             if (!title || !date) return alert('Please enter a title and date');
             const description = document.getElementById('reminder-description').value.trim();
             const type = document.getElementById('reminder-type').value;
-            const id = currentReminderBeingEdited;
-            const reminder = { title, description, date, type };
-            
-            if (id) {
-                remindersRef.child(id).update(reminder).then(closeReminderEditor);
-            } else {
-                const currentMaxOrder = reminders.length > 0 ? Math.max(...reminders.map(r => r.order || 0)) + 1 : 0;
-                reminder.order = currentMaxOrder;
-                remindersRef.push(reminder).then(closeReminderEditor);
-            }
+            const id = currentReminderBeingEdited || database.ref().push().key;
+            const reminder = { id, title, description, date, type };
+            database.ref('reminders/' + id).set(reminder).then(closeReminderEditor);
         }
-
+        
         window.editReminder = (event, id) => { event.stopPropagation(); openReminderEditor(id); };
         window.deleteReminder = (event, id) => {
             event.stopPropagation(); if (!isAdmin) return;
@@ -1616,34 +1622,26 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         };
         
-        // --- Undo Snackbar Manager ---
         const UndoManager = {
-            timeoutId: null,
-            init() { /* no-op */ },
-            show(message, undoCallback) {
-                if (this.timeoutId) clearTimeout(this.timeoutId);
-                
-                const snackbar = document.getElementById('undo-snackbar');
-                const messageEl = document.getElementById('undo-message');
-                const undoBtn = document.getElementById('undo-button');
-
-                messageEl.textContent = message;
-
-                const newUndoBtn = undoBtn.cloneNode(true);
-                undoBtn.parentNode.replaceChild(newUndoBtn, undoBtn);
-                newUndoBtn.addEventListener('click', () => {
-                    undoCallback();
-                    this.hide(snackbar);
-                }, { once: true });
-
-                snackbar.classList.add('show');
-
-                this.timeoutId = setTimeout(() => this.hide(snackbar), 5000);
+            queue: [], isShowing: false,
+            init() {},
+            show(message, undoCallback) { this.queue.push({ message, undoCallback }); this.processQueue(); },
+            processQueue() {
+                if (this.isShowing || this.queue.length === 0) return;
+                this.isShowing = true; const { message, undoCallback } = this.queue.shift();
+                const snackbar = document.createElement('div'); snackbar.className = 'snackbar';
+                snackbar.innerHTML = `<i class="fas fa-check-circle"></i><span>${message}</span><button class="undo-btn">UNDO</button><div class="snackbar-progress"></div>`;
+                document.body.appendChild(snackbar);
+                const undoButton = snackbar.querySelector('.undo-btn');
+                undoButton.style.cssText = document.getElementById('undo-button').style.cssText;
+                undoButton.onclick = () => { undoCallback(); this.hide(snackbar); };
+                setTimeout(() => snackbar.classList.add('show'), 50);
+                setTimeout(() => this.hide(snackbar), 5000);
             },
             hide(snackbar) {
-                if (this.timeoutId) clearTimeout(this.timeoutId);
-                this.timeoutId = null;
+                if (!snackbar) return;
                 snackbar.classList.remove('show');
+                setTimeout(() => { snackbar.remove(); this.isShowing = false; this.processQueue(); }, 500);
             }
         };
 
@@ -1665,3 +1663,4 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
     </script>
 </body>
 </html>
+```
