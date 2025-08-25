@@ -1072,7 +1072,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             setupDarkMode();
             setupProfileDropdown();
             setupCustomEditor();
-            initializeDragAndDrop(); // REBUILT: Centralized D&D initialization
+            initializeDragAndDrop(); // Centralized D&D initialization
             UndoManager.init();
             
             tabNameInput.addEventListener('keydown', (event) => {
@@ -1270,8 +1270,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             tabsRef.orderByChild('order').on('value', snapshot => {
                 const tabsData = snapshot.val();
                 tabs = tabsData ? Object.values(tabsData) : [];
-                // The orderByChild in the query should handle sorting, but we can sort client-side as a fallback.
-                tabs.sort((a, b) => (a.order || 0) - (b.order || 0));
                 renderTabs();
                 if (tabs.length > 0 && (!currentTabId || !tabs.some(t => t.id === currentTabId))) {
                     setActiveTab(tabs[0].id);
@@ -1280,7 +1278,10 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     pinnedPostsFeed.innerHTML = ""; unpinnedPostsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
                 }
             });
-            remindersRef.orderByChild('order').on('value', snapshot => { reminders = snapshot.val() ? Object.values(snapshot.val()) : []; renderReminders(); });
+            remindersRef.orderByChild('order').on('value', snapshot => { 
+                reminders = snapshot.val() ? Object.values(snapshot.val()) : []; 
+                renderReminders(); 
+            });
         }
         
         function autoEmbed(htmlContent) {
@@ -1298,11 +1299,13 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
         function renderAnnouncements(announcements, skipAnimation = false) {
             const pinned = announcements.filter(a => a.pinned).sort((a, b) => (a.order || 0) - (b.order || 0));
-            const unpinned = announcements.filter(a => !a.pinned).sort((a, b) => (b.order || Date.now()) - (a.order || Date.now()));
+            const unpinned = announcements.filter(a => !a.pinned).sort((a, b) => (b.order || 0) - (a.order || 0));
+            
             pinnedPostsHeader.style.display = pinned.length > 0 ? 'flex' : 'none';
             pinnedPostsFeed.innerHTML = pinned.map(ann => createPostElement(ann, skipAnimation)).join('');
             unpinnedPostsFeed.innerHTML = unpinned.map(ann => createPostElement(ann, skipAnimation)).join('');
             if (announcements.length === 0) { unpinnedPostsFeed.innerHTML = '<p>No announcements found for this tab.</p>'; }
+            
             document.querySelectorAll('.post-card').forEach(card => card.addEventListener('click', (e) => { if (!e.target.closest('button, a, iframe, .post-actions')) { expandPost(card); } }));
             document.querySelectorAll('.post-actions button').forEach(button => button.addEventListener('click', e => e.stopPropagation()));
         }
@@ -1330,9 +1333,9 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         }
         
-        // --- REBUILT: DRAG-AND-DROP INITIALIZATION ---
+        // --- REBUILT & FIXED: DRAG-AND-DROP INITIALIZATION ---
         function initializeDragAndDrop() {
-            if (!isAdmin) return; // Only enable for admins
+            if (!isAdmin) return; 
 
             const body = document.body;
             const commonSortableOptions = {
@@ -1341,10 +1344,10 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 chosenClass: 'sortable-chosen',
                 dragClass: 'sortable-drag',
                 onStart: () => body.classList.add('is-dragging'),
-                onEnd: () => body.classList.remove('is-dragging'),
+                // onEnd is defined per-instance to release the 'is-dragging' class
             };
 
-            // 1. Sidebar Tabs Sorting
+            // 1. Sidebar Tabs Sorting (This works well)
             sidebarMenu.classList.add('sortable-admin');
             new Sortable(sidebarMenu, {
                 ...commonSortableOptions,
@@ -1359,7 +1362,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
 
-            // 2. Reminders Sorting
+            // 2. Reminders Sorting (Stable implementation)
             remindersList.classList.add('sortable-admin');
             new Sortable(remindersList, {
                 ...commonSortableOptions,
@@ -1374,39 +1377,40 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
 
-            // 3. Announcements Sorting (including between pinned/unpinned)
-            [pinnedPostsFeed, unpinnedPostsFeed].forEach(feed => {
-                feed.classList.add('sortable-admin');
-                new Sortable(feed, {
-                    ...commonSortableOptions,
-                    group: 'posts', // This allows dragging between the two lists
-                    filter: '.post-actions, button, a, iframe',
-                    onEnd: (evt) => {
-                        body.classList.remove('is-dragging');
-                        suppressPostAnimation = true; // Prevent flicker on re-render
-                        
-                        const updates = {};
-                        const postId = evt.item.dataset.id;
-                        const isNowPinned = evt.to.id === 'pinned-posts-feed';
+            // 3. Pinned Announcements Sorting (FIXED: Separate list, no grouping)
+            pinnedPostsFeed.classList.add('sortable-admin');
+            new Sortable(pinnedPostsFeed, {
+                ...commonSortableOptions,
+                filter: '.post-actions, button, a, iframe',
+                onEnd: (evt) => {
+                    body.classList.remove('is-dragging');
+                    suppressPostAnimation = true;
+                    const updates = {};
+                    evt.target.querySelectorAll('.post-card').forEach((card, index) => {
+                        // Pinned posts are ordered by a simple ascending index.
+                        updates[`${card.dataset.id}/order`] = index;
+                    });
+                    announcementsRef.child(currentTabId).update(updates);
+                }
+            });
 
-                        // Update the pinned status of the moved item
-                        updates[`${postId}/pinned`] = isNowPinned;
-                        
-                        // Re-order the pinned list
-                        pinnedPostsFeed.querySelectorAll('.post-card').forEach((card, index) => {
-                            updates[`${card.dataset.id}/order`] = index;
-                        });
-                        
-                        // Re-order the unpinned list (using reverse timestamp for default sort)
-                        unpinnedPostsFeed.querySelectorAll('.post-card').forEach((card, index) => {
-                            const announcement = currentTabAnnouncements.find(a => a.id === card.dataset.id);
-                            // Preserve original timestamp if it exists, otherwise use current time
-                            updates[`${card.dataset.id}/order`] = announcement.timestamp || Date.now();
-                        });
-                        
-                        announcementsRef.child(currentTabId).update(updates);
-                    }
-                });
+            // 4. Unpinned Announcements Sorting (FIXED: Separate list, no grouping)
+            unpinnedPostsFeed.classList.add('sortable-admin');
+            new Sortable(unpinnedPostsFeed, {
+                ...commonSortableOptions,
+                filter: '.post-actions, button, a, iframe',
+                onEnd: (evt) => {
+                    body.classList.remove('is-dragging');
+                    suppressPostAnimation = true;
+                    const updates = {};
+                    const items = Array.from(evt.target.querySelectorAll('.post-card'));
+                    // Unpinned posts are sorted by timestamp (desc), so we re-calculate new descending timestamps.
+                    items.forEach((card, index) => {
+                        // The first item gets the newest timestamp, the last gets an older one.
+                        updates[`${card.dataset.id}/order`] = Date.now() - index;
+                    });
+                    announcementsRef.child(currentTabId).update(updates);
+                }
             });
         }
         
@@ -1505,12 +1509,13 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const isNowPinned = !announcement.pinned;
             const updates = { pinned: isNowPinned };
 
-            // When unpinning, give it the current time as its order to go to the top of the unpinned list
             if (!isNowPinned) {
+                // When unpinning, give it the current time as its order to go to the top of the unpinned list
                 updates.order = Date.now();
             } else {
-                // When pinning, give it the lowest order number to go to the top of the pinned list
-                const minOrder = Math.min(...currentTabAnnouncements.filter(a => a.pinned && a.id !== id).map(a => a.order || 0), 0);
+                // When pinning, give it an order number lower than any other pinned post to go to the top
+                const pinnedOrders = currentTabAnnouncements.filter(a => a.pinned && a.id !== id).map(a => a.order || 0);
+                const minOrder = pinnedOrders.length > 0 ? Math.min(...pinnedOrders) : 0;
                 updates.order = minOrder - 1;
             }
 
@@ -1653,4 +1658,4 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function setupModalCloseHandlers() { window.onclick = e => { if (e.target.classList.contains('modal')) { e.target.style.display = 'none'; } }; }
     </script>
 </body>
-</html>```
+</html>
