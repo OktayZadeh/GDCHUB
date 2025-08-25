@@ -313,9 +313,6 @@ body.dark-mode .add-tab-header-button { color: var(--dark-medium); }
 body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light-gray); color: var(--primary); }
 .sidebar-menu { list-style: none; padding: var(--space-sm) 0; margin: 0; flex-grow: 1; overflow-y: auto; }
 .sidebar-item { position: relative; margin-bottom: var(--space-xxs); padding: 0 var(--space-sm); transition: transform var(--transition-fast), opacity var(--transition-fast); }
-.sidebar-item.sortable-chosen { cursor: grabbing; }
-.sidebar-item.sortable-ghost { opacity: 0.4; background: var(--primary-light); border-radius: var(--radius-md); }
-.sidebar-item.sortable-drag { opacity: 0; }
 .sidebar-link {
     display: flex; align-items: center; color: var(--medium); text-decoration: none; padding: var(--space-sm) var(--space-md);
     transition: all var(--transition-fast); border-radius: var(--radius-md); font-size: var(--text-sm); font-weight: 500;
@@ -494,18 +491,8 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
     cursor: pointer; transition: all var(--transition-normal) cubic-bezier(0.25, 0.8, 0.25, 1); position: relative;
     animation: fadeIn var(--transition-normal) forwards; opacity: 0; border: 1px solid var(--light-gray);
 }
-.post-card.sortable-chosen { cursor: grabbing; }
 .posts-feed.sortable-admin .post-card { cursor: grab; }
 .post-card.pinned { border-left: 4px solid var(--primary); }
-.post-card.sortable-ghost {
-    opacity: 0.4;
-    background: var(--primary-light);
-    border: 2px dashed var(--primary);
-}
-.post-card.sortable-drag {
-    box-shadow: var(--shadow-xl) !important;
-    transform: scale(1.02);
-}
 .pin-icon {
     position: absolute; top: var(--space-lg); left: -10px; color: var(--primary); background-color: var(--lighter);
     border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
@@ -557,17 +544,6 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
     border-radius: var(--radius-md); position: relative; transition: all var(--transition-normal);
     box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
 }
-/* SortableJS Drag & Drop Styles */
-.reminder-card.sortable-chosen { cursor: grabbing; }
-.reminder-card.sortable-ghost {
-    opacity: 0.4;
-    background: var(--primary-light);
-    border: 2px dashed var(--primary);
-}
-.reminder-card.sortable-drag {
-    box-shadow: var(--shadow-xl) !important;
-    transform: scale(1.03);
-}
 .reminder-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
 .reminder-card.trip { border-left-color: var(--success); }
 .reminder-card.test { border-left-color: var(--danger); }
@@ -592,6 +568,38 @@ body.dark-mode .reminder-title { color: white; }
 body.dark-mode .reminder-action-btn { background: var(--dark-light); color: var(--dark-medium); }
 body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light); color: var(--primary); }
 /* --- END REMINDERS UI --- */
+
+
+/* --- DRAG AND DROP REFINEMENT STYLES --- */
+
+/* GHOST: The placeholder style for where the item will drop */
+.sidebar-item.sortable-ghost,
+.reminder-card.sortable-ghost,
+.post-card.sortable-ghost {
+    opacity: 0.4;
+    background: var(--primary-light);
+    border: 2px dashed var(--primary);
+}
+
+/* CHOSEN: The style for the original item in the list after it's been picked up */
+.sidebar-item.sortable-chosen,
+.reminder-card.sortable-chosen,
+.post-card.sortable-chosen {
+    cursor: grabbing;
+    background-color: var(--primary-light);
+}
+
+/* DRAG: The style for the element clone being dragged by the cursor */
+.sidebar-item.sortable-drag,
+.reminder-card.sortable-drag,
+.post-card.sortable-drag {
+    opacity: 1 !important; /* Ensure dragged item is fully visible */
+    box-shadow: var(--shadow-xl) !important;
+    transform: scale(1.03) rotate(2deg); /* Lift and tilt effect */
+    z-index: 9999;
+}
+/* --- END DRAG AND DROP --- */
+
 
 /* Hide editing controls for non-admins */
 body.non-admin .add-tab-header-button, body.non-admin .button[onclick="openAnnouncementEditor()"],
@@ -1064,13 +1072,9 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             setupDarkMode();
             setupProfileDropdown();
             setupCustomEditor();
+            initializeDragAndDrop(); // REBUILT: Centralized D&D initialization
             UndoManager.init();
-            if (isAdmin) {
-                initSortableSidebar();
-                initSortableReminders();
-                initSortablePosts();
-            }
-
+            
             tabNameInput.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter') {
                     event.preventDefault();
@@ -1263,9 +1267,10 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function clearSearch() { announcementSearchInput.value = ''; filterAnnouncements(); }
 
         function setupFirebaseListeners() {
-            tabsRef.on('value', snapshot => {
+            tabsRef.orderByChild('order').on('value', snapshot => {
                 const tabsData = snapshot.val();
                 tabs = tabsData ? Object.values(tabsData) : [];
+                // The orderByChild in the query should handle sorting, but we can sort client-side as a fallback.
                 tabs.sort((a, b) => (a.order || 0) - (b.order || 0));
                 renderTabs();
                 if (tabs.length > 0 && (!currentTabId || !tabs.some(t => t.id === currentTabId))) {
@@ -1275,7 +1280,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     pinnedPostsFeed.innerHTML = ""; unpinnedPostsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
                 }
             });
-            remindersRef.on('value', snapshot => { reminders = snapshot.val() ? Object.values(snapshot.val()) : []; renderReminders(); });
+            remindersRef.orderByChild('order').on('value', snapshot => { reminders = snapshot.val() ? Object.values(snapshot.val()) : []; renderReminders(); });
         }
         
         function autoEmbed(htmlContent) {
@@ -1293,7 +1298,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
         function renderAnnouncements(announcements, skipAnimation = false) {
             const pinned = announcements.filter(a => a.pinned).sort((a, b) => (a.order || 0) - (b.order || 0));
-            const unpinned = announcements.filter(a => !a.pinned).sort((a, b) => (b.order || 0) - (a.order || 0));
+            const unpinned = announcements.filter(a => !a.pinned).sort((a, b) => (b.order || Date.now()) - (a.order || Date.now()));
             pinnedPostsHeader.style.display = pinned.length > 0 ? 'flex' : 'none';
             pinnedPostsFeed.innerHTML = pinned.map(ann => createPostElement(ann, skipAnimation)).join('');
             unpinnedPostsFeed.innerHTML = unpinned.map(ann => createPostElement(ann, skipAnimation)).join('');
@@ -1303,7 +1308,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         }
 
         function createPostElement(announcement, skipAnimation = false) {
-            const postDate = new Date(announcement.order).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
+            const postDate = new Date(announcement.timestamp || announcement.order).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
             const pinButtonText = announcement.pinned ? 'Unpin' : 'Pin';
             const pinIcon = announcement.pinned ? `<div class="pin-icon"><i class="fas fa-thumbtack"></i></div>` : '';
             const actionsHtml = isAdmin ? `<div class="post-actions"><button class="button small secondary" onclick="togglePin(event, '${announcement.id}')">${pinButtonText}</button><button class="button small" onclick="editAnnouncement(event, '${announcement.id}')">Edit</button><button class="button small delete-button" onclick="deleteAnnouncement(event, '${announcement.id}')">Delete</button></div>` : '';
@@ -1315,12 +1320,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             return `<div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" ${animationStyle}>${pinIcon}${actionsHtml}<h3>${announcement.title}</h3><div class="collapsed-content">${collapsedText}</div><div class="post-details"><div class="post-content">${expandedContent}</div><div class="post-meta">Posted on ${postDate}</div></div></div>`;
         }
         
-        function saveTabs() {
-            if (!isAdmin) return;
-            const updates = tabs.reduce((acc, tab) => { acc[tab.id] = tab; return acc; }, {});
-            tabsRef.set(updates).catch(error => console.error("Error saving tabs:", error));
-        }
-
         function renderTabs() {
             sidebarMenu.innerHTML = tabs.map(tab => {
                 const actionsHtml = isAdmin ? `<div class="tab-actions"><button class="tab-action-btn" title="Edit Tab" onclick="editTab(event, '${tab.id}')"><i class="fas fa-pencil-alt"></i></button><button class="tab-action-btn delete" title="Delete Tab" onclick="deleteTab(event, '${tab.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
@@ -1331,72 +1330,81 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         }
         
-        // --- SMOOTH DRAG AND DROP WITH SORTABLE.JS ---
-        function initSortableSidebar() {
-            sidebarMenu.classList.add('sortable-admin');
-            new Sortable(sidebarMenu, {
+        // --- REBUILT: DRAG-AND-DROP INITIALIZATION ---
+        function initializeDragAndDrop() {
+            if (!isAdmin) return; // Only enable for admins
+
+            const body = document.body;
+            const commonSortableOptions = {
                 animation: 150,
                 ghostClass: 'sortable-ghost',
                 chosenClass: 'sortable-chosen',
                 dragClass: 'sortable-drag',
-                filter: '.tab-actions', // Clicking buttons won't start a drag
+                onStart: () => body.classList.add('is-dragging'),
+                onEnd: () => body.classList.remove('is-dragging'),
+            };
+
+            // 1. Sidebar Tabs Sorting
+            sidebarMenu.classList.add('sortable-admin');
+            new Sortable(sidebarMenu, {
+                ...commonSortableOptions,
+                filter: '.tab-actions',
                 onEnd: (evt) => {
-                    const newOrderedIds = Array.from(evt.target.querySelectorAll('.sidebar-item')).map(item => item.dataset.tabId);
-                    tabs.sort((a, b) => newOrderedIds.indexOf(a.id) - newOrderedIds.indexOf(b.id));
-                    tabs.forEach((tab, index) => { tab.order = index; });
-                    saveTabs();
+                    body.classList.remove('is-dragging');
+                    const updates = {};
+                    evt.target.querySelectorAll('.sidebar-item').forEach((item, index) => {
+                        updates[`${item.dataset.tabId}/order`] = index;
+                    });
+                    tabsRef.update(updates);
                 }
             });
-        }
 
-        function initSortableReminders() {
+            // 2. Reminders Sorting
             remindersList.classList.add('sortable-admin');
             new Sortable(remindersList, {
-                animation: 150,
-                ghostClass: 'reminder-card sortable-ghost', // Use card styles for placeholder
-                chosenClass: 'sortable-chosen',
-                dragClass: 'sortable-drag',
+                ...commonSortableOptions,
                 filter: '.reminder-actions',
                 onEnd: (evt) => {
+                    body.classList.remove('is-dragging');
                     const updates = {};
-                    const orderedCards = Array.from(evt.target.querySelectorAll('.reminder-card'));
-                    orderedCards.forEach((card, index) => {
+                    evt.target.querySelectorAll('.reminder-card').forEach((card, index) => {
                         updates[`${card.dataset.id}/order`] = index;
                     });
-                    if (Object.keys(updates).length > 0) {
-                        remindersRef.update(updates);
-                    }
+                    remindersRef.update(updates);
                 }
             });
-        }
 
-        function initSortablePosts() {
+            // 3. Announcements Sorting (including between pinned/unpinned)
             [pinnedPostsFeed, unpinnedPostsFeed].forEach(feed => {
                 feed.classList.add('sortable-admin');
                 new Sortable(feed, {
-                    group: 'posts', // Allows dragging between pinned and unpinned
-                    animation: 150,
-                    ghostClass: 'post-card sortable-ghost',
-                    chosenClass: 'sortable-chosen',
-                    dragClass: 'sortable-drag',
+                    ...commonSortableOptions,
+                    group: 'posts', // This allows dragging between the two lists
                     filter: '.post-actions, button, a, iframe',
                     onEnd: (evt) => {
-                        const { to, newIndex, oldIndex, item } = evt;
-                        const postId = item.dataset.id;
-                        const isNowPinned = to.id === 'pinned-posts-feed';
+                        body.classList.remove('is-dragging');
+                        suppressPostAnimation = true; // Prevent flicker on re-render
                         
-                        // Update the moved item's pinned status
-                        announcementsRef.child(currentTabId).child(postId).update({ pinned: isNowPinned });
+                        const updates = {};
+                        const postId = evt.item.dataset.id;
+                        const isNowPinned = evt.to.id === 'pinned-posts-feed';
 
-                        // Re-order both lists
-                        suppressPostAnimation = true;
-                        const pinnedUpdates = {};
-                        Array.from(pinnedPostsFeed.querySelectorAll('.post-card')).forEach((p, i) => { pinnedUpdates[`${p.dataset.id}/order`] = i; });
-                        announcementsRef.child(currentTabId).update(pinnedUpdates);
-
-                        const unpinnedUpdates = {};
-                        Array.from(unpinnedPostsFeed.querySelectorAll('.post-card')).forEach((p, i) => { unpinnedUpdates[`${p.dataset.id}/order`] = Date.now() - i; });
-                        announcementsRef.child(currentTabId).update(unpinnedUpdates);
+                        // Update the pinned status of the moved item
+                        updates[`${postId}/pinned`] = isNowPinned;
+                        
+                        // Re-order the pinned list
+                        pinnedPostsFeed.querySelectorAll('.post-card').forEach((card, index) => {
+                            updates[`${card.dataset.id}/order`] = index;
+                        });
+                        
+                        // Re-order the unpinned list (using reverse timestamp for default sort)
+                        unpinnedPostsFeed.querySelectorAll('.post-card').forEach((card, index) => {
+                            const announcement = currentTabAnnouncements.find(a => a.id === card.dataset.id);
+                            // Preserve original timestamp if it exists, otherwise use current time
+                            updates[`${card.dataset.id}/order`] = announcement.timestamp || Date.now();
+                        });
+                        
+                        announcementsRef.child(currentTabId).update(updates);
                     }
                 });
             });
@@ -1409,8 +1417,11 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 document.querySelectorAll('.sidebar-link.active').forEach(l => l.classList.remove('active'));
                 const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
                 if (activeLink) activeLink.classList.add('active');
-                announcementsRef.child(tabId).off();
-                announcementsRef.child(tabId).on('value', snapshot => { currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : []; filterAnnouncements(); });
+                announcementsRef.child(tabId).off(); // Detach previous listener
+                announcementsRef.child(tabId).on('value', snapshot => { 
+                    currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : []; 
+                    filterAnnouncements(); 
+                });
             }
         }
 
@@ -1427,8 +1438,12 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function saveTab() {
             if (!isAdmin) return;
             const name = tabNameInput.value.trim(); if (!name) return alert('Please enter a tab name');
-            if (currentTabBeingEdited) { tabsRef.child(currentTabBeingEdited).update({ name: name }); } else {
-                const newTabRef = tabsRef.push(); newTabRef.set({ id: newTabRef.key, name, order: tabs.length });
+            if (currentTabBeingEdited) { 
+                tabsRef.child(currentTabBeingEdited).update({ name: name }); 
+            } else {
+                const newTabRef = tabsRef.push(); 
+                const currentMaxOrder = tabs.reduce((max, tab) => Math.max(max, tab.order || 0), -1);
+                newTabRef.set({ id: newTabRef.key, name, order: currentMaxOrder + 1 });
             }
             closeTabEditor();
         }
@@ -1471,7 +1486,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const title = announcementTitleInput.value.trim(); const content = announcementContentEditor.innerHTML;
             if (!title) return alert('Please enter a title.');
             const newAnnRef = announcementsRef.child(currentTabId).push();
-            const newAnn = { id: newAnnRef.key, title, content, pinned: false, order: Date.now() };
+            const now = Date.now();
+            const newAnn = { id: newAnnRef.key, title, content, pinned: false, order: now, timestamp: now };
             newAnnRef.set(newAnn).then(closeAnnouncementEditor);
         }
         function saveEditedAnnouncement(id) {
@@ -1485,11 +1501,21 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             event.stopPropagation();
             const announcement = currentTabAnnouncements.find(a => a.id === id);
             if (!announcement) return;
-            announcementsRef.child(currentTabId).child(id).update({ pinned: !announcement.pinned });
-            
-            if (expandedPost) {
-                collapsePost(expandedPost);
+
+            const isNowPinned = !announcement.pinned;
+            const updates = { pinned: isNowPinned };
+
+            // When unpinning, give it the current time as its order to go to the top of the unpinned list
+            if (!isNowPinned) {
+                updates.order = Date.now();
+            } else {
+                // When pinning, give it the lowest order number to go to the top of the pinned list
+                const minOrder = Math.min(...currentTabAnnouncements.filter(a => a.pinned && a.id !== id).map(a => a.order || 0), 0);
+                updates.order = minOrder - 1;
             }
+
+            announcementsRef.child(currentTabId).child(id).update(updates);
+            if (expandedPost) collapsePost(expandedPost);
         };
 
         function expandPost(postElement) {
@@ -1522,7 +1548,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         };
         
         function renderReminders() {
-            remindersList.innerHTML = [...reminders].sort((a, b) => (a.order || 0) - (b.order || 0)).map(rem => {
+            remindersList.innerHTML = reminders.map(rem => {
                 if (!rem || !rem.id) return '';
                 const actionsHtml = isAdmin ? `<div class="reminder-actions"><button class="reminder-action-btn" onclick="editReminder(event, '${rem.id}')"><i class="fas fa-pencil-alt"></i></button><button class="reminder-action-btn" onclick="deleteReminder(event, '${rem.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
                 return `
@@ -1560,7 +1586,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             
             const isEditing = !!currentReminderBeingEdited;
             const existingReminder = isEditing ? reminders.find(r => r.id === id) : null;
-            const order = isEditing && existingReminder && typeof existingReminder.order === 'number' ? existingReminder.order : Date.now();
+            const order = isEditing && existingReminder && typeof existingReminder.order === 'number' ? existingReminder.order : reminders.length;
             
             const reminder = { id, title, description, date, type, order };
             database.ref('reminders/' + id).set(reminder).then(closeReminderEditor);
@@ -1579,7 +1605,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         };
         
-        // --- Undo Snackbar Manager (FIXED) ---
+        // --- Undo Snackbar Manager ---
         const UndoManager = {
             timeoutId: null,
             init() { /* no-op */ },
@@ -1627,4 +1653,4 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function setupModalCloseHandlers() { window.onclick = e => { if (e.target.classList.contains('modal')) { e.target.style.display = 'none'; } }; }
     </script>
 </body>
-</html>
+</html>```
