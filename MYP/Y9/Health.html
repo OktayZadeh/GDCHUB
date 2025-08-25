@@ -6,8 +6,10 @@
     <title>Classroom Dashboard</title>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&family=Lato:wght@400;700&family=Montserrat:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
-    <!-- Font Awesome Icons - THIS IS ESSENTIAL for all icons to appear -->
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SortableJS Library for smooth drag-and-drop -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     
     <style>
 :root {
@@ -311,6 +313,9 @@ body.dark-mode .add-tab-header-button { color: var(--dark-medium); }
 body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light-gray); color: var(--primary); }
 .sidebar-menu { list-style: none; padding: var(--space-sm) 0; margin: 0; flex-grow: 1; overflow-y: auto; }
 .sidebar-item { position: relative; margin-bottom: var(--space-xxs); padding: 0 var(--space-sm); transition: transform var(--transition-fast), opacity var(--transition-fast); }
+.sidebar-item.sortable-chosen { cursor: grabbing; }
+.sidebar-item.sortable-ghost { opacity: 0.4; background: var(--primary-light); border-radius: var(--radius-md); }
+.sidebar-item.sortable-drag { opacity: 0; }
 .sidebar-link {
     display: flex; align-items: center; color: var(--medium); text-decoration: none; padding: var(--space-sm) var(--space-md);
     transition: all var(--transition-fast); border-radius: var(--radius-md); font-size: var(--text-sm); font-weight: 500;
@@ -331,9 +336,7 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 .tab-action-btn i { font-size: 12px; }
 .tab-action-btn:hover { color: var(--primary); background: var(--primary-light); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
 .tab-action-btn.delete:hover { color: var(--danger); background: rgba(245, 101, 101, 0.1); }
-.sidebar-item[draggable="true"] { cursor: grab; }
-.sidebar-placeholder { background: var(--primary-light); border: 2px dashed var(--primary); border-radius: var(--radius-md); margin: 0 var(--space-sm) var(--space-xxs); height: 46px; }
-.sidebar-item.dragging { opacity: 0.4; background-color: var(--primary-light); transform: scale(1.02); box-shadow: var(--shadow-lg); }
+#sidebar-menu.sortable-admin .sidebar-item { cursor: grab; }
 
 /* Main Content Styles */
 .main-content {
@@ -491,9 +494,18 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
     cursor: pointer; transition: all var(--transition-normal) cubic-bezier(0.25, 0.8, 0.25, 1); position: relative;
     animation: fadeIn var(--transition-normal) forwards; opacity: 0; border: 1px solid var(--light-gray);
 }
-.post-card[draggable="true"] { cursor: grab; }
+.post-card.sortable-chosen { cursor: grabbing; }
+.posts-feed.sortable-admin .post-card { cursor: grab; }
 .post-card.pinned { border-left: 4px solid var(--primary); }
-.post-card.dragging { opacity: 0.4; transform: scale(1.02); box-shadow: var(--shadow-lg); }
+.post-card.sortable-ghost {
+    opacity: 0.4;
+    background: var(--primary-light);
+    border: 2px dashed var(--primary);
+}
+.post-card.sortable-drag {
+    box-shadow: var(--shadow-xl) !important;
+    transform: scale(1.02);
+}
 .pin-icon {
     position: absolute; top: var(--space-lg); left: -10px; color: var(--primary); background-color: var(--lighter);
     border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
@@ -537,6 +549,7 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
 .reminders-list {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-md);
 }
+#reminders-list.sortable-admin .reminder-card { cursor: grab; }
 .reminder-card {
     background: var(--lighter);
     border-left: 12px solid var(--primary);
@@ -544,18 +557,16 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
     border-radius: var(--radius-md); position: relative; transition: all var(--transition-normal);
     box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
 }
-/* REFINED Drag & Drop Styles */
-.reminder-card[draggable="true"] { cursor: grab; }
-.reminder-card.dragging {
+/* SortableJS Drag & Drop Styles */
+.reminder-card.sortable-chosen { cursor: grabbing; }
+.reminder-card.sortable-ghost {
     opacity: 0.4;
-    transform: scale(1.02);
-    box-shadow: var(--shadow-lg);
-}
-.reminder-placeholder {
-    background-color: var(--primary-light);
+    background: var(--primary-light);
     border: 2px dashed var(--primary);
-    border-radius: var(--radius-md);
-    transition: none;
+}
+.reminder-card.sortable-drag {
+    box-shadow: var(--shadow-xl) !important;
+    transform: scale(1.03);
 }
 .reminder-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
 .reminder-card.trip { border-left-color: var(--success); }
@@ -1055,9 +1066,9 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             setupCustomEditor();
             UndoManager.init();
             if (isAdmin) {
-                setupSidebarDragAndDrop();
-                setupPostsDragAndDrop();
-                setupRemindersDragAndDrop();
+                initSortableSidebar();
+                initSortableReminders();
+                initSortablePosts();
             }
 
             tabNameInput.addEventListener('keydown', (event) => {
@@ -1287,7 +1298,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             pinnedPostsFeed.innerHTML = pinned.map(ann => createPostElement(ann, skipAnimation)).join('');
             unpinnedPostsFeed.innerHTML = unpinned.map(ann => createPostElement(ann, skipAnimation)).join('');
             if (announcements.length === 0) { unpinnedPostsFeed.innerHTML = '<p>No announcements found for this tab.</p>'; }
-            document.querySelectorAll('.post-card').forEach(card => card.addEventListener('click', (e) => { if (!e.target.closest('button, a, iframe')) { expandPost(card); } }));
+            document.querySelectorAll('.post-card').forEach(card => card.addEventListener('click', (e) => { if (!e.target.closest('button, a, iframe, .post-actions')) { expandPost(card); } }));
             document.querySelectorAll('.post-actions button').forEach(button => button.addEventListener('click', e => e.stopPropagation()));
         }
 
@@ -1301,8 +1312,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const tempDiv = document.createElement("div"); tempDiv.innerHTML = rawContent;
             const collapsedText = tempDiv.textContent || "";
             const animationStyle = skipAnimation ? 'style="animation: none; opacity: 1;"' : '';
-            const draggableAttr = isAdmin ? `draggable="true"` : '';
-            return `<div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" ${draggableAttr} ${animationStyle}>${pinIcon}${actionsHtml}<h3>${announcement.title}</h3><div class="collapsed-content">${collapsedText}</div><div class="post-details"><div class="post-content">${expandedContent}</div><div class="post-meta">Posted on ${postDate}</div></div></div>`;
+            return `<div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" ${animationStyle}>${pinIcon}${actionsHtml}<h3>${announcement.title}</h3><div class="collapsed-content">${collapsedText}</div><div class="post-details"><div class="post-content">${expandedContent}</div><div class="post-meta">Posted on ${postDate}</div></div></div>`;
         }
         
         function saveTabs() {
@@ -1314,78 +1324,84 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function renderTabs() {
             sidebarMenu.innerHTML = tabs.map(tab => {
                 const actionsHtml = isAdmin ? `<div class="tab-actions"><button class="tab-action-btn" title="Edit Tab" onclick="editTab(event, '${tab.id}')"><i class="fas fa-pencil-alt"></i></button><button class="tab-action-btn delete" title="Delete Tab" onclick="deleteTab(event, '${tab.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
-                const draggableAttr = isAdmin ? 'draggable="true"' : '';
-                return `<li class="sidebar-item" data-tab-id="${tab.id}" ${draggableAttr}><a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}">${tab.name}${actionsHtml}</a></li>`;
+                return `<li class="sidebar-item" data-tab-id="${tab.id}"><a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}">${tab.name}${actionsHtml}</a></li>`;
             }).join('');
             document.querySelectorAll('.sidebar-item').forEach(item => {
-                item.addEventListener('click', e => { if (!e.target.closest('.tab-action-btn')) { e.preventDefault(); setActiveTab(item.dataset.tabId); if (window.innerWidth <= 768) sidebar.classList.remove('visible'); } });
+                item.addEventListener('click', e => { if (!e.target.closest('.tab-actions')) { e.preventDefault(); setActiveTab(item.dataset.tabId); if (window.innerWidth <= 768) sidebar.classList.remove('visible'); } });
             });
         }
         
-        function setupSidebarDragAndDrop() {
-            let draggedItem = null, placeholder = null;
-
-            sidebarMenu.addEventListener('dragstart', e => {
-                draggedItem = e.target.closest('.sidebar-item[draggable="true"]');
-                if (!draggedItem) {
-                    e.preventDefault();
-                    return;
+        // --- SMOOTH DRAG AND DROP WITH SORTABLE.JS ---
+        function initSortableSidebar() {
+            sidebarMenu.classList.add('sortable-admin');
+            new Sortable(sidebarMenu, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                filter: '.tab-actions', // Clicking buttons won't start a drag
+                onEnd: (evt) => {
+                    const newOrderedIds = Array.from(evt.target.querySelectorAll('.sidebar-item')).map(item => item.dataset.tabId);
+                    tabs.sort((a, b) => newOrderedIds.indexOf(a.id) - newOrderedIds.indexOf(b.id));
+                    tabs.forEach((tab, index) => { tab.order = index; });
+                    saveTabs();
                 }
-                
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', draggedItem.dataset.tabId);
-
-                placeholder = document.createElement('li');
-                placeholder.className = 'sidebar-placeholder';
-                
-                setTimeout(() => {
-                    if (draggedItem) {
-                        draggedItem.classList.add('dragging');
-                        document.body.classList.add('is-dragging');
-                    }
-                }, 0);
-            });
-            
-            sidebarMenu.addEventListener('dragover', e => {
-                e.preventDefault();
-                if (!draggedItem) return;
-
-                const overElement = e.target.closest('.sidebar-item');
-                if (overElement && overElement !== draggedItem) {
-                    const rect = overElement.getBoundingClientRect();
-                    const isBefore = e.clientY < rect.top + rect.height / 2;
-                    overElement.parentNode.insertBefore(placeholder, isBefore ? overElement : overElement.nextSibling);
-                }
-            });
-
-            const endDrag = () => {
-                if (draggedItem) draggedItem.classList.remove('dragging');
-                if (placeholder && placeholder.parentNode) placeholder.remove();
-                document.body.classList.remove('is-dragging');
-                draggedItem = null;
-                placeholder = null;
-            };
-            
-            sidebarMenu.addEventListener('dragend', endDrag);
-            sidebarMenu.addEventListener('drop', e => {
-                e.preventDefault();
-                if (!placeholder || !placeholder.parentNode || !draggedItem) {
-                    endDrag();
-                    return;
-                }
-
-                placeholder.parentNode.insertBefore(draggedItem, placeholder);
-                
-                const newOrderedIds = Array.from(sidebarMenu.querySelectorAll('.sidebar-item')).map(item => item.dataset.tabId);
-                tabs.sort((a, b) => newOrderedIds.indexOf(a.id) - newOrderedIds.indexOf(b.id));
-                tabs.forEach((tab, index) => { tab.order = index; });
-                saveTabs();
-
-                endDrag();
             });
         }
 
+        function initSortableReminders() {
+            remindersList.classList.add('sortable-admin');
+            new Sortable(remindersList, {
+                animation: 150,
+                ghostClass: 'reminder-card sortable-ghost', // Use card styles for placeholder
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                filter: '.reminder-actions',
+                onEnd: (evt) => {
+                    const updates = {};
+                    const orderedCards = Array.from(evt.target.querySelectorAll('.reminder-card'));
+                    orderedCards.forEach((card, index) => {
+                        updates[`${card.dataset.id}/order`] = index;
+                    });
+                    if (Object.keys(updates).length > 0) {
+                        remindersRef.update(updates);
+                    }
+                }
+            });
+        }
 
+        function initSortablePosts() {
+            [pinnedPostsFeed, unpinnedPostsFeed].forEach(feed => {
+                feed.classList.add('sortable-admin');
+                new Sortable(feed, {
+                    group: 'posts', // Allows dragging between pinned and unpinned
+                    animation: 150,
+                    ghostClass: 'post-card sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    dragClass: 'sortable-drag',
+                    filter: '.post-actions, button, a, iframe',
+                    onEnd: (evt) => {
+                        const { to, newIndex, oldIndex, item } = evt;
+                        const postId = item.dataset.id;
+                        const isNowPinned = to.id === 'pinned-posts-feed';
+                        
+                        // Update the moved item's pinned status
+                        announcementsRef.child(currentTabId).child(postId).update({ pinned: isNowPinned });
+
+                        // Re-order both lists
+                        suppressPostAnimation = true;
+                        const pinnedUpdates = {};
+                        Array.from(pinnedPostsFeed.querySelectorAll('.post-card')).forEach((p, i) => { pinnedUpdates[`${p.dataset.id}/order`] = i; });
+                        announcementsRef.child(currentTabId).update(pinnedUpdates);
+
+                        const unpinnedUpdates = {};
+                        Array.from(unpinnedPostsFeed.querySelectorAll('.post-card')).forEach((p, i) => { unpinnedUpdates[`${p.dataset.id}/order`] = Date.now() - i; });
+                        announcementsRef.child(currentTabId).update(unpinnedUpdates);
+                    }
+                });
+            });
+        }
+        
         function setActiveTab(tabId) {
             currentTabId = tabId; const tab = tabs.find(t => t.id === tabId);
             if (tab) {
@@ -1504,45 +1520,13 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 });
             });
         };
-
-        function setupPostsDragAndDrop() {
-            let draggedPost = null, postPlaceholder = null, sourceContainer = null;
-            classroomInfo.addEventListener('dragstart', e => {
-                draggedPost = e.target.closest('.post-card[draggable="true"]'); if (!draggedPost) return;
-                sourceContainer = draggedPost.parentElement; e.dataTransfer.effectAllowed = 'move';
-                postPlaceholder = document.createElement('div'); postPlaceholder.className = 'post-placeholder';
-                postPlaceholder.style.height = `${draggedPost.offsetHeight}px`;
-                setTimeout(() => { if (draggedPost) draggedPost.classList.add('dragging'); document.body.classList.add('is-dragging'); }, 0);
-            });
-            classroomInfo.addEventListener('dragover', e => {
-                if (!draggedPost || !sourceContainer) return;
-                const currentContainer = e.target.closest('.posts-feed'); if (currentContainer !== sourceContainer) return;
-                e.preventDefault(); const overElement = e.target.closest('.post-card');
-                if (overElement && overElement !== draggedPost) {
-                    const rect = overElement.getBoundingClientRect(); const isBefore = e.clientY < rect.top + rect.height / 2;
-                    if (isBefore) { sourceContainer.insertBefore(postPlaceholder, overElement); } else { sourceContainer.insertBefore(postPlaceholder, overElement.nextSibling); }
-                } else if (!overElement && !sourceContainer.contains(postPlaceholder)) { sourceContainer.appendChild(postPlaceholder); }
-            });
-            const endDrag = () => { if(draggedPost) draggedPost.classList.remove('dragging'); if(postPlaceholder) postPlaceholder.remove(); document.body.classList.remove('is-dragging'); draggedPost = null; postPlaceholder = null; sourceContainer = null; };
-            classroomInfo.addEventListener('dragend', endDrag);
-            classroomInfo.addEventListener('drop', e => {
-                e.preventDefault(); if (!postPlaceholder || !postPlaceholder.parentNode || !draggedPost || !sourceContainer) { endDrag(); return; }
-                postPlaceholder.parentNode.insertBefore(draggedPost, postPlaceholder);
-                const updates = {}; const isPinnedList = sourceContainer.id === 'pinned-posts-feed';
-                const orderedIds = Array.from(sourceContainer.querySelectorAll('.post-card')).map(p => p.dataset.id);
-                if (isPinnedList) { orderedIds.forEach((id, index) => { updates[`${id}/order`] = index; }); } else { orderedIds.forEach((id, index) => { updates[`${id}/order`] = Date.now() - index; }); }
-                if (Object.keys(updates).length > 0) { suppressPostAnimation = true; announcementsRef.child(currentTabId).update(updates); }
-                endDrag();
-            });
-        }
         
         function renderReminders() {
             remindersList.innerHTML = [...reminders].sort((a, b) => (a.order || 0) - (b.order || 0)).map(rem => {
                 if (!rem || !rem.id) return '';
                 const actionsHtml = isAdmin ? `<div class="reminder-actions"><button class="reminder-action-btn" onclick="editReminder(event, '${rem.id}')"><i class="fas fa-pencil-alt"></i></button><button class="reminder-action-btn" onclick="deleteReminder(event, '${rem.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
-                const draggableAttr = isAdmin ? 'draggable="true"' : '';
                 return `
-                <div class="reminder-card ${rem.type || 'trip'}" data-id="${rem.id}" ${draggableAttr}>
+                <div class="reminder-card ${rem.type || 'trip'}" data-id="${rem.id}">
                     ${actionsHtml}
                     <div class="reminder-title">${rem.title}</div>
                     <div class="reminder-date">${formatDate(rem.date)}</div>
@@ -1581,77 +1565,6 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const reminder = { id, title, description, date, type, order };
             database.ref('reminders/' + id).set(reminder).then(closeReminderEditor);
         }
-        
-        function setupRemindersDragAndDrop() {
-            let draggedItem = null, placeholder = null;
-
-            remindersList.addEventListener('dragstart', e => {
-                draggedItem = e.target.closest('.reminder-card[draggable="true"]');
-                if (!draggedItem) {
-                    e.preventDefault();
-                    return;
-                }
-
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', draggedItem.dataset.id);
-
-                placeholder = document.createElement('div');
-                placeholder.className = 'reminder-placeholder';
-                placeholder.style.height = `${draggedItem.offsetHeight}px`;
-                
-                setTimeout(() => {
-                    if (draggedItem) {
-                        draggedItem.classList.add('dragging');
-                        document.body.classList.add('is-dragging');
-                    }
-                }, 0);
-            });
-
-            remindersList.addEventListener('dragover', e => {
-                e.preventDefault();
-                if (!draggedItem) return;
-
-                const overElement = e.target.closest('.reminder-card');
-                if (overElement && overElement !== draggedItem) {
-                    const rect = overElement.getBoundingClientRect();
-                    const isBefore = e.clientY < rect.top + rect.height / 2;
-                    overElement.parentNode.insertBefore(placeholder, isBefore ? overElement : overElement.nextSibling);
-                } else if (!overElement && !remindersList.contains(placeholder)) {
-                    remindersList.appendChild(placeholder);
-                }
-            });
-
-            const endDrag = () => {
-                if (draggedItem) draggedItem.classList.remove('dragging');
-                if (placeholder && placeholder.parentNode) placeholder.remove();
-                document.body.classList.remove('is-dragging');
-                draggedItem = null;
-                placeholder = null;
-            };
-
-            remindersList.addEventListener('dragend', endDrag);
-            remindersList.addEventListener('drop', e => {
-                e.preventDefault();
-                if (!placeholder || !placeholder.parentNode || !draggedItem) {
-                    endDrag();
-                    return;
-                }
-
-                placeholder.parentNode.insertBefore(draggedItem, placeholder);
-                
-                const updates = {};
-                const orderedCards = Array.from(remindersList.querySelectorAll('.reminder-card'));
-                orderedCards.forEach((card, index) => {
-                    updates[`${card.dataset.id}/order`] = index;
-                });
-
-                if (Object.keys(updates).length > 0) {
-                    remindersRef.update(updates);
-                }
-                
-                endDrag();
-            });
-        }
 
         window.editReminder = (event, id) => { event.stopPropagation(); openReminderEditor(id); };
         window.deleteReminder = (event, id) => {
@@ -1679,13 +1592,12 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
                 messageEl.textContent = message;
 
-                // Clone and replace to safely remove old event listeners
                 const newUndoBtn = undoBtn.cloneNode(true);
                 undoBtn.parentNode.replaceChild(newUndoBtn, undoBtn);
                 newUndoBtn.addEventListener('click', () => {
                     undoCallback();
                     this.hide(snackbar);
-                }, { once: true }); // ensure it only fires once
+                }, { once: true });
 
                 snackbar.classList.add('show');
 
