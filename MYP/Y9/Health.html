@@ -1268,8 +1268,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
         function setupFirebaseListeners() {
             tabsRef.orderByChild('order').on('value', snapshot => {
-                const tabsData = snapshot.val();
-                tabs = tabsData ? Object.values(tabsData) : [];
+                tabs = snapshot.val() ? Object.values(snapshot.val()) : [];
                 renderTabs();
                 if (tabs.length > 0 && (!currentTabId || !tabs.some(t => t.id === currentTabId))) {
                     setActiveTab(tabs[0].id);
@@ -1333,21 +1332,22 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         }
         
-        // --- REBUILT & FIXED: DRAG-AND-DROP INITIALIZATION ---
+        // --- UNIFIED & REFINED: DRAG-AND-DROP INITIALIZATION ---
         function initializeDragAndDrop() {
             if (!isAdmin) return; 
 
             const body = document.body;
+            // Common configuration for a consistent look and feel
             const commonSortableOptions = {
                 animation: 150,
                 ghostClass: 'sortable-ghost',
                 chosenClass: 'sortable-chosen',
                 dragClass: 'sortable-drag',
                 onStart: () => body.classList.add('is-dragging'),
-                // onEnd is defined per-instance to release the 'is-dragging' class
+                onEnd: () => body.classList.remove('is-dragging'),
             };
 
-            // 1. Sidebar Tabs Sorting (This works well)
+            // 1. Sidebar Tabs Sorting (Consistent Implementation)
             sidebarMenu.classList.add('sortable-admin');
             new Sortable(sidebarMenu, {
                 ...commonSortableOptions,
@@ -1362,7 +1362,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
 
-            // 2. Reminders Sorting (Stable implementation)
+            // 2. Reminders Sorting (Consistent Implementation)
             remindersList.classList.add('sortable-admin');
             new Sortable(remindersList, {
                 ...commonSortableOptions,
@@ -1377,7 +1377,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
 
-            // 3. Pinned Announcements Sorting (FIXED: Separate list, no grouping)
+            // 3. Pinned Announcements Sorting
             pinnedPostsFeed.classList.add('sortable-admin');
             new Sortable(pinnedPostsFeed, {
                 ...commonSortableOptions,
@@ -1387,14 +1387,13 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     suppressPostAnimation = true;
                     const updates = {};
                     evt.target.querySelectorAll('.post-card').forEach((card, index) => {
-                        // Pinned posts are ordered by a simple ascending index.
                         updates[`${card.dataset.id}/order`] = index;
                     });
                     announcementsRef.child(currentTabId).update(updates);
                 }
             });
 
-            // 4. Unpinned Announcements Sorting (FIXED: Separate list, no grouping)
+            // 4. Unpinned Announcements Sorting
             unpinnedPostsFeed.classList.add('sortable-admin');
             new Sortable(unpinnedPostsFeed, {
                 ...commonSortableOptions,
@@ -1404,9 +1403,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     suppressPostAnimation = true;
                     const updates = {};
                     const items = Array.from(evt.target.querySelectorAll('.post-card'));
-                    // Unpinned posts are sorted by timestamp (desc), so we re-calculate new descending timestamps.
                     items.forEach((card, index) => {
-                        // The first item gets the newest timestamp, the last gets an older one.
                         updates[`${card.dataset.id}/order`] = Date.now() - index;
                     });
                     announcementsRef.child(currentTabId).update(updates);
@@ -1421,7 +1418,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 document.querySelectorAll('.sidebar-link.active').forEach(l => l.classList.remove('active'));
                 const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
                 if (activeLink) activeLink.classList.add('active');
-                announcementsRef.child(tabId).off(); // Detach previous listener
+                announcementsRef.child(tabId).off(); 
                 announcementsRef.child(tabId).on('value', snapshot => { 
                     currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : []; 
                     filterAnnouncements(); 
@@ -1446,8 +1443,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 tabsRef.child(currentTabBeingEdited).update({ name: name }); 
             } else {
                 const newTabRef = tabsRef.push(); 
-                const currentMaxOrder = tabs.reduce((max, tab) => Math.max(max, tab.order || 0), -1);
-                newTabRef.set({ id: newTabRef.key, name, order: currentMaxOrder + 1 });
+                const currentMaxOrder = tabs.length > 0 ? Math.max(...tabs.map(t => t.order || 0)) + 1 : 0;
+                newTabRef.set({ id: newTabRef.key, name, order: currentMaxOrder });
             }
             closeTabEditor();
         }
@@ -1510,10 +1507,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const updates = { pinned: isNowPinned };
 
             if (!isNowPinned) {
-                // When unpinning, give it the current time as its order to go to the top of the unpinned list
                 updates.order = Date.now();
             } else {
-                // When pinning, give it an order number lower than any other pinned post to go to the top
                 const pinnedOrders = currentTabAnnouncements.filter(a => a.pinned && a.id !== id).map(a => a.order || 0);
                 const minOrder = pinnedOrders.length > 0 ? Math.min(...pinnedOrders) : 0;
                 updates.order = minOrder - 1;
