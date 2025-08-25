@@ -535,10 +535,25 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
 }
 .reminder-card {
     background: var(--lighter);
-    border-left: 12px solid var(--primary); /* MODIFICATION: Increased from 8px */
+    border-left: 12px solid var(--primary);
     padding: var(--space-md);
     border-radius: var(--radius-md); position: relative; transition: all var(--transition-normal);
     box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
+}
+/* MODIFICATION: Added styles for reminder drag-and-drop */
+.reminder-card-drag-handle {
+    position: absolute; top: 12px; left: -2px; font-size: 16px;
+    cursor: move; color: var(--medium); opacity: 0;
+    transition: opacity var(--transition-fast); touch-action: none;
+    padding: var(--space-xs);
+}
+.reminder-card:hover .reminder-card-drag-handle { opacity: 0.6; }
+.reminder-card.dragging { opacity: 0.4; box-shadow: var(--shadow-lg); background-color: var(--primary-light); }
+.reminder-placeholder {
+    background-color: var(--primary-light);
+    border: 2px dashed var(--primary);
+    border-radius: var(--radius-md);
+    min-height: 100px;
 }
 .reminder-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
 .reminder-card.trip { border-left-color: var(--success); }
@@ -568,7 +583,8 @@ body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light
 /* Hide editing controls for non-admins */
 body.non-admin .add-tab-header-button, body.non-admin .button[onclick="openAnnouncementEditor()"],
 body.non-admin .tab-actions, body.non-admin .post-actions, body.non-admin #add-reminder-btn,
-body.non-admin .move-handle, body.non-admin .post-card-drag-handle { display: none !important; }
+body.non-admin .move-handle, body.non-admin .post-card-drag-handle, 
+body.non-admin .reminder-card-drag-handle { display: none !important; }
 body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 /* Typography for rendered rich content */
 .post-content { font-size: var(--text-base); line-height: 1.7; color: var(--medium); word-wrap: break-word; }
@@ -1034,6 +1050,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             if (isAdmin) {
                 setupSidebarDragAndDrop();
                 setupPostsDragAndDrop();
+                setupRemindersDragAndDrop(); // MODIFICATION: Initialize reminder drag-and-drop
             }
 
             tabNameInput.addEventListener('keydown', (event) => {
@@ -1479,11 +1496,13 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         }
         
         function renderReminders() {
-            remindersList.innerHTML = [...reminders].sort((a, b) => new Date(a.date) - new Date(b.date)).map(rem => {
+            remindersList.innerHTML = [...reminders].sort((a, b) => (a.order || 0) - (b.order || 0)).map(rem => { // MODIFICATION: Sort by 'order'
                 if (!rem || !rem.id) return '';
                 const actionsHtml = isAdmin ? `<div class="reminder-actions"><button class="reminder-action-btn" onclick="editReminder(event, '${rem.id}')"><i class="fas fa-pencil-alt"></i></button><button class="reminder-action-btn" onclick="deleteReminder(event, '${rem.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
+                const dragHandleHtml = isAdmin ? `<span class="reminder-card-drag-handle move-handle">☰</span>` : ''; // MODIFICATION: Add drag handle
                 return `
-                <div class="reminder-card ${rem.type || 'trip'}" data-id="${rem.id}">
+                <div class="reminder-card ${rem.type || 'trip'}" data-id="${rem.id}" draggable="${isAdmin}">
+                    ${dragHandleHtml}
                     ${actionsHtml}
                     <div class="reminder-title">${rem.title}</div>
                     <div class="reminder-date">${formatDate(rem.date)}</div>
@@ -1514,10 +1533,91 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             const description = document.getElementById('reminder-description').value.trim();
             const type = document.getElementById('reminder-type').value;
             const id = currentReminderBeingEdited || database.ref().push().key;
-            const reminder = { id, title, description, date, type };
+            
+            // MODIFICATION: Preserve or create 'order' property
+            const isEditing = !!currentReminderBeingEdited;
+            const existingReminder = isEditing ? reminders.find(r => r.id === id) : null;
+            const order = isEditing && existingReminder ? existingReminder.order : Date.now();
+            
+            const reminder = { id, title, description, date, type, order };
             database.ref('reminders/' + id).set(reminder).then(closeReminderEditor);
         }
         
+        // MODIFICATION: New function to handle reminder drag-and-drop
+        function setupRemindersDragAndDrop() {
+            let draggedReminder = null, placeholder = null;
+
+            remindersList.addEventListener('dragstart', e => {
+                if (!e.target.classList.contains('reminder-card')) return;
+                draggedReminder = e.target;
+                e.dataTransfer.effectAllowed = 'move';
+                
+                placeholder = document.createElement('div');
+                placeholder.className = 'reminder-placeholder';
+                placeholder.style.height = `${draggedReminder.offsetHeight}px`;
+
+                setTimeout(() => {
+                    if (draggedReminder) draggedReminder.classList.add('dragging');
+                }, 0);
+            });
+
+            remindersList.addEventListener('dragover', e => {
+                e.preventDefault();
+                if (!draggedReminder) return;
+
+                const overElement = e.target.closest('.reminder-card');
+                if (overElement && overElement !== draggedReminder) {
+                     const rect = overElement.getBoundingClientRect();
+                     const isBefore = e.clientY < rect.top + rect.height / 2;
+                     if (isBefore) {
+                         remindersList.insertBefore(placeholder, overElement);
+                     } else {
+                         remindersList.insertBefore(placeholder, overElement.nextSibling);
+                     }
+                } else if (!remindersList.contains(placeholder)) {
+                    // This handles dragging into an empty space at the end
+                    const lastElement = remindersList.querySelector('.reminder-card:not(.dragging):last-of-type');
+                    if(lastElement) {
+                        remindersList.insertBefore(placeholder, lastElement.nextSibling);
+                    } else {
+                        remindersList.appendChild(placeholder);
+                    }
+                }
+            });
+
+            const endDrag = () => {
+                if (draggedReminder) draggedReminder.classList.remove('dragging');
+                if (placeholder && placeholder.parentNode) placeholder.remove();
+                draggedReminder = null;
+                placeholder = null;
+            };
+
+            remindersList.addEventListener('dragend', endDrag);
+
+            remindersList.addEventListener('drop', e => {
+                e.preventDefault();
+                if (!placeholder || !placeholder.parentNode || !draggedReminder) {
+                    endDrag();
+                    return;
+                }
+
+                placeholder.parentNode.insertBefore(draggedReminder, placeholder);
+                endDrag();
+
+                const updates = {};
+                const orderedCards = Array.from(remindersList.querySelectorAll('.reminder-card'));
+                orderedCards.forEach((card, index) => {
+                    const reminderId = card.dataset.id;
+                    updates[`${reminderId}/order`] = index;
+                });
+
+                if (Object.keys(updates).length > 0) {
+                    remindersRef.update(updates);
+                }
+            });
+        }
+
+
         window.editReminder = (event, id) => { event.stopPropagation(); openReminderEditor(id); };
         window.deleteReminder = (event, id) => {
             event.stopPropagation(); if (!isAdmin) return;
