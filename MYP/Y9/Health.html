@@ -701,8 +701,13 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 }
 #undo-button:hover { background-color: rgba(255, 255, 255, 0.1); }
 .snackbar-progress {
-    position: absolute; bottom: 0; left: 0; height: 4px; width: 100%; background-color: var(--primary);
-    transform-origin: left; animation: shrink 5s linear forwards;
+    position: absolute; bottom: 0; left: 0; height: 4px; width: 100%;
+    background-color: transparent; /* Start transparent */
+}
+.snackbar.show .snackbar-progress {
+    background-color: var(--primary);
+    transform-origin: left;
+    animation: shrink 5s linear forwards;
 }
 @keyframes shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
@@ -1326,58 +1331,78 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function renderTabs() {
             sidebarMenu.innerHTML = tabs.map(tab => {
                 const actionsHtml = isAdmin ? `<div class="tab-actions"><button class="tab-action-btn" title="Edit Tab" onclick="editTab(event, '${tab.id}')"><i class="fas fa-pencil-alt"></i></button><button class="tab-action-btn delete" title="Delete Tab" onclick="deleteTab(event, '${tab.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
-                return `<li class="sidebar-item" data-tab-id="${tab.id}" draggable="${isAdmin}"><a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}"><span class="move-handle">☰</span> ${tab.name}${actionsHtml}</a></li>`;
+                return `<li class="sidebar-item" data-tab-id="${tab.id}"><a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}"><span class="move-handle" draggable="true">☰</span> ${tab.name}${actionsHtml}</a></li>`;
             }).join('');
             document.querySelectorAll('.sidebar-item').forEach(item => {
                 item.addEventListener('click', e => { if (!e.target.closest('.tab-action-btn, .move-handle')) { e.preventDefault(); setActiveTab(item.dataset.tabId); if (window.innerWidth <= 768) sidebar.classList.remove('visible'); } });
             });
         }
         
+        // --- Sidebar Drag-and-Drop (Restored to stable version) ---
         function setupSidebarDragAndDrop() {
             let draggedItem = null, placeholder = null;
+
             sidebarMenu.addEventListener('dragstart', e => {
-                if (!e.target.classList.contains('move-handle')) { e.preventDefault(); return; }
+                if (!e.target.classList.contains('move-handle')) {
+                    e.preventDefault();
+                    return;
+                }
                 draggedItem = e.target.closest('.sidebar-item');
                 if (!draggedItem) return;
+
                 e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', draggedItem.dataset.tabId);
+
                 placeholder = document.createElement('li');
                 placeholder.className = 'sidebar-placeholder';
-                setTimeout(() => { if (draggedItem) draggedItem.classList.add('dragging'); }, 0);
+                
+                setTimeout(() => {
+                    if (draggedItem) {
+                        draggedItem.classList.add('dragging');
+                        document.body.classList.add('is-dragging');
+                    }
+                }, 0);
             });
+            
             sidebarMenu.addEventListener('dragover', e => {
                 e.preventDefault();
                 if (!draggedItem) return;
+
                 const overElement = e.target.closest('.sidebar-item');
                 if (overElement && overElement !== draggedItem) {
                     const rect = overElement.getBoundingClientRect();
                     const isBefore = e.clientY < rect.top + rect.height / 2;
-                    if (isBefore) {
-                        overElement.parentNode.insertBefore(placeholder, overElement);
-                    } else {
-                        overElement.parentNode.insertBefore(placeholder, overElement.nextSibling);
-                    }
+                    overElement.parentNode.insertBefore(placeholder, isBefore ? overElement : overElement.nextSibling);
                 }
             });
+
             const endDrag = () => {
                 if (draggedItem) draggedItem.classList.remove('dragging');
                 if (placeholder && placeholder.parentNode) placeholder.remove();
+                document.body.classList.remove('is-dragging');
                 draggedItem = null;
                 placeholder = null;
             };
+            
             sidebarMenu.addEventListener('dragend', endDrag);
             sidebarMenu.addEventListener('drop', e => {
                 e.preventDefault();
-                if (!placeholder || !placeholder.parentNode || !draggedItem) { endDrag(); return; }
+                if (!placeholder || !placeholder.parentNode || !draggedItem) {
+                    endDrag();
+                    return;
+                }
+
                 placeholder.parentNode.insertBefore(draggedItem, placeholder);
-                const originalIndex = tabs.findIndex(t => t.id === draggedItem.dataset.tabId);
-                const [movedTab] = tabs.splice(originalIndex, 1);
-                const newIndex = Array.from(sidebarMenu.children).indexOf(draggedItem);
-                tabs.splice(newIndex, 0, movedTab);
+                
+                const newOrderedIds = Array.from(sidebarMenu.querySelectorAll('.sidebar-item')).map(item => item.dataset.tabId);
+                tabs.sort((a, b) => newOrderedIds.indexOf(a.id) - newOrderedIds.indexOf(b.id));
                 tabs.forEach((tab, index) => { tab.order = index; });
                 saveTabs();
+
                 endDrag();
             });
         }
+
 
         function setActiveTab(tabId) {
             currentTabId = tabId; const tab = tabs.find(t => t.id === tabId);
@@ -1570,13 +1595,13 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             
             const isEditing = !!currentReminderBeingEdited;
             const existingReminder = isEditing ? reminders.find(r => r.id === id) : null;
-            const order = isEditing && existingReminder ? existingReminder.order : Date.now();
+            const order = isEditing && existingReminder && typeof existingReminder.order === 'number' ? existingReminder.order : Date.now();
             
             const reminder = { id, title, description, date, type, order };
             database.ref('reminders/' + id).set(reminder).then(closeReminderEditor);
         }
         
-        // REWRITTEN - Stable Reminder Drag-and-Drop
+        // --- Reminder Drag-and-Drop (Modeled after stable sidebar version) ---
         function setupRemindersDragAndDrop() {
             let draggedItem = null, placeholder = null;
 
@@ -1598,6 +1623,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 setTimeout(() => {
                     if (draggedItem) {
                         draggedItem.classList.add('dragging');
+                        document.body.classList.add('is-dragging');
                     }
                 }, 0);
             });
@@ -1606,25 +1632,18 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 e.preventDefault();
                 if (!draggedItem) return;
 
-                const overElement = e.target.closest('.reminder-card:not(.dragging)');
-                if (overElement) {
+                const overElement = e.target.closest('.reminder-card');
+                if (overElement && overElement !== draggedItem) {
                     const rect = overElement.getBoundingClientRect();
                     const isBefore = e.clientY < rect.top + rect.height / 2;
-                    if (isBefore) {
-                        overElement.parentNode.insertBefore(placeholder, overElement);
-                    } else {
-                        overElement.parentNode.insertBefore(placeholder, overElement.nextSibling);
-                    }
+                    overElement.parentNode.insertBefore(placeholder, isBefore ? overElement : overElement.nextSibling);
                 }
             });
 
             const endDrag = () => {
-                if (draggedItem) {
-                    draggedItem.classList.remove('dragging');
-                }
-                if (placeholder && placeholder.parentNode) {
-                    placeholder.remove();
-                }
+                if (draggedItem) draggedItem.classList.remove('dragging');
+                if (placeholder && placeholder.parentNode) placeholder.remove();
+                document.body.classList.remove('is-dragging');
                 draggedItem = null;
                 placeholder = null;
             };
@@ -1666,26 +1685,35 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         };
         
+        // --- Undo Snackbar Manager (FIXED) ---
         const UndoManager = {
-            queue: [], isShowing: false,
-            init() {},
-            show(message, undoCallback) { this.queue.push({ message, undoCallback }); this.processQueue(); },
-            processQueue() {
-                if (this.isShowing || this.queue.length === 0) return;
-                this.isShowing = true; const { message, undoCallback } = this.queue.shift();
-                const snackbar = document.createElement('div'); snackbar.className = 'snackbar';
-                snackbar.innerHTML = `<i class="fas fa-check-circle"></i><span>${message}</span><button class="undo-btn">UNDO</button><div class="snackbar-progress"></div>`;
-                document.body.appendChild(snackbar);
-                const undoButton = snackbar.querySelector('.undo-btn');
-                undoButton.style.cssText = document.getElementById('undo-button').style.cssText;
-                undoButton.onclick = () => { undoCallback(); this.hide(snackbar); };
-                setTimeout(() => snackbar.classList.add('show'), 50);
-                setTimeout(() => this.hide(snackbar), 5000);
+            timeoutId: null,
+            init() { /* no-op */ },
+            show(message, undoCallback) {
+                if (this.timeoutId) clearTimeout(this.timeoutId);
+                
+                const snackbar = document.getElementById('undo-snackbar');
+                const messageEl = document.getElementById('undo-message');
+                const undoBtn = document.getElementById('undo-button');
+
+                messageEl.textContent = message;
+
+                // Clone and replace to safely remove old event listeners
+                const newUndoBtn = undoBtn.cloneNode(true);
+                undoBtn.parentNode.replaceChild(newUndoBtn, undoBtn);
+                newUndoBtn.addEventListener('click', () => {
+                    undoCallback();
+                    this.hide(snackbar);
+                }, { once: true }); // ensure it only fires once
+
+                snackbar.classList.add('show');
+
+                this.timeoutId = setTimeout(() => this.hide(snackbar), 5000);
             },
             hide(snackbar) {
-                if (!snackbar) return;
+                if (this.timeoutId) clearTimeout(this.timeoutId);
+                this.timeoutId = null;
                 snackbar.classList.remove('show');
-                setTimeout(() => { snackbar.remove(); this.isShowing = false; this.processQueue(); }, 500);
             }
         };
 
@@ -1707,3 +1735,4 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
     </script>
 </body>
 </html>
+```
