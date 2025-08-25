@@ -333,7 +333,8 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 .tab-action-btn i { font-size: 12px; }
 .tab-action-btn:hover { color: var(--primary); background: var(--primary-light); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
 .tab-action-btn.delete:hover { color: var(--danger); background: rgba(245, 101, 101, 0.1); }
-#sidebar-menu.sortable-admin .sidebar-item { cursor: grab; }
+/* No longer need grab cursor for sidebar items */
+/* #sidebar-menu.sortable-admin .sidebar-item { cursor: grab; } */
 
 /* Main Content Styles */
 .main-content {
@@ -525,7 +526,7 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
 .post-actions .delete-button { background: var(--danger); }
 .post-actions .delete-button:hover { background: #E53E3E; }
 
-/* --- REMINDERS UI - REFINED DRAG & DROP --- */
+/* --- REMINDERS UI --- */
 .reminders-container {
     background: var(--lighter); border-radius: var(--radius-lg); padding: var(--space-lg);
     margin-bottom: var(--space-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
@@ -536,7 +537,8 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
 .reminders-list {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-md);
 }
-#reminders-list.sortable-admin .reminder-card { cursor: grab; }
+/* No longer need grab cursor for reminder cards */
+/* #reminders-list.sortable-admin .reminder-card { cursor: grab; } */
 .reminder-card {
     background: var(--lighter);
     border-left: 12px solid var(--primary);
@@ -573,8 +575,6 @@ body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light
 /* --- DRAG AND DROP REFINEMENT STYLES --- */
 
 /* GHOST: The placeholder style for where the item will drop */
-.sidebar-item.sortable-ghost,
-.reminder-card.sortable-ghost,
 .post-card.sortable-ghost {
     opacity: 0.4;
     background: var(--primary-light);
@@ -582,16 +582,12 @@ body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light
 }
 
 /* CHOSEN: The style for the original item in the list after it's been picked up */
-.sidebar-item.sortable-chosen,
-.reminder-card.sortable-chosen,
 .post-card.sortable-chosen {
     cursor: grabbing;
     background-color: var(--primary-light);
 }
 
 /* DRAG: The style for the element clone being dragged by the cursor */
-.sidebar-item.sortable-drag,
-.reminder-card.sortable-drag,
 .post-card.sortable-drag {
     opacity: 1 !important; /* Ensure dragged item is fully visible */
     box-shadow: var(--shadow-xl) !important;
@@ -1268,7 +1264,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 
         function setupFirebaseListeners() {
             tabsRef.orderByChild('order').on('value', snapshot => {
-                tabs = snapshot.val() ? Object.values(snapshot.val()) : [];
+                const tabData = snapshot.val();
+                tabs = tabData ? Object.keys(tabData).map(key => ({ id: key, ...tabData[key] })).sort((a,b) => (a.order || 0) - (b.order || 0)) : [];
                 renderTabs();
                 if (tabs.length > 0 && (!currentTabId || !tabs.some(t => t.id === currentTabId))) {
                     setActiveTab(tabs[0].id);
@@ -1277,8 +1274,9 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                     pinnedPostsFeed.innerHTML = ""; unpinnedPostsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
                 }
             });
-            remindersRef.orderByChild('order').on('value', snapshot => { 
-                reminders = snapshot.val() ? Object.values(snapshot.val()) : []; 
+            remindersRef.orderByValue().on('value', snapshot => { 
+                const reminderData = snapshot.val();
+                reminders = reminderData ? Object.keys(reminderData).map(key => ({ id: key, ...reminderData[key] })).sort((a,b) => new Date(a.date) - new Date(b.date)) : [];
                 renderReminders(); 
             });
         }
@@ -1332,72 +1330,39 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         }
         
-        // --- [START] REFINED DRAG-AND-DROP SYSTEM ---
-        /**
-         * This refined system uses a master configuration to ensure consistent, reliable, 
-         * and smooth drag-and-drop functionality across the entire application.
-         * The `forceFallback: true` option is key to avoiding buggy native browser APIs.
-         */
+        // --- [START] DRAG-AND-DROP FOR POSTS ONLY ---
         function initializeDragAndDrop() {
             if (!isAdmin) return; 
 
-            // The master configuration object. This defines the standard behavior and appearance 
-            // for all draggable elements, ensuring a consistent user experience.
             const masterSortableConfig = {
-                animation: 150,                   // A crisp and smooth animation speed.
-                ghostClass: 'sortable-ghost',     // The class for the light blue placeholder.
-                chosenClass: 'sortable-chosen',   // The class for the item you are currently holding.
-                dragClass: 'sortable-drag',       // The class for the "lift and tilt" clone that follows the cursor.
-                forceFallback: true,              // **MOST IMPORTANT**: This forces SortableJS to use its reliable JS-based dragging instead of the browser's buggy native API.
-                onStart: () => document.body.classList.add('is-dragging'),   // Instantly apply the 'grabbing' cursor to the whole page.
-                onEnd: () => document.body.classList.remove('is-dragging'), // Remove the 'grabbing' cursor when done.
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                forceFallback: true,
+                onStart: () => document.body.classList.add('is-dragging'),
+                onEnd: () => document.body.classList.remove('is-dragging'),
             };
 
-            // 1. Sidebar Tabs: Applying the master configuration.
-            sidebarMenu.classList.add('sortable-admin');
-            new Sortable(sidebarMenu, {
-                ...masterSortableConfig,
-                filter: '.tab-actions', // Specifically ignore clicks on the edit/delete buttons.
-                onEnd: (evt) => {
-                    const updates = {};
-                    // After dropping, get the new order and save it to Firebase.
-                    evt.target.querySelectorAll('.sidebar-item').forEach((item, index) => {
-                        updates[`${item.dataset.tabId}/order`] = index;
-                    });
-                    tabsRef.update(updates);
-                }
-            });
+            // Drag-and-drop is now ONLY enabled for pinned and unpinned announcement posts.
+            // Sidebar and Reminders are no longer sortable.
 
-            // 2. Reminders: Applying the master configuration.
-            remindersList.classList.add('sortable-admin');
-            new Sortable(remindersList, {
-                ...masterSortableConfig,
-                filter: '.reminder-actions', // Specifically ignore clicks on the edit/delete buttons.
-                onEnd: (evt) => {
-                    const updates = {};
-                    evt.target.querySelectorAll('.reminder-card').forEach((card, index) => {
-                        updates[`${card.dataset.id}/order`] = index;
-                    });
-                    remindersRef.update(updates);
-                }
-            });
-
-            // 3. Pinned Announcements: Applying the master configuration.
+            // 1. Pinned Announcements
             pinnedPostsFeed.classList.add('sortable-admin');
             new Sortable(pinnedPostsFeed, {
                 ...masterSortableConfig,
-                filter: '.post-actions, button, a, iframe', // Ignore clicks on any interactive elements within the post card.
+                filter: '.post-actions, button, a, iframe',
                 onEnd: (evt) => {
-                    suppressPostAnimation = true; // Prevent visual flickering on re-render.
+                    suppressPostAnimation = true;
                     const updates = {};
                     evt.target.querySelectorAll('.post-card').forEach((card, index) => {
-                        updates[`${card.dataset.id}/order`] = index;
+                        updates[`${currentTabId}/${card.dataset.id}/order`] = index;
                     });
-                    announcementsRef.child(currentTabId).update(updates);
+                    announcementsRef.update(updates);
                 }
             });
 
-            // 4. Unpinned Announcements: Applying the master configuration.
+            // 2. Unpinned Announcements
             unpinnedPostsFeed.classList.add('sortable-admin');
             new Sortable(unpinnedPostsFeed, {
                 ...masterSortableConfig,
@@ -1405,15 +1370,14 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 onEnd: (evt) => {
                     suppressPostAnimation = true;
                     const updates = {};
-                    // Unpinned items are sorted by a reverse timestamp. Reordering gives them a new, higher-priority timestamp.
                     Array.from(evt.target.querySelectorAll('.post-card')).forEach((card, index) => {
-                        updates[`${card.dataset.id}/order`] = Date.now() - index;
+                        updates[`${currentTabId}/${card.dataset.id}/order`] = Date.now() - index;
                     });
-                    announcementsRef.child(currentTabId).update(updates);
+                    announcementsRef.update(updates);
                 }
             });
         }
-        // --- [END] REFINED DRAG-AND-DROP SYSTEM ---
+        // --- [END] DRAG-AND-DROP FOR POSTS ONLY ---
         
         function setActiveTab(tabId) {
             currentTabId = tabId; const tab = tabs.find(t => t.id === tabId);
@@ -1424,7 +1388,8 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 if (activeLink) activeLink.classList.add('active');
                 announcementsRef.child(tabId).off(); 
                 announcementsRef.child(tabId).on('value', snapshot => { 
-                    currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : []; 
+                    const annData = snapshot.val();
+                    currentTabAnnouncements = annData ? Object.keys(annData).map(key => ({ id: key, ...annData[key] })) : [];
                     filterAnnouncements(); 
                 });
             }
@@ -1448,7 +1413,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             } else {
                 const newTabRef = tabsRef.push(); 
                 const currentMaxOrder = tabs.length > 0 ? Math.max(...tabs.map(t => t.order || 0)) + 1 : 0;
-                newTabRef.set({ id: newTabRef.key, name, order: currentMaxOrder });
+                newTabRef.set({ name, order: currentMaxOrder });
             }
             closeTabEditor();
         }
@@ -1492,7 +1457,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             if (!title) return alert('Please enter a title.');
             const newAnnRef = announcementsRef.child(currentTabId).push();
             const now = Date.now();
-            const newAnn = { id: newAnnRef.key, title, content, pinned: false, order: now, timestamp: now };
+            const newAnn = { title, content, pinned: false, order: now, timestamp: now };
             newAnnRef.set(newAnn).then(closeAnnouncementEditor);
         }
         function saveEditedAnnouncement(id) {
@@ -1586,14 +1551,14 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             if (!title || !date) return alert('Please enter a title and date');
             const description = document.getElementById('reminder-description').value.trim();
             const type = document.getElementById('reminder-type').value;
-            const id = currentReminderBeingEdited || database.ref().push().key;
+            const id = currentReminderBeingEdited;
+            const reminder = { title, description, date, type };
             
-            const isEditing = !!currentReminderBeingEdited;
-            const existingReminder = isEditing ? reminders.find(r => r.id === id) : null;
-            const order = isEditing && typeof existingReminder.order === 'number' ? existingReminder.order : reminders.length;
-            
-            const reminder = { id, title, description, date, type, order };
-            database.ref('reminders/' + id).set(reminder).then(closeReminderEditor);
+            if (id) {
+                remindersRef.child(id).update(reminder).then(closeReminderEditor);
+            } else {
+                remindersRef.push(reminder).then(closeReminderEditor);
+            }
         }
 
         window.editReminder = (event, id) => { event.stopPropagation(); openReminderEditor(id); };
