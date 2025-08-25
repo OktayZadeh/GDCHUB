@@ -1332,34 +1332,34 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         }
         
-        // --- [START] UNIFIED & ROBUST DRAG-AND-DROP IMPLEMENTATION ---
+        // --- [START] REBUILT DRAG-AND-DROP SYSTEM ---
+        /**
+         * Rebuilt from scratch to ensure consistent, reliable, and smooth drag-and-drop
+         * functionality across the entire application.
+         */
         function initializeDragAndDrop() {
             if (!isAdmin) return; 
 
-            const body = document.body;
-            
-            // This single, master configuration is used for ALL sortable instances.
-            // This is the key to ensuring consistent, smooth, and reliable behavior everywhere.
-            const commonSortableOptions = {
-                animation: 200,                   // Smooth animation when items are reordered.
-                ghostClass: 'sortable-ghost',     // The class for the placeholder element.
-                chosenClass: 'sortable-chosen',   // The class for the item being actively dragged.
-                dragClass: 'sortable-drag',       // The class for the cloned drag element.
-                forceFallback: true,              // **CRUCIAL**: This disables the native HTML5 drag-and-drop API and uses SortableJS's superior, consistent backend. This fixes most cross-browser bugs.
-                delay: 0,                         // No delay on desktop for a responsive feel.
-                delayOnTouchOnly: true,           // A delay is only applied on touch devices.
-                touchStartThreshold: 5,           // How many pixels the finger must move before a drag starts on touch devices.
-                onStart: () => body.classList.add('is-dragging'),   // Add a global class for cursor styling.
-                onEnd: () => body.classList.remove('is-dragging'), // Clean up the global class.
+            // The "Golden Standard" configuration. This single object defines the behavior 
+            // for all draggable elements, ensuring they look and feel identical.
+            const masterSortableConfig = {
+                animation: 150,                   // A crisp and smooth animation speed.
+                ghostClass: 'sortable-ghost',     // The class for the light blue placeholder.
+                chosenClass: 'sortable-chosen',   // The class for the item you are currently holding.
+                dragClass: 'sortable-drag',       // The class for the "lift and tilt" clone that follows your cursor.
+                forceFallback: true,              // **THE MOST IMPORTANT SETTING**: This forces SortableJS to use its own JavaScript-based dragging instead of the browser's native, buggy API. This is the key to reliability and consistency.
+                onStart: () => document.body.classList.add('is-dragging'),   // Instantly apply the 'grabbing' cursor to the whole page.
+                onEnd: () => document.body.classList.remove('is-dragging'), // Remove the 'grabbing' cursor when done.
             };
 
-            // 1. Sidebar Tabs Sorting (Now uses the unified configuration)
+            // 1. Sidebar Tabs: Applying the master configuration.
             sidebarMenu.classList.add('sortable-admin');
             new Sortable(sidebarMenu, {
-                ...commonSortableOptions,
-                filter: '.tab-actions', // Prevents a drag from starting when clicking on action buttons.
+                ...masterSortableConfig,
+                filter: '.tab-actions', // Specifically ignore clicks on the edit/delete buttons.
                 onEnd: (evt) => {
                     const updates = {};
+                    // After dropping, get the new order and save it to Firebase.
                     evt.target.querySelectorAll('.sidebar-item').forEach((item, index) => {
                         updates[`${item.dataset.tabId}/order`] = index;
                     });
@@ -1367,11 +1367,11 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
 
-            // 2. Reminders Sorting (Now uses the unified configuration)
+            // 2. Reminders: Applying the master configuration.
             remindersList.classList.add('sortable-admin');
             new Sortable(remindersList, {
-                ...commonSortableOptions,
-                filter: '.reminder-actions', // Prevents a drag when clicking reminder action buttons.
+                ...masterSortableConfig,
+                filter: '.reminder-actions', // Specifically ignore clicks on the edit/delete buttons.
                 onEnd: (evt) => {
                     const updates = {};
                     evt.target.querySelectorAll('.reminder-card').forEach((card, index) => {
@@ -1381,13 +1381,13 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
 
-            // 3. Pinned Announcements Sorting (Uses the unified configuration)
+            // 3. Pinned Announcements: Applying the master configuration.
             pinnedPostsFeed.classList.add('sortable-admin');
             new Sortable(pinnedPostsFeed, {
-                ...commonSortableOptions,
-                filter: '.post-actions, button, a, iframe', // Comprehensive filter for all non-draggable elements.
+                ...masterSortableConfig,
+                filter: '.post-actions, button, a, iframe', // Ignore clicks on any interactive elements within the post card.
                 onEnd: (evt) => {
-                    suppressPostAnimation = true; // Prevents the re-render animation from firing.
+                    suppressPostAnimation = true; // Prevent visual flickering on re-render.
                     const updates = {};
                     evt.target.querySelectorAll('.post-card').forEach((card, index) => {
                         updates[`${card.dataset.id}/order`] = index;
@@ -1396,15 +1396,15 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
 
-            // 4. Unpinned Announcements Sorting (Uses the unified configuration)
+            // 4. Unpinned Announcements: Applying the master configuration.
             unpinnedPostsFeed.classList.add('sortable-admin');
             new Sortable(unpinnedPostsFeed, {
-                ...commonSortableOptions,
+                ...masterSortableConfig,
                 filter: '.post-actions, button, a, iframe',
                 onEnd: (evt) => {
                     suppressPostAnimation = true;
                     const updates = {};
-                    // Unpinned posts are sorted by reverse timestamp. Dragging to a new position gives them a new, higher-priority timestamp.
+                    // Unpinned items are sorted by a reverse timestamp. Reordering gives them a new, higher-priority timestamp.
                     Array.from(evt.target.querySelectorAll('.post-card')).forEach((card, index) => {
                         updates[`${card.dataset.id}/order`] = Date.now() - index;
                     });
@@ -1412,7 +1412,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
         }
-        // --- [END] UNIFIED & ROBUST DRAG-AND-DROP IMPLEMENTATION ---
+        // --- [END] REBUILT DRAG-AND-DROP SYSTEM ---
         
         function setActiveTab(tabId) {
             currentTabId = tabId; const tab = tabs.find(t => t.id === tabId);
