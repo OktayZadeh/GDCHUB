@@ -564,15 +564,15 @@ body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray)
 .reminder-card:hover .reminder-card-drag-handle { opacity: 0.6; }
 .reminder-card-drag-handle:hover { background-color: var(--light-gray); opacity: 1; }
 .reminder-card.dragging {
-    opacity: 0.5;
-    transform: scale(1.05);
+    opacity: 0.4;
+    transform: scale(1.02);
     box-shadow: var(--shadow-lg);
 }
 .reminder-placeholder {
     background-color: var(--primary-light);
     border: 2px dashed var(--primary);
     border-radius: var(--radius-md);
-    transition: none; /* Prevent transition on placeholder */
+    transition: none;
 }
 .reminder-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
 .reminder-card.trip { border-left-color: var(--success); }
@@ -1336,29 +1336,46 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
         function setupSidebarDragAndDrop() {
             let draggedItem = null, placeholder = null;
             sidebarMenu.addEventListener('dragstart', e => {
-                draggedItem = e.target.closest('.sidebar-item'); if (!draggedItem) return;
-                e.dataTransfer.effectAllowed = 'move'; placeholder = document.createElement('li'); placeholder.className = 'sidebar-placeholder';
-                setTimeout(() => { if(draggedItem) draggedItem.classList.add('dragging'); }, 0);
+                if (!e.target.classList.contains('move-handle')) { e.preventDefault(); return; }
+                draggedItem = e.target.closest('.sidebar-item');
+                if (!draggedItem) return;
+                e.dataTransfer.effectAllowed = 'move';
+                placeholder = document.createElement('li');
+                placeholder.className = 'sidebar-placeholder';
+                setTimeout(() => { if (draggedItem) draggedItem.classList.add('dragging'); }, 0);
             });
             sidebarMenu.addEventListener('dragover', e => {
-                e.preventDefault(); if (!draggedItem) return;
+                e.preventDefault();
+                if (!draggedItem) return;
                 const overElement = e.target.closest('.sidebar-item');
                 if (overElement && overElement !== draggedItem) {
-                    const rect = overElement.getBoundingClientRect(); const isBefore = e.clientY < rect.top + rect.height / 2;
-                    if (isBefore) { overElement.parentNode.insertBefore(placeholder, overElement); } else { overElement.parentNode.insertBefore(placeholder, overElement.nextSibling); }
+                    const rect = overElement.getBoundingClientRect();
+                    const isBefore = e.clientY < rect.top + rect.height / 2;
+                    if (isBefore) {
+                        overElement.parentNode.insertBefore(placeholder, overElement);
+                    } else {
+                        overElement.parentNode.insertBefore(placeholder, overElement.nextSibling);
+                    }
                 }
             });
-            const endDrag = () => { if(draggedItem) draggedItem.classList.remove('dragging'); if(placeholder) placeholder.remove(); draggedItem = null; placeholder = null; }
+            const endDrag = () => {
+                if (draggedItem) draggedItem.classList.remove('dragging');
+                if (placeholder && placeholder.parentNode) placeholder.remove();
+                draggedItem = null;
+                placeholder = null;
+            };
             sidebarMenu.addEventListener('dragend', endDrag);
             sidebarMenu.addEventListener('drop', e => {
-                e.preventDefault(); if (!placeholder || !placeholder.parentNode || !draggedItem) { endDrag(); return; }
+                e.preventDefault();
+                if (!placeholder || !placeholder.parentNode || !draggedItem) { endDrag(); return; }
                 placeholder.parentNode.insertBefore(draggedItem, placeholder);
                 const originalIndex = tabs.findIndex(t => t.id === draggedItem.dataset.tabId);
                 const [movedTab] = tabs.splice(originalIndex, 1);
                 const newIndex = Array.from(sidebarMenu.children).indexOf(draggedItem);
                 tabs.splice(newIndex, 0, movedTab);
                 tabs.forEach((tab, index) => { tab.order = index; });
-                saveTabs(); endDrag();
+                saveTabs();
+                endDrag();
             });
         }
 
@@ -1559,96 +1576,81 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             database.ref('reminders/' + id).set(reminder).then(closeReminderEditor);
         }
         
-        // REFINED reminder drag-and-drop
+        // REWRITTEN - Stable Reminder Drag-and-Drop
         function setupRemindersDragAndDrop() {
-            let draggedEl = null;
+            let draggedItem = null, placeholder = null;
 
             remindersList.addEventListener('dragstart', e => {
-                // Only allow dragging from the handle
                 if (!e.target.classList.contains('reminder-card-drag-handle')) {
                     e.preventDefault();
                     return;
                 }
-                
-                draggedEl = e.target.closest('.reminder-card');
-                if (!draggedEl) return;
-                
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', draggedEl.dataset.id); // Good practice
+                draggedItem = e.target.closest('.reminder-card');
+                if (!draggedItem) return;
 
-                // Use setTimeout to allow the browser to paint the drag image before we change styles
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', draggedItem.dataset.id);
+
+                placeholder = document.createElement('div');
+                placeholder.className = 'reminder-placeholder';
+                placeholder.style.height = `${draggedItem.offsetHeight}px`;
+                
                 setTimeout(() => {
-                    if(draggedEl) {
-                        draggedEl.classList.add('dragging');
-                        document.body.classList.add('is-dragging');
+                    if (draggedItem) {
+                        draggedItem.classList.add('dragging');
                     }
                 }, 0);
             });
 
-            remindersList.addEventListener('dragend', () => {
-                if(draggedEl) {
-                    draggedEl.classList.remove('dragging');
-                }
-                document.body.classList.remove('is-dragging');
-                const placeholder = remindersList.querySelector('.reminder-placeholder');
-                if (placeholder) {
-                    placeholder.remove();
-                }
-                draggedEl = null;
-            });
-
             remindersList.addEventListener('dragover', e => {
                 e.preventDefault();
-                const placeholder = remindersList.querySelector('.reminder-placeholder') || createPlaceholder();
-                const afterElement = getDragAfterElement(remindersList, e.clientY);
+                if (!draggedItem) return;
 
-                if (afterElement == null) {
-                    if (!remindersList.contains(placeholder)) remindersList.appendChild(placeholder);
-                } else {
-                    if (!remindersList.contains(placeholder)) remindersList.insertBefore(placeholder, afterElement);
-                }
-            });
-            
-             remindersList.addEventListener('drop', e => {
-                e.preventDefault();
-                const placeholder = remindersList.querySelector('.reminder-placeholder');
-                if (placeholder && draggedEl) {
-                    remindersList.insertBefore(draggedEl, placeholder);
-                    
-                    const updates = {};
-                    const orderedCards = Array.from(remindersList.querySelectorAll('.reminder-card'));
-                    orderedCards.forEach((card, index) => {
-                        updates[`${card.dataset.id}/order`] = index;
-                    });
-
-                    if (Object.keys(updates).length > 0) {
-                        remindersRef.update(updates);
-                    }
-                }
-            });
-
-            function createPlaceholder() {
-                const placeholder = document.createElement('div');
-                placeholder.className = 'reminder-placeholder';
-                if (draggedEl) {
-                     placeholder.style.height = `${draggedEl.offsetHeight}px`;
-                }
-                return placeholder;
-            }
-            
-            function getDragAfterElement(container, y) {
-                const draggableElements = [...container.querySelectorAll('.reminder-card:not(.dragging)')];
-
-                return draggableElements.reduce((closest, child) => {
-                    const box = child.getBoundingClientRect();
-                    const offset = y - box.top - box.height / 2;
-                    if (offset < 0 && offset > closest.offset) {
-                        return { offset: offset, element: child };
+                const overElement = e.target.closest('.reminder-card:not(.dragging)');
+                if (overElement) {
+                    const rect = overElement.getBoundingClientRect();
+                    const isBefore = e.clientY < rect.top + rect.height / 2;
+                    if (isBefore) {
+                        overElement.parentNode.insertBefore(placeholder, overElement);
                     } else {
-                        return closest;
+                        overElement.parentNode.insertBefore(placeholder, overElement.nextSibling);
                     }
-                }, { offset: Number.NEGATIVE_INFINITY }).element;
-            }
+                }
+            });
+
+            const endDrag = () => {
+                if (draggedItem) {
+                    draggedItem.classList.remove('dragging');
+                }
+                if (placeholder && placeholder.parentNode) {
+                    placeholder.remove();
+                }
+                draggedItem = null;
+                placeholder = null;
+            };
+
+            remindersList.addEventListener('dragend', endDrag);
+            remindersList.addEventListener('drop', e => {
+                e.preventDefault();
+                if (!placeholder || !placeholder.parentNode || !draggedItem) {
+                    endDrag();
+                    return;
+                }
+
+                placeholder.parentNode.insertBefore(draggedItem, placeholder);
+                
+                const updates = {};
+                const orderedCards = Array.from(remindersList.querySelectorAll('.reminder-card'));
+                orderedCards.forEach((card, index) => {
+                    updates[`${card.dataset.id}/order`] = index;
+                });
+
+                if (Object.keys(updates).length > 0) {
+                    remindersRef.update(updates);
+                }
+                
+                endDrag();
+            });
         }
 
         window.editReminder = (event, id) => { event.stopPropagation(); openReminderEditor(id); };
