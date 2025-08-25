@@ -1332,29 +1332,38 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
             });
         }
         
-        // --- UNIFIED & FINAL: DRAG-AND-DROP INITIALIZATION ---
+        // --- [START] REVISED DRAG-AND-DROP FUNCTION ---
+        /**
+         * Initializes drag-and-drop functionality for all sortable elements.
+         * This function is designed to be robust, consistent, and user-friendly.
+         */
         function initializeDragAndDrop() {
             if (!isAdmin) return; 
 
             const body = document.body;
-            // Common configuration for a consistent look and feel
+            
+            // A common configuration for a consistent and smooth drag-and-drop experience.
             const commonSortableOptions = {
-                animation: 150,
-                ghostClass: 'sortable-ghost',
-                chosenClass: 'sortable-chosen',
-                dragClass: 'sortable-drag',
-                onStart: () => body.classList.add('is-dragging'),
-                onEnd: () => body.classList.remove('is-dragging'),
+                animation: 200, // A slightly slower animation for a smoother visual effect.
+                ghostClass: 'sortable-ghost',   // The class for the drop placeholder.
+                chosenClass: 'sortable-chosen', // The class for the item being dragged.
+                dragClass: 'sortable-drag',     // The class for the cloned item being dragged.
+                forceFallback: true, // This is crucial for consistency. It avoids using the native HTML5 drag-and-drop API, which can be buggy and inconsistent across browsers.
+                delay: 100, // A small delay in milliseconds to prevent accidental drags when the user intends to click.
+                delayOnTouchOnly: true, // The delay only applies to touch devices, where distinguishing a tap from a drag is harder.
+                touchStartThreshold: 5, // The user must move their finger at least 5 pixels before a drag is initiated.
+                onStart: () => body.classList.add('is-dragging'), // Add a class to the body for global styling during a drag.
+                onEnd: () => body.classList.remove('is-dragging'), // Clean up the global styling.
             };
 
-            // 1. Sidebar Tabs Sorting (REPLICATED LOGIC)
+            // 1. Initialize sorting for Sidebar Tabs.
             sidebarMenu.classList.add('sortable-admin');
             new Sortable(sidebarMenu, {
                 ...commonSortableOptions,
-                filter: '.tab-actions',
+                filter: '.tab-actions', // Clicks on action buttons will not initiate a drag.
                 onEnd: (evt) => {
-                    body.classList.remove('is-dragging');
                     const updates = {};
+                    // After dropping, iterate through the reordered items and create a batch update for Firebase.
                     evt.target.querySelectorAll('.sidebar-item').forEach((item, index) => {
                         updates[`${item.dataset.tabId}/order`] = index;
                     });
@@ -1362,13 +1371,12 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
 
-            // 2. Reminders Sorting (REPLICATED LOGIC)
+            // 2. Initialize sorting for Reminders.
             remindersList.classList.add('sortable-admin');
             new Sortable(remindersList, {
                 ...commonSortableOptions,
                 filter: '.reminder-actions',
                 onEnd: (evt) => {
-                    body.classList.remove('is-dragging');
                     const updates = {};
                     evt.target.querySelectorAll('.reminder-card').forEach((card, index) => {
                         updates[`${card.dataset.id}/order`] = index;
@@ -1377,14 +1385,13 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
 
-            // 3. Pinned Announcements Sorting (The "Perfect" Implementation)
+            // 3. Initialize sorting for Pinned Announcements.
             pinnedPostsFeed.classList.add('sortable-admin');
             new Sortable(pinnedPostsFeed, {
                 ...commonSortableOptions,
                 filter: '.post-actions, button, a, iframe',
                 onEnd: (evt) => {
-                    body.classList.remove('is-dragging');
-                    suppressPostAnimation = true;
+                    suppressPostAnimation = true; // Prevent distracting animations on re-render.
                     const updates = {};
                     evt.target.querySelectorAll('.post-card').forEach((card, index) => {
                         updates[`${card.dataset.id}/order`] = index;
@@ -1393,15 +1400,15 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
 
-            // 4. Unpinned Announcements Sorting
+            // 4. Initialize sorting for Unpinned Announcements.
             unpinnedPostsFeed.classList.add('sortable-admin');
             new Sortable(unpinnedPostsFeed, {
                 ...commonSortableOptions,
                 filter: '.post-actions, button, a, iframe',
                 onEnd: (evt) => {
-                    body.classList.remove('is-dragging');
                     suppressPostAnimation = true;
                     const updates = {};
+                    // Unpinned posts are sorted by a reverse timestamp. Reordering gives them a new, high-priority timestamp.
                     Array.from(evt.target.querySelectorAll('.post-card')).forEach((card, index) => {
                         updates[`${card.dataset.id}/order`] = Date.now() - index;
                     });
@@ -1409,6 +1416,7 @@ body.non-admin .sidebar-title { padding-right: var(--space-sm); }
                 }
             });
         }
+        // --- [END] REVISED DRAG-AND-DROP FUNCTION ---
         
         function setActiveTab(tabId) {
             currentTabId = tabId; const tab = tabs.find(t => t.id === tabId);
