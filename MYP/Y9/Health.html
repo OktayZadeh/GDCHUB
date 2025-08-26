@@ -809,6 +809,11 @@ body.non-admin .reminder-card { cursor: default; }
 @keyframes shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
     </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    
 </head>
 <body class="non-admin">
     <!-- Top Navigation Bar -->
@@ -1418,7 +1423,7 @@ body.non-admin .reminder-card { cursor: default; }
                 hueCtx.fillRect(0, 0, hueSlider.width, hueSlider.height);
             }
 
-            function updateFromHsl() {
+            function updateFromHsl(apply = true) {
                 const color = hslToHex(hue, saturation, lightness);
                 const rgb = hslToRgb(hue / 360, saturation, lightness);
                 
@@ -1434,7 +1439,7 @@ body.non-admin .reminder-card { cursor: default; }
                     if (document.activeElement !== input) input.value = rgb[input.dataset.channel];
                 });
 
-                applyColor(color);
+                if (apply) applyColor(color);
             }
 
             function applyColor(color) {
@@ -1519,7 +1524,7 @@ body.non-admin .reminder-card { cursor: default; }
 
             drawSpectrum();
             drawHueSlider();
-            updateFromHsl();
+            updateFromHsl(false); // Initial update without applying color
         }
 
         function hslToRgb(h, s, l) {
@@ -1554,7 +1559,7 @@ body.non-admin .reminder-card { cursor: default; }
         
         function hslToHex(h, s, l) {
             const { r, g, b } = hslToRgb(h / 360, s, l);
-            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
         }
 
         function hexToHsl(hex) {
