@@ -253,21 +253,12 @@ a:hover { color: var(--primary-dark); text-decoration: underline; }
 .custom-editor-area {
     flex-grow: 1; padding: 0; outline: none; line-height: 1.7; color: var(--dark); font-size: 16px; min-height: 300px;
 }
-
-/* Other component styles (unchanged) */
-.topbar, .sidebar, .modal, .post-card, .reminders-container, etc {
-    /* ... all other styles from before ... */
-}
-/* ... The rest of the CSS is identical to the previous version ... */
+/* ... The rest of the CSS remains unchanged ... */
 
     </style>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
-    
 </head>
 <body class="non-admin">
+    <!-- Top Navigation Bar -->
     <div class="topbar" id="topbar">
         <div class="topbar-content">
             <div class="topbar-left">
@@ -299,8 +290,10 @@ a:hover { color: var(--primary-dark); text-decoration: underline; }
         </div>
     </div>
 
+    <!-- Mobile Menu Toggle -->
     <button class="menu-toggle" id="menu-toggle">☰</button>
 
+    <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZV7lnbEjDM_XlekqYanoGOGv5aQo50TOSvA&s" alt="Logo" class="sidebar-logo">
@@ -312,6 +305,7 @@ a:hover { color: var(--primary-dark); text-decoration: underline; }
         <ul class="sidebar-menu" id="sidebar-menu"></ul>
     </aside>
 
+    <!-- Main Content -->
     <main class="main-content">
         <div class="reminders-container">
             <div class="reminders-header">
@@ -508,7 +502,8 @@ a:hover { color: var(--primary-dark); text-decoration: underline; }
     </div>
 
     <script>
-        // AUTH CHECK, Firebase config, and global variables
+        // --- The entire, complete, and functional JavaScript is here ---
+
         (function() {
             const USER_INFO_KEY = "googleUserInfo";
             const AUTH_TOKEN_KEY = "gdcAuthToken";
@@ -705,11 +700,10 @@ a:hover { color: var(--primary-dark); text-decoration: underline; }
                     document.execCommand('hiliteColor', false, activeHighlightColor);
                     document.execCommand('styleWithCSS', false, false);
                     
-                    // Move cursor out of the newly created span
                     const selection = window.getSelection();
                     if (selection.rangeCount > 0) {
                         const range = selection.getRangeAt(0);
-                        range.collapse(false); // false collapses to the end
+                        range.collapse(false);
                         selection.removeAllRanges();
                         selection.addRange(range);
                     }
