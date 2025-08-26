@@ -460,17 +460,54 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
 #format-block-menu .toolbar-dropdown-item[data-value="h3"] { font-size: var(--text-lg); font-weight: 600; }
 #format-block-menu .toolbar-dropdown-item[data-value="h4"] { font-size: var(--text-base); font-weight: 600; }
 #format-block-menu .toolbar-dropdown-item[data-value="blockquote"] { border-left: 3px solid var(--primary); padding-left: var(--space-sm); font-style: italic; }
-/* --- NEW: Color Picker Styles --- */
-.color-picker-menu {
-    display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-xs); padding: var(--space-sm);
-    min-width: auto;
+
+/* --- UPDATED: Advanced Color Picker Styles --- */
+.advanced-color-picker {
+    padding: var(--space-sm);
+    min-width: 220px;
+}
+.color-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: var(--space-xs);
 }
 .color-swatch {
-    width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+    width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
     border: 1px solid rgba(0,0,0,0.1); transition: transform var(--transition-fast);
 }
 .color-swatch:hover { transform: scale(1.15); box-shadow: var(--shadow-sm); }
 .color-swatch.active { border: 2px solid var(--primary); }
+.custom-color-section {
+    margin-top: var(--space-sm); padding-top: var(--space-sm);
+    border-top: 1px solid var(--light-gray);
+}
+.custom-color-section h4 {
+    font-size: var(--text-sm); font-weight: 600; margin-bottom: var(--space-xs);
+    color: var(--medium); text-align: center;
+}
+.custom-color-input-wrapper {
+    display: flex; align-items: center; gap: var(--space-xs);
+}
+.hex-input-prefix {
+    font-size: var(--text-sm); color: var(--medium);
+}
+.custom-color-input {
+    flex-grow: 1; border: 1px solid var(--light-gray); border-radius: var(--radius-sm);
+    padding: var(--space-xs); font-size: var(--text-sm); font-family: monospace;
+    text-transform: uppercase; margin-bottom: 0;
+}
+.custom-color-apply-btn {
+    background: transparent; border: 1px solid var(--light-gray); color: var(--medium);
+    width: 30px; height: 30px; border-radius: var(--radius-md); display: flex;
+    align-items: center; justify-content: center; cursor: pointer; transition: all var(--transition-fast);
+}
+.custom-color-apply-btn:hover { background: var(--primary-light); color: var(--primary); }
+body.dark-mode .custom-color-section { border-top-color: var(--dark-light); }
+body.dark-mode .custom-color-section h4 { color: var(--dark-medium); }
+body.dark-mode .custom-color-input { background: var(--dark-dark-gray); border-color: var(--dark-light); color: white; }
+body.dark-mode .custom-color-apply-btn { border-color: var(--dark-light); color: var(--dark-medium); }
+body.dark-mode .custom-color-apply-btn:hover { background: var(--dark-primary-light); color: var(--primary); }
+
 
 .custom-editor-area {
     flex-grow: 1; padding: 0; outline: none; line-height: 1.7; color: var(--dark); font-size: 16px; min-height: 300px;
@@ -512,8 +549,14 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
     border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
     box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
 }
-.post-card-drag-handle { position: absolute; top: var(--space-md); left: var(--space-md); padding: var(--space-xs); opacity: 0; transition: opacity var(--transition-fast); }
-.post-card:hover .post-card-drag-handle { opacity: 0.5; }
+/* REMOVED DRAG HANDLE */
+.post-card-drag-handle { 
+    display: none !important; 
+}
+.post-card[draggable="true"] {
+    cursor: move; /* Provide cursor feedback for dragging directly on the card */
+}
+
 .post-card.expanded {
     position: fixed; top: 54px; left: 260px; right: 0; bottom: 0; z-index: 100; overflow-y: auto; margin: 0;
     padding: var(--space-xl); padding-top: calc(68px + var(--space-lg)); background: white; border-radius: 0;
@@ -866,15 +909,15 @@ body.non-admin .reminder-card { cursor: default; }
                         <button class="toolbar-button" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
                         <button class="toolbar-button" data-command="strikeThrough" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
                     </div>
-                     <!-- NEW: Color Pickers Group -->
+                     <!-- UPDATED: Color Pickers Group -->
                     <div class="toolbar-group">
                         <div class="toolbar-dropdown" id="text-color-dropdown">
                             <button class="toolbar-dropdown-toggle" id="text-color-toggle" title="Text Color">
                                 <i class="fas fa-font"></i>
                                 <div class="color-indicator" id="text-color-indicator"></div>
                             </button>
-                            <div class="toolbar-dropdown-menu color-picker-menu" id="text-color-menu">
-                                <!-- Color swatches will be populated by JS -->
+                            <div class="toolbar-dropdown-menu" id="text-color-menu">
+                                <!-- Advanced color picker will be populated by JS -->
                             </div>
                         </div>
                         <div class="toolbar-dropdown" id="highlight-color-dropdown">
@@ -882,8 +925,8 @@ body.non-admin .reminder-card { cursor: default; }
                                 <i class="fas fa-highlighter"></i>
                                 <div class="color-indicator" id="highlight-color-indicator" style="background-color: #FFFF00;"></div>
                             </button>
-                            <div class="toolbar-dropdown-menu color-picker-menu" id="highlight-color-menu">
-                                <!-- Color swatches will be populated by JS -->
+                            <div class="toolbar-dropdown-menu" id="highlight-color-menu">
+                                <!-- Advanced color picker will be populated by JS -->
                             </div>
                         </div>
                     </div>
@@ -1090,29 +1133,25 @@ body.non-admin .reminder-card { cursor: default; }
             });
         });
         
-        // --- Cleaned Editor Logic ---
+        // --- UPDATED Editor Logic ---
         function setupCustomEditor() {
             const toolbar = document.getElementById('custom-toolbar');
             const editor = document.getElementById('announcement-content');
 
             populateFontDropdown();
-            // NEW: Populate color pickers
             populateColorPickers();
             
-            // The single most important fix: prevent mousedown on dropdowns from stealing editor focus.
             const preventFocusSteal = (e) => e.preventDefault();
             document.querySelectorAll('.toolbar-dropdown-menu').forEach(menu => {
                 menu.addEventListener('mousedown', preventFocusSteal);
             });
 
-            // Single, robust click handler for the entire toolbar.
             toolbar.addEventListener('click', e => {
-                const button = e.target.closest('.toolbar-button, .toolbar-dropdown-toggle, .toolbar-dropdown-item, .color-swatch');
+                const button = e.target.closest('.toolbar-button, .toolbar-dropdown-toggle, .toolbar-dropdown-item, .color-swatch, .custom-color-apply-btn');
                 if (!button) return;
 
                 const dropdown = button.closest('.toolbar-dropdown');
-
-                // Handle dropdown toggling
+                
                 if (button.classList.contains('toolbar-dropdown-toggle')) {
                     const wasOpen = dropdown.classList.contains('open');
                     document.querySelectorAll('.toolbar-dropdown.open').forEach(d => d.classList.remove('open'));
@@ -1128,7 +1167,19 @@ body.non-admin .reminder-card { cursor: default; }
                 }
 
                 const command = button.dataset.command;
-                const value = button.dataset.value || null;
+                let value = button.dataset.value || null;
+
+                // Handle custom color input
+                if (button.classList.contains('custom-color-apply-btn')) {
+                    const input = button.previousElementSibling;
+                    const hexValue = input.value.startsWith('#') ? input.value : '#' + input.value;
+                    if (/^#[0-9A-F]{6}$/i.test(hexValue)) {
+                        value = hexValue;
+                    } else {
+                        alert('Please enter a valid 6-digit hex color code.');
+                        return;
+                    }
+                }
 
                 if (command) {
                     if (command === 'createLink') {
@@ -1137,7 +1188,6 @@ body.non-admin .reminder-card { cursor: default; }
                     } else if (command === 'embedContent') {
                         openEmbedModal();
                     } else {
-                        // NEW: Use 'styleWithCSS' for highlights to use background-color instead of <font> tags
                         if (command === 'hiliteColor') {
                              document.execCommand('styleWithCSS', false, true);
                              document.execCommand(command, false, value);
@@ -1151,21 +1201,29 @@ body.non-admin .reminder-card { cursor: default; }
                 if (dropdown) {
                     if (button.classList.contains('toolbar-dropdown-item') && (command === 'formatBlock' || command === 'fontName')) {
                        const toggle = dropdown.querySelector('.toolbar-dropdown-toggle');
-                       if (toggle) {
-                           toggle.innerHTML = `${button.textContent} <i class="fas fa-chevron-down"></i>`;
-                       }
+                       if (toggle) toggle.innerHTML = `${button.textContent} <i class="fas fa-chevron-down"></i>`;
                     }
-                     // NEW: Update color indicators when a color is picked
-                    if (button.classList.contains('color-swatch')) {
+                    if (button.classList.contains('color-swatch') || button.classList.contains('custom-color-apply-btn')) {
                        const indicator = dropdown.querySelector('.color-indicator');
-                       if (indicator) {
-                           indicator.style.backgroundColor = value;
-                       }
+                       if (indicator && value) indicator.style.backgroundColor = value;
                     }
-                    dropdown.classList.remove('open');
+                    if(!button.classList.contains('custom-color-input')) {
+                        dropdown.classList.remove('open');
+                    }
                 }
                 
                 updateToolbarState();
+            });
+            
+            toolbar.addEventListener('input', e => {
+                if(e.target.classList.contains('custom-color-input')) {
+                     const hexValue = e.target.value.startsWith('#') ? e.target.value : '#' + e.target.value;
+                     if (/^#[0-9A-F]{6}$/i.test(hexValue)) {
+                         e.target.style.borderColor = 'var(--primary)';
+                     } else {
+                         e.target.style.borderColor = 'var(--danger)';
+                     }
+                }
             });
 
             document.addEventListener('click', (e) => {
@@ -1178,9 +1236,7 @@ body.non-admin .reminder-card { cursor: default; }
                 const selection = window.getSelection();
                 if (selection.rangeCount > 0) {
                    const range = selection.getRangeAt(0);
-                   if (editor.contains(range.commonAncestorContainer)) {
-                       savedEditorSelection = range;
-                   }
+                   if (editor.contains(range.commonAncestorContainer)) savedEditorSelection = range;
                 }
             };
 
@@ -1198,50 +1254,60 @@ body.non-admin .reminder-card { cursor: default; }
             ).join('');
         }
         
-        // NEW: Function to populate color pickers
+        // UPDATED: Function to populate advanced color pickers
         function populateColorPickers() {
-            const colors = [
-                '#000000', '#444444', '#666666', '#999999', '#CCCCCC', '#FFFFFF',
-                '#FF0000', '#FF9900', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF',
-                '#9900FF', '#FF00FF', '#F44E3B', '#D33115', '#9F0500', '#E27300'
+            const textColors = [
+                '#000000', '#444444', '#666666', '#999999', '#CCCCCC', '#EFEFEF', '#F3F3F3', '#FFFFFF',
+                '#FF0000', '#FF9900', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#9900FF', '#FF00FF',
+                '#F44E3B', '#D33115', '#9F0500', '#E27300', '#B45F06', '#783F04', '#FCC400', '#BF9000',
+                '#45818E', '#134F5C', '#0B5394', '#073763', '#674EA7', '#351C75', '#A64D79', '#741B47'
             ];
             const highlightColors = [
-                '#FFFF00', '#90EE90', '#ADD8E6', '#FFB6C1', '#FFA07A', '#FFFFFF'
+                 '#FFFF00', '#90EE90', '#ADD8E6', '#FFB6C1', '#FFA07A', '#FFD700', '#E6E6FA', 'transparent'
             ];
 
             const textColorMenu = document.getElementById('text-color-menu');
             const highlightColorMenu = document.getElementById('highlight-color-menu');
 
-            textColorMenu.innerHTML = colors.map(color => 
-                `<button class="color-swatch" data-command="foreColor" data-value="${color}" style="background-color: ${color};"></button>`
-            ).join('');
-
-            highlightColorMenu.innerHTML = highlightColors.map(color => 
-                `<button class="color-swatch" data-command="hiliteColor" data-value="${color}" style="background-color: ${color};"></button>`
-            ).join('');
+            textColorMenu.innerHTML = createAdvancedColorPicker('foreColor', textColors);
+            highlightColorMenu.innerHTML = createAdvancedColorPicker('hiliteColor', highlightColors, true);
         }
+
+        function createAdvancedColorPicker(command, colors, isHighlight = false) {
+            const swatches = colors.map(color => {
+                let style = `background-color: ${color};`;
+                if(color === 'transparent') style += `background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 10px 10px; background-position: 0 0, 0 5px, 5px -5px, -5px 0px;`;
+                return `<button class="color-swatch" data-command="${command}" data-value="${color}" style="${style}"></button>`
+            }).join('');
+
+            return `
+                <div class="advanced-color-picker">
+                    <div class="color-grid">${swatches}</div>
+                    <div class="custom-color-section">
+                        <h4>Custom</h4>
+                        <div class="custom-color-input-wrapper">
+                            <span class="hex-input-prefix">#</span>
+                            <input type="text" class="custom-color-input" maxlength="6" placeholder="HEX">
+                            <button class="custom-color-apply-btn" data-command="${command}" title="Apply"><i class="fas fa-check"></i></button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
 
         function updateToolbarState() {
             const commands = ['bold', 'italic', 'underline', 'strikeThrough', 'justifyLeft', 'justifyCenter', 'justifyRight', 'insertUnorderedList', 'insertOrderedList'];
             commands.forEach(command => {
                 const button = document.querySelector(`.toolbar-button[data-command="${command}"]`);
-                if (button) {
-                    button.classList.toggle('active', document.queryCommandState(command));
-                }
+                if (button) button.classList.toggle('active', document.queryCommandState(command));
             });
-
-            // NEW: Update color indicators based on selection
             const textColor = document.queryCommandValue('foreColor');
             const highlightColor = document.queryCommandValue('hiliteColor');
-            
             document.getElementById('text-color-indicator').style.backgroundColor = textColor || 'var(--dark)';
-            // For highlight, we need to handle browsers returning rgb()
             const highlightIndicator = document.getElementById('highlight-color-indicator');
-            try {
-                 highlightIndicator.style.backgroundColor = new Option().style.color = highlightColor;
-            } catch(e) {
-                 highlightIndicator.style.backgroundColor = '#FFFF00'; // fallback
-            }
+            try { highlightIndicator.style.backgroundColor = new Option().style.color = highlightColor; } 
+            catch(e) { highlightIndicator.style.backgroundColor = '#FFFF00'; }
         }
         
         function openEmbedModal() { document.getElementById('embed-url-input').value = ''; embedModal.style.display = 'flex'; }
@@ -1378,7 +1444,8 @@ body.non-admin .reminder-card { cursor: default; }
             const tempDiv = document.createElement("div"); tempDiv.innerHTML = rawContent;
             const collapsedText = tempDiv.textContent || "";
             const animationStyle = skipAnimation ? 'style="animation: none; opacity: 1;"' : '';
-            return `<div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" draggable="${isAdmin}" ${animationStyle}><span class="post-card-drag-handle move-handle">☰</span>${pinIcon}${actionsHtml}<h3>${announcement.title}</h3><div class="collapsed-content">${collapsedText}</div><div class="post-details"><div class="post-content">${expandedContent}</div><div class="post-meta">Posted on ${postDate}</div></div></div>`;
+            // REMOVED span with post-card-drag-handle class
+            return `<div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" draggable="${isAdmin}" ${animationStyle}>${pinIcon}${actionsHtml}<h3>${announcement.title}</h3><div class="collapsed-content">${collapsedText}</div><div class="post-details"><div class="post-content">${expandedContent}</div><div class="post-meta">Posted on ${postDate}</div></div></div>`;
         }
         
         function saveTabs() {
@@ -1747,3 +1814,4 @@ body.non-admin .reminder-card { cursor: default; }
     </script>
 </body>
 </html>
+```
