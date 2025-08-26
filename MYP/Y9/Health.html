@@ -337,20 +337,20 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 }
 .header-content { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 1px solid var(--light-gray); }
 
-/* --- UPDATED: Search Bar Styles --- */
+/* --- FIXED: Search Bar Styles --- */
 .search-container { position: relative; width: 100%; max-width: 400px; }
 .search-input {
     width: 100%; 
     height: 38px;
+    padding: var(--space-sm) var(--space-md) var(--space-sm) 40px; /* Increased left padding for icon */
     border: 1px solid var(--light-gray);
     border-radius: var(--radius-full); 
     font-size: var(--text-sm); 
     background-color: white;
     background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23718096" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
     background-repeat: no-repeat;
-    background-position: left 12px center;
+    background-position: 12px center;
     background-size: 16px 16px;
-    padding: var(--space-sm) var(--space-md) var(--space-sm) 40px; /* Increased left padding */
     transition: all var(--transition-fast); 
     box-shadow: var(--shadow-sm);
 }
@@ -358,11 +358,13 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 .search-input:focus { outline: none; border-color: var(--primary); box-shadow: var(--shadow-primary); }
 .search-clear {
     position: absolute; right: var(--space-md); top: 50%; transform: translateY(-50%); background: none; border: none;
-    color: var(--medium); cursor: pointer; display: none; font-size: var(--text-lg); width: 24px; height: 24px;
-    display: flex; align-items: center; justify-content: center; border-radius: var(--radius-full); transition: all var(--transition-fast);
+    color: var(--medium); cursor: pointer; font-size: var(--text-lg); width: 24px; height: 24px;
+    border-radius: var(--radius-full); transition: all var(--transition-fast);
+    display: none; /* Hidden by default */
 }
+.search-input:not(:placeholder-shown) + .search-clear { display: flex; align-items: center; justify-content: center; }
 .search-clear:hover { background: var(--light); color: var(--danger); }
-.search-input:not(:placeholder-shown) + .search-clear { display: flex; }
+
 /* Profile picture styles */
 #profile-pic {
     width: 36px; height: 36px; border-radius: var(--radius-full); border: 2px solid white; cursor: pointer;
@@ -391,7 +393,7 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 .modal h2 { margin-top: 0; padding-right: var(--space-lg); color: var(--dark); }
 .modal-buttons { display: flex; justify-content: flex-end; margin-top: var(--space-lg); gap: var(--space-sm); }
 
-/* --- UI REWORK: Full-Screen Editor --- */
+/* --- Full-Screen Editor --- */
 #announcement-editor-overlay {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: var(--light); z-index: 2000;
     display: flex; flex-direction: column; transform: translateY(100%); visibility: hidden;
@@ -419,7 +421,7 @@ body.dark-mode .editor-header { background-color: var(--dark-lighter); border-bo
 body.dark-mode #announcement-title { color: white; }
 body.dark-mode #announcement-title::placeholder { color: var(--dark-light); }
 
-/* --- Cleaned Toolbar --- */
+/* --- Editor Toolbar --- */
 .custom-toolbar-container {
     position: sticky; top: 0; z-index: 5; background-color: var(--light);
     padding: var(--space-md) 0; margin-bottom: var(--space-md);
@@ -442,14 +444,12 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
 }
 .toolbar-button:hover, .toolbar-dropdown-toggle:hover { background: var(--light); color: var(--dark); transform: scale(1.1); }
 .toolbar-button.active { background: var(--primary-light); color: var(--primary-dark); }
-/* --- Color Indicator Underline --- */
 .color-indicator {
     position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
     width: 16px; height: 3px; border-radius: 2px;
-    background-color: var(--dark); /* Default color */
+    background-color: var(--dark);
     transition: background-color var(--transition-fast);
 }
-/* Toolbar Dropdown */
 .toolbar-dropdown { position: relative; }
 .toolbar-dropdown-toggle { width: auto; padding: 0 var(--space-sm); font-size: var(--text-sm); font-weight: 500; }
 .toolbar-dropdown-toggle .fa-chevron-down { margin-left: var(--space-xs); font-size: 10px; transition: transform var(--transition-fast); }
@@ -506,9 +506,24 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
     background-color: var(--light-gray);
     margin: var(--space-xs) 0;
 }
-.gdocs-color-picker .custom-color-area {
+.custom-section-toggle {
     border-top: 1px solid var(--light-gray);
     padding-top: var(--space-sm);
+}
+.custom-color-add-btn {
+    width: 100%; display: flex; align-items: center; justify-content: center;
+    gap: var(--space-xs); padding: var(--space-xs); border-radius: var(--radius-sm);
+    font-size: var(--text-sm); color: var(--medium);
+    background: transparent; border: none; cursor: pointer;
+}
+.custom-color-add-btn:hover { background: var(--light); }
+.custom-color-panel { display: none; /* Hidden by default */ }
+.gdocs-color-picker.custom-visible .palette-section,
+.gdocs-color-picker.custom-visible .custom-section-toggle {
+    display: none;
+}
+.gdocs-color-picker.custom-visible .custom-color-panel {
+    display: block;
 }
 .gdocs-color-picker .custom-color-header {
     display: flex;
@@ -564,14 +579,14 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
     padding: 4px 6px; font-size: var(--text-xs); margin-bottom: 0;
 }
 body.dark-mode .gdocs-color-picker .swatch-divider,
-body.dark-mode .gdocs-color-picker .custom-color-area,
+body.dark-mode .gdocs-color-picker .custom-section-toggle,
 body.dark-mode .gdocs-color-picker .custom-color-preview,
 body.dark-mode .gdocs-color-picker .eyedropper-btn,
 body.dark-mode .gdocs-color-picker .color-input-group input {
     border-color: var(--dark-light);
 }
-body.dark-mode .gdocs-color-picker .eyedropper-btn:hover { background: var(--dark-light-gray); }
-
+body.dark-mode .custom-color-add-btn:hover { background: var(--dark-light-gray); }
+body.dark-mode .eyedropper-btn:hover { background: var(--dark-light-gray); }
 /* --- END Color Picker --- */
 
 .custom-editor-area {
@@ -595,10 +610,6 @@ body.dark-mode .toolbar-dropdown-item { color: var(--dark-medium); }
 body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray); }
 body.dark-mode .color-indicator { background-color: var(--dark-medium); }
 
-/* Pinned Posts Styles */
-#pinned-posts-header { margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 2px solid var(--primary); color: var(--primary-dark); display: flex; align-items: center; gap: var(--space-sm); }
-.post-placeholder { background: var(--primary-light); border-radius: var(--radius-lg); margin-bottom: var(--space-lg); min-height: 100px; border: 2px dashed var(--primary); }
-
 /* Post Styles */
 .post-card {
     background: white; border-radius: var(--radius-lg); padding: var(--space-lg); margin-bottom: var(--space-lg); box-shadow: var(--shadow-sm);
@@ -606,23 +617,15 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
     animation: fadeIn var(--transition-normal) forwards; opacity: 0; border: 1px solid var(--light-gray);
 }
 .post-card.pinned { border-left: 4px solid var(--primary); }
-/* --- UPDATED: Dragging Cursor Logic --- */
 .post-card.dragging {
-    opacity: 0.4;
-    transform: scale(1.02);
-    box-shadow: var(--shadow-lg);
-    cursor: grabbing !important;
+    opacity: 0.4; transform: scale(1.02); box-shadow: var(--shadow-lg); cursor: grabbing !important;
 }
-.post-card[draggable="true"] {
-    cursor: pointer; /* Default cursor for draggable items */
-}
+.post-card[draggable="true"] { cursor: pointer; }
 .pin-icon {
     position: absolute; top: var(--space-lg); left: -10px; color: var(--primary); background-color: var(--lighter);
     border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
     box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
 }
-.post-card-drag-handle { display: none !important; }
-
 .post-card.expanded {
     position: fixed; top: 54px; left: 260px; right: 0; bottom: 0; z-index: 100; overflow-y: auto; margin: 0;
     padding: var(--space-xl); padding-top: calc(68px + var(--space-lg)); background: white; border-radius: 0;
@@ -649,8 +652,10 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
 .post-actions button { padding: var(--space-sm) var(--space-md); font-size: var(--text-sm); border-radius: var(--radius-sm); transition: all var(--transition-fast); }
 .post-actions .delete-button { background: var(--danger); }
 .post-actions .delete-button:hover { background: #E53E3E; }
+.pinned-posts-feed, .unpinned-posts-feed { min-height: 50px; }
+.post-placeholder { background: var(--primary-light); border-radius: var(--radius-lg); margin-bottom: var(--space-lg); min-height: 100px; border: 2px dashed var(--primary); }
 
-/* --- REMINDERS UI --- */
+/* Reminders UI */
 .reminders-container {
     background: var(--lighter); border-radius: var(--radius-lg); padding: var(--space-lg);
     margin-bottom: var(--space-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
@@ -695,14 +700,13 @@ body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light
 .reminder-card.dragging { opacity: 0.4; transform: scale(1.05); box-shadow: var(--shadow-lg); cursor: grabbing; }
 .reminder-placeholder { background: var(--primary-light); border: 2px dashed var(--primary); border-radius: var(--radius-md); grid-column: span 1; grid-row: span 1; }
 
-/* Hide editing controls for non-admins */
+/* General UI & Layout */
 body.non-admin .add-tab-header-button, body.non-admin .button[onclick="openAnnouncementEditor()"],
 body.non-admin .tab-actions, body.non-admin .post-actions, body.non-admin #add-reminder-btn,
-body.non-admin .move-handle, body.non-admin .post-card-drag-handle { display: none !important; }
+body.non-admin .move-handle { display: none !important; }
 body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 body.non-admin .reminder-card { cursor: default; }
 
-/* Typography for rendered rich content */
 .post-content { font-size: var(--text-base); line-height: 1.7; color: var(--medium); word-wrap: break-word; }
 .post-content p { margin-bottom: var(--space-lg); }
 .post-content h1, .post-content h2, .post-content h3, .post-content h4 { margin-top: var(--space-lg); font-weight: 600; color: var(--dark); line-height: 1.25; }
@@ -710,7 +714,7 @@ body.non-admin .reminder-card { cursor: default; }
 .post-content ul, .post-content ol { margin-left: var(--space-lg); margin-bottom: var(--space-lg); }
 .post-content blockquote { border-left: 4px solid var(--light-gray); padding-left: var(--space-md); margin: var(--space-lg) 0; font-style: italic; }
 .post-content img { max-width: 100%; height: auto; border-radius: var(--radius-md); margin: var(--space-lg) 0; box-shadow: var(--shadow-md); }
-/* Input Styles */
+
 .input-group { position: relative; margin: var(--space-lg) 0; }
 .input-group label {
     position: absolute; top: var(--space-sm); left: var(--space-md); color: var(--medium); pointer-events: none;
@@ -720,17 +724,15 @@ body.non-admin .reminder-card { cursor: default; }
 .input-group textarea:focus + label, .input-group textarea:not(:placeholder-shown) + label {
     top: -10px; font-size: var(--text-xs); color: var(--primary); transform: scale(0.85);
 }
-/* Animations */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .post-card:nth-child(1) { animation-delay: 0.1s; }
 .post-card:nth-child(2) { animation-delay: 0.2s; }
-/* Scrollbar Styles */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--light); }
 ::-webkit-scrollbar-thumb { background: var(--medium); border-radius: var(--radius-full); }
 ::-webkit-scrollbar-thumb:hover { background: var(--dark); }
 
-/* Responsive adjustments */
+/* Responsive Adjustments */
 @media (max-width: 1024px) {
     .sidebar { width: 240px; }
     .main-content { max-width: calc(100% - 240px); margin-left: 240px; }
@@ -763,7 +765,6 @@ body.non-admin .reminder-card { cursor: default; }
     #announcement-title { font-size: var(--text-2xl); }
 }
 
-/* Mobile menu toggle */
 .menu-toggle {
     display: none; position: fixed; top: var(--space-sm); left: var(--space-sm); background: var(--primary); color: white;
     border: none; width: 40px; height: 40px; border-radius: var(--radius-md); cursor: pointer; z-index: 101;
@@ -774,13 +775,11 @@ body.non-admin .reminder-card { cursor: default; }
     .sidebar { position: fixed; left: 0; top: 54px; bottom: 0; transform: translateX(-100%); transition: transform var(--transition-normal); z-index: 100; }
     .sidebar.visible { transform: translateX(0); }
 }
-/* Loading state */
 .loading-spinner {
     display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3);
     border-radius: var(--radius-full); border-top-color: white; animation: spin 1s ease-in-out infinite; margin-right: var(--space-sm);
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-/* Undo Snackbar Styles - IMPROVED */
 .snackbar {
     visibility: hidden; min-width: 300px; background-color: var(--dark-gray); color: var(--lighter); border-radius: var(--radius-lg);
     padding: var(--space-sm) var(--space-lg); position: fixed; z-index: 3000; left: 50%; transform: translate(-50%, 100px);
@@ -973,7 +972,7 @@ body.non-admin .reminder-card { cursor: default; }
                         <button class="toolbar-button" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
                         <button class="toolbar-button" data-command="strikeThrough" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
                     </div>
-                     <!-- UPDATED: Color Pickers Group -->
+                     <!-- Color Pickers Group -->
                     <div class="toolbar-group">
                         <div class="toolbar-dropdown" id="text-color-dropdown">
                             <button class="toolbar-dropdown-toggle" id="text-color-toggle" title="Text Color">
@@ -981,7 +980,7 @@ body.non-admin .reminder-card { cursor: default; }
                                 <div class="color-indicator" id="text-color-indicator"></div>
                             </button>
                             <div class="toolbar-dropdown-menu" id="text-color-menu">
-                                <!-- Advanced color picker will be populated by JS -->
+                                <!-- Advanced color picker populated here -->
                             </div>
                         </div>
                         <div class="toolbar-dropdown" id="highlight-color-dropdown">
@@ -990,7 +989,7 @@ body.non-admin .reminder-card { cursor: default; }
                                 <div class="color-indicator" id="highlight-color-indicator" style="background-color: #FFFF00;"></div>
                             </button>
                             <div class="toolbar-dropdown-menu" id="highlight-color-menu">
-                                <!-- Advanced color picker will be populated by JS -->
+                                <!-- Advanced color picker populated here -->
                             </div>
                         </div>
                     </div>
@@ -1218,7 +1217,10 @@ body.non-admin .reminder-card { cursor: default; }
                 
                 if (button.classList.contains('toolbar-dropdown-toggle')) {
                     const wasOpen = dropdown.classList.contains('open');
-                    document.querySelectorAll('.toolbar-dropdown.open').forEach(d => d.classList.remove('open'));
+                    document.querySelectorAll('.toolbar-dropdown.open').forEach(d => {
+                        d.classList.remove('open');
+                        d.querySelector('.gdocs-color-picker')?.classList.remove('custom-visible');
+                    });
                     if (!wasOpen) dropdown.classList.add('open');
                     return;
                 }
@@ -1259,6 +1261,7 @@ body.non-admin .reminder-card { cursor: default; }
                        const indicator = dropdown.querySelector('.color-indicator');
                        if (indicator) indicator.style.backgroundColor = value;
                        dropdown.classList.remove('open');
+                       dropdown.querySelector('.gdocs-color-picker')?.classList.remove('custom-visible');
                     }
                 }
                 updateToolbarState();
@@ -1266,7 +1269,10 @@ body.non-admin .reminder-card { cursor: default; }
 
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.toolbar-dropdown')) {
-                    document.querySelectorAll('.toolbar-dropdown.open').forEach(d => d.classList.remove('open'));
+                    document.querySelectorAll('.toolbar-dropdown.open').forEach(d => {
+                        d.classList.remove('open');
+                        d.querySelector('.gdocs-color-picker')?.classList.remove('custom-visible');
+                    });
                 }
             });
             
@@ -1309,8 +1315,8 @@ body.non-admin .reminder-card { cursor: default; }
                 '#85200c', '#990000', '#b45f06', '#bf9000', '#38761d', '#134f5c', '#0b5394', '#073763', '#351c75', '#741b47',
                 '#5b0f00', '#660000', '#783f04', '#7f6000', '#274e13', '#0c343d', '#073763', '#052949', '#20124d', '#4c1130'
             ];
-             const highlightDefaults = ['#ffff00', '#00ff00', '#00ffff', '#ff00ff', '#ff0000', '#0000ff', '#ff9900', '#cccccc', '#f3f3f3', 'transparent'];
-             const highlightPalette = [
+            const highlightDefaults = ['#ffff00', '#00ff00', '#00ffff', '#ff00ff', '#ff0000', '#0000ff', '#ff9900', '#cccccc', '#f3f3f3', 'transparent'];
+            const highlightPalette = [
                 '#fce5cd', '#fff2cc', '#d9ead3', '#d0e0e3', '#cfe2f3', '#d9d2e9', '#ead1dc', '#dd7e6b',
                 '#f6b26b', '#ffd966', '#93c47d', '#76a5af', '#6fa8dc', '#8e7cc3', '#c27ba0', '#e06666'
             ];
@@ -1327,13 +1333,21 @@ body.non-admin .reminder-card { cursor: default; }
             
             return `
                 <div class="gdocs-color-picker" data-command="${command}">
-                    <div class="color-palette-label">Default</div>
-                    <div class="color-grid">${defaultSwatches}</div>
-                    <div class="swatch-divider"></div>
-                    <div class="color-palette-label">Theme</div>
-                    <div class="color-grid">${paletteSwatches}</div>
-                    <div class="custom-color-area">
-                        <div class="color-palette-label">Custom</div>
+                    <div class="palette-section">
+                        <div class="color-palette-label">Default</div>
+                        <div class="color-grid">${defaultSwatches}</div>
+                        <div class="swatch-divider"></div>
+                        <div class="color-palette-label">Theme</div>
+                        <div class="color-grid">${paletteSwatches}</div>
+                    </div>
+                    <div class="custom-section-toggle">
+                         <div class="swatch-divider" style="grid-column: 1 / -1; height: 1px; background-color: var(--light-gray); margin: var(--space-xs) 0;"></div>
+                         <button class="custom-color-add-btn">
+                            <i class="fas fa-plus"></i>
+                            <span>Custom</span>
+                        </button>
+                    </div>
+                    <div class="custom-color-panel">
                         <div class="custom-color-header">
                             <button class="eyedropper-btn" title="Eyedropper"><i class="fas fa-eye-dropper"></i></button>
                             <div class="custom-color-preview"></div>
@@ -1367,7 +1381,6 @@ body.non-admin .reminder-card { cursor: default; }
         }
         
         function initializeColorPicker(pickerElement) {
-            // DOM Elements
             const spectrumCanvas = pickerElement.querySelector('.spectrum-canvas');
             const spectrumCursor = pickerElement.querySelector('.spectrum-cursor');
             const hueSlider = pickerElement.querySelector('.hue-slider');
@@ -1375,20 +1388,17 @@ body.non-admin .reminder-card { cursor: default; }
             const hexInput = pickerElement.querySelector('.hex-input');
             const rgbInputs = pickerElement.querySelectorAll('.rgb-input');
             const eyedropperBtn = pickerElement.querySelector('.eyedropper-btn');
+            const customBtn = pickerElement.querySelector('.custom-color-add-btn');
             const command = pickerElement.dataset.command;
-
-            // State
+            
             let hue = 0, saturation = 1, lightness = 0.5;
-            let isDraggingSpectrum = false;
-            let isDraggingHue = false;
+            let isDraggingSpectrum = false, isDraggingHue = false;
             const spectrumCtx = spectrumCanvas.getContext('2d');
             const hueCtx = hueSlider.getContext('2d');
 
-            // --- Drawing Functions ---
             function drawSpectrum() {
-                spectrumCtx.clearRect(0, 0, spectrumCanvas.width, spectrumCanvas.height);
                 const gradWhite = spectrumCtx.createLinearGradient(0, 0, spectrumCanvas.width, 0);
-                gradWhite.addColorStop(0, `hsl(${hue}, 0%, 100%)`);
+                gradWhite.addColorStop(0, `hsl(${hue}, 100%, 100%)`);
                 gradWhite.addColorStop(1, `hsl(${hue}, 100%, 50%)`);
                 spectrumCtx.fillStyle = gradWhite;
                 spectrumCtx.fillRect(0, 0, spectrumCanvas.width, spectrumCanvas.height);
@@ -1402,31 +1412,27 @@ body.non-admin .reminder-card { cursor: default; }
             
             function drawHueSlider() {
                 const grad = hueCtx.createLinearGradient(0, 0, hueSlider.width, 0);
-                for (let i = 0; i <= 360; i += 60) {
-                    grad.addColorStop(i / 360, `hsl(${i}, 100%, 50%)`);
-                }
+                for (let i = 0; i <= 360; i += 30) { grad.addColorStop(i / 360, `hsl(${i}, 100%, 50%)`); }
                 hueCtx.fillStyle = grad;
                 hueCtx.fillRect(0, 0, hueSlider.width, hueSlider.height);
             }
-            
-            // --- Update & Apply Functions ---
-            function updateUI() {
+
+            function updateFromHsl() {
                 const color = hslToHex(hue, saturation, lightness);
+                const rgb = hslToRgb(hue / 360, saturation, lightness);
+                
                 colorPreview.style.backgroundColor = color;
                 spectrumCursor.style.left = `${saturation * spectrumCanvas.width}px`;
-                spectrumCursor.style.top = `${(1 - lightness) * 2 * spectrumCanvas.height / (lightness + 1) }px`; // Complex mapping to get position from L
-                if (document.activeElement !== hexInput) hexInput.value = color;
-                
-                const rgb = hslToRgb(hue/360, saturation, lightness);
-                rgbInputs.forEach(input => {
-                    const channel = input.dataset.channel;
-                    if (document.activeElement !== input) input.value = rgb[channel];
-                });
+                spectrumCursor.style.top = `${(1-lightness) / (1 - saturation/2) * spectrumCanvas.height }px`;
+
+                hexInput.value = color.toUpperCase();
+                rgbInputs.forEach(input => input.value = rgb[input.dataset.channel]);
 
                 applyColor(color);
             }
 
             function applyColor(color) {
+                if(color === 'transparent') return;
                 document.getElementById('announcement-content').focus();
                 if (savedEditorSelection) { const s = window.getSelection(); s.removeAllRanges(); s.addRange(savedEditorSelection); }
                 if (command === 'hiliteColor') {
@@ -1440,96 +1446,78 @@ body.non-admin .reminder-card { cursor: default; }
                 if(dropdown) dropdown.querySelector('.color-indicator').style.backgroundColor = color;
             }
 
-            // --- Event Handlers ---
             function handleSpectrumMove(e) {
-                e.preventDefault();
                 const rect = spectrumCanvas.getBoundingClientRect();
                 const x = Math.max(0, Math.min(spectrumCanvas.width, e.clientX - rect.left));
                 const y = Math.max(0, Math.min(spectrumCanvas.height, e.clientY - rect.top));
+                
                 saturation = x / spectrumCanvas.width;
-                lightness = (1 - y / spectrumCanvas.height) * (1 - saturation / 2);
-                if(lightness < 0.001) lightness = 0;
-                if(lightness > 0.999) lightness = 1;
-                updateUI();
+                lightness = 1 - (y / spectrumCanvas.height);
+                const S = saturation, L = lightness;
+                lightness = L * (1 - S/2);
+
+                updateFromHsl();
             }
 
             function handleHueMove(e) {
-                 e.preventDefault();
                 const rect = hueSlider.getBoundingClientRect();
-                const x = Math.max(0, Math.min(hueSlider.width, e.clientX - rect.left));
-                hue = (x / hueSlider.width) * 360;
+                hue = (Math.max(0, Math.min(hueSlider.width, e.clientX - rect.left)) / hueSlider.width) * 360;
                 drawSpectrum();
-                updateUI();
+                updateFromHsl();
             }
             
-            spectrumCanvas.addEventListener('mousedown', (e) => { isDraggingSpectrum = true; handleSpectrumMove(e); });
-            hueSlider.addEventListener('mousedown', (e) => { isDraggingHue = true; handleHueMove(e); });
-            document.addEventListener('mousemove', (e) => {
+            spectrumCanvas.addEventListener('mousedown', e => { isDraggingSpectrum = true; handleSpectrumMove(e); });
+            hueSlider.addEventListener('mousedown', e => { isDraggingHue = true; handleHueMove(e); });
+            document.addEventListener('mousemove', e => {
                 if (isDraggingSpectrum) handleSpectrumMove(e);
                 if (isDraggingHue) handleHueMove(e);
             });
             document.addEventListener('mouseup', () => { isDraggingSpectrum = false; isDraggingHue = false; });
             
-            // --- Input Handlers ---
+            customBtn.addEventListener('click', () => pickerElement.classList.add('custom-visible'));
+
             hexInput.addEventListener('change', () => {
                 const [h, s, l] = hexToHsl(hexInput.value);
                 hue = h; saturation = s; lightness = l;
-                drawSpectrum();
-                updateUI();
+                drawSpectrum(); updateFromHsl();
             });
 
-            rgbInputs.forEach(input => {
-                input.addEventListener('change', () => {
-                    const r = parseInt(pickerElement.querySelector('[data-channel="r"]').value);
-                    const g = parseInt(pickerElement.querySelector('[data-channel="g"]').value);
-                    const b = parseInt(pickerElement.querySelector('[data-channel="b"]').value);
+            rgbInputs.forEach(input => input.addEventListener('change', () => {
+                    const r = pickerElement.querySelector('[data-channel="r"]').value;
+                    const g = pickerElement.querySelector('[data-channel="g"]').value;
+                    const b = pickerElement.querySelector('[data-channel="b"]').value;
                     const [h, s, l] = rgbToHsl(r, g, b);
                     hue = h; saturation = s; lightness = l;
-                    drawSpectrum();
-                    updateUI();
-                });
-            });
+                    drawSpectrum(); updateFromHsl();
+                })
+            );
 
-            // --- Eyedropper ---
             if ('EyeDropper' in window) {
                 const eyeDropper = new EyeDropper();
                 eyedropperBtn.addEventListener('click', () => {
                     eyeDropper.open().then(result => {
-                        const color = result.sRGBHex;
-                        const [h, s, l] = hexToHsl(color);
+                        const [h, s, l] = hexToHsl(result.sRGBHex);
                         hue = h; saturation = s; lightness = l;
                         drawSpectrum();
-                        updateUI();
-                        pickerElement.closest('.toolbar-dropdown').classList.remove('open');
-                    }).catch(e => console.log('Eyedropper cancelled'));
+                        updateFromHsl();
+                    }).catch(e => {});
                 });
             } else {
                 eyedropperBtn.style.display = 'none';
             }
 
-            // --- Initial Draw ---
             drawSpectrum();
             drawHueSlider();
         }
 
-        // --- Color Conversion Helpers ---
         function hslToRgb(h, s, l) {
             let r, g, b;
             if (s === 0) { r = g = b = l; } 
             else {
-                const hue2rgb = (p, q, t) => {
-                    if (t < 0) t += 1;
-                    if (t > 1) t -= 1;
-                    if (t < 1 / 6) return p + (q - p) * 6 * t;
-                    if (t < 1 / 2) return q;
-                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-                    return p;
-                };
+                const hue2rgb = (p, q, t) => { if (t < 0) t += 1; if (t > 1) t -= 1; if (t < 1 / 6) return p + (q - p) * 6 * t; if (t < 1 / 2) return q; if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6; return p; };
                 const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
                 const p = 2 * l - q;
-                r = hue2rgb(p, q, h + 1 / 3);
-                g = hue2rgb(p, q, h);
-                b = hue2rgb(p, q, h - 1 / 3);
+                r = hue2rgb(p, q, h + 1 / 3); g = hue2rgb(p, q, h); b = hue2rgb(p, q, h - 1 / 3);
             }
             return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
         }
@@ -1553,16 +1541,25 @@ body.non-admin .reminder-card { cursor: default; }
         }
         
         function hslToHex(h, s, l) {
-            const { r, g, b } = hslToRgb(h / 360, s, l);
-            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+            l = Math.max(0, Math.min(1, l));
+            s = Math.max(0, Math.min(1, s));
+            const chroma = (1 - Math.abs(2 * l - 1)) * s;
+            const x = chroma * (1 - Math.abs((h / 60) % 2 - 1));
+            const m = l - chroma / 2;
+            let r=0, g=0, b=0;
+            if(0 <= h && h < 60){ r=chroma; g=x; b=0; }
+            else if(60 <= h && h < 120){ r=x; g=chroma; b=0; }
+            else if(120 <= h && h < 180){ r=0; g=chroma; b=x; }
+            else if(180 <= h && h < 240){ r=0; g=x; b=chroma; }
+            else if(240 <= h && h < 300){ r=x; g=0; b=chroma; }
+            else if(300 <= h && h <= 360){ r=chroma; g=0; b=x; }
+            const toHex = c => Math.round((c + m) * 255).toString(16).padStart(2, '0');
+            return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
         }
 
         function hexToHsl(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            const r = parseInt(result[1], 16);
-            const g = parseInt(result[2], 16);
-            const b = parseInt(result[3], 16);
-            return rgbToHsl(r, g, b);
+            return rgbToHsl(parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16));
         }
 
         // --- END: NEW COLOR PICKER LOGIC ---
@@ -2074,3 +2071,4 @@ body.non-admin .reminder-card { cursor: default; }
     </script>
 </body>
 </html>
+```
