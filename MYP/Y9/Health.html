@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classroom Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&family=Lato:wght@400;700&family=Montserrat:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&family=Lato:wght@400;700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -667,11 +667,62 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
 .post-card.expanded h3 { font-size: var(--text-2xl); color: var(--dark); margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 1px solid var(--light-gray); }
 .post-meta { display: flex; align-items: center; margin-top: var(--space-xl); padding-top: var(--space-md); border-top: 1px solid var(--light-gray); color: var(--medium); font-size: var(--text-sm); }
 
-/* --- UPDATED: Post Actions Hover Effect --- */
-.post-actions { 
-    position: absolute; top: var(--space-lg); right: var(--space-lg); display: flex; gap: var(--space-sm);
-    z-index: 5; /* Ensure actions are on top */
+/* --- NEW / ENHANCED: Post Actions UI --- */
+.post-actions {
+    position: absolute;
+    top: var(--space-md);
+    right: var(--space-md);
+    z-index: 5;
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid var(--light-gray);
+    border-radius: var(--radius-full);
+    padding: var(--space-xxs);
+    display: flex;
+    gap: var(--space-xxs);
+    box-shadow: var(--shadow-sm);
 }
+.post-action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: var(--medium);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all var(--transition-fast);
+}
+.post-action-btn:hover {
+    transform: scale(1.1);
+    background-color: var(--light);
+}
+.post-action-btn.pin-btn:hover { color: var(--secondary); }
+.post-action-btn.edit-btn:hover { color: var(--primary); }
+.post-action-btn.delete-btn:hover { color: var(--danger); background-color: rgba(245, 101, 101, 0.1); }
+
+.post-action-btn.pin-btn.pinned {
+    color: var(--secondary);
+}
+.post-action-btn.pin-btn.pinned .fa-thumbtack::before {
+    content: "\f08d"; /* FontAwesome solid thumbtack */
+    font-weight: 900;
+}
+body.dark-mode .post-actions {
+    background-color: rgba(45, 55, 72, 0.7);
+    border-color: var(--dark-light);
+}
+body.dark-mode .post-action-btn { color: var(--dark-medium); }
+body.dark-mode .post-action-btn:hover { background-color: var(--dark-light); }
+body.dark-mode .post-action-btn.pin-btn:hover { color: var(--dark-secondary); }
+body.dark-mode .post-action-btn.edit-btn:hover { color: var(--dark-primary); }
+body.dark-mode .post-action-btn.delete-btn:hover { color: var(--dark-danger); background-color: rgba(229, 62, 62, 0.2); }
+body.dark-mode .post-action-btn.pin-btn.pinned { color: var(--dark-secondary); }
+
 /* Hide actions by default for admins on desktop */
 body:not(.non-admin) .post-card:not(.expanded) .post-actions {
     opacity: 0;
@@ -692,10 +743,12 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
     opacity: 1;
     transform: none;
     pointer-events: auto;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    gap: var(--space-xs);
 }
-.post-actions button { padding: var(--space-sm) var(--space-md); font-size: var(--text-sm); border-radius: var(--radius-sm); transition: all var(--transition-fast); }
-.post-actions .delete-button { background: var(--danger); }
-.post-actions .delete-button:hover { background: #E53E3E; }
 .pinned-posts-feed, .unpinned-posts-feed { min-height: 50px; }
 
 /* Reminders UI */
@@ -802,12 +855,14 @@ body.non-admin .reminder-card { cursor: default; }
         position: static;
         margin-top: var(--space-md);
         justify-content: flex-end;
+        background: transparent;
+        border: none;
+        padding: 0;
+        box-shadow: none;
     }
 }
 @media (max-width: 480px) {
     .modal-content { padding: var(--space-lg); }
-    /* This rule is now handled by the 768px breakpoint */
-    /* .post-actions { position: static; margin-top: var(--space-md); justify-content: flex-end; } */
     .sidebar-header, .main-content { padding: var(--space-md); }
     .reminders-container, .post-card { padding: var(--space-md); }
     .topbar { padding: 0 var(--space-sm); }
@@ -1728,9 +1783,20 @@ body.non-admin .reminder-card { cursor: default; }
 
         function createPostElement(announcement, skipAnimation = false) {
             const postDate = new Date(announcement.order).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
-            const pinButtonText = announcement.pinned ? 'Unpin' : 'Pin';
             const pinIcon = announcement.pinned ? `<div class="pin-icon"><i class="fas fa-thumbtack"></i></div>` : '';
-            const actionsHtml = isAdmin ? `<div class="post-actions"><button class="button small secondary" onclick="togglePin(event, '${announcement.id}')">${pinButtonText}</button><button class="button small" onclick="editAnnouncement(event, '${announcement.id}')">Edit</button><button class="button small delete-button" onclick="deleteAnnouncement(event, '${announcement.id}')">Delete</button></div>` : '';
+            const pinBtnClass = announcement.pinned ? 'pinned' : '';
+            const actionsHtml = isAdmin ? `
+                <div class="post-actions">
+                    <button class="post-action-btn pin-btn ${pinBtnClass}" onclick="togglePin(event, '${announcement.id}')" title="${announcement.pinned ? 'Unpin' : 'Pin'}">
+                        <i class="fas fa-thumbtack"></i>
+                    </button>
+                    <button class="post-action-btn edit-btn" onclick="editAnnouncement(event, '${announcement.id}')" title="Edit">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                    <button class="post-action-btn delete-btn" onclick="deleteAnnouncement(event, '${announcement.id}')" title="Delete">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>` : '';
             const rawContent = announcement.content || '';
             const expandedContent = autoEmbed(rawContent);
             const tempDiv = document.createElement("div"); tempDiv.innerHTML = rawContent;
