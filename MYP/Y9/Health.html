@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classroom Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&family=Lato:wght@400;700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&family=Lato:wght@400;700&family=Montserrat:wght@400;600&family=Poppins:wght@400;600&family=Nunito:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -667,35 +667,36 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
 .post-card.expanded h3 { font-size: var(--text-2xl); color: var(--dark); margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 1px solid var(--light-gray); }
 .post-meta { display: flex; align-items: center; margin-top: var(--space-xl); padding-top: var(--space-md); border-top: 1px solid var(--light-gray); color: var(--medium); font-size: var(--text-sm); }
 
-/* --- NEW / ENHANCED: Sleek Back Button --- */
+/* --- NEW / ENHANCED: Redesigned Back Button --- */
 #expanded-back-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    padding: 0; /* Override .button padding */
-    background-color: var(--primary-light);
-    border: 1px solid var(--primary);
-    color: var(--primary-dark);
-    font-size: 16px;
-    box-shadow: var(--shadow-sm);
-    flex-shrink: 0; /* Prevent shrinking in flex container */
+    padding: var(--space-xs) var(--space-md);
+    background-color: transparent;
+    border: 1px solid transparent;
+    color: var(--medium);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    height: auto; /* override .button height */
+    box-shadow: none;
+    flex-shrink: 0;
+    gap: var(--space-xs);
+}
+#expanded-back-btn .fas {
+    font-size: 12px;
 }
 #expanded-back-btn:hover {
-    background-color: var(--primary);
-    border-color: var(--primary-dark);
-    transform: scale(1.05) translateY(0); /* Override .button transform */
-    box-shadow: var(--shadow-md); 
-    color: white;
+    background-color: var(--light);
+    border-color: var(--light-gray);
+    transform: translateY(0); /* Override .button transform */
+    box-shadow: none; 
+    color: var(--primary-dark);
 }
 body.dark-mode #expanded-back-btn {
-    background-color: var(--dark-primary-light);
-    border-color: var(--dark-primary);
-    color: var(--dark-primary);
+    color: var(--dark-medium);
 }
 body.dark-mode #expanded-back-btn:hover {
-    background-color: var(--dark-primary);
-    border-color: var(--dark-primary-dark);
-    color: white;
+    background-color: var(--dark-light-gray);
+    border-color: var(--dark-light);
+    color: var(--dark-primary);
 }
 
 
@@ -1024,7 +1025,7 @@ body.non-admin .reminder-card { cursor: default; }
     </main>
 
     <div id="expanded-post-controls" class="expanded-post-controls">
-        <button id="expanded-back-btn" class="button"><i class="fas fa-chevron-left"></i></button>
+        <button id="expanded-back-btn" class="button"><i class="fas fa-chevron-left"></i><span>Back</span></button>
         <div class="expanded-post-actions" id="expanded-actions-container"></div>
     </div>
 
@@ -1403,7 +1404,20 @@ body.non-admin .reminder-card { cursor: default; }
         }
         
         function populateFontDropdown() {
-            const fonts = { 'Inter': 'Inter, sans-serif', 'Roboto': 'Roboto, sans-serif', 'Lato': 'Lato, sans-serif', 'Montserrat': 'Montserrat, sans-serif', 'Open Sans': 'Open Sans, sans-serif', 'Georgia': 'Georgia, serif', 'Courier New': 'Courier New, monospace' };
+            const fonts = { 
+                'Inter': 'Inter, sans-serif', 
+                'Roboto': 'Roboto, sans-serif', 
+                'Lato': 'Lato, sans-serif', 
+                'Montserrat': 'Montserrat, sans-serif', 
+                'Open Sans': 'Open Sans, sans-serif',
+                'Poppins': 'Poppins, sans-serif',
+                'Nunito': 'Nunito, sans-serif',
+                'Times New Roman': 'Times New Roman, serif',
+                'Arial': 'Arial, sans-serif',
+                'Verdana': 'Verdana, sans-serif',
+                'Georgia': 'Georgia, serif', 
+                'Courier New': 'Courier New, monospace' 
+            };
             const menu = document.getElementById('font-name-menu');
             menu.style.padding = 'var(--space-xs)';
             menu.innerHTML = Object.entries(fonts).map(([name, value]) => 
@@ -1884,7 +1898,11 @@ body.non-admin .reminder-card { cursor: default; }
         }
 
         function setActiveTab(tabId) {
-            currentTabId = tabId; const tab = tabs.find(t => t.id === tabId);
+            if (expandedPost) {
+                collapsePost(expandedPost);
+            }
+            currentTabId = tabId; 
+            const tab = tabs.find(t => t.id === tabId);
             if (tab) {
                 currentTabTitleElement.textContent = tab.name;
                 document.querySelectorAll('.sidebar-link.active').forEach(l => l.classList.remove('active'));
