@@ -665,9 +665,34 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
 .post-card.expanded .post-details { display: block; margin-top: 0; font-size: var(--text-base); line-height: 1.6; color: var(--medium); }
 .post-card.expanded .post-details p { margin-bottom: var(--space-lg); }
 .post-card.expanded h3 { font-size: var(--text-2xl); color: var(--dark); margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 1px solid var(--light-gray); }
-.post-card:not(.expanded) .post-actions { display: none !important; }
 .post-meta { display: flex; align-items: center; margin-top: var(--space-xl); padding-top: var(--space-md); border-top: 1px solid var(--light-gray); color: var(--medium); font-size: var(--text-sm); }
-.post-actions { position: absolute; top: var(--space-lg); right: var(--space-lg); display: flex; gap: var(--space-sm); }
+
+/* --- UPDATED: Post Actions Hover Effect --- */
+.post-actions { 
+    position: absolute; top: var(--space-lg); right: var(--space-lg); display: flex; gap: var(--space-sm);
+    z-index: 5; /* Ensure actions are on top */
+}
+/* Hide actions by default for admins on desktop */
+body:not(.non-admin) .post-card:not(.expanded) .post-actions {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.95);
+    pointer-events: none;
+    transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+/* Reveal on hover or when a child element has focus */
+body:not(.non-admin) .post-card:not(.expanded):hover .post-actions,
+body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+/* Ensure actions in the expanded view header are always visible */
+.expanded-post-actions .post-actions {
+    position: static;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+}
 .post-actions button { padding: var(--space-sm) var(--space-md); font-size: var(--text-sm); border-radius: var(--radius-sm); transition: all var(--transition-fast); }
 .post-actions .delete-button { background: var(--danger); }
 .post-actions .delete-button:hover { background: #E53E3E; }
@@ -767,10 +792,22 @@ body.non-admin .reminder-card { cursor: default; }
     .search-container { max-width: 100%; }
     .modal-content { padding: var(--space-lg); max-width: 90%; }
     .custom-toolbar { flex-wrap: nowrap; overflow-x: auto; }
+
+    /* --- UPDATED: Mobile Post Actions --- */
+    /* Make post actions always visible on mobile for admins */
+    body:not(.non-admin) .post-card:not(.expanded) .post-actions {
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+        position: static;
+        margin-top: var(--space-md);
+        justify-content: flex-end;
+    }
 }
 @media (max-width: 480px) {
     .modal-content { padding: var(--space-lg); }
-    .post-actions { position: static; margin-top: var(--space-md); justify-content: flex-end; }
+    /* This rule is now handled by the 768px breakpoint */
+    /* .post-actions { position: static; margin-top: var(--space-md); justify-content: flex-end; } */
     .sidebar-header, .main-content { padding: var(--space-md); }
     .reminders-container, .post-card { padding: var(--space-md); }
     .topbar { padding: 0 var(--space-sm); }
@@ -1699,7 +1736,8 @@ body.non-admin .reminder-card { cursor: default; }
             const tempDiv = document.createElement("div"); tempDiv.innerHTML = rawContent;
             const collapsedText = tempDiv.textContent || "";
             const animationStyle = skipAnimation ? 'style="animation: none; opacity: 1;"' : '';
-            return `<div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" draggable="${isAdmin}" ${animationStyle}>${pinIcon}${actionsHtml}<h3>${announcement.title}</h3><div class="collapsed-content">${collapsedText}</div><div class="post-details"><div class="post-content">${expandedContent}</div><div class="post-meta">Posted on ${postDate}</div></div></div>`;
+            const adminAttrs = isAdmin ? `draggable="true" tabindex="0"` : '';
+            return `<div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" ${adminAttrs} ${animationStyle}>${pinIcon}${actionsHtml}<h3>${announcement.title}</h3><div class="collapsed-content">${collapsedText}</div><div class="post-details"><div class="post-content">${expandedContent}</div><div class="post-meta">Posted on ${postDate}</div></div></div>`;
         }
         
         function saveTabs() {
