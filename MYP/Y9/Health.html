@@ -1354,16 +1354,32 @@ body.non-admin .reminder-card { cursor: default; }
                         if (url) document.execCommand('createLink', false, url);
                     } else if (command === 'embedContent') {
                         openEmbedModal();
-                    } else if (command === 'hiliteColor' && value === 'transparent') {
-                        document.execCommand('styleWithCSS', false, true);
-                        document.execCommand('hiliteColor', false, 'inherit');
-                        document.execCommand('styleWithCSS', false, false);
-                        const selection = window.getSelection();
-                        if (selection.rangeCount > 0) selection.collapseToEnd();
                     } else if (command === 'hiliteColor') {
-                        document.execCommand('styleWithCSS', false, true);
-                        document.execCommand(command, false, value);
-                        document.execCommand('styleWithCSS', false, false);
+                        const selection = window.getSelection();
+                        if (value === 'transparent') {
+                            document.execCommand('styleWithCSS', false, true);
+                            document.execCommand('hiliteColor', false, 'transparent');
+                            document.execCommand('styleWithCSS', false, false);
+
+                            if (selection.isCollapsed && selection.rangeCount > 0) {
+                                let node = selection.anchorNode;
+                                let parentWithHighlight = (node.nodeType === 3 ? node.parentNode : node);
+                                
+                                while (parentWithHighlight && parentWithHighlight !== editor && !(parentWithHighlight.style && parentWithHighlight.style.backgroundColor)) {
+                                    parentWithHighlight = parentWithHighlight.parentNode;
+                                }
+
+                                if (parentWithHighlight && parentWithHighlight !== editor) {
+                                    const zeroWidthSpace = document.createTextNode('\u200B');
+                                    parentWithHighlight.parentNode.insertBefore(zeroWidthSpace, parentWithHighlight.nextSibling);
+                                    selection.collapse(zeroWidthSpace, 1);
+                                }
+                            }
+                        } else {
+                            document.execCommand('styleWithCSS', false, true);
+                            document.execCommand('hiliteColor', false, value);
+                            document.execCommand('styleWithCSS', false, false);
+                        }
                     } else {
                         document.execCommand(command, false, value);
                     }
@@ -2249,4 +2265,3 @@ body.non-admin .reminder-card { cursor: default; }
     </script>
 </body>
 </html>
-```
