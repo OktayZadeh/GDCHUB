@@ -462,10 +462,17 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
     font-size: var(--text-sm); text-decoration: none; cursor: pointer; border: none; background: none; text-align: left;
 }
 .toolbar-dropdown-item:hover { background: var(--light); }
-#format-block-menu .toolbar-dropdown-item[data-value="h2"] { font-size: var(--text-xl); font-weight: 600; }
-#format-block-menu .toolbar-dropdown-item[data-value="h3"] { font-size: var(--text-lg); font-weight: 600; }
-#format-block-menu .toolbar-dropdown-item[data-value="h4"] { font-size: var(--text-base); font-weight: 600; }
-#format-block-menu .toolbar-dropdown-item[data-value="blockquote"] { border-left: 3px solid var(--primary); padding-left: var(--space-sm); font-style: italic; }
+
+/* --- UPDATED: Paragraphs Dropdown UI Refinements --- */
+#format-block-menu .toolbar-dropdown-item[data-value="h2"],
+#format-block-menu .toolbar-dropdown-item[data-value="h3"],
+#format-block-menu .toolbar-dropdown-item[data-value="h4"] {
+    font-weight: 600;
+}
+#format-block-menu .toolbar-dropdown-item[data-value="blockquote"] {
+    font-style: italic;
+}
+
 
 /* --- UPDATED: Google Docs-Style Color Picker --- */
 .gdocs-color-picker {
@@ -2265,3 +2272,4 @@ body.non-admin .reminder-card { cursor: default; }
     </script>
 </body>
 </html>
+```
