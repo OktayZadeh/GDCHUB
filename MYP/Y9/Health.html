@@ -652,12 +652,9 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
 }
 .expanded-post-controls {
     position: fixed; top: 54px; left: 260px; right: 0; height: 68px; padding: 0 var(--space-lg);
-    background: transparent; border-bottom: 1px solid var(--light-gray); display: none;
-    align-items: center; justify-content: space-between; z-index: 101;
+    background: var(--lighter); border-bottom: 1px solid var(--light-gray); display: none;
+    align-items: center; justify-content: space-between; z-index: 101; box-shadow: var(--shadow-sm);
     transition: background-color var(--transition-normal), border-color var(--transition-normal);
-}
-.post-card.expanded .expanded-post-controls {
-    background: var(--lighter);
 }
 .expanded-post-actions { display: flex; gap: var(--space-sm); }
 .embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; background: #000; margin: var(--space-lg) 0; border-radius: var(--radius-md); }
@@ -675,38 +672,32 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    padding: 0;
-    background-color: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    border: 1px solid var(--light-gray);
-    color: var(--dark);
+    padding: 0; /* Override .button padding */
+    background-color: var(--primary-light);
+    border: 1px solid var(--primary);
+    color: var(--primary-dark);
     font-size: 16px;
     box-shadow: var(--shadow-sm);
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all var(--transition-fast);
+    flex-shrink: 0; /* Prevent shrinking in flex container */
 }
 #expanded-back-btn:hover {
-    background-color: white;
-    border-color: var(--medium);
-    transform: scale(1.05);
+    background-color: var(--primary);
+    border-color: var(--primary-dark);
+    transform: scale(1.05) translateY(0); /* Override .button transform */
     box-shadow: var(--shadow-md); 
-    color: var(--primary-dark);
-}
-body.dark-mode #expanded-back-btn {
-    background-color: rgba(45, 55, 72, 0.7);
-    border-color: var(--dark-light);
     color: white;
 }
-body.dark-mode #expanded-back-btn:hover {
-    background-color: var(--dark-lighter);
-    border-color: var(--dark-medium);
+body.dark-mode #expanded-back-btn {
+    background-color: var(--dark-primary-light);
+    border-color: var(--dark-primary);
     color: var(--dark-primary);
 }
+body.dark-mode #expanded-back-btn:hover {
+    background-color: var(--dark-primary);
+    border-color: var(--dark-primary-dark);
+    color: white;
+}
+
 
 /* --- NEW / ENHANCED: Post Actions UI --- */
 .post-actions {
@@ -1033,7 +1024,7 @@ body.non-admin .reminder-card { cursor: default; }
     </main>
 
     <div id="expanded-post-controls" class="expanded-post-controls">
-        <button id="expanded-back-btn"><i class="fas fa-arrow-left"></i></button>
+        <button id="expanded-back-btn" class="button"><i class="fas fa-chevron-left"></i></button>
         <div class="expanded-post-actions" id="expanded-actions-container"></div>
     </div>
 
