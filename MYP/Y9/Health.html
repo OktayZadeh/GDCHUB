@@ -652,9 +652,12 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
 }
 .expanded-post-controls {
     position: fixed; top: 54px; left: 260px; right: 0; height: 68px; padding: 0 var(--space-lg);
-    background: var(--lighter); border-bottom: 1px solid var(--light-gray); display: none;
-    align-items: center; justify-content: space-between; z-index: 101; box-shadow: var(--shadow-sm);
+    background: transparent; border-bottom: 1px solid var(--light-gray); display: none;
+    align-items: center; justify-content: space-between; z-index: 101;
     transition: background-color var(--transition-normal), border-color var(--transition-normal);
+}
+.post-card.expanded .expanded-post-controls {
+    background: var(--lighter);
 }
 .expanded-post-actions { display: flex; gap: var(--space-sm); }
 .embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; background: #000; margin: var(--space-lg) 0; border-radius: var(--radius-md); }
@@ -672,7 +675,7 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    padding: 0; /* Override .button padding */
+    padding: 0;
     background-color: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
@@ -680,12 +683,17 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
     color: var(--dark);
     font-size: 16px;
     box-shadow: var(--shadow-sm);
-    flex-shrink: 0; /* Prevent shrinking in flex container */
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
 }
 #expanded-back-btn:hover {
     background-color: white;
     border-color: var(--medium);
-    transform: scale(1.05) translateY(0); /* Override .button transform */
+    transform: scale(1.05);
     box-shadow: var(--shadow-md); 
     color: var(--primary-dark);
 }
@@ -988,7 +996,7 @@ body.non-admin .reminder-card { cursor: default; }
         <div class="sidebar-header">
             <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZV7lnbEjDM_XlekqYanoGOGv5aQo50TOSvA&s" alt="Logo" class="sidebar-logo">
             <h2 class="sidebar-title">GDCHUB</h2>
-            <button class="add-tab-header-button" onclick="openTabEditor()" title="Add New Tab">
+            <button class="add-tab-header-button" onclick="openTabEditor()">
                 <i class="fas fa-plus"></i>
             </button>
         </div>
@@ -1025,7 +1033,7 @@ body.non-admin .reminder-card { cursor: default; }
     </main>
 
     <div id="expanded-post-controls" class="expanded-post-controls">
-        <button id="expanded-back-btn" class="button" title="Back"><i class="fas fa-arrow-left"></i></button>
+        <button id="expanded-back-btn"><i class="fas fa-arrow-left"></i></button>
         <div class="expanded-post-actions" id="expanded-actions-container"></div>
     </div>
 
@@ -1073,8 +1081,8 @@ body.non-admin .reminder-card { cursor: default; }
              <div class="custom-toolbar-container">
                 <div class="custom-toolbar" id="custom-toolbar">
                      <div class="toolbar-group">
-                        <button class="toolbar-button" data-command="undo" title="Undo"><i class="fas fa-undo"></i></button>
-                        <button class="toolbar-button" data-command="redo" title="Redo"><i class="fas fa-redo"></i></button>
+                        <button class="toolbar-button" data-command="undo"><i class="fas fa-undo"></i></button>
+                        <button class="toolbar-button" data-command="redo"><i class="fas fa-redo"></i></button>
                     </div>
                     <div class="toolbar-group">
                          <div class="toolbar-dropdown" id="font-name-dropdown">
@@ -1095,21 +1103,21 @@ body.non-admin .reminder-card { cursor: default; }
                         </div>
                     </div>
                     <div class="toolbar-group">
-                        <button class="toolbar-button" data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
-                        <button class="toolbar-button" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
-                        <button class="toolbar-button" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
-                        <button class="toolbar-button" data-command="strikeThrough" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
+                        <button class="toolbar-button" data-command="bold"><i class="fas fa-bold"></i></button>
+                        <button class="toolbar-button" data-command="italic"><i class="fas fa-italic"></i></button>
+                        <button class="toolbar-button" data-command="underline"><i class="fas fa-underline"></i></button>
+                        <button class="toolbar-button" data-command="strikeThrough"><i class="fas fa-strikethrough"></i></button>
                     </div>
                     <div class="toolbar-group">
                         <div class="toolbar-dropdown" id="text-color-dropdown">
-                            <button class="toolbar-dropdown-toggle" id="text-color-toggle" title="Text Color">
+                            <button class="toolbar-dropdown-toggle" id="text-color-toggle">
                                 <i class="fas fa-font"></i>
                                 <div class="color-indicator" id="text-color-indicator"></div>
                             </button>
                             <div class="toolbar-dropdown-menu" id="text-color-menu"></div>
                         </div>
                         <div class="toolbar-dropdown" id="highlight-color-dropdown">
-                            <button class="toolbar-dropdown-toggle" id="highlight-color-toggle" title="Highlight Color">
+                            <button class="toolbar-dropdown-toggle" id="highlight-color-toggle">
                                 <i class="fas fa-highlighter"></i>
                                 <div class="color-indicator" id="highlight-color-indicator" style="background-color: #FFFF00;"></div>
                             </button>
@@ -1117,20 +1125,20 @@ body.non-admin .reminder-card { cursor: default; }
                         </div>
                     </div>
                     <div class="toolbar-group">
-                        <button class="toolbar-button" data-command="justifyLeft" title="Align Left"><i class="fas fa-align-left"></i></button>
-                        <button class="toolbar-button" data-command="justifyCenter" title="Align Center"><i class="fas fa-align-center"></i></button>
-                        <button class="toolbar-button" data-command="justifyRight" title="Align Right"><i class="fas fa-align-right"></i></button>
+                        <button class="toolbar-button" data-command="justifyLeft"><i class="fas fa-align-left"></i></button>
+                        <button class="toolbar-button" data-command="justifyCenter"><i class="fas fa-align-center"></i></button>
+                        <button class="toolbar-button" data-command="justifyRight"><i class="fas fa-align-right"></i></button>
                     </div>
                     <div class="toolbar-group">
-                        <button class="toolbar-button" data-command="insertUnorderedList" title="Bulleted List"><i class="fas fa-list-ul"></i></button>
-                        <button class="toolbar-button" data-command="insertOrderedList" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                        <button class="toolbar-button" data-command="insertUnorderedList"><i class="fas fa-list-ul"></i></button>
+                        <button class="toolbar-button" data-command="insertOrderedList"><i class="fas fa-list-ol"></i></button>
                     </div>
                     <div class="toolbar-group">
-                        <button class="toolbar-button" data-command="createLink" title="Insert Link"><i class="fas fa-link"></i></button>
-                        <button class="toolbar-button" data-command="embedContent" title="Embed Media"><i class="fas fa-code"></i></button>
+                        <button class="toolbar-button" data-command="createLink"><i class="fas fa-link"></i></button>
+                        <button class="toolbar-button" data-command="embedContent"><i class="fas fa-code"></i></button>
                     </div>
                      <div class="toolbar-group">
-                        <button class="toolbar-button" data-command="removeFormat" title="Clear Formatting"><i class="fas fa-eraser"></i></button>
+                        <button class="toolbar-button" data-command="removeFormat"><i class="fas fa-eraser"></i></button>
                     </div>
                 </div>
             </div>
@@ -1463,7 +1471,7 @@ body.non-admin .reminder-card { cursor: default; }
                     </div>
                     <div class="custom-color-panel">
                         <div class="custom-color-header">
-                            <button class="eyedropper-btn" title="Eyedropper"><i class="fas fa-eye-dropper"></i></button>
+                            <button class="eyedropper-btn"><i class="fas fa-eye-dropper"></i></button>
                             <div class="custom-color-preview"></div>
                         </div>
                         <div style="position:relative;">
@@ -1820,13 +1828,13 @@ body.non-admin .reminder-card { cursor: default; }
             const pinBtnClass = announcement.pinned ? 'pinned' : '';
             const actionsHtml = isAdmin ? `
                 <div class="post-actions">
-                    <button class="post-action-btn pin-btn ${pinBtnClass}" onclick="togglePin(event, '${announcement.id}')" title="${announcement.pinned ? 'Unpin' : 'Pin'}">
+                    <button class="post-action-btn pin-btn ${pinBtnClass}" onclick="togglePin(event, '${announcement.id}')">
                         <i class="fas fa-thumbtack"></i>
                     </button>
-                    <button class="post-action-btn edit-btn" onclick="editAnnouncement(event, '${announcement.id}')" title="Edit">
+                    <button class="post-action-btn edit-btn" onclick="editAnnouncement(event, '${announcement.id}')">
                         <i class="fas fa-pencil-alt"></i>
                     </button>
-                    <button class="post-action-btn delete-btn" onclick="deleteAnnouncement(event, '${announcement.id}')" title="Delete">
+                    <button class="post-action-btn delete-btn" onclick="deleteAnnouncement(event, '${announcement.id}')">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </div>` : '';
@@ -1847,7 +1855,7 @@ body.non-admin .reminder-card { cursor: default; }
 
         function renderTabs() {
             sidebarMenu.innerHTML = tabs.map(tab => {
-                const actionsHtml = isAdmin ? `<div class="tab-actions"><button class="tab-action-btn" title="Edit Tab" onclick="editTab(event, '${tab.id}')"><i class="fas fa-pencil-alt"></i></button><button class="tab-action-btn delete" title="Delete Tab" onclick="deleteTab(event, '${tab.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
+                const actionsHtml = isAdmin ? `<div class="tab-actions"><button class="tab-action-btn" onclick="editTab(event, '${tab.id}')"><i class="fas fa-pencil-alt"></i></button><button class="tab-action-btn delete" onclick="deleteTab(event, '${tab.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
                 return `<li class="sidebar-item" data-tab-id="${tab.id}" draggable="${isAdmin}"><a href="#" class="sidebar-link ${tab.id === currentTabId ? 'active' : ''}"><span class="move-handle">☰</span> ${tab.name}${actionsHtml}</a></li>`;
             }).join('');
             document.querySelectorAll('.sidebar-item').forEach(item => {
@@ -2195,4 +2203,3 @@ body.non-admin .reminder-card { cursor: default; }
     </script>
 </body>
 </html>
-```
