@@ -667,6 +667,39 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
 .post-card.expanded h3 { font-size: var(--text-2xl); color: var(--dark); margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 1px solid var(--light-gray); }
 .post-meta { display: flex; align-items: center; margin-top: var(--space-xl); padding-top: var(--space-md); border-top: 1px solid var(--light-gray); color: var(--medium); font-size: var(--text-sm); }
 
+/* --- NEW / ENHANCED: Sleek Back Button --- */
+#expanded-back-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    padding: 0; /* Override .button padding */
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid var(--light-gray);
+    color: var(--dark);
+    font-size: 16px;
+    box-shadow: var(--shadow-sm);
+    flex-shrink: 0; /* Prevent shrinking in flex container */
+}
+#expanded-back-btn:hover {
+    background-color: white;
+    border-color: var(--medium);
+    transform: scale(1.05) translateY(0); /* Override .button transform */
+    box-shadow: var(--shadow-md); 
+    color: var(--primary-dark);
+}
+body.dark-mode #expanded-back-btn {
+    background-color: rgba(45, 55, 72, 0.7);
+    border-color: var(--dark-light);
+    color: white;
+}
+body.dark-mode #expanded-back-btn:hover {
+    background-color: var(--dark-lighter);
+    border-color: var(--dark-medium);
+    color: var(--dark-primary);
+}
+
 /* --- NEW / ENHANCED: Post Actions UI --- */
 .post-actions {
     position: absolute;
@@ -992,7 +1025,7 @@ body.non-admin .reminder-card { cursor: default; }
     </main>
 
     <div id="expanded-post-controls" class="expanded-post-controls">
-        <button id="expanded-back-btn" class="button secondary">← Back</button>
+        <button id="expanded-back-btn" class="button" title="Back"><i class="fas fa-arrow-left"></i></button>
         <div class="expanded-post-actions" id="expanded-actions-container"></div>
     </div>
 
