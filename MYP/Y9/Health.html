@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classroom Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&family=Lato:wght@400;700&family=Montserrat:wght@400;600&family=Poppins:wght@400;600&family=Nunito:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&family=Lato:wght@400;700&family=Montserrat:wght@400;600&family=Poppins:wght@400;600&family=Nunito:wght@400;600&family=Merriweather:wght@400;700&family=Source+Sans+Pro:wght@400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -647,11 +647,11 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
 }
 .post-card.expanded {
     position: fixed; top: 54px; left: 260px; right: 0; bottom: 0; z-index: 100; overflow-y: auto; margin: 0;
-    padding: var(--space-xl); padding-top: calc(68px + var(--space-lg)); background: white; border-radius: 0;
+    padding: var(--space-xl); padding-top: calc(56px + var(--space-lg)); background: white; border-radius: 0;
     box-shadow: none; transition: all var(--transition-normal) ease; border: none; cursor: default;
 }
 .expanded-post-controls {
-    position: fixed; top: 54px; left: 260px; right: 0; height: 68px; padding: 0 var(--space-lg);
+    position: fixed; top: 54px; left: 260px; right: 0; height: 56px; padding: 0 var(--space-lg);
     background: var(--lighter); border-bottom: 1px solid var(--light-gray); display: none;
     align-items: center; justify-content: space-between; z-index: 101; box-shadow: var(--shadow-sm);
     transition: background-color var(--transition-normal), border-color var(--transition-normal);
@@ -872,7 +872,7 @@ body.non-admin .reminder-card { cursor: default; }
     .sidebar { width: 100%; position: relative; min-height: auto; max-height: 60vh; transform: translateX(0); top: 54px; }
     .main-content { max-width: 100%; margin-left: 0; padding: var(--space-lg); margin-top: 54px; }
     .post-card.expanded, .expanded-post-controls { left: 0; }
-    .post-card.expanded { padding: var(--space-lg); padding-top: calc(68px + var(--space-lg)); }
+    .post-card.expanded { padding: var(--space-lg); padding-top: calc(56px + var(--space-lg)); }
     .reminders-list { grid-template-columns: 1fr; }
     .header-content { flex-direction: column; align-items: flex-start; gap: var(--space-md); }
     .search-container { max-width: 100%; }
@@ -1349,11 +1349,17 @@ body.non-admin .reminder-card { cursor: default; }
                 const value = button.dataset.value || null;
 
                 if (command) {
-                     if (command === 'createLink') {
+                    if (command === 'createLink') {
                         const url = prompt('Enter the URL:');
                         if (url) document.execCommand('createLink', false, url);
                     } else if (command === 'embedContent') {
                         openEmbedModal();
+                    } else if (command === 'hiliteColor' && value === 'transparent') {
+                        document.execCommand('styleWithCSS', false, true);
+                        document.execCommand('hiliteColor', false, 'inherit');
+                        document.execCommand('styleWithCSS', false, false);
+                        const selection = window.getSelection();
+                        if (selection.rangeCount > 0) selection.collapseToEnd();
                     } else if (command === 'hiliteColor') {
                         document.execCommand('styleWithCSS', false, true);
                         document.execCommand(command, false, value);
@@ -1404,7 +1410,7 @@ body.non-admin .reminder-card { cursor: default; }
         }
         
         function populateFontDropdown() {
-            const fonts = { 
+             const fonts = { 
                 'Inter': 'Inter, sans-serif', 
                 'Roboto': 'Roboto, sans-serif', 
                 'Lato': 'Lato, sans-serif', 
@@ -1412,7 +1418,9 @@ body.non-admin .reminder-card { cursor: default; }
                 'Open Sans': 'Open Sans, sans-serif',
                 'Poppins': 'Poppins, sans-serif',
                 'Nunito': 'Nunito, sans-serif',
-                'Times New Roman': 'Times New Roman, serif',
+                'Source Sans Pro': 'Source Sans Pro, sans-serif',
+                'Merriweather': 'Merriweather, serif',
+                'Playfair Display': 'Playfair Display, serif',
                 'Arial': 'Arial, sans-serif',
                 'Verdana': 'Verdana, sans-serif',
                 'Georgia': 'Georgia, serif', 
@@ -1690,17 +1698,46 @@ body.non-admin .reminder-card { cursor: default; }
         }
         
         function updateToolbarState() {
+            // Update simple command buttons
             const commands = ['bold', 'italic', 'underline', 'strikeThrough', 'justifyLeft', 'justifyCenter', 'justifyRight', 'insertUnorderedList', 'insertOrderedList'];
             commands.forEach(command => {
                 const button = document.querySelector(`.toolbar-button[data-command="${command}"]`);
                 if (button) button.classList.toggle('active', document.queryCommandState(command));
             });
+
+            // Update color indicators
             const textColor = document.queryCommandValue('foreColor');
             const highlightColor = document.queryCommandValue('hiliteColor');
             document.getElementById('text-color-indicator').style.backgroundColor = textColor || 'var(--dark)';
             const highlightIndicator = document.getElementById('highlight-color-indicator');
             try { highlightIndicator.style.backgroundColor = new Option().style.color = highlightColor; } 
             catch(e) { highlightIndicator.style.backgroundColor = '#FFFF00'; }
+
+            // Update format block dropdown
+            updateFormatBlockDropdown();
+        }
+
+        function updateFormatBlockDropdown() {
+            const editor = document.getElementById('announcement-content');
+            const toggle = document.getElementById('format-block-toggle');
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+
+            let node = selection.getRangeAt(0).startContainer;
+            node = node.nodeType === 3 ? node.parentNode : node;
+
+            let blockType = 'Paragraph';
+            const formatMap = { 'H2': 'Heading 1', 'H3': 'Heading 2', 'H4': 'Heading 3', 'BLOCKQUOTE': 'Quote' };
+
+            while (node && node !== editor) {
+                const tagName = node.tagName;
+                if (formatMap[tagName]) {
+                    blockType = formatMap[tagName];
+                    break;
+                }
+                node = node.parentNode;
+            }
+            toggle.innerHTML = `${blockType} <i class="fas fa-chevron-down"></i>`;
         }
         
         function openEmbedModal() { document.getElementById('embed-url-input').value = ''; embedModal.style.display = 'flex'; }
@@ -2212,3 +2249,4 @@ body.non-admin .reminder-card { cursor: default; }
     </script>
 </body>
 </html>
+```
