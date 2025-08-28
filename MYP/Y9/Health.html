@@ -235,126 +235,6 @@ a:hover { color: var(--primary-dark); text-decoration: underline; }
 .topbar-button:hover { background: var(--light); color: var(--primary); border-color: var(--primary-light); text-decoration: none; }
 .topbar-button i { font-size: var(--text-sm); }
 
-/* --- NEW: Notification Bell Styles --- */
-#notification-bell {
-    font-size: var(--text-lg);
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    justify-content: center;
-}
-#notification-bell.subscribed {
-    color: var(--warning); /* Filled/highlighted color */
-}
-body.dark-mode #notification-bell.subscribed {
-    color: var(--warning);
-}
-
-.notification-dropdown { position: relative; }
-.notification-dropdown-content {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: calc(100% + 8px);
-    background-color: var(--lighter);
-    min-width: 280px;
-    box-shadow: var(--shadow-md);
-    border-radius: var(--radius-md);
-    z-index: 1001;
-    border: 1px solid var(--light-gray);
-    opacity: 0;
-    transform: translateY(-10px);
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    pointer-events: none;
-    padding: var(--space-sm);
-}
-.notification-dropdown-content.show {
-    display: block;
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-}
-.notification-dropdown-content h4 {
-    font-size: var(--text-sm);
-    margin: var(--space-xs) var(--space-sm) var(--space-md);
-    color: var(--dark);
-}
-.notification-toggle-wrapper {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--space-sm) var(--space-sm);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-}
-.notification-toggle-wrapper:hover {
-    background-color: var(--light);
-}
-.notification-toggle-wrapper label {
-    font-size: var(--text-sm);
-    color: var(--medium);
-    cursor: pointer;
-    flex-grow: 1;
-    margin-right: var(--space-md);
-}
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 40px;
-    height: 22px;
-    flex-shrink: 0;
-}
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--light-gray);
-    transition: var(--transition-fast);
-    border-radius: var(--radius-full);
-}
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 16px;
-    width: 16px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: var(--transition-fast);
-    border-radius: 50%;
-}
-input:checked + .slider {
-    background-color: var(--primary);
-}
-input:checked + .slider:before {
-    transform: translateX(18px);
-}
-body.dark-mode .notification-dropdown-content {
-    background-color: var(--dark-lighter);
-    border-color: var(--dark-light);
-}
-body.dark-mode .notification-dropdown-content h4 {
-    color: white;
-}
-body.dark-mode .notification-toggle-wrapper:hover {
-    background-color: var(--dark-light-gray);
-}
-body.dark-mode .notification-toggle-wrapper label {
-    color: var(--dark-medium);
-}
-body.dark-mode .slider {
-    background-color: var(--dark-light);
-}
-/* --- END Notification Bell Styles --- */
-
 /* Profile dropdown - Improved */
 .profile-dropdown { position: relative; display: inline-block; }
 .profile-dropdown-content {
@@ -578,40 +458,17 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
 }
 .toolbar-dropdown.open .toolbar-dropdown-menu { display: block; }
 .toolbar-dropdown-item {
-    display: block;
-    width: 100%;
-    padding: var(--space-sm) var(--space-md);
-    color: var(--dark);
-    font-size: var(--text-sm);
-    text-decoration: none;
-    cursor: pointer;
-    border: none;
-    background: none;
-    text-align: left;
-    white-space: nowrap;
+    display: block; width: 100%; padding: var(--space-sm) var(--space-md); color: var(--dark);
+    font-size: var(--text-sm); text-decoration: none; cursor: pointer; border: none; background: none; text-align: left;
 }
 .toolbar-dropdown-item:hover { background: var(--light); }
 
-/* --- ENHANCED: Paragraphs Dropdown with Font Size Hierarchy --- */
+/* --- UPDATED: Paragraphs Dropdown UI Refinements --- */
 #format-block-menu .toolbar-dropdown-item[data-value="h2"],
 #format-block-menu .toolbar-dropdown-item[data-value="h3"],
 #format-block-menu .toolbar-dropdown-item[data-value="h4"] {
-    font-weight: 600; /* Keep headings bold */
+    font-weight: 600;
 }
-
-/* Apply a subtle size hierarchy to heading options for a better visual preview */
-#format-block-menu .toolbar-dropdown-item[data-value="h2"] {
-    font-size: 1.15rem; /* Heading 1 */
-}
-
-#format-block-menu .toolbar-dropdown-item[data-value="h3"] {
-    font-size: 1.05rem; /* Heading 2 */
-}
-
-#format-block-menu .toolbar-dropdown-item[data-value="h4"] {
-    font-size: 0.95rem; /* Heading 3 */
-}
-
 #format-block-menu .toolbar-dropdown-item[data-value="blockquote"] {
     font-style: italic;
 }
@@ -1117,22 +974,6 @@ body.non-admin .reminder-card { cursor: default; }
                 <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
                     <i class="fas fa-envelope"></i> <span>Student Portal</span>
                 </a>
-                <!-- NEW: Notification Bell & Dropdown -->
-                <div class="notification-dropdown">
-                    <button id="notification-bell" class="topbar-button">
-                        <i class="far fa-bell"></i> <!-- Default to outlined bell -->
-                    </button>
-                    <div id="notification-dropdown-content" class="notification-dropdown-content">
-                        <h4>Notification Settings</h4>
-                        <div class="notification-toggle-wrapper">
-                            <label for="notification-toggle">Receive all announcements & reminders</label>
-                            <label class="switch">
-                                <input type="checkbox" id="notification-toggle">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
                 <div class="profile-dropdown">
                     <img id="profile-pic" src="" alt="Profile Picture" class="topbar-button" style="width: 36px; height: 36px; padding: 0; border-radius: 50%;">
                     <div class="profile-dropdown-content">
@@ -1414,7 +1255,6 @@ body.non-admin .reminder-card { cursor: default; }
         const tabsRef = database.ref('tabs');
         const announcementsRef = database.ref('announcements');
         const remindersRef = database.ref('reminders');
-        const usersRef = database.ref('users');
 
         const sidebarMenu = document.getElementById('sidebar-menu');
         const tabEditorModal = document.getElementById('tab-editor-modal');
@@ -1449,8 +1289,6 @@ body.non-admin .reminder-card { cursor: default; }
         let currentTabAnnouncements = [];
         let suppressPostAnimation = false;
         let savedEditorSelection = null;
-        let userInfo = null; // UPDATED: To store user info
-        let userSettingsRef = null; // UPDATED: To store user-specific db reference
         
         const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
 
@@ -1463,7 +1301,6 @@ body.non-admin .reminder-card { cursor: default; }
             setupMobileMenu();
             setupDarkMode();
             setupProfileDropdown();
-            setupNotificationBell(); // NEW: Initialize notification bell
             setupCustomEditor();
             UndoManager.init();
             if (isAdmin) {
@@ -1951,25 +1788,12 @@ body.non-admin .reminder-card { cursor: default; }
             } else { alert('Invalid URL. Please use a valid share URL from YouTube, Google Docs, or Google Slides.'); }
         }
 
-        // UPDATED: checkUserProfile now also creates the database reference for user settings
         function checkUserProfile() {
-            userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
+            const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
             if (userInfo && userInfo.email) {
                 profilePicElement.src = userInfo.picture || '';
                 isAdmin = ADMIN_EMAILS.includes(userInfo.email.toLowerCase());
                 document.body.classList.toggle('non-admin', !isAdmin);
-                
-                // Create a user-specific reference for settings.
-                // Using email and replacing invalid characters is a simple way to create a unique ID.
-                const userId = userInfo.email.replace(/[\.\#\$\[\]]/g, "_");
-                userSettingsRef = usersRef.child(userId);
-
-                // Also save basic user info if it doesn't exist
-                userSettingsRef.update({
-                    email: userInfo.email,
-                    name: userInfo.name
-                });
-
             } else {
                 isAdmin = false;
                 document.body.classList.add('non-admin');
@@ -1992,56 +1816,6 @@ body.non-admin .reminder-card { cursor: default; }
                 const icon = darkModeToggle.querySelector('i');
                 icon.classList.toggle('fa-moon', !isDarkMode); icon.classList.toggle('fa-sun', isDarkMode);
                 darkModeToggle.querySelector('span').textContent = isDarkMode ? 'Light Mode' : 'Dark Mode';
-            });
-        }
-
-        // --- NEW: Notification Bell Functionality ---
-        function setupNotificationBell() {
-            const bell = document.getElementById('notification-bell');
-            const dropdown = document.getElementById('notification-dropdown-content');
-            const toggle = document.getElementById('notification-toggle');
-
-            bell.addEventListener('click', (e) => {
-                e.stopPropagation();
-                dropdown.classList.toggle('show');
-            });
-
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('.notification-dropdown')) {
-                    dropdown.classList.remove('show');
-                }
-            });
-
-            // Fetch initial state from the database
-            if (userSettingsRef) {
-                userSettingsRef.child('settings/notifications_subscribed').on('value', (snapshot) => {
-                    const isSubscribed = snapshot.val() === true;
-                    toggle.checked = isSubscribed;
-                    bell.classList.toggle('subscribed', isSubscribed);
-                    const icon = bell.querySelector('i');
-                    icon.className = isSubscribed ? 'fas fa-bell' : 'far fa-bell';
-                });
-            }
-
-            // Handle toggle change and update the database
-            toggle.addEventListener('change', () => {
-                if (!userSettingsRef) return;
-                const newValue = toggle.checked;
-                const originalValue = !newValue; 
-
-                userSettingsRef.child('settings/notifications_subscribed').set(newValue)
-                    .then(() => {
-                        UndoManager.show('Notification preferences updated.', null, false);
-                    })
-                    .catch((error) => {
-                        console.error("Failed to update notification settings:", error);
-                        UndoManager.show('Failed to update settings. Please try again.', null, true);
-                        // Revert UI on failure
-                        toggle.checked = originalValue;
-                        bell.classList.toggle('subscribed', originalValue);
-                        const icon = bell.querySelector('i');
-                        icon.className = originalValue ? 'fas fa-bell' : 'far fa-bell';
-                    });
             });
         }
         
@@ -2457,28 +2231,19 @@ body.non-admin .reminder-card { cursor: default; }
             });
         }
         
-        // UPDATED: UndoManager now supports success/error states and actions without an "undo" button.
         const UndoManager = {
             queue: [], isShowing: false,
             init() {},
-            show(message, undoCallback, isError = false) { 
-                this.queue.push({ message, undoCallback, isError }); this.processQueue(); 
-            },
+            show(message, undoCallback) { this.queue.push({ message, undoCallback }); this.processQueue(); },
             processQueue() {
                 if (this.isShowing || this.queue.length === 0) return;
-                this.isShowing = true; const { message, undoCallback, isError } = this.queue.shift();
+                this.isShowing = true; const { message, undoCallback } = this.queue.shift();
                 const snackbar = document.createElement('div'); snackbar.className = 'snackbar';
-                const iconClass = isError ? 'fa-times-circle' : 'fa-check-circle';
-                const iconColor = isError ? 'var(--danger)' : 'var(--primary)';
-                const undoButtonHtml = undoCallback ? `<button id="undo-button">UNDO</button>` : '';
-
-                snackbar.innerHTML = `<i class="fas ${iconClass}" style="color: ${iconColor};"></i><span>${message}</span>${undoButtonHtml}<div class="snackbar-progress"></div>`;
+                snackbar.innerHTML = `<i class="fas fa-check-circle"></i><span>${message}</span><button class="undo-btn">UNDO</button><div class="snackbar-progress"></div>`;
                 document.body.appendChild(snackbar);
-                
-                if (undoCallback) {
-                    const undoButton = snackbar.querySelector('#undo-button');
-                    undoButton.onclick = () => { undoCallback(); this.hide(snackbar); };
-                }
+                const undoButton = snackbar.querySelector('.undo-btn');
+                undoButton.style.cssText = document.getElementById('undo-button').style.cssText;
+                undoButton.onclick = () => { undoCallback(); this.hide(snackbar); };
                 setTimeout(() => snackbar.classList.add('show'), 50);
                 setTimeout(() => this.hide(snackbar), 5000);
             },
