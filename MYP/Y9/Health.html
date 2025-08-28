@@ -836,6 +836,32 @@ body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light
 .reminder-card.dragging { opacity: 0.4; transform: scale(1.05); box-shadow: var(--shadow-lg); cursor: grabbing; }
 .reminder-placeholder { background: var(--primary-light); border: 2px dashed var(--primary); border-radius: var(--radius-md); grid-column: span 1; grid-row: span 1; }
 
+.reminder-link-container {
+    margin-top: var(--space-sm);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--light-gray);
+}
+.reminder-resource-link {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--secondary);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    transition: color var(--transition-fast);
+}
+.reminder-resource-link:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+body.dark-mode .reminder-link-container {
+    border-top-color: var(--dark-light);
+}
+body.dark-mode .reminder-resource-link {
+    color: var(--dark-secondary);
+}
+
 /* General UI & Layout */
 body.non-admin .add-tab-header-button, body.non-admin .button[onclick="openAnnouncementEditor()"],
 body.non-admin .tab-actions, body.non-admin .post-actions, body.non-admin #add-reminder-btn,
@@ -1049,6 +1075,10 @@ body.non-admin .reminder-card { cursor: default; }
                 <label>Description (optional)</label>
             </div>
             <div class="input-group">
+                <input type="text" id="reminder-link" placeholder=" ">
+                <label>Resource Link</label>
+            </div>
+            <div class="input-group">
                 <input type="date" id="reminder-date">
                 <label>Date</label>
             </div>
@@ -1207,9 +1237,9 @@ body.non-admin .reminder-card { cursor: default; }
             function checkAuth() {
                 try {
                     const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-                    const cookieToken = document.cookie.split('; ').find(row => row.startsWith('gdcAuth='))?.split('=')[1];
+                    const cookieToken = document.cookie.split('; ').find(row => row.startsWith('gdcAuth='))?.split('=');
                     if (!authToken || !cookieToken || authToken !== cookieToken) { clearAuthData(); return false; }
-                    const tokenTimestamp = parseInt(authToken.split('-')[0]);
+                    const tokenTimestamp = parseInt(authToken.split('-'));
                     if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) { clearAuthData(); return false; }
                     return true;
                 } catch (error) { clearAuthData(); return false; }
@@ -1716,8 +1746,8 @@ body.non-admin .reminder-card { cursor: default; }
 
         function hexToHsl(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            if (!result) return [0, 0, 0];
-            return rgbToHsl(parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16));
+            if (!result) return;
+            return rgbToHsl(parseInt(result, 16), parseInt(result, 16), parseInt(result, 16));
         }
         
         function updateToolbarState() {
@@ -1854,7 +1884,7 @@ body.non-admin .reminder-card { cursor: default; }
                 tabs.sort((a, b) => (a.order || 0) - (b.order || 0));
                 renderTabs();
                 if (tabs.length > 0 && (!currentTabId || !tabs.some(t => t.id === currentTabId))) {
-                    setActiveTab(tabs[0].id);
+                    setActiveTab(tabs.id);
                 } else if (tabs.length === 0) {
                     currentTabId = null; currentTabTitleElement.textContent = "No Tabs";
                     pinnedPostsFeed.innerHTML = ""; unpinnedPostsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
@@ -2117,12 +2147,15 @@ body.non-admin .reminder-card { cursor: default; }
             .map(rem => {
                 if (!rem || !rem.id) return '';
                 const actionsHtml = isAdmin ? `<div class="reminder-actions"><button class="reminder-action-btn" onclick="editReminder(event, '${rem.id}')"><i class="fas fa-pencil-alt"></i></button><button class="reminder-action-btn" onclick="deleteReminder(event, '${rem.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
+                const linkHtml = rem.link ? `<div class="reminder-link-container"><a href="${rem.link}" target="_blank" rel="noopener noreferrer" class="reminder-resource-link"><i class="fas fa-link"></i> Resource Link</a></div>` : '';
+
                 return `
                 <div class="reminder-card ${rem.type || 'trip'}" data-id="${rem.id}" draggable="${isAdmin}">
                     ${actionsHtml}
                     <div class="reminder-title">${rem.title}</div>
                     <div class="reminder-date">${formatDate(rem.date)}</div>
                     ${rem.description ? `<div class="reminder-description">${rem.description}</div>` : ''}
+                    ${linkHtml}
                 </div>`;
             }).join('');
         }
@@ -2136,6 +2169,7 @@ body.non-admin .reminder-card { cursor: default; }
             modal.querySelector('h2').textContent = isEditing ? 'Edit Reminder' : 'Add New Reminder';
             modal.querySelector('#reminder-title').value = isEditing && rem ? rem.title : '';
             modal.querySelector('#reminder-description').value = isEditing && rem ? rem.description || '' : '';
+            modal.querySelector('#reminder-link').value = isEditing && rem ? rem.link || '' : '';
             modal.querySelector('#reminder-date').value = isEditing && rem ? rem.date : new Date(Date.now() + 864e5).toISOString().slice(0, 10);
             modal.querySelector('#reminder-type').value = isEditing && rem ? rem.type || 'trip' : 'trip';
             modal.querySelector('#save-reminder-button').textContent = isEditing ? 'Save Changes' : 'Add Reminder';
@@ -2149,13 +2183,14 @@ body.non-admin .reminder-card { cursor: default; }
             if (!title || !date) return alert('Please enter a title and date');
             const description = document.getElementById('reminder-description').value.trim();
             const type = document.getElementById('reminder-type').value;
+            const link = document.getElementById('reminder-link').value.trim();
 
             if (currentReminderBeingEdited) {
-                const reminderUpdate = { title, description, date, type };
+                const reminderUpdate = { title, description, date, type, link };
                 remindersRef.child(currentReminderBeingEdited).update(reminderUpdate).then(closeReminderEditor);
             } else {
                 const newReminderRef = remindersRef.push();
-                const newReminder = { id: newReminderRef.key, title, description, date, type, order: reminders.length };
+                const newReminder = { id: newReminderRef.key, title, description, date, type, order: reminders.length, link };
                 newReminderRef.set(newReminder).then(closeReminderEditor);
             }
         }
