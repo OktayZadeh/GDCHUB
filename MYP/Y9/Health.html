@@ -458,8 +458,17 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
 }
 .toolbar-dropdown.open .toolbar-dropdown-menu { display: block; }
 .toolbar-dropdown-item {
-    display: block; width: 100%; padding: var(--space-sm) var(--space-md); color: var(--dark);
-    font-size: var(--text-sm); text-decoration: none; cursor: pointer; border: none; background: none; text-align: left;
+    display: block;
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    color: var(--dark);
+    font-size: var(--text-sm);
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    background: none;
+    text-align: left;
+    white-space: nowrap; /* FIX: Prevents text from wrapping */
 }
 .toolbar-dropdown-item:hover { background: var(--light); }
 
@@ -2272,4 +2281,3 @@ body.non-admin .reminder-card { cursor: default; }
     </script>
 </body>
 </html>
-```
