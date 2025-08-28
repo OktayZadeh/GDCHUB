@@ -468,16 +468,30 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
     border: none;
     background: none;
     text-align: left;
-    white-space: nowrap; /* FIX: Prevents text from wrapping */
+    white-space: nowrap;
 }
 .toolbar-dropdown-item:hover { background: var(--light); }
 
-/* --- UPDATED: Paragraphs Dropdown UI Refinements --- */
+/* --- ENHANCED: Paragraphs Dropdown with Font Size Hierarchy --- */
 #format-block-menu .toolbar-dropdown-item[data-value="h2"],
 #format-block-menu .toolbar-dropdown-item[data-value="h3"],
 #format-block-menu .toolbar-dropdown-item[data-value="h4"] {
-    font-weight: 600;
+    font-weight: 600; /* Keep headings bold */
 }
+
+/* Apply a subtle size hierarchy to heading options for a better visual preview */
+#format-block-menu .toolbar-dropdown-item[data-value="h2"] {
+    font-size: 1.15rem; /* Heading 1 */
+}
+
+#format-block-menu .toolbar-dropdown-item[data-value="h3"] {
+    font-size: 1.05rem; /* Heading 2 */
+}
+
+#format-block-menu .toolbar-dropdown-item[data-value="h4"] {
+    font-size: 0.95rem; /* Heading 3 */
+}
+
 #format-block-menu .toolbar-dropdown-item[data-value="blockquote"] {
     font-style: italic;
 }
@@ -2281,3 +2295,4 @@ body.non-admin .reminder-card { cursor: default; }
     </script>
 </body>
 </html>
+```
