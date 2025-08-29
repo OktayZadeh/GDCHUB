@@ -817,6 +817,8 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
     border-radius: var(--radius-md); position: relative; transition: all var(--transition-normal);
     box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
     cursor: grab;
+    display: flex; /* MODIFICATION */
+    flex-direction: column; /* MODIFICATION */
 }
 .reminder-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
 .reminder-card.trip { border-left-color: var(--success); }
@@ -825,7 +827,7 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
 .reminder-card.deadline { border-left-color: var(--secondary); }
 .reminder-title { font-weight: 600; margin-bottom: var(--space-xs); color: var(--dark); font-size: var(--text-base); }
 .reminder-date { font-size: var(--text-sm); color: var(--medium); margin-bottom: var(--space-sm); }
-.reminder-description { font-size: var(--text-sm); color: var(--medium); line-height: 1.5; }
+.reminder-description { font-size: var(--text-sm); color: var(--medium); line-height: 1.5; flex-grow: 1; /* MODIFICATION */}
 .reminder-actions {
     position: absolute; top: var(--space-sm); right: var(--space-sm); display: flex; gap: var(--space-xs);
     opacity: 0; pointer-events: none; transform: scale(0.9); transition: all var(--transition-fast);
@@ -852,6 +854,74 @@ body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light
     display: flex;
     align-items: center;
     gap: var(--space-xs);
+}
+/* MODIFICATION END */
+
+/* MODIFICATION START: Add to Calendar Button & Dropdown */
+.reminder-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--space-md);
+    gap: var(--space-sm);
+}
+.calendar-dropdown {
+    position: relative;
+    display: inline-block;
+}
+.calendar-dropdown-menu {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px); /* Position above the button */
+    right: 0;
+    background-color: var(--lighter);
+    min-width: 150px;
+    box-shadow: var(--shadow-lg);
+    border-radius: var(--radius-md);
+    z-index: 10;
+    border: 1px solid var(--light-gray);
+    padding: var(--space-xs) 0;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity var(--transition-fast), transform var(--transition-fast);
+    pointer-events: none;
+}
+.calendar-dropdown.open .calendar-dropdown-menu {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+.calendar-dropdown-item {
+    color: var(--dark);
+    padding: var(--space-sm) var(--space-md);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--text-sm);
+    transition: all var(--transition-fast);
+}
+.calendar-dropdown-item:hover {
+    background-color: var(--light);
+    color: var(--primary);
+    text-decoration: none;
+}
+.calendar-dropdown-item i {
+    width: 16px;
+    text-align: center;
+    font-size: 16px;
+}
+body.dark-mode .calendar-dropdown-menu {
+    background-color: var(--dark-lighter);
+    border-color: var(--dark-light);
+}
+body.dark-mode .calendar-dropdown-item {
+    color: var(--dark-medium);
+}
+body.dark-mode .calendar-dropdown-item:hover {
+    background-color: var(--dark-light-gray);
+    color: var(--primary);
 }
 /* MODIFICATION END */
 
@@ -1331,13 +1401,14 @@ body.non-admin .reminder-card { cursor: default; }
         document.addEventListener('DOMContentLoaded', () => {
             checkUserProfile();
             setupFirebaseListeners();
-            setupModalCloseHandlers();
+            setupGlobalClickHandlers();
             setupConfirmationModal();
             setupSearch();
             setupMobileMenu();
             setupDarkMode();
             setupProfileDropdown();
             setupCustomEditor();
+            setupReminderActionDelegation();
             UndoManager.init();
             if (isAdmin) {
                 setupSidebarDragAndDrop();
@@ -2182,9 +2253,82 @@ body.non-admin .reminder-card { cursor: default; }
                     <div class="reminder-date">${formatDate(rem.date)}</div>
                     ${rem.description ? `<div class="reminder-description">${rem.description}</div>` : ''}
                     ${locationHtml}
-                    ${rem.link ? `<a href="${rem.link}" target="_blank" rel="noopener noreferrer" class="button small" style="margin-top: var(--space-sm);" onclick="event.stopPropagation()">View Resource</a>` : ''}
+                    <div class="reminder-footer">
+                        ${rem.link ? `<a href="${rem.link}" target="_blank" rel="noopener noreferrer" class="button small" onclick="event.stopPropagation()">View Resource</a>` : '<div></div>'}
+                        <div class="calendar-dropdown">
+                            <button class="button small secondary calendar-toggle-btn" title="Add to Calendar">
+                                <i class="fas fa-calendar-plus"></i>
+                            </button>
+                            <div class="calendar-dropdown-menu">
+                                <a href="#" class="calendar-dropdown-item" data-calendar-type="google" data-reminder-id="${rem.id}"><i class="fab fa-google" style="color: #4285F4;"></i> Google</a>
+                                <a href="#" class="calendar-dropdown-item" data-calendar-type="apple" data-reminder-id="${rem.id}"><i class="fab fa-apple" style="color: #A2AAAD;"></i> Apple</a>
+                                <a href="#" class="calendar-dropdown-item" data-calendar-type="outlook" data-reminder-id="${rem.id}"><i class="fab fa-microsoft" style="color: #0078D4;"></i> Outlook</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>`;
             }).join('');
+        }
+        
+        function formatDateForCalendar(dateStr, format) {
+            const date = dateStr ? new Date(dateStr + 'T00:00:00') : new Date();
+            if (isNaN(date.getTime())) return '';
+        
+            const tomorrow = new Date(date);
+            if(dateStr) tomorrow.setDate(date.getDate() + 1);
+        
+            const pad = (num) => num.toString().padStart(2, '0');
+        
+            if (format === 'google') {
+                return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}/${tomorrow.getFullYear()}${pad(tomorrow.getMonth() + 1)}${pad(tomorrow.getDate())}`;
+            }
+            if (format === 'ics_start') {
+                return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}`;
+            }
+            if (format === 'ics_end') {
+                return `${tomorrow.getFullYear()}${pad(tomorrow.getMonth() + 1)}${pad(tomorrow.getDate())}`;
+            }
+            if (format === 'ics_stamp') {
+                return date.getUTCFullYear() + pad(date.getUTCMonth() + 1) + pad(date.getUTCDate()) + 'T' + pad(date.getUTCHours()) + pad(date.getUTCMinutes()) + pad(date.getUTCSeconds()) + 'Z';
+            }
+            return '';
+        }
+        
+        function handleGoogleCalendar(reminder) {
+            const baseUrl = 'https://www.google.com/calendar/render?action=TEMPLATE';
+            const title = encodeURIComponent(reminder.title || 'Reminder');
+            const dates = formatDateForCalendar(reminder.date, 'google');
+            const details = encodeURIComponent(reminder.description || '');
+            const location = encodeURIComponent(reminder.location || '');
+            const url = `${baseUrl}&text=${title}&dates=${dates}&details=${details}&location=${location}`;
+            window.open(url, '_blank');
+        }
+        
+        function handleIcsDownload(reminder) {
+            const filename = (reminder.title || 'Reminder').replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.ics';
+            const icsContent = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//GDCHUB//Event//EN',
+                'BEGIN:VEVENT',
+                `UID:${reminder.id}@gdchub.com`,
+                `DTSTAMP:${formatDateForCalendar(null, 'ics_stamp')}`,
+                `DTSTART;VALUE=DATE:${formatDateForCalendar(reminder.date, 'ics_start')}`,
+                `DTEND;VALUE=DATE:${formatDateForCalendar(reminder.date, 'ics_end')}`,
+                `SUMMARY:${reminder.title || ''}`,
+                `DESCRIPTION:${(reminder.description || '').replace(/\n/g, '\\n')}`,
+                `LOCATION:${reminder.location || ''}`,
+                'END:VEVENT',
+                'END:VCALENDAR'
+            ].join('\r\n');
+        
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
         // MODIFICATION END
 
@@ -2338,7 +2482,58 @@ body.non-admin .reminder-card { cursor: default; }
         
         function setupConfirmationModal() { confirmationModal.init(); }
         function showConfirmationModal(message, onConfirm) { confirmationModal.show(message, onConfirm); }
-        function setupModalCloseHandlers() { window.onclick = e => { if (e.target.classList.contains('modal')) { e.target.style.display = 'none'; } }; }
+        function setupGlobalClickHandlers() {
+            document.addEventListener('click', (e) => {
+                // Close modal if background is clicked
+                if (e.target.classList.contains('modal')) {
+                    e.target.style.display = 'none';
+                }
+        
+                // Close open calendar dropdowns that are not the target of the click
+                document.querySelectorAll('.calendar-dropdown.open').forEach(dropdown => {
+                    if (!dropdown.contains(e.target)) {
+                        dropdown.classList.remove('open');
+                    }
+                });
+            });
+        }
+        function setupReminderActionDelegation() {
+            remindersList.addEventListener('click', (e) => {
+                const calendarToggle = e.target.closest('.calendar-toggle-btn');
+                const calendarOption = e.target.closest('.calendar-dropdown-item');
+        
+                if (calendarToggle) {
+                    e.stopPropagation();
+                    const dropdown = calendarToggle.closest('.calendar-dropdown');
+                    if (dropdown) {
+                        document.querySelectorAll('.calendar-dropdown.open').forEach(d => {
+                            if (d !== dropdown) d.classList.remove('open');
+                        });
+                        dropdown.classList.toggle('open');
+                    }
+                    return;
+                }
+                
+                if (calendarOption) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const reminderId = calendarOption.dataset.reminderId;
+                    const calendarType = calendarOption.dataset.calendarType;
+                    const reminder = reminders.find(r => r.id === reminderId);
+                    
+                    if (reminder) {
+                        if (calendarType === 'google') {
+                            handleGoogleCalendar(reminder);
+                        } else if (calendarType === 'apple' || calendarType === 'outlook') {
+                            handleIcsDownload(reminder);
+                        }
+                    }
+                    
+                    const dropdown = calendarOption.closest('.calendar-dropdown');
+                    if (dropdown) dropdown.classList.remove('open');
+                }
+            });
+        }
     </script>
 </body>
 </html>
