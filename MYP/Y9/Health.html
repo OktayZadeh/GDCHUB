@@ -856,10 +856,17 @@ body.non-admin .reminder-card { cursor: default; }
     position: absolute; top: var(--space-sm); left: var(--space-md); color: var(--medium); pointer-events: none;
     transition: all var(--transition-fast); font-size: var(--text-sm); background: var(--lighter); padding: 0 var(--space-xs); transform-origin: left center;
 }
+/* MODIFICATION START */
 .input-group input:focus + label, .input-group input:not(:placeholder-shown) + label,
-.input-group textarea:focus + label, .input-group textarea:not(:placeholder-shown) + label {
-    top: -10px; font-size: var(--text-xs); color: var(--primary); transform: scale(0.85);
+.input-group textarea:focus + label, .input-group textarea:not(:placeholder-shown) + label,
+.input-group select:focus + label,
+.input-group select + label {
+    top: -10px;
+    font-size: var(--text-xs);
+    color: var(--primary);
+    transform: scale(0.85);
 }
+/* MODIFICATION END */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .post-card:nth-child(1) { animation-delay: 0.1s; }
 .post-card:nth-child(2) { animation-delay: 0.2s; }
