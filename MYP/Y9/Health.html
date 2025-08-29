@@ -261,7 +261,7 @@ body.dark-mode .profile-dropdown-content a:hover { background-color: var(--dark-
     font-weight: 500; font-size: var(--text-sm); line-height: 1; cursor: pointer; transition: all var(--transition-fast); border: none;
     background-color: var(--primary); color: white; box-shadow: var(--shadow-sm); height: 36px;
 }
-/* MODIFICATION START */
+
 .button:hover {
     background-color: var(--primary-dark);
     transform: translateY(-1px);
@@ -269,7 +269,7 @@ body.dark-mode .profile-dropdown-content a:hover { background-color: var(--dark-
     text-decoration: none;
     color: white; /* Ensures text remains white on hover */
 }
-/* MODIFICATION END */
+
 .button:active { transform: translateY(0); box-shadow: var(--shadow-sm); }
 .button:focus { outline: none; box-shadow: var(--shadow-primary); }
 .button.secondary { background-color: white; color: var(--primary); border: 1px solid var(--light-gray); }
@@ -807,9 +807,14 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
 .reminders-header {
     display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);
 }
+/* MODIFICATION START: Dynamic Card Heights */
 .reminders-list {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-md);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-md);
+    align-items: start; /* Aligns cards to the top, allowing variable heights */
 }
+/* MODIFICATION END */
 .reminder-card {
     background: var(--lighter);
     border-left: 5px solid var(--primary);
@@ -817,8 +822,8 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
     border-radius: var(--radius-md); position: relative; transition: all var(--transition-normal);
     box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
     cursor: grab;
-    display: flex; /* MODIFICATION */
-    flex-direction: column; /* MODIFICATION */
+    display: flex;
+    flex-direction: column;
 }
 .reminder-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
 .reminder-card.trip { border-left-color: var(--success); }
@@ -827,7 +832,7 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
 .reminder-card.deadline { border-left-color: var(--secondary); }
 .reminder-title { font-weight: 600; margin-bottom: var(--space-xs); color: var(--dark); font-size: var(--text-base); }
 .reminder-date { font-size: var(--text-sm); color: var(--medium); margin-bottom: var(--space-sm); }
-.reminder-description { font-size: var(--text-sm); color: var(--medium); line-height: 1.5; flex-grow: 1; /* MODIFICATION */}
+.reminder-description { font-size: var(--text-sm); color: var(--medium); line-height: 1.5; flex-grow: 1; }
 .reminder-actions {
     position: absolute; top: var(--space-sm); right: var(--space-sm); display: flex; gap: var(--space-xs);
     opacity: 0; pointer-events: none; transform: scale(0.9); transition: all var(--transition-fast);
@@ -846,7 +851,6 @@ body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light
 .reminder-card.dragging { opacity: 0.4; transform: scale(1.05); box-shadow: var(--shadow-lg); cursor: grabbing; }
 .reminder-placeholder { background: var(--primary-light); border: 2px dashed var(--primary); border-radius: var(--radius-md); grid-column: span 1; grid-row: span 1; }
 
-/* MODIFICATION START */
 .reminder-location {
     font-size: var(--text-sm);
     color: var(--medium);
@@ -855,9 +859,8 @@ body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light
     align-items: center;
     gap: var(--space-xs);
 }
-/* MODIFICATION END */
 
-/* MODIFICATION START: Add to Calendar Button & Dropdown */
+/* Add to Calendar Button & Dropdown */
 .reminder-footer {
     display: flex;
     justify-content: space-between;
@@ -875,7 +878,7 @@ body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light
     bottom: calc(100% + 8px); /* Position above the button */
     right: 0;
     background-color: var(--lighter);
-    min-width: 150px;
+    min-width: 180px; /* MODIFICATION */
     box-shadow: var(--shadow-lg);
     border-radius: var(--radius-md);
     z-index: 10;
@@ -923,7 +926,7 @@ body.dark-mode .calendar-dropdown-item:hover {
     background-color: var(--dark-light-gray);
     color: var(--primary);
 }
-/* MODIFICATION END */
+
 
 /* General UI & Layout */
 body.non-admin .add-tab-header-button, body.non-admin .button[onclick="openAnnouncementEditor()"],
@@ -945,7 +948,7 @@ body.non-admin .reminder-card { cursor: default; }
     position: absolute; top: var(--space-sm); left: var(--space-md); color: var(--medium); pointer-events: none;
     transition: all var(--transition-fast); font-size: var(--text-sm); background: var(--lighter); padding: 0 var(--space-xs); transform-origin: left center;
 }
-/* MODIFICATION START */
+
 .input-group input:focus + label, .input-group input:not(:placeholder-shown) + label,
 .input-group textarea:focus + label, .input-group textarea:not(:placeholder-shown) + label,
 .input-group select:focus + label,
@@ -955,7 +958,7 @@ body.non-admin .reminder-card { cursor: default; }
     color: var(--primary);
     transform: scale(0.85);
 }
-/* MODIFICATION END */
+
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .post-card:nth-child(1) { animation-delay: 0.1s; }
 .post-card:nth-child(2) { animation-delay: 0.2s; }
@@ -1157,12 +1160,10 @@ body.non-admin .reminder-card { cursor: default; }
                 </select>
                 <label>Type</label>
             </div>
-            <!-- MODIFICATION START -->
             <div class="input-group">
                 <input type="text" id="reminder-location" placeholder=" ">
                 <label>Location (optional)</label>
             </div>
-            <!-- MODIFICATION END -->
             <div class="input-group">
                 <input type="text" id="reminder-link" placeholder=" ">
                 <label>Resource Link (optional)</label>
@@ -1396,7 +1397,7 @@ body.non-admin .reminder-card { cursor: default; }
         let suppressPostAnimation = false;
         let savedEditorSelection = null;
         
-        const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz', 'shahraamhassanzadeh@gmail.com'];
+        const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
 
         document.addEventListener('DOMContentLoaded', () => {
             checkUserProfile();
@@ -2260,9 +2261,8 @@ body.non-admin .reminder-card { cursor: default; }
                                 <i class="fas fa-calendar-plus"></i>
                             </button>
                             <div class="calendar-dropdown-menu">
-                                <a href="#" class="calendar-dropdown-item" data-calendar-type="google" data-reminder-id="${rem.id}"><i class="fab fa-google" style="color: #4285F4;"></i> Google</a>
-                                <a href="#" class="calendar-dropdown-item" data-calendar-type="apple" data-reminder-id="${rem.id}"><i class="fab fa-apple" style="color: #A2AAAD;"></i> Apple</a>
-                                <a href="#" class="calendar-dropdown-item" data-calendar-type="outlook" data-reminder-id="${rem.id}"><i class="fab fa-microsoft" style="color: #0078D4;"></i> Outlook</a>
+                                <a href="#" class="calendar-dropdown-item" data-calendar-type="google" data-reminder-id="${rem.id}"><i class="fab fa-google" style="color: #4285F4;"></i> Google Calendar</a>
+                                <a href="#" class="calendar-dropdown-item" data-calendar-type="apple" data-reminder-id="${rem.id}"><i class="fab fa-apple" style="color: #A2AAAD;"></i> Apple Calendar</a>
                             </div>
                         </div>
                     </div>
@@ -2334,7 +2334,6 @@ body.non-admin .reminder-card { cursor: default; }
 
         function formatDate(dateString) { try { return new Date(dateString).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }); } catch { return "Invalid Date"; } }
         
-        // MODIFICATION START
         function openReminderEditor(id = null) {
             if (!isAdmin) return;
             const modal = document.getElementById('reminder-editor'); modal.style.display = 'flex';
@@ -2349,10 +2348,8 @@ body.non-admin .reminder-card { cursor: default; }
             modal.querySelector('#reminder-link').value = isEditing && rem ? rem.link || '' : '';
             modal.querySelector('#save-reminder-button').textContent = isEditing ? 'Save Changes' : 'Add Reminder';
         }
-        // MODIFICATION END
         function closeReminderEditor() { document.getElementById('reminder-editor').style.display = 'none'; }
         
-        // MODIFICATION START
         function saveReminder() {
             if (!isAdmin) return;
             const title = document.getElementById('reminder-title').value.trim();
@@ -2372,7 +2369,6 @@ body.non-admin .reminder-card { cursor: default; }
                 newReminderRef.set(newReminder).then(closeReminderEditor);
             }
         }
-        // MODIFICATION END
         
         window.editReminder = (event, id) => { event.stopPropagation(); openReminderEditor(id); };
         window.deleteReminder = (event, id) => {
@@ -2524,7 +2520,7 @@ body.non-admin .reminder-card { cursor: default; }
                     if (reminder) {
                         if (calendarType === 'google') {
                             handleGoogleCalendar(reminder);
-                        } else if (calendarType === 'apple' || calendarType === 'outlook') {
+                        } else if (calendarType === 'apple') {
                             handleIcsDownload(reminder);
                         }
                     }
