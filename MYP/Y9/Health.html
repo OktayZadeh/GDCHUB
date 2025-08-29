@@ -261,7 +261,15 @@ body.dark-mode .profile-dropdown-content a:hover { background-color: var(--dark-
     font-weight: 500; font-size: var(--text-sm); line-height: 1; cursor: pointer; transition: all var(--transition-fast); border: none;
     background-color: var(--primary); color: white; box-shadow: var(--shadow-sm); height: 36px;
 }
-.button:hover { background-color: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-md); text-decoration: none; }
+/* MODIFICATION START */
+.button:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
+    color: white; /* Ensures text remains white on hover */
+}
+/* MODIFICATION END */
 .button:active { transform: translateY(0); box-shadow: var(--shadow-sm); }
 .button:focus { outline: none; box-shadow: var(--shadow-primary); }
 .button.secondary { background-color: white; color: var(--primary); border: 1px solid var(--light-gray); }
@@ -836,6 +844,17 @@ body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light
 .reminder-card.dragging { opacity: 0.4; transform: scale(1.05); box-shadow: var(--shadow-lg); cursor: grabbing; }
 .reminder-placeholder { background: var(--primary-light); border: 2px dashed var(--primary); border-radius: var(--radius-md); grid-column: span 1; grid-row: span 1; }
 
+/* MODIFICATION START */
+.reminder-location {
+    font-size: var(--text-sm);
+    color: var(--medium);
+    margin-top: var(--space-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+/* MODIFICATION END */
+
 /* General UI & Layout */
 body.non-admin .add-tab-header-button, body.non-admin .button[onclick="openAnnouncementEditor()"],
 body.non-admin .tab-actions, body.non-admin .post-actions, body.non-admin #add-reminder-btn,
@@ -1068,6 +1087,12 @@ body.non-admin .reminder-card { cursor: default; }
                 </select>
                 <label>Type</label>
             </div>
+            <!-- MODIFICATION START -->
+            <div class="input-group">
+                <input type="text" id="reminder-location" placeholder=" ">
+                <label>Location (optional)</label>
+            </div>
+            <!-- MODIFICATION END -->
             <div class="input-group">
                 <input type="text" id="reminder-link" placeholder=" ">
                 <label>Resource Link (optional)</label>
@@ -2122,24 +2147,50 @@ body.non-admin .reminder-card { cursor: default; }
             });
         }
         
+        // MODIFICATION START
         function renderReminders() {
             remindersList.innerHTML = [...reminders]
             .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity))
             .map(rem => {
                 if (!rem || !rem.id) return '';
                 const actionsHtml = isAdmin ? `<div class="reminder-actions"><button class="reminder-action-btn" onclick="editReminder(event, '${rem.id}')"><i class="fas fa-pencil-alt"></i></button><button class="reminder-action-btn" onclick="deleteReminder(event, '${rem.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
+                
+                const location = rem.location || '';
+                let locationHtml = '';
+                if (location) {
+                    const encodedLocation = encodeURIComponent(location);
+                    locationHtml = `
+                        <div class="reminder-location">
+                            <i class="fas fa-map-marker-alt"></i> ${location}
+                        </div>
+                        <div class="reminder-map">
+                            <iframe
+                                width="100%"
+                                height="150"
+                                frameborder="0" style="border:0; border-radius: var(--radius-sm); margin-top: var(--space-sm);"
+                                src="https://maps.google.com/maps?q=${encodedLocation}&t=&z=13&ie=UTF8&iwloc=&output=embed"
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+                    `;
+                }
+
                 return `
                 <div class="reminder-card ${rem.type || 'trip'}" data-id="${rem.id}" draggable="${isAdmin}">
                     ${actionsHtml}
                     <div class="reminder-title">${rem.title}</div>
                     <div class="reminder-date">${formatDate(rem.date)}</div>
                     ${rem.description ? `<div class="reminder-description">${rem.description}</div>` : ''}
+                    ${locationHtml}
                     ${rem.link ? `<a href="${rem.link}" target="_blank" rel="noopener noreferrer" class="button small" style="margin-top: var(--space-sm);" onclick="event.stopPropagation()">View Resource</a>` : ''}
                 </div>`;
             }).join('');
         }
+        // MODIFICATION END
+
         function formatDate(dateString) { try { return new Date(dateString).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }); } catch { return "Invalid Date"; } }
         
+        // MODIFICATION START
         function openReminderEditor(id = null) {
             if (!isAdmin) return;
             const modal = document.getElementById('reminder-editor'); modal.style.display = 'flex';
@@ -2150,11 +2201,14 @@ body.non-admin .reminder-card { cursor: default; }
             modal.querySelector('#reminder-description').value = isEditing && rem ? rem.description || '' : '';
             modal.querySelector('#reminder-date').value = isEditing && rem ? rem.date : new Date(Date.now() + 864e5).toISOString().slice(0, 10);
             modal.querySelector('#reminder-type').value = isEditing && rem ? rem.type || 'trip' : 'trip';
+            modal.querySelector('#reminder-location').value = isEditing && rem ? rem.location || '' : '';
             modal.querySelector('#reminder-link').value = isEditing && rem ? rem.link || '' : '';
             modal.querySelector('#save-reminder-button').textContent = isEditing ? 'Save Changes' : 'Add Reminder';
         }
+        // MODIFICATION END
         function closeReminderEditor() { document.getElementById('reminder-editor').style.display = 'none'; }
         
+        // MODIFICATION START
         function saveReminder() {
             if (!isAdmin) return;
             const title = document.getElementById('reminder-title').value.trim();
@@ -2162,17 +2216,19 @@ body.non-admin .reminder-card { cursor: default; }
             if (!title || !date) return alert('Please enter a title and date');
             const description = document.getElementById('reminder-description').value.trim();
             const type = document.getElementById('reminder-type').value;
+            const location = document.getElementById('reminder-location').value.trim();
             const link = document.getElementById('reminder-link').value.trim();
 
             if (currentReminderBeingEdited) {
-                const reminderUpdate = { title, description, date, type, link };
+                const reminderUpdate = { title, description, date, type, location, link };
                 remindersRef.child(currentReminderBeingEdited).update(reminderUpdate).then(closeReminderEditor);
             } else {
                 const newReminderRef = remindersRef.push();
-                const newReminder = { id: newReminderRef.key, title, description, date, type, link, order: reminders.length };
+                const newReminder = { id: newReminderRef.key, title, description, date, type, location, link, order: reminders.length };
                 newReminderRef.set(newReminder).then(closeReminderEditor);
             }
         }
+        // MODIFICATION END
         
         window.editReminder = (event, id) => { event.stopPropagation(); openReminderEditor(id); };
         window.deleteReminder = (event, id) => {
@@ -2286,3 +2342,4 @@ body.non-admin .reminder-card { cursor: default; }
     </script>
 </body>
 </html>
+```
