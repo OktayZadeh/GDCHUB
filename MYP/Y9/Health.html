@@ -289,6 +289,16 @@ select {
     appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right var(--space-md) center; background-size: 16px; padding-right: var(--space-xl);
 }
+/* Ensure options are never greyed out unless explicitly disabled */
+select option {
+    color: var(--dark);
+    background-color: var(--lighter);
+}
+body.dark-mode select option {
+    color: var(--dark-medium);
+    background-color: var(--dark-lighter);
+}
+
 
 /* Layout */
 .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 var(--space-md); }
@@ -377,12 +387,20 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 }
 #profile-pic:hover { transform: scale(1.1); box-shadow: var(--shadow-md); }
 
-/* Modal Styles */
+/* MODIFICATION START: Z-Index Fix for Modals */
 .modal {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);
     z-index: 2050; justify-content: center; align-items: center; backdrop-filter: blur(4px); animation: modalFadeIn var(--transition-fast) forwards;
 }
-#confirmation-modal, #embed-modal, #category-manager-modal { z-index: 2100; }
+/* Standard modals */
+#embed-modal, #category-manager-modal, #reminder-editor, #tab-editor-modal {
+    z-index: 2100;
+}
+/* Confirmation modal must be on top of other modals */
+#confirmation-modal {
+    z-index: 2200;
+}
+/* MODIFICATION END */
 .modal-content {
     background-color: white; padding: var(--space-xl); border-radius: var(--radius-lg); width: 100%; max-width: 500px;
     max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-xl); animation: modalSlideIn var(--transition-normal) forwards;
@@ -1178,7 +1196,6 @@ body.dark-mode .snackbar.hint {
         <div class="reminders-container">
             <div class="reminders-header">
                 <h2>Upcoming Reminders</h2>
-                <!-- MODIFICATION START: Added filter and Manage Categories button -->
                 <div class="reminder-filter-container">
                     <label for="reminder-category-filter">Class:</label>
                     <select id="reminder-category-filter">
@@ -1189,7 +1206,6 @@ body.dark-mode .snackbar.hint {
                     <button class="button secondary small" onclick="openCategoryManager()" id="manage-categories-btn">Manage Categories</button>
                     <button class="button" onclick="openReminderEditor()" id="add-reminder-btn">+ Add Reminder</button>
                 </div>
-                <!-- MODIFICATION END -->
             </div>
             <div class="reminders-list" id="reminders-list"></div>
         </div>
@@ -1244,7 +1260,6 @@ body.dark-mode .snackbar.hint {
                 </select>
                 <label>Type</label>
             </div>
-            <!-- MODIFICATION START: Added Category Selector -->
             <div class="input-group">
                 <select id="reminder-category" required>
                     <option value="" disabled selected>Select a category...</option>
@@ -1252,7 +1267,6 @@ body.dark-mode .snackbar.hint {
                 </select>
                 <label for="reminder-category">Category</label>
             </div>
-            <!-- MODIFICATION END -->
             <div class="input-group">
                 <input type="text" id="reminder-location" placeholder=" ">
                 <label>Location (optional)</label>
@@ -1390,7 +1404,6 @@ body.dark-mode .snackbar.hint {
         </div>
     </div>
 
-    <!-- MODIFICATION START: Category Manager Modal -->
     <div id="category-manager-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeCategoryManager()">×</span>
@@ -1408,7 +1421,6 @@ body.dark-mode .snackbar.hint {
             </div>
         </div>
     </div>
-    <!-- MODIFICATION END -->
 
     <div id="undo-snackbar" class="snackbar">
         <i class="fas fa-check-circle"></i>
@@ -1417,12 +1429,10 @@ body.dark-mode .snackbar.hint {
         <div class="snackbar-progress"></div>
     </div>
 
-    <!-- MODIFICATION START: Apple Hint Snackbar -->
     <div id="apple-hint-snackbar" class="snackbar hint">
         <i class="fas fa-download"></i>
         <span>Download started. Tap the file in your browser's downloads to add to Calendar.</span>
     </div>
-    <!-- MODIFICATION END -->
 
     <script>
         (function() {
@@ -1482,9 +1492,7 @@ body.dark-mode .snackbar.hint {
         const tabsRef = database.ref('tabs');
         const announcementsRef = database.ref('announcements');
         const remindersRef = database.ref('reminders');
-        // MODIFICATION START: Add reference for reminder categories
         const reminderCategoriesRef = database.ref('reminder_categories');
-        // MODIFICATION END
 
         const sidebarMenu = document.getElementById('sidebar-menu');
         const tabEditorModal = document.getElementById('tab-editor-modal');
@@ -1507,21 +1515,17 @@ body.dark-mode .snackbar.hint {
         const darkModeToggle = document.querySelector('.dark-mode-toggle');
         const profileDropdown = document.querySelector('.profile-dropdown');
         const embedModal = document.getElementById('embed-modal');
-        // MODIFICATION START: Add references for new elements
         const categoryManagerModal = document.getElementById('category-manager-modal');
         const reminderCategoryFilter = document.getElementById('reminder-category-filter');
         const reminderCategoryEditorSelect = document.getElementById('reminder-category');
-        // MODIFICATION END
 
         let tabs = [];
         let currentTabId = null;
         let currentTabBeingEdited = null;
         let expandedPost = null;
         let reminders = [];
-        // MODIFICATION START: Add state for categories and filter
         let reminderCategories = [];
         let selectedReminderCategory = localStorage.getItem('selectedReminderCategory') || 'ALL_CLASSES';
-        // MODIFICATION END
         let currentReminderBeingEdited = null;
         let isAdmin = false;
         let currentAnnouncementBeingEdited = null;
@@ -1542,9 +1546,7 @@ body.dark-mode .snackbar.hint {
             setupProfileDropdown();
             setupCustomEditor();
             setupReminderActionDelegation();
-            // MODIFICATION START: Setup reminder filter listener
             reminderCategoryFilter.addEventListener('change', handleCategoryFilterChange);
-            // MODIFICATION END
             UndoManager.init();
             if (isAdmin) {
                 setupSidebarDragAndDrop();
@@ -2104,32 +2106,49 @@ body.dark-mode .snackbar.hint {
                 }
             });
             remindersRef.on('value', snapshot => { reminders = snapshot.val() ? Object.values(snapshot.val()) : []; renderReminders(); });
-            // MODIFICATION START: Add listener for reminder categories
             reminderCategoriesRef.on('value', snapshot => {
                 const categoriesData = snapshot.val();
                 reminderCategories = categoriesData ? Object.values(categoriesData) : [];
                 reminderCategories.sort((a, b) => a.name.localeCompare(b.name));
+                
+                // This function now updates all category-related UI elements at once.
                 populateCategoryDropdowns();
-                renderReminders(); // Re-render reminders in case a category was deleted
+                renderReminders();
+                
+                // MODIFICATION START: Auto-refresh the list in the manager modal if it's open
+                if (categoryManagerModal.style.display === 'flex') {
+                    renderCategoryManagerList();
+                }
+                // MODIFICATION END
             });
-            // MODIFICATION END
         }
         
-        // MODIFICATION START: Function to populate all category dropdowns
         function populateCategoryDropdowns() {
+            // MODIFICATION START: Filter out any bad data before rendering options
+            const validCategories = reminderCategories.filter(cat => cat && cat.name);
+            // MODIFICATION END
+            
             // Populate the main user filter
-            const filterOptions = reminderCategories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
+            const filterOptions = validCategories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
             reminderCategoryFilter.innerHTML = `<option value="ALL_CLASSES">All Classes</option><option value="ALL">ALL (Global)</option>${filterOptions}`;
-            reminderCategoryFilter.value = selectedReminderCategory;
+            
+            // Restore user's previous selection
+            if ([...reminderCategoryFilter.options].some(opt => opt.value === selectedReminderCategory)) {
+                reminderCategoryFilter.value = selectedReminderCategory;
+            } else {
+                // If their saved category was deleted, default to All Classes
+                selectedReminderCategory = 'ALL_CLASSES';
+                localStorage.setItem('selectedReminderCategory', selectedReminderCategory);
+                reminderCategoryFilter.value = selectedReminderCategory;
+            }
 
             // Populate the admin editor dropdown
-            const editorOptions = reminderCategories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
+            const editorOptions = validCategories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
             reminderCategoryEditorSelect.innerHTML = `
                 <option value="" disabled selected>Select a category...</option>
                 <option value="ALL">ALL (Visible to Everyone)</option>
                 ${editorOptions}`;
         }
-        // MODIFICATION END
 
         function autoEmbed(htmlContent) {
             if (!htmlContent) return '';
@@ -2379,7 +2398,6 @@ body.dark-mode .snackbar.hint {
             });
         }
         
-        // MODIFICATION START: Updated renderReminders function with filtering
         function renderReminders() {
             let filteredReminders = reminders;
 
@@ -2415,7 +2433,6 @@ body.dark-mode .snackbar.hint {
                     `;
                 }
                 
-                // Add category badge for admins for clarity
                 const categoryBadge = isAdmin && rem.category ? `<span style="font-size: 10px; background: var(--light-gray); color: var(--medium); padding: 2px 6px; border-radius: 4px; margin-left: 8px;">${rem.category}</span>` : '';
 
                 return `
@@ -2444,7 +2461,6 @@ body.dark-mode .snackbar.hint {
                  remindersList.innerHTML = '<p>No reminders found for the selected class.</p>';
             }
         }
-        // MODIFICATION END
 
         function handleCategoryFilterChange() {
             selectedReminderCategory = reminderCategoryFilter.value;
@@ -2532,9 +2548,7 @@ body.dark-mode .snackbar.hint {
             document.body.removeChild(link);
         }
         
-        // MODIFICATION START: Apple Hint Functions
         function isAppleDevice() {
-            // This checks the navigator platform, which is a reliable way to detect the OS family.
             return /Mac|iPod|iPhone|iPad/.test(navigator.platform);
         }
 
@@ -2544,10 +2558,9 @@ body.dark-mode .snackbar.hint {
                 hintSnackbar.classList.add('show');
                 setTimeout(() => {
                     hintSnackbar.classList.remove('show');
-                }, 6000); // Show for 6 seconds
+                }, 6000);
             }
         }
-        // MODIFICATION END
 
         function formatDate(dateString) { try { return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }); } catch { return "Invalid Date"; } }
         
@@ -2561,9 +2574,7 @@ body.dark-mode .snackbar.hint {
             modal.querySelector('#reminder-description').value = isEditing && rem ? rem.description || '' : '';
             modal.querySelector('#reminder-date').value = isEditing && rem ? rem.date : new Date(Date.now() + 864e5).toISOString().slice(0, 10);
             modal.querySelector('#reminder-type').value = isEditing && rem ? rem.type || 'trip' : 'trip';
-            // MODIFICATION START: Set category value in editor
             modal.querySelector('#reminder-category').value = isEditing && rem ? rem.category || '' : '';
-            // MODIFICATION END
             modal.querySelector('#reminder-location').value = isEditing && rem ? rem.location || '' : '';
             modal.querySelector('#reminder-link').value = isEditing && rem ? rem.link || '' : '';
             modal.querySelector('#save-reminder-button').textContent = isEditing ? 'Save Changes' : 'Add Reminder';
@@ -2574,21 +2585,19 @@ body.dark-mode .snackbar.hint {
             if (!isAdmin) return;
             const title = document.getElementById('reminder-title').value.trim();
             const date = document.getElementById('reminder-date').value;
-            // MODIFICATION START: Get and validate category
             const category = document.getElementById('reminder-category').value;
             if (!title || !date || !category) return alert('Please enter a title, date, and category.');
-            // MODIFICATION END
             const description = document.getElementById('reminder-description').value.trim();
             const type = document.getElementById('reminder-type').value;
             const location = document.getElementById('reminder-location').value.trim();
             const link = document.getElementById('reminder-link').value.trim();
 
             if (currentReminderBeingEdited) {
-                const reminderUpdate = { title, description, date, type, category, location, link }; // Added category
+                const reminderUpdate = { title, description, date, type, category, location, link };
                 remindersRef.child(currentReminderBeingEdited).update(reminderUpdate).then(closeReminderEditor);
             } else {
                 const newReminderRef = remindersRef.push();
-                const newReminder = { id: newReminderRef.key, title, description, date, type, category, location, link, order: reminders.length }; // Added category
+                const newReminder = { id: newReminderRef.key, title, description, date, type, category, location, link, order: reminders.length };
                 newReminderRef.set(newReminder).then(closeReminderEditor);
             }
         }
@@ -2663,8 +2672,7 @@ body.dark-mode .snackbar.hint {
                 endDrag();
             });
         }
-
-        // MODIFICATION START: Category Management Functions
+        
         function openCategoryManager() {
             if (!isAdmin) return;
             renderCategoryManagerList();
@@ -2696,7 +2704,6 @@ body.dark-mode .snackbar.hint {
             const name = input.value.trim();
             if (!name) return;
 
-            // Check for duplicates
             if (reminderCategories.some(cat => cat.name.toLowerCase() === name.toLowerCase())) {
                 alert('This category name already exists.');
                 return;
@@ -2716,11 +2723,10 @@ body.dark-mode .snackbar.hint {
 
         window.deleteCategory = (id) => {
             if (!isAdmin) return;
-            showConfirmationModal('Are you sure you want to delete this category? Reminders in this category will no longer be filterable.', () => {
+            showConfirmationModal('Are you sure you want to delete this category? Reminders in this category will no longer be filterable by this name.', () => {
                  reminderCategoriesRef.child(id).remove();
             });
         }
-        // MODIFICATION END
         
         const UndoManager = {
             queue: [], isShowing: false,
@@ -2761,12 +2767,14 @@ body.dark-mode .snackbar.hint {
         function showConfirmationModal(message, onConfirm) { confirmationModal.show(message, onConfirm); }
         function setupGlobalClickHandlers() {
             document.addEventListener('click', (e) => {
-                // Close modal if background is clicked
                 if (e.target.classList.contains('modal')) {
-                    e.target.style.display = 'none';
+                    // Check if it's the confirmation modal, if so, don't close on background click
+                    // for safety. User must explicitly cancel.
+                    if (e.target.id !== 'confirmation-modal') {
+                       e.target.style.display = 'none';
+                    }
                 }
         
-                // Close open calendar dropdowns that are not the target of the click
                 document.querySelectorAll('.calendar-dropdown.open').forEach(dropdown => {
                     if (!dropdown.contains(e.target)) {
                         dropdown.classList.remove('open');
@@ -2802,7 +2810,6 @@ body.dark-mode .snackbar.hint {
                         if (calendarType === 'google') {
                             handleGoogleCalendar(reminder);
                         } else if (calendarType === 'apple') {
-                            // MODIFICATION: Show hint on Apple devices before downloading
                             if (isAppleDevice()) {
                                 showAppleCalendarHint();
                             }
@@ -2820,3 +2827,5 @@ body.dark-mode .snackbar.hint {
     </script>
 </body>
 </html>
+```
+294.7s
