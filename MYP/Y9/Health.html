@@ -1178,12 +1178,10 @@ body.dark-mode .snackbar.hint {
                 <input type="text" id="reminder-title" placeholder=" ">
                 <label>Reminder Title</label>
             </div>
-            <!-- MODIFICATION START: Added Author Input -->
             <div class="input-group">
                 <input type="text" id="reminder-author" placeholder=" ">
                 <label>Author/Publisher (e.g., Year 9 Health or ALL)</label>
             </div>
-            <!-- MODIFICATION END -->
             <div class="input-group">
                 <textarea id="reminder-description" placeholder=" "></textarea>
                 <label>Description (optional)</label>
@@ -1357,25 +1355,42 @@ body.dark-mode .snackbar.hint {
             const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
             const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
             
-            //** FIXED AUTHENTICATION LOGIC **//
+            //** FIXED AUTHENTICATION LOGIC - MORE ROBUST **//
             function checkAuth() {
                 try {
                     const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-                    const cookieToken = document.cookie.split('; ').find(row => row.startsWith('gdcAuth='))?.split('=')[1];
 
-                    if (!authToken || !cookieToken || authToken !== cookieToken) {
+                    // Robustly parse the cookie
+                    const cookieString = document.cookie;
+                    const cookieMatch = cookieString.match(`(^|;)\\s*gdcAuth\\s*=\\s*([^;]+)`);
+                    const cookieToken = cookieMatch ? cookieMatch.pop() : null;
+
+                    if (!authToken || !cookieToken) {
                         clearAuthData();
                         return false;
                     }
                     
-                    const tokenTimestamp = parseInt(authToken.split('-')[0], 10);
+                    if (authToken !== cookieToken) {
+                        clearAuthData();
+                        return false;
+                    }
+
+                    // Robustly parse the timestamp from the token
+                    const tokenParts = authToken.split('-');
+                    if (tokenParts.length < 1) {
+                        clearAuthData();
+                        return false;
+                    }
+                    const tokenTimestamp = parseInt(tokenParts[0], 10);
+
                     if (isNaN(tokenTimestamp) || (Date.now() - tokenTimestamp > SESSION_TIMEOUT)) {
                         clearAuthData();
                         return false;
                     }
+
                     return true;
                 } catch (error) {
-                    console.error("Authentication check failed:", error);
+                    console.error("Authentication check failed with an error:", error);
                     clearAuthData();
                     return false;
                 }
@@ -1384,6 +1399,7 @@ body.dark-mode .snackbar.hint {
             function clearAuthData() {
                 localStorage.removeItem(USER_INFO_KEY);
                 localStorage.removeItem(AUTH_TOKEN_KEY);
+                // Ensure cookie is cleared correctly for the specific path/domain
                 document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
             }
             
@@ -2025,7 +2041,6 @@ body.dark-mode .snackbar.hint {
                 tabs = tabsData ? Object.values(tabsData) : [];
                 tabs.sort((a, b) => (a.order || 0) - (b.order || 0));
                 renderTabs();
-                //** FIXED DATA LOADING LOGIC **//
                 if (tabs.length > 0 && (!currentTabId || !tabs.some(t => t.id === currentTabId))) {
                     setActiveTab(tabs[0].id);
                 } else if (tabs.length === 0) {
@@ -2290,7 +2305,6 @@ body.dark-mode .snackbar.hint {
             });
         }
         
-        //** NEW/MODIFIED FUNCTIONS FOR REMINDER FILTERING **//
         function setupReminderFilter() {
             const savedAuthor = localStorage.getItem('selectedReminderAuthor');
             if (savedAuthor) {
@@ -2315,7 +2329,6 @@ body.dark-mode .snackbar.hint {
                 }
             });
             
-            // Restore previous selection if it still exists
             if ([...reminderAuthorFilter.options].some(o => o.value === currentFilterValue)) {
                 reminderAuthorFilter.value = currentFilterValue;
             } else {
@@ -2557,7 +2570,7 @@ body.dark-mode .snackbar.hint {
                 document.getElementById('undo-message').textContent = message;
                 const undoButton = document.getElementById('undo-button');
                 
-                const newUndoButton = undoButton.cloneNode(true); // Prevent multiple listeners
+                const newUndoButton = undoButton.cloneNode(true);
                 undoButton.parentNode.replaceChild(newUndoButton, undoButton);
                 newUndoButton.onclick = () => { undoCallback(); this.hide(snackbar); };
 
@@ -2632,3 +2645,4 @@ body.dark-mode .snackbar.hint {
     </script>
 </body>
 </html>
+```
