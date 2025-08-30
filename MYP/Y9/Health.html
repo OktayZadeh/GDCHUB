@@ -808,6 +808,18 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
     display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);
 }
 
+/* MODIFICATION START */
+.reminders-header .filter-container {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+#reminder-author-filter {
+    margin-bottom: 0; /* Override default margin */
+    min-width: 150px;
+}
+/* MODIFICATION END */
+
 .reminders-list {
     column-count: 3;
     column-gap: var(--space-md);
@@ -1117,7 +1129,12 @@ body.dark-mode .snackbar.hint {
     <main class="main-content">
         <div class="reminders-container">
             <div class="reminders-header">
-                <h2>Upcoming Reminders</h2>
+                <div class="filter-container">
+                    <h2>Upcoming Reminders</h2>
+                    <select id="reminder-author-filter">
+                        <option value="all">All Reminders</option>
+                    </select>
+                </div>
                 <button class="button" onclick="openReminderEditor()" id="add-reminder-btn">+ Add Reminder</button>
             </div>
             <div class="reminders-list" id="reminders-list"></div>
@@ -1156,6 +1173,12 @@ body.dark-mode .snackbar.hint {
                 <input type="text" id="reminder-title" placeholder=" ">
                 <label>Reminder Title</label>
             </div>
+            <!-- MODIFICATION START -->
+            <div class="input-group">
+                <input type="text" id="reminder-author" placeholder=" ">
+                <label>Author/Publisher (e.g., Year 9 Health)</label>
+            </div>
+            <!-- MODIFICATION END -->
             <div class="input-group">
                 <textarea id="reminder-description" placeholder=" "></textarea>
                 <label>Description (optional)</label>
@@ -1334,9 +1357,9 @@ body.dark-mode .snackbar.hint {
             function checkAuth() {
                 try {
                     const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-                    const cookieToken = document.cookie.split('; ').find(row => row.startsWith('gdcAuth='))?.split('=')[1];
+                    const cookieToken = document.cookie.split('; ').find(row => row.startsWith('gdcAuth='))?.split('=')[[1](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQGd8u_MOhTCx6QUJvc8GsZ0PxoTaOn8jXThiI-JRXgUbLsLgDDlUWzeyGO7s3x_4qx6Rq7Vyws-mZJ-vvIazW7SCYoX423EN10D9WQP8S4qplTiiqUJc3kTzQlMzqKxf4eW64bzl1ZqQ60vvQP7UFJL9EySwJ_J4jUqwZ_oYPxEmp3BU0piwULCCZ8yAj-8ZaWA_MXxqsyXr90xd2Ui6co%3D)];
                     if (!authToken || !cookieToken || authToken !== cookieToken) { clearAuthData(); return false; }
-                    const tokenTimestamp = parseInt(authToken.split('-')[0]);
+                    const tokenTimestamp = parseInt(authToken.split('-'));
                     if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) { clearAuthData(); return false; }
                     return true;
                 } catch (error) { clearAuthData(); return false; }
@@ -1404,6 +1427,7 @@ body.dark-mode .snackbar.hint {
         const darkModeToggle = document.querySelector('.dark-mode-toggle');
         const profileDropdown = document.querySelector('.profile-dropdown');
         const embedModal = document.getElementById('embed-modal');
+        const reminderAuthorFilter = document.getElementById('reminder-author-filter');
 
         let tabs = [];
         let currentTabId = null;
@@ -1430,6 +1454,7 @@ body.dark-mode .snackbar.hint {
             setupProfileDropdown();
             setupCustomEditor();
             setupReminderActionDelegation();
+            setupReminderFilter();
             UndoManager.init();
             if (isAdmin) {
                 setupSidebarDragAndDrop();
@@ -1844,8 +1869,8 @@ body.dark-mode .snackbar.hint {
 
         function hexToHsl(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            if (!result) return [0, 0, 0];
-            return rgbToHsl(parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16));
+            if (!result) return;
+            return rgbToHsl(parseInt(result[[1](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQGd8u_MOhTCx6QUJvc8GsZ0PxoTaOn8jXThiI-JRXgUbLsLgDDlUWzeyGO7s3x_4qx6Rq7Vyws-mZJ-vvIazW7SCYoX423EN10D9WQP8S4qplTiiqUJc3kTzQlMzqKxf4eW64bzl1ZqQ60vvQP7UFJL9EySwJ_J4jUqwZ_oYPxEmp3BU0piwULCCZ8yAj-8ZaWA_MXxqsyXr90xd2Ui6co%3D)], 16), parseInt(result[[2](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQE_BAtP6TAdNikrf_q7rEQc15lZKXdMXGd_IfX6m_gjzKyl8Yap3Q5nA67Uq_1p_4jnJTrqCSH6NN3QDrNv6tC3rDebiHLuG3Gvh4Ui0r0tkh_8mwppKtRsJPgp-SYu8I_swQ5X405kpMQuqnrdAZ3F8gzLZWfIb9TmSVvheC9mdbcN7V_XqdjlvaRCAZNwqOXmewHIyNd-flPWaggnxiOdKo5hc8fDp7KOGurupoJ3D0WPB0nNits%3D)], 16), parseInt(result[[3](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQGq11P8cXVd9HI15CAMvrdW2988splPO_ZxC_5Nh1a3xR2OFZ7LSxnVIr1WhIB_eAbtd1FkHPJVsSIJhIo8qyKSbhtQnYiYPZH-NqnosI6hI7ytOonoFl1cUkZNbt8eyaaMx5mZ2jIBNj0GqIpkwFYqSmWOGrYepAUhYdNPogW1OKak)], 16));
         }
         
         function updateToolbarState() {
@@ -1982,13 +2007,17 @@ body.dark-mode .snackbar.hint {
                 tabs.sort((a, b) => (a.order || 0) - (b.order || 0));
                 renderTabs();
                 if (tabs.length > 0 && (!currentTabId || !tabs.some(t => t.id === currentTabId))) {
-                    setActiveTab(tabs[0].id);
+                    setActiveTab(tabs.id);
                 } else if (tabs.length === 0) {
                     currentTabId = null; currentTabTitleElement.textContent = "No Tabs";
                     pinnedPostsFeed.innerHTML = ""; unpinnedPostsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
                 }
             });
-            remindersRef.on('value', snapshot => { reminders = snapshot.val() ? Object.values(snapshot.val()) : []; renderReminders(); });
+            remindersRef.on('value', snapshot => { 
+                reminders = snapshot.val() ? Object.values(snapshot.val()) : []; 
+                populateReminderFilter();
+                renderReminders(); 
+            });
         }
         
         function autoEmbed(htmlContent) {
@@ -2239,8 +2268,45 @@ body.dark-mode .snackbar.hint {
             });
         }
         
+        function setupReminderFilter() {
+            const savedAuthor = localStorage.getItem('selectedReminderAuthor');
+            if (savedAuthor) {
+                reminderAuthorFilter.value = savedAuthor;
+            }
+            reminderAuthorFilter.addEventListener('change', (e) => {
+                localStorage.setItem('selectedReminderAuthor', e.target.value);
+                renderReminders();
+            });
+        }
+
+        function populateReminderFilter() {
+            const authors = [...new Set(reminders.map(r => r.author).filter(Boolean))];
+            const currentFilterValue = reminderAuthorFilter.value;
+            reminderAuthorFilter.innerHTML = `<option value="all">All Reminders</option>`;
+            authors.forEach(author => {
+                if(author.toLowerCase() !== 'all') {
+                    const option = document.createElement('option');
+                    option.value = author;
+                    option.textContent = author;
+                    reminderAuthorFilter.appendChild(option);
+                }
+            });
+            if (authors.includes(currentFilterValue)) {
+                reminderAuthorFilter.value = currentFilterValue;
+            } else {
+                reminderAuthorFilter.value = 'all';
+                localStorage.setItem('selectedReminderAuthor', 'all');
+            }
+        }
+
         function renderReminders() {
-            remindersList.innerHTML = [...reminders]
+            const selectedAuthor = reminderAuthorFilter.value;
+            const filteredReminders = reminders.filter(rem => {
+                if (selectedAuthor === 'all') return true;
+                return rem.author === selectedAuthor || rem.author?.toLowerCase() === 'all';
+            });
+
+            remindersList.innerHTML = filteredReminders
             .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity))
             .map(rem => {
                 if (!rem || !rem.id) return '';
@@ -2396,6 +2462,7 @@ body.dark-mode .snackbar.hint {
             const rem = isEditing ? reminders.find(r => r.id === id) : null;
             modal.querySelector('h2').textContent = isEditing ? 'Edit Reminder' : 'Add New Reminder';
             modal.querySelector('#reminder-title').value = isEditing && rem ? rem.title : '';
+            modal.querySelector('#reminder-author').value = isEditing && rem ? rem.author || '' : '';
             modal.querySelector('#reminder-description').value = isEditing && rem ? rem.description || '' : '';
             modal.querySelector('#reminder-date').value = isEditing && rem ? rem.date : new Date(Date.now() + 864e5).toISOString().slice(0, 10);
             modal.querySelector('#reminder-type').value = isEditing && rem ? rem.type || 'trip' : 'trip';
@@ -2408,20 +2475,23 @@ body.dark-mode .snackbar.hint {
         function saveReminder() {
             if (!isAdmin) return;
             const title = document.getElementById('reminder-title').value.trim();
+            const author = document.getElementById('reminder-author').value.trim();
             const date = document.getElementById('reminder-date').value;
-            if (!title || !date) return alert('Please enter a title and date');
+            if (!title || !date || !author) return alert('Please enter a title, author, and date');
             const description = document.getElementById('reminder-description').value.trim();
             const type = document.getElementById('reminder-type').value;
             const location = document.getElementById('reminder-location').value.trim();
             const link = document.getElementById('reminder-link').value.trim();
 
+            const reminderData = { title, author, description, date, type, location, link };
+
             if (currentReminderBeingEdited) {
-                const reminderUpdate = { title, description, date, type, location, link };
-                remindersRef.child(currentReminderBeingEdited).update(reminderUpdate).then(closeReminderEditor);
+                remindersRef.child(currentReminderBeingEdited).update(reminderData).then(closeReminderEditor);
             } else {
                 const newReminderRef = remindersRef.push();
-                const newReminder = { id: newReminderRef.key, title, description, date, type, location, link, order: reminders.length };
-                newReminderRef.set(newReminder).then(closeReminderEditor);
+                reminderData.id = newReminderRef.key;
+                reminderData.order = reminders.length;
+                newReminderRef.set(reminderData).then(closeReminderEditor);
             }
         }
         
@@ -2594,3 +2664,11 @@ body.dark-mode .snackbar.hint {
     </script>
 </body>
 </html>
+Sources
+help
+stackoverflow.com
+stackoverflow.com
+wixstudio.com
+Google Search Suggestions
+Display of Search Suggestions is required when using Grounding with Google Search. Learn more
+Google logo
