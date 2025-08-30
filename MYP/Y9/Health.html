@@ -382,7 +382,7 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);
     z-index: 2050; justify-content: center; align-items: center; backdrop-filter: blur(4px); animation: modalFadeIn var(--transition-fast) forwards;
 }
-#confirmation-modal, #embed-modal { z-index: 2100; }
+#confirmation-modal, #embed-modal, #category-manager-modal { z-index: 2100; }
 .modal-content {
     background-color: white; padding: var(--space-xl); border-radius: var(--radius-lg); width: 100%; max-width: 500px;
     max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-xl); animation: modalSlideIn var(--transition-normal) forwards;
@@ -805,26 +805,31 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
     margin-bottom: var(--space-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
 }
 .reminders-header {
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);
     flex-wrap: wrap; gap: var(--space-md);
 }
-
-/* MODIFICATION START */
-.reminders-header .filter-container {
+/* MODIFICATION START: Styles for Reminder Filter */
+.reminder-filter-container {
     display: flex;
     align-items: center;
     gap: var(--space-sm);
     flex-grow: 1;
-}
-#reminder-author-filter {
-    margin-bottom: 0; /* Override default margin */
     min-width: 200px;
+}
+.reminder-filter-container label {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--medium);
+}
+#reminder-category-filter {
+    margin-bottom: 0;
+    font-size: var(--text-sm);
+    padding: var(--space-xs) var(--space-sm);
+    padding-right: var(--space-xl); /* for arrow */
+    max-width: 220px;
     height: 36px;
-    padding-top: 0;
-    padding-bottom: 0;
 }
 /* MODIFICATION END */
-
 .reminders-list {
     column-count: 3;
     column-gap: var(--space-md);
@@ -945,11 +950,49 @@ body.dark-mode .calendar-dropdown-item:hover {
     color: var(--primary);
 }
 
+/* MODIFICATION START: Category Manager Styles */
+.category-manager-list {
+    margin-top: var(--space-lg);
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--light-gray);
+    border-radius: var(--radius-md);
+    padding: var(--space-xs);
+}
+.category-manager-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm);
+    border-radius: var(--radius-sm);
+}
+.category-manager-item:nth-child(even) {
+    background-color: var(--light);
+}
+.category-manager-item button {
+    background: none;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    font-size: var(--text-base);
+}
+.add-category-form {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: var(--space-lg);
+}
+#new-category-name {
+    flex-grow: 1;
+    margin-bottom: 0;
+}
+body.dark-mode .category-manager-list { border-color: var(--dark-light); }
+body.dark-mode .category-manager-item:nth-child(even) { background-color: var(--dark-dark-gray); }
+/* MODIFICATION END */
 
 /* General UI & Layout */
 body.non-admin .add-tab-header-button, body.non-admin .button[onclick="openAnnouncementEditor()"],
 body.non-admin .tab-actions, body.non-admin .post-actions, body.non-admin #add-reminder-btn,
-body.non-admin .move-handle { display: none !important; }
+body.non-admin .move-handle, body.non-admin #manage-categories-btn { display: none !important; }
 body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 body.non-admin .reminder-card { cursor: default; }
 
@@ -970,7 +1013,7 @@ body.non-admin .reminder-card { cursor: default; }
 .input-group input:focus + label, .input-group input:not(:placeholder-shown) + label,
 .input-group textarea:focus + label, .input-group textarea:not(:placeholder-shown) + label,
 .input-group select:focus + label,
-.input-group select + label {
+.input-group select:not([value=""]):not(:focus) + label { /* MODIFIED for select placeholders */
     top: -10px;
     font-size: var(--text-xs);
     color: var(--primary);
@@ -1134,13 +1177,19 @@ body.dark-mode .snackbar.hint {
     <main class="main-content">
         <div class="reminders-container">
             <div class="reminders-header">
-                <div class="filter-container">
-                    <h2>Reminders</h2>
-                    <select id="reminder-author-filter">
-                        <option value="all">All Reminders</option>
+                <h2>Upcoming Reminders</h2>
+                <!-- MODIFICATION START: Added filter and Manage Categories button -->
+                <div class="reminder-filter-container">
+                    <label for="reminder-category-filter">Class:</label>
+                    <select id="reminder-category-filter">
+                        <option value="ALL_CLASSES">All Classes</option>
                     </select>
                 </div>
-                <button class="button" onclick="openReminderEditor()" id="add-reminder-btn">+ Add Reminder</button>
+                <div class="admin-buttons" style="display: flex; gap: var(--space-sm);">
+                    <button class="button secondary small" onclick="openCategoryManager()" id="manage-categories-btn">Manage Categories</button>
+                    <button class="button" onclick="openReminderEditor()" id="add-reminder-btn">+ Add Reminder</button>
+                </div>
+                <!-- MODIFICATION END -->
             </div>
             <div class="reminders-list" id="reminders-list"></div>
         </div>
@@ -1179,10 +1228,6 @@ body.dark-mode .snackbar.hint {
                 <label>Reminder Title</label>
             </div>
             <div class="input-group">
-                <input type="text" id="reminder-author" placeholder=" ">
-                <label>Author/Publisher (e.g., Year 9 Health or ALL)</label>
-            </div>
-            <div class="input-group">
                 <textarea id="reminder-description" placeholder=" "></textarea>
                 <label>Description (optional)</label>
             </div>
@@ -1199,6 +1244,15 @@ body.dark-mode .snackbar.hint {
                 </select>
                 <label>Type</label>
             </div>
+            <!-- MODIFICATION START: Added Category Selector -->
+            <div class="input-group">
+                <select id="reminder-category" required>
+                    <option value="" disabled selected>Select a category...</option>
+                    <option value="ALL">ALL (Visible to Everyone)</option>
+                </select>
+                <label for="reminder-category">Category</label>
+            </div>
+            <!-- MODIFICATION END -->
             <div class="input-group">
                 <input type="text" id="reminder-location" placeholder=" ">
                 <label>Location (optional)</label>
@@ -1336,6 +1390,26 @@ body.dark-mode .snackbar.hint {
         </div>
     </div>
 
+    <!-- MODIFICATION START: Category Manager Modal -->
+    <div id="category-manager-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeCategoryManager()">×</span>
+            <h2>Manage Reminder Categories</h2>
+            <p style="font-size: var(--text-sm); color: var(--medium); margin-bottom: var(--space-md);">Add or remove class categories for reminders.</p>
+            <div class="category-manager-list" id="category-manager-list">
+                <!-- Categories will be dynamically inserted here -->
+            </div>
+            <form class="add-category-form" onsubmit="addCategory(event)">
+                <input type="text" id="new-category-name" placeholder="e.g., 9Health-A" required>
+                <button type="submit" class="button">Add</button>
+            </form>
+            <div class="modal-buttons">
+                <button class="button secondary" onclick="closeCategoryManager()">Done</button>
+            </div>
+        </div>
+    </div>
+    <!-- MODIFICATION END -->
+
     <div id="undo-snackbar" class="snackbar">
         <i class="fas fa-check-circle"></i>
         <span id="undo-message"></span>
@@ -1343,70 +1417,41 @@ body.dark-mode .snackbar.hint {
         <div class="snackbar-progress"></div>
     </div>
 
+    <!-- MODIFICATION START: Apple Hint Snackbar -->
     <div id="apple-hint-snackbar" class="snackbar hint">
         <i class="fas fa-download"></i>
         <span>Download started. Tap the file in your browser's downloads to add to Calendar.</span>
     </div>
+    <!-- MODIFICATION END -->
 
     <script>
         (function() {
             const USER_INFO_KEY = "googleUserInfo";
             const AUTH_TOKEN_KEY = "gdcAuthToken";
             const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
-            const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+            const SESSION_TIMEOUT = 30 * 60 * 1000;
             
-            //** FIXED AUTHENTICATION LOGIC - MORE ROBUST **//
             function checkAuth() {
                 try {
                     const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-
-                    // Robustly parse the cookie
-                    const cookieString = document.cookie;
-                    const cookieMatch = cookieString.match(`(^|;)\\s*gdcAuth\\s*=\\s*([^;]+)`);
-                    const cookieToken = cookieMatch ? cookieMatch.pop() : null;
-
-                    if (!authToken || !cookieToken) {
-                        clearAuthData();
-                        return false;
-                    }
-                    
-                    if (authToken !== cookieToken) {
-                        clearAuthData();
-                        return false;
-                    }
-
-                    // Robustly parse the timestamp from the token
-                    const tokenParts = authToken.split('-');
-                    if (tokenParts.length < 1) {
-                        clearAuthData();
-                        return false;
-                    }
-                    const tokenTimestamp = parseInt(tokenParts[0], 10);
-
-                    if (isNaN(tokenTimestamp) || (Date.now() - tokenTimestamp > SESSION_TIMEOUT)) {
-                        clearAuthData();
-                        return false;
-                    }
-
+                    const cookieToken = document.cookie.split('; ').find(row => row.startsWith('gdcAuth='))?.split('=')[1];
+                    if (!authToken || !cookieToken || authToken !== cookieToken) { clearAuthData(); return false; }
+                    const tokenTimestamp = parseInt(authToken.split('-')[0]);
+                    if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) { clearAuthData(); return false; }
                     return true;
-                } catch (error) {
-                    console.error("Authentication check failed with an error:", error);
-                    clearAuthData();
-                    return false;
-                }
+                } catch (error) { clearAuthData(); return false; }
             }
             
             function clearAuthData() {
                 localStorage.removeItem(USER_INFO_KEY);
                 localStorage.removeItem(AUTH_TOKEN_KEY);
-                // Ensure cookie is cleared correctly for the specific path/domain
                 document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
             }
             
             if (!checkAuth()) {
                 document.body.innerHTML = `<div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Inter',sans-serif;z-index:9999;"><div style="text-align:center;padding:30px;max-width:400px;"><h2 style="color:#2b2d42;margin-bottom:20px;">Session Expired</h2><p style="color:#5f6a7d;margin-bottom:25px;">Please sign in again. Redirecting to login page...</p><div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;"><div style="width:100%;height:100%;background:#3EA899;border-radius:2px;animation:progress 2s ease-in-out infinite;"></div></div></div></div><style>@keyframes progress {0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}</style>`;
                 setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
-                throw new Error("Authentication required. Halting script execution.");
+                throw new Error("Authentication required");
             }
             
             document.addEventListener('DOMContentLoaded', () => {
@@ -1437,6 +1482,9 @@ body.dark-mode .snackbar.hint {
         const tabsRef = database.ref('tabs');
         const announcementsRef = database.ref('announcements');
         const remindersRef = database.ref('reminders');
+        // MODIFICATION START: Add reference for reminder categories
+        const reminderCategoriesRef = database.ref('reminder_categories');
+        // MODIFICATION END
 
         const sidebarMenu = document.getElementById('sidebar-menu');
         const tabEditorModal = document.getElementById('tab-editor-modal');
@@ -1459,13 +1507,21 @@ body.dark-mode .snackbar.hint {
         const darkModeToggle = document.querySelector('.dark-mode-toggle');
         const profileDropdown = document.querySelector('.profile-dropdown');
         const embedModal = document.getElementById('embed-modal');
-        const reminderAuthorFilter = document.getElementById('reminder-author-filter');
+        // MODIFICATION START: Add references for new elements
+        const categoryManagerModal = document.getElementById('category-manager-modal');
+        const reminderCategoryFilter = document.getElementById('reminder-category-filter');
+        const reminderCategoryEditorSelect = document.getElementById('reminder-category');
+        // MODIFICATION END
 
         let tabs = [];
         let currentTabId = null;
         let currentTabBeingEdited = null;
         let expandedPost = null;
         let reminders = [];
+        // MODIFICATION START: Add state for categories and filter
+        let reminderCategories = [];
+        let selectedReminderCategory = localStorage.getItem('selectedReminderCategory') || 'ALL_CLASSES';
+        // MODIFICATION END
         let currentReminderBeingEdited = null;
         let isAdmin = false;
         let currentAnnouncementBeingEdited = null;
@@ -1486,7 +1542,9 @@ body.dark-mode .snackbar.hint {
             setupProfileDropdown();
             setupCustomEditor();
             setupReminderActionDelegation();
-            setupReminderFilter();
+            // MODIFICATION START: Setup reminder filter listener
+            reminderCategoryFilter.addEventListener('change', handleCategoryFilterChange);
+            // MODIFICATION END
             UndoManager.init();
             if (isAdmin) {
                 setupSidebarDragAndDrop();
@@ -1901,30 +1959,27 @@ body.dark-mode .snackbar.hint {
 
         function hexToHsl(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            if (!result) return [0,0,0];
-            const r = parseInt(result[1], 16);
-            const g = parseInt(result[2], 16);
-            const b = parseInt(result[3], 16);
-            return rgbToHsl(r,g,b);
+            if (!result) return [0, 0, 0];
+            return rgbToHsl(parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16));
         }
         
         function updateToolbarState() {
+            // Update simple command buttons
             const commands = ['bold', 'italic', 'underline', 'strikeThrough', 'justifyLeft', 'justifyCenter', 'justifyRight', 'insertUnorderedList', 'insertOrderedList'];
             commands.forEach(command => {
                 const button = document.querySelector(`.toolbar-button[data-command="${command}"]`);
-                if (button) {
-                    try { button.classList.toggle('active', document.queryCommandState(command)); } catch(e) {}
-                }
+                if (button) button.classList.toggle('active', document.queryCommandState(command));
             });
 
-            try {
-                const textColor = document.queryCommandValue('foreColor');
-                const highlightColor = document.queryCommandValue('hiliteColor');
-                document.getElementById('text-color-indicator').style.backgroundColor = textColor || 'var(--dark)';
-                const highlightIndicator = document.getElementById('highlight-color-indicator');
-                highlightIndicator.style.backgroundColor = new Option().style.color = highlightColor || '#FFFF00';
-            } catch(e) {}
-            
+            // Update color indicators
+            const textColor = document.queryCommandValue('foreColor');
+            const highlightColor = document.queryCommandValue('hiliteColor');
+            document.getElementById('text-color-indicator').style.backgroundColor = textColor || 'var(--dark)';
+            const highlightIndicator = document.getElementById('highlight-color-indicator');
+            try { highlightIndicator.style.backgroundColor = new Option().style.color = highlightColor; } 
+            catch(e) { highlightIndicator.style.backgroundColor = '#FFFF00'; }
+
+            // Update format block dropdown
             updateFormatBlockDropdown();
         }
 
@@ -1992,7 +2047,7 @@ body.dark-mode .snackbar.hint {
             let dropdownHoverTimeout;
             const content = document.querySelector('.profile-dropdown-content');
             profileDropdown.addEventListener('mouseenter', () => { clearTimeout(dropdownHoverTimeout); content.style.display = 'block'; setTimeout(() => { content.style.opacity = '1'; content.style.transform = 'translateY(0)'; content.style.pointerEvents = 'auto'; }, 10); });
-            const hideDropdown = () => { dropdownHoverTimeout = setTimeout(() => { content.style.opacity = '0'; content.style.transform = 'translateY(-10px)'; content.style.pointerEvents = 'none'; setTimeout(() => { if(content) content.style.display = 'none'; }, 200); }, 300); };
+            const hideDropdown = () => { dropdownHoverTimeout = setTimeout(() => { content.style.opacity = '0'; content.style.transform = 'translateY(-10px)'; content.style.pointerEvents = 'none'; setTimeout(() => { content.style.display = 'none'; }, 200); }, 300); };
             profileDropdown.addEventListener('mouseleave', hideDropdown);
             content.addEventListener('mouseenter', () => clearTimeout(dropdownHoverTimeout));
             content.addEventListener('mouseleave', hideDropdown);
@@ -2044,19 +2099,38 @@ body.dark-mode .snackbar.hint {
                 if (tabs.length > 0 && (!currentTabId || !tabs.some(t => t.id === currentTabId))) {
                     setActiveTab(tabs[0].id);
                 } else if (tabs.length === 0) {
-                    currentTabId = null; 
-                    currentTabTitleElement.textContent = "No Tabs";
-                    pinnedPostsFeed.innerHTML = ""; 
-                    unpinnedPostsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
+                    currentTabId = null; currentTabTitleElement.textContent = "No Tabs";
+                    pinnedPostsFeed.innerHTML = ""; unpinnedPostsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
                 }
             });
-            remindersRef.on('value', snapshot => { 
-                reminders = snapshot.val() ? Object.values(snapshot.val()) : []; 
-                populateReminderFilter();
-                renderReminders(); 
+            remindersRef.on('value', snapshot => { reminders = snapshot.val() ? Object.values(snapshot.val()) : []; renderReminders(); });
+            // MODIFICATION START: Add listener for reminder categories
+            reminderCategoriesRef.on('value', snapshot => {
+                const categoriesData = snapshot.val();
+                reminderCategories = categoriesData ? Object.values(categoriesData) : [];
+                reminderCategories.sort((a, b) => a.name.localeCompare(b.name));
+                populateCategoryDropdowns();
+                renderReminders(); // Re-render reminders in case a category was deleted
             });
+            // MODIFICATION END
         }
         
+        // MODIFICATION START: Function to populate all category dropdowns
+        function populateCategoryDropdowns() {
+            // Populate the main user filter
+            const filterOptions = reminderCategories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
+            reminderCategoryFilter.innerHTML = `<option value="ALL_CLASSES">All Classes</option><option value="ALL">ALL (Global)</option>${filterOptions}`;
+            reminderCategoryFilter.value = selectedReminderCategory;
+
+            // Populate the admin editor dropdown
+            const editorOptions = reminderCategories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
+            reminderCategoryEditorSelect.innerHTML = `
+                <option value="" disabled selected>Select a category...</option>
+                <option value="ALL">ALL (Visible to Everyone)</option>
+                ${editorOptions}`;
+        }
+        // MODIFICATION END
+
         function autoEmbed(htmlContent) {
             if (!htmlContent) return '';
             const tempDiv = document.createElement('div'); tempDiv.innerHTML = htmlContent;
@@ -2305,49 +2379,20 @@ body.dark-mode .snackbar.hint {
             });
         }
         
-        function setupReminderFilter() {
-            const savedAuthor = localStorage.getItem('selectedReminderAuthor');
-            if (savedAuthor) {
-                reminderAuthorFilter.value = savedAuthor;
-            }
-            reminderAuthorFilter.addEventListener('change', (e) => {
-                localStorage.setItem('selectedReminderAuthor', e.target.value);
-                renderReminders();
-            });
-        }
-
-        function populateReminderFilter() {
-            const authors = [...new Set(reminders.map(r => r.author).filter(Boolean))];
-            const currentFilterValue = reminderAuthorFilter.value;
-            reminderAuthorFilter.innerHTML = `<option value="all">All Reminders</option>`;
-            authors.sort().forEach(author => {
-                if (author.toLowerCase() !== 'all') {
-                    const option = document.createElement('option');
-                    option.value = author;
-                    option.textContent = author;
-                    reminderAuthorFilter.appendChild(option);
-                }
-            });
-            
-            if ([...reminderAuthorFilter.options].some(o => o.value === currentFilterValue)) {
-                reminderAuthorFilter.value = currentFilterValue;
-            } else {
-                reminderAuthorFilter.value = 'all';
-                localStorage.setItem('selectedReminderAuthor', 'all');
-            }
-        }
-
+        // MODIFICATION START: Updated renderReminders function with filtering
         function renderReminders() {
-            const selectedAuthor = reminderAuthorFilter.value;
-            const filteredReminders = reminders.filter(rem => {
-                if (!rem || !rem.id) return false;
-                if (selectedAuthor === 'all') return true;
-                return rem.author === selectedAuthor || rem.author?.toLowerCase() === 'all';
-            });
+            let filteredReminders = reminders;
 
-            remindersList.innerHTML = filteredReminders
+            if (selectedReminderCategory !== 'ALL_CLASSES') {
+                filteredReminders = reminders.filter(rem => 
+                    rem.category === selectedReminderCategory || rem.category === 'ALL'
+                );
+            }
+
+            remindersList.innerHTML = [...filteredReminders]
             .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity))
             .map(rem => {
+                if (!rem || !rem.id) return '';
                 const actionsHtml = isAdmin ? `<div class="reminder-actions"><button class="reminder-action-btn" onclick="editReminder(event, '${rem.id}')"><i class="fas fa-pencil-alt"></i></button><button class="reminder-action-btn" onclick="deleteReminder(event, '${rem.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
                 
                 const location = rem.location || '';
@@ -2366,13 +2411,17 @@ body.dark-mode .snackbar.hint {
                                 src="https://maps.google.com/maps?q=${encodedLocation}&t=&z=13&ie=UTF8&iwloc=&output=embed"
                                 allowfullscreen>
                             </iframe>
-                        </div>`;
+                        </div>
+                    `;
                 }
+                
+                // Add category badge for admins for clarity
+                const categoryBadge = isAdmin && rem.category ? `<span style="font-size: 10px; background: var(--light-gray); color: var(--medium); padding: 2px 6px; border-radius: 4px; margin-left: 8px;">${rem.category}</span>` : '';
 
                 return `
                 <div class="reminder-card ${rem.type || 'trip'}" data-id="${rem.id}" draggable="${isAdmin}">
                     ${actionsHtml}
-                    <div class="reminder-title">${rem.title}</div>
+                    <div class="reminder-title">${rem.title} ${categoryBadge}</div>
                     <div class="reminder-date">${formatDate(rem.date)}</div>
                     ${rem.description ? `<div class="reminder-description">${rem.description}</div>` : ''}
                     ${locationHtml}
@@ -2391,6 +2440,16 @@ body.dark-mode .snackbar.hint {
                     </div>
                 </div>`;
             }).join('');
+            if (filteredReminders.length === 0) {
+                 remindersList.innerHTML = '<p>No reminders found for the selected class.</p>';
+            }
+        }
+        // MODIFICATION END
+
+        function handleCategoryFilterChange() {
+            selectedReminderCategory = reminderCategoryFilter.value;
+            localStorage.setItem('selectedReminderCategory', selectedReminderCategory);
+            renderReminders();
         }
         
         function formatDateForCalendar(dateStr, format) {
@@ -2402,35 +2461,66 @@ body.dark-mode .snackbar.hint {
         
             const pad = (num) => num.toString().padStart(2, '0');
         
-            if (format === 'google') return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}/${tomorrow.getFullYear()}${pad(tomorrow.getMonth() + 1)}${pad(tomorrow.getDate())}`;
-            if (format === 'ics_start') return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}`;
-            if (format === 'ics_end') return `${tomorrow.getFullYear()}${pad(tomorrow.getMonth() + 1)}${pad(tomorrow.getDate())}`;
-            if (format === 'ics_stamp') return date.getUTCFullYear() + pad(date.getUTCMonth() + 1) + pad(date.getUTCDate()) + 'T' + pad(date.getUTCHours()) + pad(date.getUTCMinutes()) + pad(date.getUTCSeconds()) + 'Z';
-            if (format === 'outlook') return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T00:00:00`;
-            if (format === 'outlook_end') return `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}T00:00:00`;
+            if (format === 'google') {
+                return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}/${tomorrow.getFullYear()}${pad(tomorrow.getMonth() + 1)}${pad(tomorrow.getDate())}`;
+            }
+            if (format === 'ics_start') {
+                return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}`;
+            }
+            if (format === 'ics_end') {
+                return `${tomorrow.getFullYear()}${pad(tomorrow.getMonth() + 1)}${pad(tomorrow.getDate())}`;
+            }
+            if (format === 'ics_stamp') {
+                return date.getUTCFullYear() + pad(date.getUTCMonth() + 1) + pad(date.getUTCDate()) + 'T' + pad(date.getUTCHours()) + pad(date.getUTCMinutes()) + pad(date.getUTCSeconds()) + 'Z';
+            }
+            if (format === 'outlook') {
+                return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T00:00:00`;
+            }
+            if (format === 'outlook_end') {
+                return `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}T00:00:00`;
+            }
             return '';
         }
         
         function handleGoogleCalendar(reminder) {
             const baseUrl = 'https://www.google.com/calendar/render?action=TEMPLATE';
-            const params = new URLSearchParams({ text: reminder.title || 'Reminder', dates: formatDateForCalendar(reminder.date, 'google'), details: reminder.description || '', location: reminder.location || '' });
+            const params = new URLSearchParams({
+                text: reminder.title || 'Reminder',
+                dates: formatDateForCalendar(reminder.date, 'google'),
+                details: reminder.description || '',
+                location: reminder.location || ''
+            });
             window.open(`${baseUrl}&${params.toString()}`, '_blank');
         }
 
         function handleOutlookWebCalendar(reminder) {
             const baseUrl = 'https://outlook.live.com/calendar/0/deeplink/compose?';
-            const params = new URLSearchParams({ subject: reminder.title || 'Reminder', startdt: formatDateForCalendar(reminder.date, 'outlook'), enddt: formatDateForCalendar(reminder.date, 'outlook_end'), body: reminder.description || '', location: reminder.location || '' });
+            const params = new URLSearchParams({
+                subject: reminder.title || 'Reminder',
+                startdt: formatDateForCalendar(reminder.date, 'outlook'),
+                enddt: formatDateForCalendar(reminder.date, 'outlook_end'),
+                body: reminder.description || '',
+                location: reminder.location || ''
+            });
             window.open(`${baseUrl}&${params.toString()}`, '_blank');
         }
         
         function handleIcsDownload(reminder) {
             const filename = (reminder.title || 'Reminder').replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.ics';
             const icsContent = [
-                'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//GDCHUB//Event//EN', 'BEGIN:VEVENT',
-                `UID:${reminder.id}@gdchub.com`, `DTSTAMP:${formatDateForCalendar(null, 'ics_stamp')}`,
-                `DTSTART;VALUE=DATE:${formatDateForCalendar(reminder.date, 'ics_start')}`, `DTEND;VALUE=DATE:${formatDateForCalendar(reminder.date, 'ics_end')}`,
-                `SUMMARY:${reminder.title || ''}`, `DESCRIPTION:${(reminder.description || '').replace(/\n/g, '\\n')}`, `LOCATION:${reminder.location || ''}`,
-                'END:VEVENT', 'END:VCALENDAR'
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//GDCHUB//Event//EN',
+                'BEGIN:VEVENT',
+                `UID:${reminder.id}@gdchub.com`,
+                `DTSTAMP:${formatDateForCalendar(null, 'ics_stamp')}`,
+                `DTSTART;VALUE=DATE:${formatDateForCalendar(reminder.date, 'ics_start')}`,
+                `DTEND;VALUE=DATE:${formatDateForCalendar(reminder.date, 'ics_end')}`,
+                `SUMMARY:${reminder.title || ''}`,
+                `DESCRIPTION:${(reminder.description || '').replace(/\n/g, '\\n')}`,
+                `LOCATION:${reminder.location || ''}`,
+                'END:VEVENT',
+                'END:VCALENDAR'
             ].join('\r\n');
         
             const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
@@ -2442,14 +2532,24 @@ body.dark-mode .snackbar.hint {
             document.body.removeChild(link);
         }
         
-        function isAppleDevice() { return /Mac|iPod|iPhone|iPad/.test(navigator.platform); }
+        // MODIFICATION START: Apple Hint Functions
+        function isAppleDevice() {
+            // This checks the navigator platform, which is a reliable way to detect the OS family.
+            return /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+        }
 
         function showAppleCalendarHint() {
             const hintSnackbar = document.getElementById('apple-hint-snackbar');
-            if (hintSnackbar) { hintSnackbar.classList.add('show'); setTimeout(() => { hintSnackbar.classList.remove('show'); }, 6000); }
+            if (hintSnackbar) {
+                hintSnackbar.classList.add('show');
+                setTimeout(() => {
+                    hintSnackbar.classList.remove('show');
+                }, 6000); // Show for 6 seconds
+            }
         }
+        // MODIFICATION END
 
-        function formatDate(dateString) { try { return new Date(dateString).toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }); } catch { return "Invalid Date"; } }
+        function formatDate(dateString) { try { return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }); } catch { return "Invalid Date"; } }
         
         function openReminderEditor(id = null) {
             if (!isAdmin) return;
@@ -2458,10 +2558,12 @@ body.dark-mode .snackbar.hint {
             const rem = isEditing ? reminders.find(r => r.id === id) : null;
             modal.querySelector('h2').textContent = isEditing ? 'Edit Reminder' : 'Add New Reminder';
             modal.querySelector('#reminder-title').value = isEditing && rem ? rem.title : '';
-            modal.querySelector('#reminder-author').value = isEditing && rem ? rem.author || '' : '';
             modal.querySelector('#reminder-description').value = isEditing && rem ? rem.description || '' : '';
             modal.querySelector('#reminder-date').value = isEditing && rem ? rem.date : new Date(Date.now() + 864e5).toISOString().slice(0, 10);
             modal.querySelector('#reminder-type').value = isEditing && rem ? rem.type || 'trip' : 'trip';
+            // MODIFICATION START: Set category value in editor
+            modal.querySelector('#reminder-category').value = isEditing && rem ? rem.category || '' : '';
+            // MODIFICATION END
             modal.querySelector('#reminder-location').value = isEditing && rem ? rem.location || '' : '';
             modal.querySelector('#reminder-link').value = isEditing && rem ? rem.link || '' : '';
             modal.querySelector('#save-reminder-button').textContent = isEditing ? 'Save Changes' : 'Add Reminder';
@@ -2471,27 +2573,23 @@ body.dark-mode .snackbar.hint {
         function saveReminder() {
             if (!isAdmin) return;
             const title = document.getElementById('reminder-title').value.trim();
-            const author = document.getElementById('reminder-author').value.trim();
             const date = document.getElementById('reminder-date').value;
-            if (!title || !date || !author) return alert('Please enter a Title, Author, and Date for the reminder.');
-            
-            const reminderData = {
-                title: title,
-                author: author,
-                description: document.getElementById('reminder-description').value.trim(),
-                date: date,
-                type: document.getElementById('reminder-type').value,
-                location: document.getElementById('reminder-location').value.trim(),
-                link: document.getElementById('reminder-link').value.trim()
-            };
+            // MODIFICATION START: Get and validate category
+            const category = document.getElementById('reminder-category').value;
+            if (!title || !date || !category) return alert('Please enter a title, date, and category.');
+            // MODIFICATION END
+            const description = document.getElementById('reminder-description').value.trim();
+            const type = document.getElementById('reminder-type').value;
+            const location = document.getElementById('reminder-location').value.trim();
+            const link = document.getElementById('reminder-link').value.trim();
 
             if (currentReminderBeingEdited) {
-                remindersRef.child(currentReminderBeingEdited).update(reminderData).then(closeReminderEditor);
+                const reminderUpdate = { title, description, date, type, category, location, link }; // Added category
+                remindersRef.child(currentReminderBeingEdited).update(reminderUpdate).then(closeReminderEditor);
             } else {
                 const newReminderRef = remindersRef.push();
-                reminderData.id = newReminderRef.key;
-                reminderData.order = reminders.length;
-                newReminderRef.set(reminderData).then(closeReminderEditor);
+                const newReminder = { id: newReminderRef.key, title, description, date, type, category, location, link, order: reminders.length }; // Added category
+                newReminderRef.set(newReminder).then(closeReminderEditor);
             }
         }
         
@@ -2542,10 +2640,12 @@ body.dark-mode .snackbar.hint {
             const endDrag = () => {
                 if (draggedItem) draggedItem.classList.remove('dragging');
                 if (placeholder) placeholder.remove();
-                draggedItem = null; placeholder = null;
+                draggedItem = null;
+                placeholder = null;
             };
 
             container.addEventListener('dragend', endDrag);
+
             container.addEventListener('drop', e => {
                 e.preventDefault();
                 if (!placeholder || !placeholder.parentNode || !draggedItem) { endDrag(); return; }
@@ -2553,11 +2653,74 @@ body.dark-mode .snackbar.hint {
                 
                 const updates = {};
                 const orderedCards = container.querySelectorAll('.reminder-card');
-                orderedCards.forEach((card, index) => { updates[`${card.dataset.id}/order`] = index; });
-                if (Object.keys(updates).length > 0) { remindersRef.update(updates); }
+                orderedCards.forEach((card, index) => {
+                    updates[`${card.dataset.id}/order`] = index;
+                });
+
+                if (Object.keys(updates).length > 0) {
+                    remindersRef.update(updates);
+                }
                 endDrag();
             });
         }
+
+        // MODIFICATION START: Category Management Functions
+        function openCategoryManager() {
+            if (!isAdmin) return;
+            renderCategoryManagerList();
+            categoryManagerModal.style.display = 'flex';
+        }
+
+        function closeCategoryManager() {
+            categoryManagerModal.style.display = 'none';
+        }
+
+        function renderCategoryManagerList() {
+            const listEl = document.getElementById('category-manager-list');
+            if (reminderCategories.length === 0) {
+                listEl.innerHTML = '<p>No categories created yet.</p>';
+                return;
+            }
+            listEl.innerHTML = reminderCategories.map(cat => `
+                <div class="category-manager-item" data-id="${cat.id}">
+                    <span>${cat.name}</span>
+                    <button onclick="deleteCategory('${cat.id}')"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function addCategory(event) {
+            event.preventDefault();
+            if (!isAdmin) return;
+            const input = document.getElementById('new-category-name');
+            const name = input.value.trim();
+            if (!name) return;
+
+            // Check for duplicates
+            if (reminderCategories.some(cat => cat.name.toLowerCase() === name.toLowerCase())) {
+                alert('This category name already exists.');
+                return;
+            }
+            if (name.toLowerCase() === 'all' || name.toLowerCase() === 'all_classes'){
+                alert('This is a reserved category name.');
+                return;
+            }
+
+            const newCategoryRef = reminderCategoriesRef.push();
+            newCategoryRef.set({
+                id: newCategoryRef.key,
+                name: name
+            });
+            input.value = '';
+        }
+
+        window.deleteCategory = (id) => {
+            if (!isAdmin) return;
+            showConfirmationModal('Are you sure you want to delete this category? Reminders in this category will no longer be filterable.', () => {
+                 reminderCategoriesRef.child(id).remove();
+            });
+        }
+        // MODIFICATION END
         
         const UndoManager = {
             queue: [], isShowing: false,
@@ -2566,26 +2729,19 @@ body.dark-mode .snackbar.hint {
             processQueue() {
                 if (this.isShowing || this.queue.length === 0) return;
                 this.isShowing = true; const { message, undoCallback } = this.queue.shift();
-                const snackbar = document.getElementById('undo-snackbar');
-                document.getElementById('undo-message').textContent = message;
-                const undoButton = document.getElementById('undo-button');
-                
-                const newUndoButton = undoButton.cloneNode(true);
-                undoButton.parentNode.replaceChild(newUndoButton, undoButton);
-                newUndoButton.onclick = () => { undoCallback(); this.hide(snackbar); };
-
-                snackbar.classList.add('show');
-                const progress = snackbar.querySelector('.snackbar-progress');
-                progress.style.animation = 'none';
-                progress.offsetHeight; // Trigger reflow
-                progress.style.animation = null;
-
+                const snackbar = document.createElement('div'); snackbar.className = 'snackbar';
+                snackbar.innerHTML = `<i class="fas fa-check-circle"></i><span>${message}</span><button class="undo-btn">UNDO</button><div class="snackbar-progress"></div>`;
+                document.body.appendChild(snackbar);
+                const undoButton = snackbar.querySelector('.undo-btn');
+                undoButton.style.cssText = document.getElementById('undo-button').style.cssText;
+                undoButton.onclick = () => { undoCallback(); this.hide(snackbar); };
+                setTimeout(() => snackbar.classList.add('show'), 50);
                 setTimeout(() => this.hide(snackbar), 5000);
             },
             hide(snackbar) {
-                if (!snackbar || !snackbar.classList.contains('show')) return;
+                if (!snackbar) return;
                 snackbar.classList.remove('show');
-                setTimeout(() => { this.isShowing = false; this.processQueue(); }, 500);
+                setTimeout(() => { snackbar.remove(); this.isShowing = false; this.processQueue(); }, 500);
             }
         };
 
@@ -2605,8 +2761,17 @@ body.dark-mode .snackbar.hint {
         function showConfirmationModal(message, onConfirm) { confirmationModal.show(message, onConfirm); }
         function setupGlobalClickHandlers() {
             document.addEventListener('click', (e) => {
-                if (e.target.classList.contains('modal')) e.target.style.display = 'none';
-                document.querySelectorAll('.calendar-dropdown.open').forEach(dropdown => { if (!dropdown.contains(e.target)) dropdown.classList.remove('open'); });
+                // Close modal if background is clicked
+                if (e.target.classList.contains('modal')) {
+                    e.target.style.display = 'none';
+                }
+        
+                // Close open calendar dropdowns that are not the target of the click
+                document.querySelectorAll('.calendar-dropdown.open').forEach(dropdown => {
+                    if (!dropdown.contains(e.target)) {
+                        dropdown.classList.remove('open');
+                    }
+                });
             });
         }
         function setupReminderActionDelegation() {
@@ -2618,23 +2783,33 @@ body.dark-mode .snackbar.hint {
                     e.stopPropagation();
                     const dropdown = calendarToggle.closest('.calendar-dropdown');
                     if (dropdown) {
-                        const wasOpen = dropdown.classList.contains('open');
-                        document.querySelectorAll('.calendar-dropdown.open').forEach(d => d.classList.remove('open'));
-                        if (!wasOpen) dropdown.classList.add('open');
+                        document.querySelectorAll('.calendar-dropdown.open').forEach(d => {
+                            if (d !== dropdown) d.classList.remove('open');
+                        });
+                        dropdown.classList.toggle('open');
                     }
                     return;
                 }
                 
                 if (calendarOption) {
-                    e.preventDefault(); e.stopPropagation();
+                    e.preventDefault();
+                    e.stopPropagation();
                     const reminderId = calendarOption.dataset.reminderId;
                     const calendarType = calendarOption.dataset.calendarType;
                     const reminder = reminders.find(r => r.id === reminderId);
                     
                     if (reminder) {
-                        if (calendarType === 'google') handleGoogleCalendar(reminder);
-                        else if (calendarType === 'apple') { if (isAppleDevice()) showAppleCalendarHint(); handleIcsDownload(reminder); } 
-                        else if (calendarType === 'outlook') handleOutlookWebCalendar(reminder);
+                        if (calendarType === 'google') {
+                            handleGoogleCalendar(reminder);
+                        } else if (calendarType === 'apple') {
+                            // MODIFICATION: Show hint on Apple devices before downloading
+                            if (isAppleDevice()) {
+                                showAppleCalendarHint();
+                            }
+                            handleIcsDownload(reminder);
+                        } else if (calendarType === 'outlook') {
+                            handleOutlookWebCalendar(reminder);
+                        }
                     }
                     
                     const dropdown = calendarOption.closest('.calendar-dropdown');
