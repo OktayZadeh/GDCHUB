@@ -698,7 +698,7 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
     color: var(--medium);
     font-size: var(--text-sm);
     font-weight: 500;
-    height: auto; /* override .button height */
+    height: auto;
     box-shadow: none;
     flex-shrink: 0;
     gap: var(--space-xs);
@@ -808,17 +808,16 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
     background: var(--lighter); border-radius: var(--radius-lg); padding: var(--space-lg);
     margin-bottom: var(--space-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
 }
-/* MODIFICATION START: Alignment fixes for reminders header */
 .reminders-header {
     display: flex;
     justify-content: space-between;
-    align-items: center; /* Vertically align all items */
+    align-items: center;
     margin-bottom: var(--space-md);
     flex-wrap: wrap;
     gap: var(--space-md);
 }
 .reminders-header h2 {
-    margin: 0; /* Remove default margin from h2 */
+    margin: 0;
 }
 .reminder-filter-container {
     display: flex;
@@ -832,12 +831,10 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
     align-items: center;
     gap: var(--space-sm);
 }
-/* Ensure small button has same height as regular button for alignment */
 #manage-categories-btn {
     height: 36px;
     padding: var(--space-sm) var(--space-md);
 }
-/* MODIFICATION END */
 .reminder-filter-container label {
     font-size: var(--text-sm);
     font-weight: 500;
@@ -970,7 +967,6 @@ body.dark-mode .calendar-dropdown-item:hover {
     color: var(--primary);
 }
 
-/* MODIFICATION START: Updated Category Manager Styles */
 .category-manager-list {
     margin-top: var(--space-lg);
     max-height: 300px;
@@ -985,7 +981,6 @@ body.dark-mode .calendar-dropdown-item:hover {
     align-items: center;
     padding: var(--space-sm);
     border-radius: var(--radius-sm);
-    /* Zebra striping was here, now removed */
 }
 .category-manager-item button {
     background: none;
@@ -996,17 +991,16 @@ body.dark-mode .calendar-dropdown-item:hover {
 }
 .add-category-form {
     display: flex;
-    align-items: center; /* Vertically align input and button */
-    gap: var(--space-md); /* Increase gap */
+    align-items: center;
+    gap: var(--space-md);
     margin-top: var(--space-lg);
 }
 #new-category-name {
     flex-grow: 1;
     margin-bottom: 0;
-    height: 36px; /* Match button height */
+    height: 36px;
 }
 body.dark-mode .category-manager-list { border-color: var(--dark-light); }
-/* MODIFICATION END */
 
 /* General UI & Layout */
 body.non-admin .add-tab-header-button, body.non-admin .button[onclick="openAnnouncementEditor()"],
@@ -1191,9 +1185,8 @@ body.dark-mode .snackbar.hint {
 
     <main class="main-content">
         <div class="reminders-container">
-            <!-- MODIFICATION START: Header structure updated for better alignment -->
             <div class="reminders-header">
-                <h2 style="margin: 0;">Upcoming Reminders</h2>
+                <h2>Upcoming Reminders</h2>
                 <div class="reminder-filter-container">
                     <label for="reminder-category-filter">Class:</label>
                     <select id="reminder-category-filter">
@@ -1205,7 +1198,6 @@ body.dark-mode .snackbar.hint {
                     <button class="button" onclick="openReminderEditor()" id="add-reminder-btn">+ Add Reminder</button>
                 </div>
             </div>
-            <!-- MODIFICATION END -->
             <div class="reminders-list" id="reminders-list"></div>
         </div>
         
@@ -1415,9 +1407,8 @@ body.dark-mode .snackbar.hint {
                 <input type="text" id="new-category-name" placeholder="e.g., 9Health-A" required>
                 <button type="submit" class="button">Add</button>
             </form>
-            <div class="modal-buttons">
-                <button class="button secondary" onclick="closeCategoryManager()">Done</button>
-            </div>
+            <!-- MODIFICATION START: "Done" button and its container are removed -->
+            <!-- MODIFICATION END -->
         </div>
     </div>
 
