@@ -807,10 +807,12 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
 .reminders-header {
     display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);
 }
+
 .reminders-list {
     column-count: 3;
     column-gap: var(--space-md);
 }
+
 .reminder-card {
     background: var(--lighter);
     border-left: 5px solid var(--primary);
@@ -1033,7 +1035,7 @@ body.non-admin .reminder-card { cursor: default; }
     visibility: hidden; min-width: 300px; background-color: var(--dark-gray); color: var(--lighter); border-radius: var(--radius-lg);
     padding: var(--space-sm) var(--space-lg); position: fixed; z-index: 3000; left: 50%; transform: translate(-50%, 100px);
     bottom: 30px; font-size: var(--text-base); display: flex; align-items: center; gap: var(--space-md);
-    box-shadow: var(--shadow-xl); overflow: hidden; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: var(--shadow-xl); overflow: hidden; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .snackbar.show { visibility: visible; transform: translate(-50%, 0); }
 .snackbar i { color: var(--primary); font-size: var(--text-lg); }
@@ -1049,6 +1051,17 @@ body.non-admin .reminder-card { cursor: default; }
 }
 @keyframes shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
+/* MODIFICATION START: Apple Hint Snackbar */
+.snackbar.hint {
+    top: 70px; /* Position below the topbar */
+    bottom: auto;
+    background-color: var(--secondary);
+    transform: translate(-50%, -150px); /* Start off-screen top */
+}
+body.dark-mode .snackbar.hint {
+    background-color: var(--dark-secondary);
+}
+/* MODIFICATION END */
     </style>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
@@ -1304,6 +1317,13 @@ body.non-admin .reminder-card { cursor: default; }
         <div class="snackbar-progress"></div>
     </div>
 
+    <!-- MODIFICATION START: Apple Hint Snackbar -->
+    <div id="apple-hint-snackbar" class="snackbar hint">
+        <i class="fas fa-download"></i>
+        <span>Download started. Tap the file in your browser's downloads to add to Calendar.</span>
+    </div>
+    <!-- MODIFICATION END -->
+
     <script>
         (function() {
             const USER_INFO_KEY = "googleUserInfo";
@@ -1397,7 +1417,7 @@ body.non-admin .reminder-card { cursor: default; }
         let suppressPostAnimation = false;
         let savedEditorSelection = null;
         
-        const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz', 'kianhasan9@gmail.com'];
+        const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
 
         document.addEventListener('DOMContentLoaded', () => {
             checkUserProfile();
@@ -2219,7 +2239,6 @@ body.non-admin .reminder-card { cursor: default; }
             });
         }
         
-        // MODIFICATION START
         function renderReminders() {
             remindersList.innerHTML = [...reminders]
             .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity))
@@ -2349,6 +2368,22 @@ body.non-admin .reminder-card { cursor: default; }
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+        
+        // MODIFICATION START: Apple Hint Functions
+        function isAppleDevice() {
+            // This checks the navigator platform, which is a reliable way to detect the OS family.
+            return /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+        }
+
+        function showAppleCalendarHint() {
+            const hintSnackbar = document.getElementById('apple-hint-snackbar');
+            if (hintSnackbar) {
+                hintSnackbar.classList.add('show');
+                setTimeout(() => {
+                    hintSnackbar.classList.remove('show');
+                }, 6000); // Show for 6 seconds
+            }
         }
         // MODIFICATION END
 
@@ -2541,6 +2576,10 @@ body.non-admin .reminder-card { cursor: default; }
                         if (calendarType === 'google') {
                             handleGoogleCalendar(reminder);
                         } else if (calendarType === 'apple') {
+                            // MODIFICATION: Show hint on Apple devices before downloading
+                            if (isAppleDevice()) {
+                                showAppleCalendarHint();
+                            }
                             handleIcsDownload(reminder);
                         } else if (calendarType === 'outlook') {
                             handleOutlookWebCalendar(reminder);
