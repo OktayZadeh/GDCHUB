@@ -807,14 +807,10 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
 .reminders-header {
     display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);
 }
-
-/* MODIFICATION START: Masonry Layout */
 .reminders-list {
     column-count: 3;
     column-gap: var(--space-md);
 }
-/* MODIFICATION END */
-
 .reminder-card {
     background: var(--lighter);
     border-left: 5px solid var(--primary);
@@ -822,11 +818,11 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
     border-radius: var(--radius-md); position: relative; transition: all var(--transition-normal);
     box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
     cursor: grab;
-    display: inline-flex; /* Changed from flex for column layout */
+    display: inline-flex; 
     flex-direction: column;
-    width: 100%; /* Ensure it takes full column width */
-    margin-bottom: var(--space-md); /* Vertical gap between cards in a column */
-    break-inside: avoid; /* Prevents cards from splitting across columns */
+    width: 100%;
+    margin-bottom: var(--space-md);
+    break-inside: avoid;
 }
 .reminder-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
 .reminder-card.trip { border-left-color: var(--success); }
@@ -878,7 +874,7 @@ body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light
 .calendar-dropdown-menu {
     display: none;
     position: absolute;
-    bottom: calc(100% + 8px); /* Position above the button */
+    bottom: calc(100% + 8px); 
     right: 0;
     background-color: var(--lighter);
     min-width: 180px;
@@ -975,7 +971,7 @@ body.non-admin .reminder-card { cursor: default; }
     .sidebar { width: 240px; }
     .main-content { max-width: calc(100% - 240px); margin-left: 240px; }
     .post-card.expanded, .expanded-post-controls { left: 240px; }
-    .reminders-list { column-count: 2; } /* MODIFICATION */
+    .reminders-list { column-count: 2; } 
 }
 @media (max-width: 768px) {
     body { flex-direction: column; }
@@ -983,7 +979,7 @@ body.non-admin .reminder-card { cursor: default; }
     .main-content { max-width: 100%; margin-left: 0; padding: var(--space-lg); margin-top: 54px; }
     .post-card.expanded, .expanded-post-controls { left: 0; }
     .post-card.expanded { padding: var(--space-lg); padding-top: calc(56px + var(--space-lg)); }
-    .reminders-list { column-count: 1; } /* MODIFICATION */
+    .reminders-list { column-count: 1; }
     .header-content { flex-direction: column; align-items: flex-start; gap: var(--space-md); }
     .search-container { max-width: 100%; }
     .modal-content { padding: var(--space-lg); max-width: 90%; }
@@ -2223,6 +2219,7 @@ body.non-admin .reminder-card { cursor: default; }
             });
         }
         
+        // MODIFICATION START
         function renderReminders() {
             remindersList.innerHTML = [...reminders]
             .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity))
@@ -2264,8 +2261,9 @@ body.non-admin .reminder-card { cursor: default; }
                                 <i class="fas fa-calendar-plus"></i>
                             </button>
                             <div class="calendar-dropdown-menu">
-                                <a href="#" class="calendar-dropdown-item" data-calendar-type="google" data-reminder-id="${rem.id}"><i class="fab fa-google" style="color: #4285F4;"></i> Google Calendar</a>
-                                <a href="#" class="calendar-dropdown-item" data-calendar-type="apple" data-reminder-id="${rem.id}"><i class="fab fa-apple" style="color: #A2AAAD;"></i> Apple Calendar</a>
+                                <a href="#" class="calendar-dropdown-item" data-calendar-type="google" data-reminder-id="${rem.id}"><i class="fab fa-google" style="color: #4285F4;"></i> Google</a>
+                                <a href="#" class="calendar-dropdown-item" data-calendar-type="apple" data-reminder-id="${rem.id}"><i class="fab fa-apple" style="color: #A2AAAD;"></i> Apple</a>
+                                <a href="#" class="calendar-dropdown-item" data-calendar-type="outlook" data-reminder-id="${rem.id}"><i class="fab fa-microsoft" style="color: #0078D4;"></i> Outlook</a>
                             </div>
                         </div>
                     </div>
@@ -2294,17 +2292,36 @@ body.non-admin .reminder-card { cursor: default; }
             if (format === 'ics_stamp') {
                 return date.getUTCFullYear() + pad(date.getUTCMonth() + 1) + pad(date.getUTCDate()) + 'T' + pad(date.getUTCHours()) + pad(date.getUTCMinutes()) + pad(date.getUTCSeconds()) + 'Z';
             }
+            if (format === 'outlook') {
+                return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T00:00:00`;
+            }
+            if (format === 'outlook_end') {
+                return `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}T00:00:00`;
+            }
             return '';
         }
         
         function handleGoogleCalendar(reminder) {
             const baseUrl = 'https://www.google.com/calendar/render?action=TEMPLATE';
-            const title = encodeURIComponent(reminder.title || 'Reminder');
-            const dates = formatDateForCalendar(reminder.date, 'google');
-            const details = encodeURIComponent(reminder.description || '');
-            const location = encodeURIComponent(reminder.location || '');
-            const url = `${baseUrl}&text=${title}&dates=${dates}&details=${details}&location=${location}`;
-            window.open(url, '_blank');
+            const params = new URLSearchParams({
+                text: reminder.title || 'Reminder',
+                dates: formatDateForCalendar(reminder.date, 'google'),
+                details: reminder.description || '',
+                location: reminder.location || ''
+            });
+            window.open(`${baseUrl}&${params.toString()}`, '_blank');
+        }
+
+        function handleOutlookWebCalendar(reminder) {
+            const baseUrl = 'https://outlook.live.com/calendar/0/deeplink/compose?';
+            const params = new URLSearchParams({
+                subject: reminder.title || 'Reminder',
+                startdt: formatDateForCalendar(reminder.date, 'outlook'),
+                enddt: formatDateForCalendar(reminder.date, 'outlook_end'),
+                body: reminder.description || '',
+                location: reminder.location || ''
+            });
+            window.open(`${baseUrl}&${params.toString()}`, '_blank');
         }
         
         function handleIcsDownload(reminder) {
@@ -2333,6 +2350,7 @@ body.non-admin .reminder-card { cursor: default; }
             link.click();
             document.body.removeChild(link);
         }
+        // MODIFICATION END
 
         function formatDate(dateString) { try { return new Date(dateString).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }); } catch { return "Invalid Date"; } }
         
@@ -2524,6 +2542,8 @@ body.non-admin .reminder-card { cursor: default; }
                             handleGoogleCalendar(reminder);
                         } else if (calendarType === 'apple') {
                             handleIcsDownload(reminder);
+                        } else if (calendarType === 'outlook') {
+                            handleOutlookWebCalendar(reminder);
                         }
                     }
                     
