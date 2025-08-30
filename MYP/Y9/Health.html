@@ -806,6 +806,7 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
 }
 .reminders-header {
     display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);
+    flex-wrap: wrap; gap: var(--space-md);
 }
 
 /* MODIFICATION START */
@@ -813,10 +814,14 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
     display: flex;
     align-items: center;
     gap: var(--space-sm);
+    flex-grow: 1;
 }
 #reminder-author-filter {
     margin-bottom: 0; /* Override default margin */
-    min-width: 150px;
+    min-width: 200px;
+    height: 36px;
+    padding-top: 0;
+    padding-bottom: 0;
 }
 /* MODIFICATION END */
 
@@ -1130,7 +1135,7 @@ body.dark-mode .snackbar.hint {
         <div class="reminders-container">
             <div class="reminders-header">
                 <div class="filter-container">
-                    <h2>Upcoming Reminders</h2>
+                    <h2>Reminders</h2>
                     <select id="reminder-author-filter">
                         <option value="all">All Reminders</option>
                     </select>
@@ -1173,10 +1178,10 @@ body.dark-mode .snackbar.hint {
                 <input type="text" id="reminder-title" placeholder=" ">
                 <label>Reminder Title</label>
             </div>
-            <!-- MODIFICATION START -->
+            <!-- MODIFICATION START: Added Author Input -->
             <div class="input-group">
                 <input type="text" id="reminder-author" placeholder=" ">
-                <label>Author/Publisher (e.g., Year 9 Health)</label>
+                <label>Author/Publisher (e.g., Year 9 Health or ALL)</label>
             </div>
             <!-- MODIFICATION END -->
             <div class="input-group">
@@ -1340,29 +1345,40 @@ body.dark-mode .snackbar.hint {
         <div class="snackbar-progress"></div>
     </div>
 
-    <!-- MODIFICATION START: Apple Hint Snackbar -->
     <div id="apple-hint-snackbar" class="snackbar hint">
         <i class="fas fa-download"></i>
         <span>Download started. Tap the file in your browser's downloads to add to Calendar.</span>
     </div>
-    <!-- MODIFICATION END -->
 
     <script>
         (function() {
             const USER_INFO_KEY = "googleUserInfo";
             const AUTH_TOKEN_KEY = "gdcAuthToken";
             const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
-            const SESSION_TIMEOUT = 30 * 60 * 1000;
+            const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
             
+            //** FIXED AUTHENTICATION LOGIC **//
             function checkAuth() {
                 try {
                     const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-                    const cookieToken = document.cookie.split('; ').find(row => row.startsWith('gdcAuth='))?.split('=')[[1](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQGd8u_MOhTCx6QUJvc8GsZ0PxoTaOn8jXThiI-JRXgUbLsLgDDlUWzeyGO7s3x_4qx6Rq7Vyws-mZJ-vvIazW7SCYoX423EN10D9WQP8S4qplTiiqUJc3kTzQlMzqKxf4eW64bzl1ZqQ60vvQP7UFJL9EySwJ_J4jUqwZ_oYPxEmp3BU0piwULCCZ8yAj-8ZaWA_MXxqsyXr90xd2Ui6co%3D)];
-                    if (!authToken || !cookieToken || authToken !== cookieToken) { clearAuthData(); return false; }
-                    const tokenTimestamp = parseInt(authToken.split('-'));
-                    if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) { clearAuthData(); return false; }
+                    const cookieToken = document.cookie.split('; ').find(row => row.startsWith('gdcAuth='))?.split('=')[1];
+
+                    if (!authToken || !cookieToken || authToken !== cookieToken) {
+                        clearAuthData();
+                        return false;
+                    }
+                    
+                    const tokenTimestamp = parseInt(authToken.split('-')[0], 10);
+                    if (isNaN(tokenTimestamp) || (Date.now() - tokenTimestamp > SESSION_TIMEOUT)) {
+                        clearAuthData();
+                        return false;
+                    }
                     return true;
-                } catch (error) { clearAuthData(); return false; }
+                } catch (error) {
+                    console.error("Authentication check failed:", error);
+                    clearAuthData();
+                    return false;
+                }
             }
             
             function clearAuthData() {
@@ -1374,7 +1390,7 @@ body.dark-mode .snackbar.hint {
             if (!checkAuth()) {
                 document.body.innerHTML = `<div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Inter',sans-serif;z-index:9999;"><div style="text-align:center;padding:30px;max-width:400px;"><h2 style="color:#2b2d42;margin-bottom:20px;">Session Expired</h2><p style="color:#5f6a7d;margin-bottom:25px;">Please sign in again. Redirecting to login page...</p><div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;"><div style="width:100%;height:100%;background:#3EA899;border-radius:2px;animation:progress 2s ease-in-out infinite;"></div></div></div></div><style>@keyframes progress {0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}</style>`;
                 setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
-                throw new Error("Authentication required");
+                throw new Error("Authentication required. Halting script execution.");
             }
             
             document.addEventListener('DOMContentLoaded', () => {
@@ -1869,27 +1885,30 @@ body.dark-mode .snackbar.hint {
 
         function hexToHsl(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            if (!result) return;
-            return rgbToHsl(parseInt(result[[1](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQGd8u_MOhTCx6QUJvc8GsZ0PxoTaOn8jXThiI-JRXgUbLsLgDDlUWzeyGO7s3x_4qx6Rq7Vyws-mZJ-vvIazW7SCYoX423EN10D9WQP8S4qplTiiqUJc3kTzQlMzqKxf4eW64bzl1ZqQ60vvQP7UFJL9EySwJ_J4jUqwZ_oYPxEmp3BU0piwULCCZ8yAj-8ZaWA_MXxqsyXr90xd2Ui6co%3D)], 16), parseInt(result[[2](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQE_BAtP6TAdNikrf_q7rEQc15lZKXdMXGd_IfX6m_gjzKyl8Yap3Q5nA67Uq_1p_4jnJTrqCSH6NN3QDrNv6tC3rDebiHLuG3Gvh4Ui0r0tkh_8mwppKtRsJPgp-SYu8I_swQ5X405kpMQuqnrdAZ3F8gzLZWfIb9TmSVvheC9mdbcN7V_XqdjlvaRCAZNwqOXmewHIyNd-flPWaggnxiOdKo5hc8fDp7KOGurupoJ3D0WPB0nNits%3D)], 16), parseInt(result[[3](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQGq11P8cXVd9HI15CAMvrdW2988splPO_ZxC_5Nh1a3xR2OFZ7LSxnVIr1WhIB_eAbtd1FkHPJVsSIJhIo8qyKSbhtQnYiYPZH-NqnosI6hI7ytOonoFl1cUkZNbt8eyaaMx5mZ2jIBNj0GqIpkwFYqSmWOGrYepAUhYdNPogW1OKak)], 16));
+            if (!result) return [0,0,0];
+            const r = parseInt(result[1], 16);
+            const g = parseInt(result[2], 16);
+            const b = parseInt(result[3], 16);
+            return rgbToHsl(r,g,b);
         }
         
         function updateToolbarState() {
-            // Update simple command buttons
             const commands = ['bold', 'italic', 'underline', 'strikeThrough', 'justifyLeft', 'justifyCenter', 'justifyRight', 'insertUnorderedList', 'insertOrderedList'];
             commands.forEach(command => {
                 const button = document.querySelector(`.toolbar-button[data-command="${command}"]`);
-                if (button) button.classList.toggle('active', document.queryCommandState(command));
+                if (button) {
+                    try { button.classList.toggle('active', document.queryCommandState(command)); } catch(e) {}
+                }
             });
 
-            // Update color indicators
-            const textColor = document.queryCommandValue('foreColor');
-            const highlightColor = document.queryCommandValue('hiliteColor');
-            document.getElementById('text-color-indicator').style.backgroundColor = textColor || 'var(--dark)';
-            const highlightIndicator = document.getElementById('highlight-color-indicator');
-            try { highlightIndicator.style.backgroundColor = new Option().style.color = highlightColor; } 
-            catch(e) { highlightIndicator.style.backgroundColor = '#FFFF00'; }
-
-            // Update format block dropdown
+            try {
+                const textColor = document.queryCommandValue('foreColor');
+                const highlightColor = document.queryCommandValue('hiliteColor');
+                document.getElementById('text-color-indicator').style.backgroundColor = textColor || 'var(--dark)';
+                const highlightIndicator = document.getElementById('highlight-color-indicator');
+                highlightIndicator.style.backgroundColor = new Option().style.color = highlightColor || '#FFFF00';
+            } catch(e) {}
+            
             updateFormatBlockDropdown();
         }
 
@@ -1957,7 +1976,7 @@ body.dark-mode .snackbar.hint {
             let dropdownHoverTimeout;
             const content = document.querySelector('.profile-dropdown-content');
             profileDropdown.addEventListener('mouseenter', () => { clearTimeout(dropdownHoverTimeout); content.style.display = 'block'; setTimeout(() => { content.style.opacity = '1'; content.style.transform = 'translateY(0)'; content.style.pointerEvents = 'auto'; }, 10); });
-            const hideDropdown = () => { dropdownHoverTimeout = setTimeout(() => { content.style.opacity = '0'; content.style.transform = 'translateY(-10px)'; content.style.pointerEvents = 'none'; setTimeout(() => { content.style.display = 'none'; }, 200); }, 300); };
+            const hideDropdown = () => { dropdownHoverTimeout = setTimeout(() => { content.style.opacity = '0'; content.style.transform = 'translateY(-10px)'; content.style.pointerEvents = 'none'; setTimeout(() => { if(content) content.style.display = 'none'; }, 200); }, 300); };
             profileDropdown.addEventListener('mouseleave', hideDropdown);
             content.addEventListener('mouseenter', () => clearTimeout(dropdownHoverTimeout));
             content.addEventListener('mouseleave', hideDropdown);
@@ -2006,11 +2025,14 @@ body.dark-mode .snackbar.hint {
                 tabs = tabsData ? Object.values(tabsData) : [];
                 tabs.sort((a, b) => (a.order || 0) - (b.order || 0));
                 renderTabs();
+                //** FIXED DATA LOADING LOGIC **//
                 if (tabs.length > 0 && (!currentTabId || !tabs.some(t => t.id === currentTabId))) {
-                    setActiveTab(tabs.id);
+                    setActiveTab(tabs[0].id);
                 } else if (tabs.length === 0) {
-                    currentTabId = null; currentTabTitleElement.textContent = "No Tabs";
-                    pinnedPostsFeed.innerHTML = ""; unpinnedPostsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
+                    currentTabId = null; 
+                    currentTabTitleElement.textContent = "No Tabs";
+                    pinnedPostsFeed.innerHTML = ""; 
+                    unpinnedPostsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
                 }
             });
             remindersRef.on('value', snapshot => { 
@@ -2268,6 +2290,7 @@ body.dark-mode .snackbar.hint {
             });
         }
         
+        //** NEW/MODIFIED FUNCTIONS FOR REMINDER FILTERING **//
         function setupReminderFilter() {
             const savedAuthor = localStorage.getItem('selectedReminderAuthor');
             if (savedAuthor) {
@@ -2283,15 +2306,17 @@ body.dark-mode .snackbar.hint {
             const authors = [...new Set(reminders.map(r => r.author).filter(Boolean))];
             const currentFilterValue = reminderAuthorFilter.value;
             reminderAuthorFilter.innerHTML = `<option value="all">All Reminders</option>`;
-            authors.forEach(author => {
-                if(author.toLowerCase() !== 'all') {
+            authors.sort().forEach(author => {
+                if (author.toLowerCase() !== 'all') {
                     const option = document.createElement('option');
                     option.value = author;
                     option.textContent = author;
                     reminderAuthorFilter.appendChild(option);
                 }
             });
-            if (authors.includes(currentFilterValue)) {
+            
+            // Restore previous selection if it still exists
+            if ([...reminderAuthorFilter.options].some(o => o.value === currentFilterValue)) {
                 reminderAuthorFilter.value = currentFilterValue;
             } else {
                 reminderAuthorFilter.value = 'all';
@@ -2302,6 +2327,7 @@ body.dark-mode .snackbar.hint {
         function renderReminders() {
             const selectedAuthor = reminderAuthorFilter.value;
             const filteredReminders = reminders.filter(rem => {
+                if (!rem || !rem.id) return false;
                 if (selectedAuthor === 'all') return true;
                 return rem.author === selectedAuthor || rem.author?.toLowerCase() === 'all';
             });
@@ -2309,7 +2335,6 @@ body.dark-mode .snackbar.hint {
             remindersList.innerHTML = filteredReminders
             .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity))
             .map(rem => {
-                if (!rem || !rem.id) return '';
                 const actionsHtml = isAdmin ? `<div class="reminder-actions"><button class="reminder-action-btn" onclick="editReminder(event, '${rem.id}')"><i class="fas fa-pencil-alt"></i></button><button class="reminder-action-btn" onclick="deleteReminder(event, '${rem.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
                 
                 const location = rem.location || '';
@@ -2328,8 +2353,7 @@ body.dark-mode .snackbar.hint {
                                 src="https://maps.google.com/maps?q=${encodedLocation}&t=&z=13&ie=UTF8&iwloc=&output=embed"
                                 allowfullscreen>
                             </iframe>
-                        </div>
-                    `;
+                        </div>`;
                 }
 
                 return `
@@ -2365,66 +2389,35 @@ body.dark-mode .snackbar.hint {
         
             const pad = (num) => num.toString().padStart(2, '0');
         
-            if (format === 'google') {
-                return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}/${tomorrow.getFullYear()}${pad(tomorrow.getMonth() + 1)}${pad(tomorrow.getDate())}`;
-            }
-            if (format === 'ics_start') {
-                return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}`;
-            }
-            if (format === 'ics_end') {
-                return `${tomorrow.getFullYear()}${pad(tomorrow.getMonth() + 1)}${pad(tomorrow.getDate())}`;
-            }
-            if (format === 'ics_stamp') {
-                return date.getUTCFullYear() + pad(date.getUTCMonth() + 1) + pad(date.getUTCDate()) + 'T' + pad(date.getUTCHours()) + pad(date.getUTCMinutes()) + pad(date.getUTCSeconds()) + 'Z';
-            }
-            if (format === 'outlook') {
-                return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T00:00:00`;
-            }
-            if (format === 'outlook_end') {
-                return `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}T00:00:00`;
-            }
+            if (format === 'google') return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}/${tomorrow.getFullYear()}${pad(tomorrow.getMonth() + 1)}${pad(tomorrow.getDate())}`;
+            if (format === 'ics_start') return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}`;
+            if (format === 'ics_end') return `${tomorrow.getFullYear()}${pad(tomorrow.getMonth() + 1)}${pad(tomorrow.getDate())}`;
+            if (format === 'ics_stamp') return date.getUTCFullYear() + pad(date.getUTCMonth() + 1) + pad(date.getUTCDate()) + 'T' + pad(date.getUTCHours()) + pad(date.getUTCMinutes()) + pad(date.getUTCSeconds()) + 'Z';
+            if (format === 'outlook') return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T00:00:00`;
+            if (format === 'outlook_end') return `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}T00:00:00`;
             return '';
         }
         
         function handleGoogleCalendar(reminder) {
             const baseUrl = 'https://www.google.com/calendar/render?action=TEMPLATE';
-            const params = new URLSearchParams({
-                text: reminder.title || 'Reminder',
-                dates: formatDateForCalendar(reminder.date, 'google'),
-                details: reminder.description || '',
-                location: reminder.location || ''
-            });
+            const params = new URLSearchParams({ text: reminder.title || 'Reminder', dates: formatDateForCalendar(reminder.date, 'google'), details: reminder.description || '', location: reminder.location || '' });
             window.open(`${baseUrl}&${params.toString()}`, '_blank');
         }
 
         function handleOutlookWebCalendar(reminder) {
             const baseUrl = 'https://outlook.live.com/calendar/0/deeplink/compose?';
-            const params = new URLSearchParams({
-                subject: reminder.title || 'Reminder',
-                startdt: formatDateForCalendar(reminder.date, 'outlook'),
-                enddt: formatDateForCalendar(reminder.date, 'outlook_end'),
-                body: reminder.description || '',
-                location: reminder.location || ''
-            });
+            const params = new URLSearchParams({ subject: reminder.title || 'Reminder', startdt: formatDateForCalendar(reminder.date, 'outlook'), enddt: formatDateForCalendar(reminder.date, 'outlook_end'), body: reminder.description || '', location: reminder.location || '' });
             window.open(`${baseUrl}&${params.toString()}`, '_blank');
         }
         
         function handleIcsDownload(reminder) {
             const filename = (reminder.title || 'Reminder').replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.ics';
             const icsContent = [
-                'BEGIN:VCALENDAR',
-                'VERSION:2.0',
-                'PRODID:-//GDCHUB//Event//EN',
-                'BEGIN:VEVENT',
-                `UID:${reminder.id}@gdchub.com`,
-                `DTSTAMP:${formatDateForCalendar(null, 'ics_stamp')}`,
-                `DTSTART;VALUE=DATE:${formatDateForCalendar(reminder.date, 'ics_start')}`,
-                `DTEND;VALUE=DATE:${formatDateForCalendar(reminder.date, 'ics_end')}`,
-                `SUMMARY:${reminder.title || ''}`,
-                `DESCRIPTION:${(reminder.description || '').replace(/\n/g, '\\n')}`,
-                `LOCATION:${reminder.location || ''}`,
-                'END:VEVENT',
-                'END:VCALENDAR'
+                'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//GDCHUB//Event//EN', 'BEGIN:VEVENT',
+                `UID:${reminder.id}@gdchub.com`, `DTSTAMP:${formatDateForCalendar(null, 'ics_stamp')}`,
+                `DTSTART;VALUE=DATE:${formatDateForCalendar(reminder.date, 'ics_start')}`, `DTEND;VALUE=DATE:${formatDateForCalendar(reminder.date, 'ics_end')}`,
+                `SUMMARY:${reminder.title || ''}`, `DESCRIPTION:${(reminder.description || '').replace(/\n/g, '\\n')}`, `LOCATION:${reminder.location || ''}`,
+                'END:VEVENT', 'END:VCALENDAR'
             ].join('\r\n');
         
             const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
@@ -2436,24 +2429,14 @@ body.dark-mode .snackbar.hint {
             document.body.removeChild(link);
         }
         
-        // MODIFICATION START: Apple Hint Functions
-        function isAppleDevice() {
-            // This checks the navigator platform, which is a reliable way to detect the OS family.
-            return /Mac|iPod|iPhone|iPad/.test(navigator.platform);
-        }
+        function isAppleDevice() { return /Mac|iPod|iPhone|iPad/.test(navigator.platform); }
 
         function showAppleCalendarHint() {
             const hintSnackbar = document.getElementById('apple-hint-snackbar');
-            if (hintSnackbar) {
-                hintSnackbar.classList.add('show');
-                setTimeout(() => {
-                    hintSnackbar.classList.remove('show');
-                }, 6000); // Show for 6 seconds
-            }
+            if (hintSnackbar) { hintSnackbar.classList.add('show'); setTimeout(() => { hintSnackbar.classList.remove('show'); }, 6000); }
         }
-        // MODIFICATION END
 
-        function formatDate(dateString) { try { return new Date(dateString).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }); } catch { return "Invalid Date"; } }
+        function formatDate(dateString) { try { return new Date(dateString).toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }); } catch { return "Invalid Date"; } }
         
         function openReminderEditor(id = null) {
             if (!isAdmin) return;
@@ -2477,13 +2460,17 @@ body.dark-mode .snackbar.hint {
             const title = document.getElementById('reminder-title').value.trim();
             const author = document.getElementById('reminder-author').value.trim();
             const date = document.getElementById('reminder-date').value;
-            if (!title || !date || !author) return alert('Please enter a title, author, and date');
-            const description = document.getElementById('reminder-description').value.trim();
-            const type = document.getElementById('reminder-type').value;
-            const location = document.getElementById('reminder-location').value.trim();
-            const link = document.getElementById('reminder-link').value.trim();
-
-            const reminderData = { title, author, description, date, type, location, link };
+            if (!title || !date || !author) return alert('Please enter a Title, Author, and Date for the reminder.');
+            
+            const reminderData = {
+                title: title,
+                author: author,
+                description: document.getElementById('reminder-description').value.trim(),
+                date: date,
+                type: document.getElementById('reminder-type').value,
+                location: document.getElementById('reminder-location').value.trim(),
+                link: document.getElementById('reminder-link').value.trim()
+            };
 
             if (currentReminderBeingEdited) {
                 remindersRef.child(currentReminderBeingEdited).update(reminderData).then(closeReminderEditor);
@@ -2542,12 +2529,10 @@ body.dark-mode .snackbar.hint {
             const endDrag = () => {
                 if (draggedItem) draggedItem.classList.remove('dragging');
                 if (placeholder) placeholder.remove();
-                draggedItem = null;
-                placeholder = null;
+                draggedItem = null; placeholder = null;
             };
 
             container.addEventListener('dragend', endDrag);
-
             container.addEventListener('drop', e => {
                 e.preventDefault();
                 if (!placeholder || !placeholder.parentNode || !draggedItem) { endDrag(); return; }
@@ -2555,13 +2540,8 @@ body.dark-mode .snackbar.hint {
                 
                 const updates = {};
                 const orderedCards = container.querySelectorAll('.reminder-card');
-                orderedCards.forEach((card, index) => {
-                    updates[`${card.dataset.id}/order`] = index;
-                });
-
-                if (Object.keys(updates).length > 0) {
-                    remindersRef.update(updates);
-                }
+                orderedCards.forEach((card, index) => { updates[`${card.dataset.id}/order`] = index; });
+                if (Object.keys(updates).length > 0) { remindersRef.update(updates); }
                 endDrag();
             });
         }
@@ -2573,19 +2553,26 @@ body.dark-mode .snackbar.hint {
             processQueue() {
                 if (this.isShowing || this.queue.length === 0) return;
                 this.isShowing = true; const { message, undoCallback } = this.queue.shift();
-                const snackbar = document.createElement('div'); snackbar.className = 'snackbar';
-                snackbar.innerHTML = `<i class="fas fa-check-circle"></i><span>${message}</span><button class="undo-btn">UNDO</button><div class="snackbar-progress"></div>`;
-                document.body.appendChild(snackbar);
-                const undoButton = snackbar.querySelector('.undo-btn');
-                undoButton.style.cssText = document.getElementById('undo-button').style.cssText;
-                undoButton.onclick = () => { undoCallback(); this.hide(snackbar); };
-                setTimeout(() => snackbar.classList.add('show'), 50);
+                const snackbar = document.getElementById('undo-snackbar');
+                document.getElementById('undo-message').textContent = message;
+                const undoButton = document.getElementById('undo-button');
+                
+                const newUndoButton = undoButton.cloneNode(true); // Prevent multiple listeners
+                undoButton.parentNode.replaceChild(newUndoButton, undoButton);
+                newUndoButton.onclick = () => { undoCallback(); this.hide(snackbar); };
+
+                snackbar.classList.add('show');
+                const progress = snackbar.querySelector('.snackbar-progress');
+                progress.style.animation = 'none';
+                progress.offsetHeight; // Trigger reflow
+                progress.style.animation = null;
+
                 setTimeout(() => this.hide(snackbar), 5000);
             },
             hide(snackbar) {
-                if (!snackbar) return;
+                if (!snackbar || !snackbar.classList.contains('show')) return;
                 snackbar.classList.remove('show');
-                setTimeout(() => { snackbar.remove(); this.isShowing = false; this.processQueue(); }, 500);
+                setTimeout(() => { this.isShowing = false; this.processQueue(); }, 500);
             }
         };
 
@@ -2605,17 +2592,8 @@ body.dark-mode .snackbar.hint {
         function showConfirmationModal(message, onConfirm) { confirmationModal.show(message, onConfirm); }
         function setupGlobalClickHandlers() {
             document.addEventListener('click', (e) => {
-                // Close modal if background is clicked
-                if (e.target.classList.contains('modal')) {
-                    e.target.style.display = 'none';
-                }
-        
-                // Close open calendar dropdowns that are not the target of the click
-                document.querySelectorAll('.calendar-dropdown.open').forEach(dropdown => {
-                    if (!dropdown.contains(e.target)) {
-                        dropdown.classList.remove('open');
-                    }
-                });
+                if (e.target.classList.contains('modal')) e.target.style.display = 'none';
+                document.querySelectorAll('.calendar-dropdown.open').forEach(dropdown => { if (!dropdown.contains(e.target)) dropdown.classList.remove('open'); });
             });
         }
         function setupReminderActionDelegation() {
@@ -2627,33 +2605,23 @@ body.dark-mode .snackbar.hint {
                     e.stopPropagation();
                     const dropdown = calendarToggle.closest('.calendar-dropdown');
                     if (dropdown) {
-                        document.querySelectorAll('.calendar-dropdown.open').forEach(d => {
-                            if (d !== dropdown) d.classList.remove('open');
-                        });
-                        dropdown.classList.toggle('open');
+                        const wasOpen = dropdown.classList.contains('open');
+                        document.querySelectorAll('.calendar-dropdown.open').forEach(d => d.classList.remove('open'));
+                        if (!wasOpen) dropdown.classList.add('open');
                     }
                     return;
                 }
                 
                 if (calendarOption) {
-                    e.preventDefault();
-                    e.stopPropagation();
+                    e.preventDefault(); e.stopPropagation();
                     const reminderId = calendarOption.dataset.reminderId;
                     const calendarType = calendarOption.dataset.calendarType;
                     const reminder = reminders.find(r => r.id === reminderId);
                     
                     if (reminder) {
-                        if (calendarType === 'google') {
-                            handleGoogleCalendar(reminder);
-                        } else if (calendarType === 'apple') {
-                            // MODIFICATION: Show hint on Apple devices before downloading
-                            if (isAppleDevice()) {
-                                showAppleCalendarHint();
-                            }
-                            handleIcsDownload(reminder);
-                        } else if (calendarType === 'outlook') {
-                            handleOutlookWebCalendar(reminder);
-                        }
+                        if (calendarType === 'google') handleGoogleCalendar(reminder);
+                        else if (calendarType === 'apple') { if (isAppleDevice()) showAppleCalendarHint(); handleIcsDownload(reminder); } 
+                        else if (calendarType === 'outlook') handleOutlookWebCalendar(reminder);
                     }
                     
                     const dropdown = calendarOption.closest('.calendar-dropdown');
