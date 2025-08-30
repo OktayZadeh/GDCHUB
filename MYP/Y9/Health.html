@@ -289,7 +289,6 @@ select {
     appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right var(--space-md) center; background-size: 16px; padding-right: var(--space-xl);
 }
-/* Ensure options are never greyed out unless explicitly disabled */
 select option {
     color: var(--dark);
     background-color: var(--lighter);
@@ -360,12 +359,12 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 .search-input {
     width: 100%; 
     height: 38px;
-    padding: var(--space-sm) var(--space-md); /* Normal padding */
+    padding: var(--space-sm) var(--space-md);
     border: 1px solid var(--light-gray);
     border-radius: var(--radius-full); 
     font-size: var(--text-sm); 
     background-color: white;
-    background-image: none; /* Icon removed */
+    background-image: none;
     transition: all var(--transition-fast); 
     box-shadow: var(--shadow-sm);
 }
@@ -392,11 +391,9 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);
     z-index: 2050; justify-content: center; align-items: center; backdrop-filter: blur(4px); animation: modalFadeIn var(--transition-fast) forwards;
 }
-/* Standard modals */
 #embed-modal, #category-manager-modal, #reminder-editor, #tab-editor-modal {
     z-index: 2100;
 }
-/* Confirmation modal must be on top of other modals */
 #confirmation-modal {
     z-index: 2200;
 }
@@ -488,7 +485,6 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
 }
 .toolbar-dropdown-item:hover { background: var(--light); }
 
-/* --- UPDATED: Paragraphs Dropdown UI Refinements --- */
 #format-block-menu .toolbar-dropdown-item[data-value="h2"],
 #format-block-menu .toolbar-dropdown-item[data-value="h3"],
 #format-block-menu .toolbar-dropdown-item[data-value="h4"] {
@@ -498,8 +494,6 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
     font-style: italic;
 }
 
-
-/* --- UPDATED: Google Docs-Style Color Picker --- */
 .gdocs-color-picker {
     padding: var(--space-md);
     width: 276px;
@@ -556,7 +550,7 @@ body.dark-mode .gdocs-color-picker .color-swatch[data-value="transparent"] {
     background: transparent; border: none; cursor: pointer;
 }
 .custom-color-add-btn:hover { background: var(--light); }
-.custom-color-panel { display: none; /* Hidden by default */ }
+.custom-color-panel { display: none; }
 .gdocs-color-picker.custom-visible .palette-section,
 .gdocs-color-picker.custom-visible .custom-section-toggle {
     display: none;
@@ -626,7 +620,6 @@ body.dark-mode .gdocs-color-picker .color-input-group input {
 }
 body.dark-mode .custom-color-add-btn:hover { background: var(--dark-light-gray); }
 body.dark-mode .eyedropper-btn:hover { background: var(--dark-light-gray); }
-/* --- END Color Picker --- */
 
 .custom-editor-area {
     flex-grow: 1; padding: 0; outline: none; line-height: 1.7; color: var(--dark); font-size: 16px; min-height: 300px;
@@ -649,7 +642,6 @@ body.dark-mode .toolbar-dropdown-item { color: var(--dark-medium); }
 body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray); }
 body.dark-mode .color-indicator { background-color: var(--dark-medium); }
 
-/* --- FIXED: Pinned Header Spacing --- */
 #pinned-posts-header { 
     margin-bottom: var(--space-lg); 
     padding-bottom: var(--space-md); 
@@ -657,7 +649,7 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
     color: var(--primary-dark); 
     display: flex; 
     align-items: center; 
-    gap: var(--space-md); /* Increased gap */
+    gap: var(--space-md);
 }
 .post-placeholder { background: var(--primary-light); border-radius: var(--radius-lg); margin-bottom: var(--space-lg); min-height: 100px; border: 2px dashed var(--primary); }
 
@@ -699,7 +691,6 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
 .post-card.expanded h3 { font-size: var(--text-2xl); color: var(--dark); margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 1px solid var(--light-gray); }
 .post-meta { display: flex; align-items: center; margin-top: var(--space-xl); padding-top: var(--space-md); border-top: 1px solid var(--light-gray); color: var(--medium); font-size: var(--text-sm); }
 
-/* --- NEW / ENHANCED: Redesigned Back Button --- */
 #expanded-back-btn {
     padding: var(--space-xs) var(--space-md);
     background-color: transparent;
@@ -718,7 +709,7 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
 #expanded-back-btn:hover {
     background-color: var(--light);
     border-color: var(--light-gray);
-    transform: translateY(0); /* Override .button transform */
+    transform: translateY(0);
     box-shadow: none; 
     color: var(--primary-dark);
 }
@@ -732,7 +723,6 @@ body.dark-mode #expanded-back-btn:hover {
 }
 
 
-/* --- NEW / ENHANCED: Post Actions UI --- */
 .post-actions {
     position: absolute;
     top: var(--space-md);
@@ -788,21 +778,18 @@ body.dark-mode .post-action-btn.edit-btn:hover { color: var(--dark-primary); }
 body.dark-mode .post-action-btn.delete-btn:hover { color: var(--dark-danger); background-color: rgba(229, 62, 62, 0.2); }
 body.dark-mode .post-action-btn.pin-btn.pinned { color: var(--dark-secondary); }
 
-/* Hide actions by default for admins on desktop */
 body:not(.non-admin) .post-card:not(.expanded) .post-actions {
     opacity: 0;
     transform: translateY(-5px) scale(0.95);
     pointer-events: none;
     transition: opacity var(--transition-fast), transform var(--transition-fast);
 }
-/* Reveal on hover or when a child element has focus */
 body:not(.non-admin) .post-card:not(.expanded):hover .post-actions,
 body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
     opacity: 1;
     transform: translateY(0) scale(1);
     pointer-events: auto;
 }
-/* Ensure actions in the expanded view header are always visible */
 .expanded-post-actions .post-actions {
     position: static;
     opacity: 1;
@@ -821,9 +808,17 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
     background: var(--lighter); border-radius: var(--radius-lg); padding: var(--space-lg);
     margin-bottom: var(--space-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
 }
+/* MODIFICATION START: Alignment fixes for reminders header */
 .reminders-header {
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);
-    flex-wrap: wrap; gap: var(--space-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Vertically align all items */
+    margin-bottom: var(--space-md);
+    flex-wrap: wrap;
+    gap: var(--space-md);
+}
+.reminders-header h2 {
+    margin: 0; /* Remove default margin from h2 */
 }
 .reminder-filter-container {
     display: flex;
@@ -832,6 +827,17 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
     flex-grow: 1;
     min-width: 200px;
 }
+.admin-buttons {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+/* Ensure small button has same height as regular button for alignment */
+#manage-categories-btn {
+    height: 36px;
+    padding: var(--space-sm) var(--space-md);
+}
+/* MODIFICATION END */
 .reminder-filter-container label {
     font-size: var(--text-sm);
     font-weight: 500;
@@ -841,7 +847,7 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
     margin-bottom: 0;
     font-size: var(--text-sm);
     padding: var(--space-xs) var(--space-sm);
-    padding-right: var(--space-xl); /* for arrow */
+    padding-right: var(--space-xl);
     max-width: 220px;
     height: 36px;
 }
@@ -898,7 +904,6 @@ body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light
     gap: var(--space-xs);
 }
 
-/* Add to Calendar Button & Dropdown */
 .reminder-footer {
     display: flex;
     justify-content: space-between;
@@ -980,7 +985,7 @@ body.dark-mode .calendar-dropdown-item:hover {
     align-items: center;
     padding: var(--space-sm);
     border-radius: var(--radius-sm);
-    /* Zebra striping removed */
+    /* Zebra striping was here, now removed */
 }
 .category-manager-item button {
     background: none;
@@ -991,15 +996,16 @@ body.dark-mode .calendar-dropdown-item:hover {
 }
 .add-category-form {
     display: flex;
-    gap: var(--space-sm);
+    align-items: center; /* Vertically align input and button */
+    gap: var(--space-md); /* Increase gap */
     margin-top: var(--space-lg);
 }
 #new-category-name {
     flex-grow: 1;
     margin-bottom: 0;
+    height: 36px; /* Match button height */
 }
 body.dark-mode .category-manager-list { border-color: var(--dark-light); }
-/* Zebra striping for dark mode also removed */
 /* MODIFICATION END */
 
 /* General UI & Layout */
@@ -1060,8 +1066,6 @@ body.non-admin .reminder-card { cursor: default; }
     .modal-content { padding: var(--space-lg); max-width: 90%; }
     .custom-toolbar { flex-wrap: nowrap; overflow-x: auto; }
 
-    /* --- UPDATED: Mobile Post Actions --- */
-    /* Make post actions always visible on mobile for admins */
     body:not(.non-admin) .post-card:not(.expanded) .post-actions {
         opacity: 1;
         transform: none;
@@ -1125,10 +1129,10 @@ body.non-admin .reminder-card { cursor: default; }
 @keyframes shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
 .snackbar.hint {
-    top: 70px; /* Position below the topbar */
+    top: 70px;
     bottom: auto;
     background-color: var(--secondary);
-    transform: translate(-50%, -150px); /* Start off-screen top */
+    transform: translate(-50%, -150px);
 }
 body.dark-mode .snackbar.hint {
     background-color: var(--dark-secondary);
@@ -1187,19 +1191,21 @@ body.dark-mode .snackbar.hint {
 
     <main class="main-content">
         <div class="reminders-container">
+            <!-- MODIFICATION START: Header structure updated for better alignment -->
             <div class="reminders-header">
-                <h2>Upcoming Reminders</h2>
+                <h2 style="margin: 0;">Upcoming Reminders</h2>
                 <div class="reminder-filter-container">
                     <label for="reminder-category-filter">Class:</label>
                     <select id="reminder-category-filter">
                         <option value="ALL_CLASSES">All Classes</option>
                     </select>
                 </div>
-                <div class="admin-buttons" style="display: flex; gap: var(--space-sm);">
-                    <button class="button secondary small" onclick="openCategoryManager()" id="manage-categories-btn">Manage Categories</button>
+                <div class="admin-buttons">
+                    <button class="button secondary" onclick="openCategoryManager()" id="manage-categories-btn">Manage Categories</button>
                     <button class="button" onclick="openReminderEditor()" id="add-reminder-btn">+ Add Reminder</button>
                 </div>
             </div>
+            <!-- MODIFICATION END -->
             <div class="reminders-list" id="reminders-list"></div>
         </div>
         
@@ -2110,9 +2116,7 @@ body.dark-mode .snackbar.hint {
             const validCategories = reminderCategories.filter(cat => cat && cat.name);
             
             const filterOptions = validCategories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
-            // MODIFICATION START: Removed "ALL (Global)" option from the filter
             reminderCategoryFilter.innerHTML = `<option value="ALL_CLASSES">All Classes</option>${filterOptions}`;
-            // MODIFICATION END
 
             if ([...reminderCategoryFilter.options].some(opt => opt.value === selectedReminderCategory)) {
                 reminderCategoryFilter.value = selectedReminderCategory;
