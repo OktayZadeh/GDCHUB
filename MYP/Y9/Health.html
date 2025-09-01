@@ -1120,15 +1120,30 @@ body.non-admin .reminder-card { cursor: default; }
 }
 .snackbar.show { visibility: visible; transform: translate(-50%, 0); }
 .snackbar i { color: var(--primary); font-size: var(--text-lg); }
-#undo-button {
-    background: none; border: none; color: var(--accent); cursor: pointer; font-weight: 700; font-size: var(--text-sm);
-    padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-sm); text-transform: uppercase;
-    letter-spacing: 0.5px; transition: background-color var(--transition-fast);
+
+/* MODIFICATION START: Styling for the undo button */
+.snackbar button {
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-weight: 700;
+    font-size: var(--text-sm);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: background-color var(--transition-fast);
 }
-#undo-button:hover { background-color: rgba(255, 255, 255, 0.1); }
+
+.snackbar button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+/* MODIFICATION END */
+
 .snackbar-progress {
     position: absolute; bottom: 0; left: 0; height: 4px; width: 100%; background-color: var(--primary);
-    transform-origin: left; animation: shrink 5s linear forwards;
+    transform-origin: left; animation: shrink 7s linear forwards;
 }
 @keyframes shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
@@ -2725,10 +2740,10 @@ body.dark-mode .snackbar.hint {
                 snackbar.innerHTML = `<i class="fas fa-check-circle"></i><span>${message}</span><button class="undo-btn">UNDO</button><div class="snackbar-progress"></div>`;
                 document.body.appendChild(snackbar);
                 const undoButton = snackbar.querySelector('.undo-btn');
-                undoButton.style.cssText = document.getElementById('undo-button').style.cssText;
+                
                 undoButton.onclick = () => { undoCallback(); this.hide(snackbar); };
                 setTimeout(() => snackbar.classList.add('show'), 50);
-                setTimeout(() => this.hide(snackbar), 5000);
+                setTimeout(() => this.hide(snackbar), 7000);
             },
             hide(snackbar) {
                 if (!snackbar) return;
