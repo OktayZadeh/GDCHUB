@@ -1421,7 +1421,6 @@ body.dark-mode .snackbar.hint {
                 <label>Share URL</label>
             </div>
             <div class="modal-buttons">
-                <button class="button secondary" onclick="closeEmbedModal()">Done</button>
                 <button class="button" id="embed-action-button" onclick="saveEmbed()">Embed</button>
             </div>
         </div>
@@ -2040,11 +2039,7 @@ body.dark-mode .snackbar.hint {
                 if (savedEditorSelection) { const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(savedEditorSelection); }
                 const embedHtml = `<div class="embed-container"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><p><br></p>`;
                 document.execCommand('insertHTML', false, embedHtml);
-                
-                urlInput.value = ''; 
-                const embedButton = document.getElementById('embed-action-button');
-                embedButton.textContent = 'Embedded!';
-                setTimeout(() => { embedButton.textContent = 'Embed'; urlInput.focus(); }, 1200);
+                closeEmbedModal();
             } else { alert('Invalid URL. Please use a valid share URL from YouTube, Google Docs, or Google Slides.'); }
         }
 
@@ -2829,4 +2824,3 @@ body.dark-mode .snackbar.hint {
     </script>
 </body>
 </html>
-```
