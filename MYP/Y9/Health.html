@@ -674,6 +674,11 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
     padding: var(--space-xl); padding-top: calc(56px + var(--space-lg)); background: white; border-radius: 0;
     box-shadow: none; transition: all var(--transition-normal) ease; border: none; cursor: default;
 }
+/* MODIFICATION START: Fix for duplicate action buttons bug */
+.post-card.expanded .post-actions {
+    display: none;
+}
+/* MODIFICATION END */
 .expanded-post-controls {
     position: fixed; top: 54px; left: 260px; right: 0; height: 56px; padding: 0 var(--space-lg);
     background: var(--lighter); border-bottom: 1px solid var(--light-gray); display: none;
@@ -1121,7 +1126,6 @@ body.non-admin .reminder-card { cursor: default; }
 .snackbar.show { visibility: visible; transform: translate(-50%, 0); }
 .snackbar i { color: var(--primary); font-size: var(--text-lg); }
 
-/* MODIFICATION START: Styling for the undo button */
 .snackbar button {
     background: none;
     border: none;
@@ -1139,11 +1143,10 @@ body.non-admin .reminder-card { cursor: default; }
 .snackbar button:hover {
     background-color: rgba(255, 255, 255, 0.1);
 }
-/* MODIFICATION END */
 
 .snackbar-progress {
     position: absolute; bottom: 0; left: 0; height: 4px; width: 100%; background-color: var(--primary);
-    transform-origin: left; animation: shrink 7s linear forwards;
+    transform-origin: left; animation: shrink 6s linear forwards;
 }
 @keyframes shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
@@ -2743,7 +2746,7 @@ body.dark-mode .snackbar.hint {
                 
                 undoButton.onclick = () => { undoCallback(); this.hide(snackbar); };
                 setTimeout(() => snackbar.classList.add('show'), 50);
-                setTimeout(() => this.hide(snackbar), 7000);
+                setTimeout(() => this.hide(snackbar), 6000);
             },
             hide(snackbar) {
                 if (!snackbar) return;
@@ -2826,3 +2829,4 @@ body.dark-mode .snackbar.hint {
     </script>
 </body>
 </html>
+```
