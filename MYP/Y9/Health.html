@@ -123,33 +123,57 @@ body.dark-mode .modal-content {
     border-color: var(--dark-light);
 }
 
+body.dark-mode .post-card.expanded {
+    background-color: var(--dark-dark-gray); /* Dark backdrop */
+}
 body.dark-mode .expanded-post-controls {
     background-color: var(--dark-lighter);
 }
 
-/* --- MODIFICATION START: Expanded Post Light Theme Override in Dark Mode --- */
+/* --- MODIFICATION START: 'Google Docs' Style Dark Mode Content --- */
 body.dark-mode .post-card.expanded {
-    background-color: var(--light); /* Display expanded content with a light background */
+    background-color: var(--light); /* Default to light theme for content */
 }
 body.dark-mode .post-card.expanded h3 {
-    color: var(--dark); /* Reset title color to light theme default */
-    border-bottom-color: var(--light-gray); /* Reset border color to light theme default */
+    color: var(--dark);
+    border-bottom-color: var(--light-gray);
 }
 body.dark-mode .post-card.expanded .post-details,
 body.dark-mode .post-card.expanded .post-content,
 body.dark-mode .post-card.expanded .post-content p,
 body.dark-mode .post-card.expanded .post-content li {
-    color: var(--medium); /* Reset body text color to light theme default */
+    color: var(--medium);
 }
 body.dark-mode .post-card.expanded .post-content h1,
 body.dark-mode .post-card.expanded .post-content h2,
 body.dark-mode .post-card.expanded .post-content h3,
 body.dark-mode .post-card.expanded .post-content h4 {
-    color: var(--dark); /* Reset heading colors within content to light theme default */
+    color: var(--dark);
 }
 body.dark-mode .post-card.expanded .post-meta {
-    color: var(--medium); /* Reset meta text color to light theme default */
-    border-top-color: var(--light-gray); /* Reset border color to light theme default */
+    color: var(--medium);
+    border-top-color: var(--light-gray);
+}
+body.dark-mode .post-card.expanded .embed-container {
+    background-color: var(--dark-dark);
+    border-color: var(--light-gray);
+}
+
+/* Exception for embed-only posts in dark mode */
+body.dark-mode .post-card.expanded.embed-only-dark-mode {
+    background-color: var(--dark-dark-gray); /* Revert to dark theme background */
+}
+body.dark-mode .post-card.expanded.embed-only-dark-mode h3 {
+    color: white; /* Revert title */
+    border-bottom-color: var(--dark-light);
+}
+body.dark-mode .post-card.expanded.embed-only-dark-mode .post-meta {
+    color: var(--dark-medium); /* Revert footer */
+    border-top-color: var(--dark-light);
+}
+body.dark-mode .post-card.expanded.embed-only-dark-mode .embed-container {
+    background-color: var(--dark-dark);
+    border-color: var(--dark-light);
 }
 /* --- MODIFICATION END --- */
 
@@ -189,7 +213,6 @@ body.dark-mode .button.secondary:hover {
 }
 body.dark-mode .input-group label { background: var(--dark-lighter); }
 body.dark-mode .sidebar-header { background-color: var(--dark-lighter); border-bottom-color: var(--dark-light); }
-body.dark-mode .post-meta { border-top-color: var(--dark-light); }
 body.dark-mode .embed-container { background-color: var(--dark-dark); border-color: var(--dark-light); }
 body.dark-mode .search-input { background-color: var(--dark-dark-gray); color: white; border-color: var(--dark-light); }
 body.dark-mode .search-input::placeholder { color: var(--dark-medium); }
@@ -2337,21 +2360,48 @@ body.dark-mode .snackbar.hint {
             }
         };
 
+        // --- MODIFICATION START: Functions to handle conditional dark mode for expanded posts ---
+        function isEmbedOnly(postElement) {
+            const content = postElement.querySelector('.post-content');
+            if (!content) return false;
+
+            const hasEmbed = content.querySelector('.embed-container, iframe');
+            if (!hasEmbed) return false;
+
+            const contentClone = content.cloneNode(true);
+            contentClone.querySelectorAll('.embed-container, iframe').forEach(el => el.remove());
+
+            return contentClone.textContent.trim() === '';
+        }
+
         function expandPost(postElement) {
-            if (expandedPost && expandedPost !== postElement) { collapsePost(expandedPost); }
-            postElement.classList.add('expanded'); expandedPost = postElement;
+            if (expandedPost && expandedPost !== postElement) {
+                collapsePost(expandedPost);
+            }
+            postElement.classList.add('expanded');
+            
+            if (document.body.classList.contains('dark-mode') && isEmbedOnly(postElement)) {
+                postElement.classList.add('embed-only-dark-mode');
+            }
+
+            expandedPost = postElement;
             const controls = document.getElementById('expanded-post-controls');
             const actions = postElement.querySelector('.post-actions');
             document.getElementById('expanded-actions-container').innerHTML = actions ? actions.innerHTML : '';
             document.getElementById('expanded-back-btn').onclick = () => collapsePost(postElement);
             controls.style.display = 'flex';
         }
+
         function collapsePost(postElement) {
             if (!postElement) return;
             postElement.classList.remove('expanded');
+            postElement.classList.remove('embed-only-dark-mode'); // Always remove the class on collapse
             document.getElementById('expanded-post-controls').style.display = 'none';
-            if (expandedPost === postElement) { expandedPost = null; }
+            if (expandedPost === postElement) {
+                expandedPost = null;
+            }
         }
+        // --- MODIFICATION END ---
         
         window.editAnnouncement = (event, id) => { event.stopPropagation(); openAnnouncementEditor(id); }
         window.deleteAnnouncement = (event, id) => {
@@ -2824,4 +2874,3 @@ body.dark-mode .snackbar.hint {
     </script>
 </body>
 </html>
-==
