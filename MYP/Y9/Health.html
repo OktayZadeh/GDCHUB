@@ -124,51 +124,58 @@ body.dark-mode .modal-content {
 }
 
 body.dark-mode .post-card.expanded {
-    background-color: var(--dark-dark-gray); /* Dark backdrop */
+    background-color: var(--dark-dark-gray);
 }
 body.dark-mode .expanded-post-controls {
     background-color: var(--dark-lighter);
 }
 
-/* --- MODIFICATION START: 'Google Docs' Style Dark Mode Content --- */
+/* --- MODIFICATION START: Corrected Dark Mode Expanded Post --- */
+/* By default, expanded posts in dark mode get a light "document" theme */
 body.dark-mode .post-card.expanded {
-    background-color: var(--light); /* Default to light theme for content */
+    background-color: #F7FAFC; /* Use explicit light color, NOT var(--light) */
+    color: #1A202C;             /* Use explicit dark text color, NOT var(--dark) */
 }
-body.dark-mode .post-card.expanded h3 {
-    color: var(--dark);
-    border-bottom-color: var(--light-gray);
+/* Explicitly set colors for elements to override broad dark-mode rules */
+body.dark-mode .post-card.expanded h1,
+body.dark-mode .post-card.expanded h2,
+body.dark-mode .post-card.expanded h3,
+body.dark-mode .post-card.expanded h4 {
+    color: #1A202C; /* Explicit dark color */
 }
-body.dark-mode .post-card.expanded .post-details,
-body.dark-mode .post-card.expanded .post-content,
-body.dark-mode .post-card.expanded .post-content p,
-body.dark-mode .post-card.expanded .post-content li {
-    color: var(--medium);
-}
-body.dark-mode .post-card.expanded .post-content h1,
-body.dark-mode .post-card.expanded .post-content h2,
-body.dark-mode .post-card.expanded .post-content h3,
-body.dark-mode .post-card.expanded .post-content h4 {
-    color: var(--dark);
+body.dark-mode .post-card.expanded p,
+body.dark-mode .post-card.expanded li,
+body.dark-mode .post-card.expanded blockquote,
+body.dark-mode .post-card.expanded .post-content {
+    color: #718096; /* Explicit medium gray color */
 }
 body.dark-mode .post-card.expanded .post-meta {
-    color: var(--medium);
-    border-top-color: var(--light-gray);
+    color: #718096; /* Explicit medium gray color */
 }
+/* Handle borders with explicit light theme colors */
+body.dark-mode .post-card.expanded h3 {
+    border-bottom-color: #E2E8F0;
+}
+body.dark-mode .post-card.expanded .post-meta {
+    border-top-color: #E2E8F0;
+}
+/* Keep the embed container dark for contrast */
 body.dark-mode .post-card.expanded .embed-container {
-    background-color: var(--dark-dark);
-    border-color: var(--light-gray);
+     background-color: #000;
+     border-color: #E2E8F0;
 }
 
-/* Exception for embed-only posts in dark mode */
+/* EXCEPTION: This reverts the post back to dark mode if it's embed-only */
 body.dark-mode .post-card.expanded.embed-only-dark-mode {
-    background-color: var(--dark-dark-gray); /* Revert to dark theme background */
+    background-color: var(--dark-dark-gray);
+    color: var(--dark-medium);
 }
 body.dark-mode .post-card.expanded.embed-only-dark-mode h3 {
-    color: white; /* Revert title */
+    color: white;
     border-bottom-color: var(--dark-light);
 }
 body.dark-mode .post-card.expanded.embed-only-dark-mode .post-meta {
-    color: var(--dark-medium); /* Revert footer */
+    color: var(--dark-medium);
     border-top-color: var(--dark-light);
 }
 body.dark-mode .post-card.expanded.embed-only-dark-mode .embed-container {
@@ -213,12 +220,14 @@ body.dark-mode .button.secondary:hover {
 }
 body.dark-mode .input-group label { background: var(--dark-lighter); }
 body.dark-mode .sidebar-header { background-color: var(--dark-lighter); border-bottom-color: var(--dark-light); }
+body.dark-mode .post-meta { border-top-color: var(--dark-light); }
 body.dark-mode .embed-container { background-color: var(--dark-dark); border-color: var(--dark-light); }
 body.dark-mode .search-input { background-color: var(--dark-dark-gray); color: white; border-color: var(--dark-light); }
 body.dark-mode .search-input::placeholder { color: var(--dark-medium); }
 body.dark-mode .tab-action-btn { background-color: var(--dark-light-gray); }
 body.dark-mode .tab-action-btn:hover { background-color: var(--dark-primary-light); }
 body.dark-mode .tab-action-btn.delete:hover { background-color: rgba(229, 62, 62, 0.2); }
+body.dark-mode .post-card.expanded h3 { border-bottom-color: var(--dark-light); }
 body.dark-mode ::-webkit-scrollbar-track { background: var(--dark-dark-gray); }
 body.dark-mode ::-webkit-scrollbar-thumb { background: var(--dark-light); }
 body.dark-mode ::-webkit-scrollbar-thumb:hover { background: var(--dark-medium); }
@@ -697,11 +706,11 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
     padding: var(--space-xl); padding-top: calc(56px + var(--space-lg)); background: white; border-radius: 0;
     box-shadow: none; transition: all var(--transition-normal) ease; border: none; cursor: default;
 }
-/* MODIFICATION START: Fix for duplicate action buttons bug */
+
 .post-card.expanded .post-actions {
     display: none;
 }
-/* MODIFICATION END */
+
 .expanded-post-controls {
     position: fixed; top: 54px; left: 260px; right: 0; height: 56px; padding: 0 var(--space-lg);
     background: var(--lighter); border-bottom: 1px solid var(--light-gray); display: none;
@@ -836,7 +845,7 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
     background: var(--lighter); border-radius: var(--radius-lg); padding: var(--space-lg);
     margin-bottom: var(--space-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
 }
-/* MODIFICATION START: Alignment fixes for reminders header */
+
 .reminders-header {
     display: flex;
     justify-content: space-between;
@@ -870,7 +879,7 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
     height: 36px;
     padding: var(--space-sm) var(--space-md);
 }
-/* MODIFICATION END */
+
 .reminder-filter-container label {
     font-size: var(--text-sm);
     font-weight: 500;
@@ -1003,7 +1012,6 @@ body.dark-mode .calendar-dropdown-item:hover {
     color: var(--primary);
 }
 
-/* MODIFICATION START: Updated Category Manager Styles */
 .category-manager-list {
     margin-top: var(--space-lg);
     max-height: 300px;
@@ -1038,7 +1046,7 @@ body.dark-mode .calendar-dropdown-item:hover {
     height: 36px;
 }
 body.dark-mode .category-manager-list { border-color: var(--dark-light); }
-/* MODIFICATION END */
+
 
 /* General UI & Layout */
 body.non-admin .add-tab-header-button, body.non-admin .button[onclick="openAnnouncementEditor()"],
@@ -1237,7 +1245,7 @@ body.dark-mode .snackbar.hint {
     <main class="main-content">
         <div class="reminders-container">
             <div class="reminders-header">
-                <!-- MODIFICATION START: Added wrapper div for left-side elements -->
+                
                 <div class="reminders-header-left">
                     <h2>Upcoming Reminders</h2>
                     <div class="reminder-filter-container">
@@ -1247,7 +1255,7 @@ body.dark-mode .snackbar.hint {
                         </select>
                     </div>
                 </div>
-                <!-- MODIFICATION END -->
+                
                 <div class="admin-buttons">
                     <button class="button secondary" onclick="openCategoryManager()" id="manage-categories-btn">Manage Categories</button>
                     <button class="button" onclick="openReminderEditor()" id="add-reminder-btn">+ Add Reminder</button>
@@ -2360,17 +2368,14 @@ body.dark-mode .snackbar.hint {
             }
         };
 
-        // --- MODIFICATION START: Functions to handle conditional dark mode for expanded posts ---
+        
         function isEmbedOnly(postElement) {
             const content = postElement.querySelector('.post-content');
             if (!content) return false;
-
             const hasEmbed = content.querySelector('.embed-container, iframe');
             if (!hasEmbed) return false;
-
             const contentClone = content.cloneNode(true);
             contentClone.querySelectorAll('.embed-container, iframe').forEach(el => el.remove());
-
             return contentClone.textContent.trim() === '';
         }
 
@@ -2395,13 +2400,13 @@ body.dark-mode .snackbar.hint {
         function collapsePost(postElement) {
             if (!postElement) return;
             postElement.classList.remove('expanded');
-            postElement.classList.remove('embed-only-dark-mode'); // Always remove the class on collapse
+            postElement.classList.remove('embed-only-dark-mode');
             document.getElementById('expanded-post-controls').style.display = 'none';
             if (expandedPost === postElement) {
                 expandedPost = null;
             }
         }
-        // --- MODIFICATION END ---
+        
         
         window.editAnnouncement = (event, id) => { event.stopPropagation(); openAnnouncementEditor(id); }
         window.deleteAnnouncement = (event, id) => {
