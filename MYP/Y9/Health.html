@@ -177,19 +177,18 @@ body.dark-mode .post-card.expanded.embed-only-dark-mode .embed-container {
     border-color: var(--dark-light);
 }
 
-/* MODIFICATION START: Improved Sidebar Link Colors in Dark Mode */
+
 body.dark-mode .sidebar-link { 
-    color: #FFFFFF; /* Make default text white */
+    color: #FFFFFF;
 }
 body.dark-mode .sidebar-link:hover { 
-    color: #FFFFFF; /* Keep text white on hover */
+    color: #FFFFFF;
     background-color: var(--dark-light); 
 }
 body.dark-mode .sidebar-link.active { 
-    color: #FFFFFF; /* Keep text white when active */
+    color: #FFFFFF;
     background-color: var(--dark-primary-light); 
 }
-/* MODIFICATION END */
 body.dark-mode .topbar-button { color: white; border-color: var(--dark-light); }
 body.dark-mode .topbar-button:hover { color: var(--dark-primary); background-color: var(--dark-light-gray); border-color: var(--dark-primary); }
 
@@ -1042,6 +1041,11 @@ body.dark-mode .calendar-dropdown-item:hover {
     padding: var(--space-sm);
     border-radius: var(--radius-sm);
 }
+/* MODIFICATION START: Category Manager Dark Mode Text Color */
+body.dark-mode .category-manager-item {
+    color: #FFFFFF;
+}
+/* MODIFICATION END */
 .category-manager-item button {
     background: none;
     border: none;
@@ -2155,14 +2159,12 @@ body.dark-mode .snackbar.hint {
                 tabs.sort((a, b) => (a.order || 0) - (b.order || 0));
                 renderTabs();
 
-                // MODIFICATION: Logic to load the last active tab
                 if (tabs.length > 0) {
                     const savedTabId = localStorage.getItem('lastActiveTabId');
                     const targetTabId = (savedTabId && tabs.some(t => t.id === savedTabId))
-                        ? savedTabId  // Use saved tab if it's valid
-                        : tabs[0].id; // Fallback to the first tab
+                        ? savedTabId
+                        : tabs[0].id;
 
-                    // Only set active tab if it's not already correct or on initial load
                     if (currentTabId !== targetTabId || currentTabId === null) {
                          setActiveTab(targetTabId);
                     }
@@ -2306,7 +2308,7 @@ body.dark-mode .snackbar.hint {
                 collapsePost(expandedPost);
             }
             currentTabId = tabId;
-            localStorage.setItem('lastActiveTabId', tabId); // MODIFICATION: Save the active tab
+            localStorage.setItem('lastActiveTabId', tabId);
             const tab = tabs.find(t => t.id === tabId);
             if (tab) {
                 currentTabTitleElement.textContent = tab.name;
@@ -2396,8 +2398,6 @@ body.dark-mode .snackbar.hint {
             }
         };
 
-        
-        
         function isEmbedOnly(postElement) {
             const content = postElement.querySelector('.post-content');
             if (!content) return false;
@@ -2419,6 +2419,7 @@ body.dark-mode .snackbar.hint {
                 collapsePost(expandedPost);
             }
             postElement.classList.add('expanded');
+            postElement.draggable = false; // MODIFICATION: Disable dragging for text selection
             
             if (document.body.classList.contains('dark-mode') && isEmbedOnly(postElement)) {
                 postElement.classList.add('embed-only-dark-mode');
@@ -2435,7 +2436,10 @@ body.dark-mode .snackbar.hint {
         function collapsePost(postElement) {
             if (!postElement) return;
             postElement.classList.remove('expanded');
-            postElement.classList.remove('embed-only-dark-mode'); 
+            postElement.classList.remove('embed-only-dark-mode');
+            if (isAdmin) { // MODIFICATION: Restore draggable only for admins
+                postElement.draggable = true;
+            }
             document.getElementById('expanded-post-controls').style.display = 'none';
             if (expandedPost === postElement) {
                 expandedPost = null;
