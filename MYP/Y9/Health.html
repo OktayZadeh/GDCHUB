@@ -123,34 +123,35 @@ body.dark-mode .modal-content {
     border-color: var(--dark-light);
 }
 
-body.dark-mode .post-card.expanded {
-    background-color: var(--dark-dark-gray); /* Dark backdrop */
-}
 body.dark-mode .expanded-post-controls {
     background-color: var(--dark-lighter);
 }
 
-/* --- 'Google Docs' Style Dark Mode Content --- */
-body.dark-mode .post-card.expanded .post-details {
-    background-color: #FFFFFF; /* Keep content background white */
-    color: var(--dark);      /* Reset text color to dark for readability */
-    padding: var(--space-xl);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    max-width: 900px; /* Optional: constrain width like a doc */
-    margin: var(--space-lg) auto;
+/* --- MODIFICATION START: Expanded Post Light Theme Override in Dark Mode --- */
+body.dark-mode .post-card.expanded {
+    background-color: var(--light); /* Display expanded content with a light background */
 }
-body.dark-mode .post-card.expanded .post-details p,
-body.dark-mode .post-card.expanded .post-details li {
-    color: var(--dark);
+body.dark-mode .post-card.expanded h3 {
+    color: var(--dark); /* Reset title color to light theme default */
+    border-bottom-color: var(--light-gray); /* Reset border color to light theme default */
 }
-body.dark-mode .post-card.expanded .post-details h1,
-body.dark-mode .post-card.expanded .post-details h2,
-body.dark-mode .post-card.expanded .post-details h3,
-body.dark-mode .post-card.expanded .post-details h4 {
-    color: var(--dark);
+body.dark-mode .post-card.expanded .post-details,
+body.dark-mode .post-card.expanded .post-content,
+body.dark-mode .post-card.expanded .post-content p,
+body.dark-mode .post-card.expanded .post-content li {
+    color: var(--medium); /* Reset body text color to light theme default */
 }
-/* --- END --- */
+body.dark-mode .post-card.expanded .post-content h1,
+body.dark-mode .post-card.expanded .post-content h2,
+body.dark-mode .post-card.expanded .post-content h3,
+body.dark-mode .post-card.expanded .post-content h4 {
+    color: var(--dark); /* Reset heading colors within content to light theme default */
+}
+body.dark-mode .post-card.expanded .post-meta {
+    color: var(--medium); /* Reset meta text color to light theme default */
+    border-top-color: var(--light-gray); /* Reset border color to light theme default */
+}
+/* --- MODIFICATION END --- */
 
 
 body.dark-mode .sidebar-link { color: var(--dark-medium); }
@@ -195,7 +196,6 @@ body.dark-mode .search-input::placeholder { color: var(--dark-medium); }
 body.dark-mode .tab-action-btn { background-color: var(--dark-light-gray); }
 body.dark-mode .tab-action-btn:hover { background-color: var(--dark-primary-light); }
 body.dark-mode .tab-action-btn.delete:hover { background-color: rgba(229, 62, 62, 0.2); }
-body.dark-mode .post-card.expanded h3 { border-bottom-color: var(--dark-light); }
 body.dark-mode ::-webkit-scrollbar-track { background: var(--dark-dark-gray); }
 body.dark-mode ::-webkit-scrollbar-thumb { background: var(--dark-light); }
 body.dark-mode ::-webkit-scrollbar-thumb:hover { background: var(--dark-medium); }
@@ -2824,3 +2824,4 @@ body.dark-mode .snackbar.hint {
     </script>
 </body>
 </html>
+==
