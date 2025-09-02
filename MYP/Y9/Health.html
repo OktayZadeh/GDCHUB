@@ -131,41 +131,35 @@ body.dark-mode .expanded-post-controls {
 }
 
 /* --- 'Google Docs' Style Dark Mode Content --- */
-/* By default, expanded posts in dark mode get a light "document" theme */
 body.dark-mode .post-card.expanded {
-    background-color: #F7FAFC; /* Use explicit light color, NOT var(--light) */
-    color: #1A202C;             /* Use explicit dark text color, NOT var(--dark) */
+    background-color: #F7FAFC; 
+    color: #1A202C;            
 }
-/* Explicitly set colors for elements to override broad dark-mode rules */
 body.dark-mode .post-card.expanded h1,
 body.dark-mode .post-card.expanded h2,
 body.dark-mode .post-card.expanded h3,
 body.dark-mode .post-card.expanded h4 {
-    color: #1A202C; /* Explicit dark color */
+    color: #1A202C;
 }
 body.dark-mode .post-card.expanded p,
 body.dark-mode .post-card.expanded li,
 body.dark-mode .post-card.expanded blockquote,
 body.dark-mode .post-card.expanded .post-content {
-    color: #718096; /* Explicit medium gray color */
+    color: #718096;
 }
 body.dark-mode .post-card.expanded .post-meta {
-    color: #718096; /* Explicit medium gray color */
+    color: #718096;
 }
-/* Handle borders with explicit light theme colors */
 body.dark-mode .post-card.expanded h3 {
     border-bottom-color: #E2E8F0;
 }
 body.dark-mode .post-card.expanded .post-meta {
     border-top-color: #E2E8F0;
 }
-/* Keep the embed container dark for contrast */
 body.dark-mode .post-card.expanded .embed-container {
      background-color: #000;
      border-color: #E2E8F0;
 }
-
-/* EXCEPTION: This reverts the post back to dark mode if it's embed/link-only */
 body.dark-mode .post-card.expanded.embed-only-dark-mode {
     background-color: var(--dark-dark-gray);
     color: var(--dark-medium);
@@ -182,7 +176,6 @@ body.dark-mode .post-card.expanded.embed-only-dark-mode .embed-container {
     background-color: var(--dark-dark);
     border-color: var(--dark-light);
 }
-/* --- END --- */
 
 
 body.dark-mode .sidebar-link { color: var(--dark-medium); }
@@ -218,7 +211,21 @@ body.dark-mode .button.secondary:hover {
     color: white;
     border-color: var(--dark-light);
 }
-body.dark-mode .input-group label { background: var(--dark-lighter); }
+/* MODIFICATION START: Improved Dark Mode Form Labels */
+body.dark-mode .input-group label {
+    background: transparent; /* Remove the awkward grey highlight */
+}
+
+body.dark-mode .input-group input:focus + label,
+body.dark-mode .input-group input:not(:placeholder-shown) + label,
+body.dark-mode .input-group textarea:focus + label,
+body.dark-mode .input-group textarea:not(:placeholder-shown) + label,
+body.dark-mode .input-group select:focus + label,
+body.dark-mode .input-group select:not([value=""]):not(:focus) + label {
+    top: -16px; /* Move label up higher to clear the border */
+    padding: 0; /* Remove padding since we no longer need to fake a 'notch' */
+}
+/* MODIFICATION END */
 body.dark-mode .sidebar-header { background-color: var(--dark-lighter); border-bottom-color: var(--dark-light); }
 body.dark-mode .post-meta { border-top-color: var(--dark-light); }
 body.dark-mode .embed-container { background-color: var(--dark-dark); border-color: var(--dark-light); }
@@ -2369,24 +2376,16 @@ body.dark-mode .snackbar.hint {
         };
 
         
-        // --- MODIFICATION START: Updated function to check for links as well ---
+        
         function isEmbedOnly(postElement) {
             const content = postElement.querySelector('.post-content');
             if (!content) return false;
-
-            // Check if there's at least one link or one embed. If not, it can't be media/link-only.
             const hasMediaOrLink = content.querySelector('.embed-container, iframe, a');
             if (!hasMediaOrLink) {
                 return false;
             }
-
-            // Clone the content to check its text without the media/links.
             const contentClone = content.cloneNode(true);
-            
-            // Remove all embeds and all links from the clone.
             contentClone.querySelectorAll('.embed-container, iframe, a').forEach(el => el.remove());
-
-            // If the remaining text content is empty, then the post is considered embed/link-only.
             return contentClone.textContent.trim() === '';
         }
 
@@ -2396,7 +2395,6 @@ body.dark-mode .snackbar.hint {
             }
             postElement.classList.add('expanded');
             
-            // Check for the dark mode exception *after* adding the 'expanded' class
             if (document.body.classList.contains('dark-mode') && isEmbedOnly(postElement)) {
                 postElement.classList.add('embed-only-dark-mode');
             }
@@ -2412,13 +2410,13 @@ body.dark-mode .snackbar.hint {
         function collapsePost(postElement) {
             if (!postElement) return;
             postElement.classList.remove('expanded');
-            postElement.classList.remove('embed-only-dark-mode'); // Always remove the class on collapse
+            postElement.classList.remove('embed-only-dark-mode'); 
             document.getElementById('expanded-post-controls').style.display = 'none';
             if (expandedPost === postElement) {
                 expandedPost = null;
             }
         }
-        // --- MODIFICATION END ---
+        
         
         window.editAnnouncement = (event, id) => { event.stopPropagation(); openAnnouncementEditor(id); }
         window.deleteAnnouncement = (event, id) => {
