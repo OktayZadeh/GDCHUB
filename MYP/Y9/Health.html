@@ -764,9 +764,11 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
     box-shadow: none; 
     color: var(--primary-dark);
 }
+/* MODIFICATION START: Back Button Dark Mode Text Color */
 body.dark-mode #expanded-back-btn {
-    color: var(--dark-medium);
+    color: #FFFFFF;
 }
+/* MODIFICATION END */
 body.dark-mode #expanded-back-btn:hover {
     background-color: var(--dark-light-gray);
     border-color: var(--dark-light);
@@ -1041,11 +1043,11 @@ body.dark-mode .calendar-dropdown-item:hover {
     padding: var(--space-sm);
     border-radius: var(--radius-sm);
 }
-/* MODIFICATION START: Category Manager Dark Mode Text Color */
+
 body.dark-mode .category-manager-item {
     color: #FFFFFF;
 }
-/* MODIFICATION END */
+
 .category-manager-item button {
     background: none;
     border: none;
@@ -1615,6 +1617,7 @@ body.dark-mode .snackbar.hint {
             setupProfileDropdown();
             setupCustomEditor();
             setupReminderActionDelegation();
+            setupCustomSelectAll(); // MODIFICATION: Initialize the Ctrl+A handler
             reminderCategoryFilter.addEventListener('change', handleCategoryFilterChange);
             UndoManager.init();
             if (isAdmin) {
@@ -2398,6 +2401,7 @@ body.dark-mode .snackbar.hint {
             }
         };
 
+        
         function isEmbedOnly(postElement) {
             const content = postElement.querySelector('.post-content');
             if (!content) return false;
@@ -2419,7 +2423,7 @@ body.dark-mode .snackbar.hint {
                 collapsePost(expandedPost);
             }
             postElement.classList.add('expanded');
-            postElement.draggable = false; // MODIFICATION: Disable dragging for text selection
+            postElement.draggable = false;
             
             if (document.body.classList.contains('dark-mode') && isEmbedOnly(postElement)) {
                 postElement.classList.add('embed-only-dark-mode');
@@ -2436,8 +2440,8 @@ body.dark-mode .snackbar.hint {
         function collapsePost(postElement) {
             if (!postElement) return;
             postElement.classList.remove('expanded');
-            postElement.classList.remove('embed-only-dark-mode');
-            if (isAdmin) { // MODIFICATION: Restore draggable only for admins
+            postElement.classList.remove('embed-only-dark-mode'); 
+            if (isAdmin) {
                 postElement.draggable = true;
             }
             document.getElementById('expanded-post-controls').style.display = 'none';
@@ -2446,6 +2450,37 @@ body.dark-mode .snackbar.hint {
             }
         }
         
+        // MODIFICATION START: New function to handle Ctrl+A
+        function setupCustomSelectAll() {
+            document.addEventListener('keydown', (event) => {
+                // Check if a post is expanded and the user pressed Ctrl+A (or Cmd+A on Mac)
+                if (expandedPost && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
+                    // Prevent the browser's default select-all action
+                    event.preventDefault();
+
+                    const titleEl = expandedPost.querySelector('h3');
+                    const detailsEl = expandedPost.querySelector('.post-details');
+
+                    if (titleEl && detailsEl) {
+                        try {
+                            const selection = window.getSelection();
+                            const range = document.createRange();
+                            
+                            // Create a range that starts before the title and ends after the details
+                            range.setStartBefore(titleEl);
+                            range.setEndAfter(detailsEl);
+                            
+                            // Apply this new range as the user's selection
+                            selection.removeAllRanges();
+                            selection.addRange(range);
+                        } catch (e) {
+                            console.error("Could not perform custom text selection:", e);
+                        }
+                    }
+                }
+            });
+        }
+        // MODIFICATION END
         
         window.editAnnouncement = (event, id) => { event.stopPropagation(); openAnnouncementEditor(id); }
         window.deleteAnnouncement = (event, id) => {
