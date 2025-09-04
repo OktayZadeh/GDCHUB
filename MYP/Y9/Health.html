@@ -1144,7 +1144,7 @@ body.dark-mode .calendar-dropdown-item:hover {
 .calendar-day.other-month .event-dot {
     display: none;
 }
-.calendar-day:not(.other-month):hover {
+.calendar-day:not(.other-month):not(.selected):hover {
     background: var(--light);
 }
 .calendar-day.today {
@@ -1157,6 +1157,9 @@ body.dark-mode .calendar-dropdown-item:hover {
     color: white !important;
     font-weight: 700;
     border-color: var(--primary-dark);
+}
+.calendar-day.selected:hover {
+    background-color: var(--primary-dark);
 }
 .calendar-day.today.selected {
     border-color: var(--primary-dark);
@@ -1191,7 +1194,6 @@ body.dark-mode .calendar-dropdown-item:hover {
     min-height: 50px;
 }
 
-/* IMPROVED STYLES START */
 .calendar-day-reminders-list .reminder-placeholder {
     height: 60px;
     margin-bottom: var(--space-sm);
@@ -1210,7 +1212,6 @@ body.dark-mode .calendar-dropdown-item:hover {
     pointer-events: auto;
     transform: scale(1);
 }
-/* IMPROVED STYLES END */
 
 .calendar-day-reminders .reminder-card {
     margin-bottom: var(--space-sm);
@@ -1251,7 +1252,7 @@ body.dark-mode .calendar-nav-btn:hover {
 body.dark-mode .calendar-day.other-month {
     color: var(--dark-light);
 }
-body.dark-mode .calendar-day:not(.other-month):hover {
+body.dark-mode .calendar-day:not(.other-month):not(.selected):hover {
     background: var(--dark-light-gray);
 }
 body.dark-mode .calendar-day.today {
@@ -1261,6 +1262,9 @@ body.dark-mode .calendar-day.today {
 body.dark-mode .calendar-day.selected {
     background-color: var(--dark-primary);
     border-color: var(--dark-primary-dark);
+}
+body.dark-mode .calendar-day.selected:hover {
+    background-color: var(--dark-primary-dark);
 }
 body.dark-mode .calendar-day-reminders h4 {
     border-bottom-color: var(--dark-light);
