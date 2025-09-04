@@ -1029,15 +1029,13 @@ body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light
     transform: translateY(0);
     pointer-events: auto;
 }
-/* MODIFICATION START: Dropdown Menu Fix */
 .calendar-dropdown-menu.fixed-dropdown {
     position: fixed;
-    z-index: 2500; /* High z-index */
-    bottom: auto; /* Reset position */
+    z-index: 2500;
+    bottom: auto;
     right: auto;
     transform: none;
 }
-/* MODIFICATION END */
 .calendar-dropdown-item {
     color: var(--dark);
     padding: var(--space-sm) var(--space-md);
@@ -1070,7 +1068,7 @@ body.dark-mode .calendar-dropdown-item:hover {
     color: var(--primary);
 }
 
-/* === MODIFICATION START: REFINED CALENDAR VIEW STYLES === */
+/* === REFINED CALENDAR VIEW STYLES === */
 .reminders-calendar-view {
     display: none;
 }
@@ -1197,6 +1195,9 @@ body.dark-mode .calendar-dropdown-item:hover {
     cursor: default;
     break-inside: auto;
 }
+.calendar-day-reminders .reminder-card[draggable="true"] {
+    cursor: grab;
+}
 .calendar-day-reminders .reminder-card:hover {
     transform: none;
     box-shadow: var(--shadow-sm);
@@ -1213,22 +1214,6 @@ body.dark-mode .calendar-dropdown-item:hover {
 .calendar.is-dragging-reminder .calendar-day.drop-target {
     border: 2px dashed var(--primary);
     transform: scale(1.05);
-}
-.quick-add-reminder-form {
-    padding: var(--space-xs);
-    margin-bottom: var(--space-sm);
-    background-color: var(--light);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--light-gray);
-}
-.quick-add-reminder-input {
-    width: 100%;
-    border: 1px solid var(--light-gray);
-    border-radius: var(--radius-sm);
-    padding: var(--space-xs);
-    font-size: var(--text-sm);
-    background-color: white;
-    margin: 0;
 }
 
 /* Dark Mode for Calendar */
@@ -1257,15 +1242,6 @@ body.dark-mode .calendar-day.selected {
 body.dark-mode .calendar-day-reminders h4 {
     border-bottom-color: var(--dark-light);
 }
-body.dark-mode .quick-add-reminder-form {
-    background-color: var(--dark-dark-gray);
-    border-color: var(--dark-light);
-}
-body.dark-mode .quick-add-reminder-input {
-    background-color: var(--dark-dark-gray);
-    border-color: var(--dark-light);
-    color: white;
-}
 @media(max-width: 1024px) {
     .calendar-container {
         flex-direction: column;
@@ -1278,7 +1254,6 @@ body.dark-mode .quick-add-reminder-input {
         margin-top: var(--space-lg);
     }
 }
-/* === MODIFICATION END === */
 
 .category-manager-list {
     margin-top: var(--space-lg);
@@ -1521,9 +1496,7 @@ body.dark-mode .snackbar.hint {
                 <div class="reminders-header-left">
                     <h2>Upcoming Reminders</h2>
                      <div class="reminders-view-toggle">
-                        <button class="view-toggle-btn" id="reminders-list-view-btn" title="List View"><i class="fas fa-list-ul"></i></button>
-                        <button class="view-toggle-btn" id="reminders-day-view-btn" title="Day View"><i class="fas fa-calendar-day"></i></button>
-                        <button class="view-toggle-btn" id="reminders-week-view-btn" title="Week View"><i class="fas fa-calendar-week"></i></button>
+                        <button class="view-toggle-btn active" id="reminders-list-view-btn" title="List View"><i class="fas fa-list-ul"></i></button>
                         <button class="view-toggle-btn" id="reminders-month-view-btn" title="Month View"><i class="fas fa-calendar-alt"></i></button>
                     </div>
                     <div class="reminder-filter-container">
@@ -1849,10 +1822,7 @@ body.dark-mode .snackbar.hint {
         const reminderCategoryEditorSelect = document.getElementById('reminder-category');
         const remindersCalendarView = document.getElementById('reminders-calendar-view');
         const listViewBtn = document.getElementById('reminders-list-view-btn');
-        const dayViewBtn = document.getElementById('reminders-day-view-btn');
-        const weekViewBtn = document.getElementById('reminders-week-view-btn');
         const monthViewBtn = document.getElementById('reminders-month-view-btn');
-
 
         let tabs = [];
         let currentTabId = null;
@@ -1869,7 +1839,6 @@ body.dark-mode .snackbar.hint {
         let savedEditorSelection = null;
         let currentCalendarDate = new Date();
         let currentReminderView = localStorage.getItem('reminderView') || 'list';
-        let quickAddEl = null;
         
         const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
 
@@ -2800,13 +2769,10 @@ body.dark-mode .snackbar.hint {
              switch(currentReminderView) {
                 case 'list': renderRemindersList(); break;
                 case 'month': renderCalendarView(); break;
-                case 'week':
-                case 'day':
-                    remindersList.style.display = 'none';
-                    remindersCalendarView.innerHTML = `<p style="padding: var(--space-md); text-align: center;">${currentReminderView.charAt(0).toUpperCase() + currentReminderView.slice(1)} view is not yet implemented.</p>`;
-                    remindersCalendarView.style.display = 'block';
-                    break;
-                default: renderRemindersList();
+                default: 
+                    currentReminderView = 'list';
+                    localStorage.setItem('reminderView', 'list');
+                    renderRemindersList();
             }
         }
 
@@ -2875,12 +2841,7 @@ body.dark-mode .snackbar.hint {
         }
 
         function setupReminderViewToggle() {
-            const buttons = {
-                list: listViewBtn,
-                day: dayViewBtn,
-                week: weekViewBtn,
-                month: monthViewBtn,
-            };
+            const buttons = { list: listViewBtn, month: monthViewBtn };
 
             const switchView = (view, isInitial = false) => {
                 currentReminderView = view;
@@ -2960,7 +2921,7 @@ body.dark-mode .snackbar.hint {
             if (isAdmin) {
                 calendarGrid.addEventListener('dblclick', (e) => {
                     const dayEl = e.target.closest('.calendar-day:not(.other-month)');
-                    if (dayEl) handleCalendarQuickAdd(dayEl.dataset.date);
+                    if (dayEl) openReminderEditor(null, dayEl.dataset.date);
                 });
             }
         }
@@ -2984,53 +2945,6 @@ body.dark-mode .snackbar.hint {
             }
         }
         
-        function handleCalendarQuickAdd(dateStr) {
-            if (!isAdmin || quickAddEl) return;
-
-            showRemindersForDay(dateStr);
-            const listContainer = document.querySelector('.calendar-day-reminders-list');
-
-            quickAddEl = document.createElement('div');
-            quickAddEl.className = 'quick-add-reminder-form';
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.placeholder = 'New reminder title... (Enter to save)';
-            input.className = 'quick-add-reminder-input';
-            quickAddEl.appendChild(input);
-
-            listContainer.prepend(quickAddEl);
-            input.focus();
-
-            const save = () => {
-                const title = input.value.trim();
-                if (title) {
-                    const newReminderRef = remindersRef.push();
-                    const newReminder = {
-                        id: newReminderRef.key,
-                        title: title,
-                        date: dateStr,
-                        type: 'deadline', // Default type
-                        category: selectedReminderCategory === 'ALL_CLASSES' ? 'ALL' : selectedReminderCategory,
-                        order: reminders.length
-                    };
-                    newReminderRef.set(newReminder);
-                }
-                quickAddEl.remove();
-                quickAddEl = null;
-            };
-
-            input.addEventListener('blur', save);
-            input.addEventListener('keydown', e => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    save();
-                } else if (e.key === 'Escape') {
-                    quickAddEl.remove();
-                    quickAddEl = null;
-                }
-            });
-        }
-
         function handleCategoryFilterChange() {
             selectedReminderCategory = reminderCategoryFilter.value;
             localStorage.setItem('selectedReminderCategory', selectedReminderCategory);
@@ -3133,15 +3047,20 @@ body.dark-mode .snackbar.hint {
 
         function formatDate(dateString) { try { return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }); } catch { return "Invalid Date"; } }
         
-        function openReminderEditor(id = null) {
+        function openReminderEditor(id = null, prefillDate = null) {
             if (!isAdmin) return;
             const modal = document.getElementById('reminder-editor'); modal.style.display = 'flex';
             currentReminderBeingEdited = id; const isEditing = !!id;
             const rem = isEditing ? reminders.find(r => r.id === id) : null;
+            
+            const dateValue = prefillDate 
+                ? prefillDate 
+                : (isEditing && rem ? rem.date : new Date(Date.now() + 864e5).toISOString().slice(0, 10));
+
             modal.querySelector('h2').textContent = isEditing ? 'Edit Reminder' : 'Add New Reminder';
             modal.querySelector('#reminder-title').value = isEditing && rem ? rem.title : '';
             modal.querySelector('#reminder-description').value = isEditing && rem ? rem.description || '' : '';
-            modal.querySelector('#reminder-date').value = isEditing && rem ? rem.date : new Date(Date.now() + 864e5).toISOString().slice(0, 10);
+            modal.querySelector('#reminder-date').value = dateValue;
             modal.querySelector('#reminder-type').value = isEditing && rem ? rem.type || 'trip' : 'trip';
             modal.querySelector('#reminder-category').value = isEditing && rem ? rem.category || '' : '';
             modal.querySelector('#reminder-location').value = isEditing && rem ? rem.location || '' : '';
@@ -3437,23 +3356,20 @@ body.dark-mode .snackbar.hint {
 
             calendarView.addEventListener('dragenter', e => {
                 const day = e.target.closest('.calendar-day:not(.other-month)');
-                if (day) {
-                    e.preventDefault();
-                    day.classList.add('drop-target');
-                }
+                const card = e.target.closest('.reminder-card');
+                if (day) { e.preventDefault(); day.classList.add('drop-target'); }
+                if (card) { e.preventDefault(); } // Allow dropping on cards for reordering
             });
 
             calendarView.addEventListener('dragover', e => {
-                if (e.target.closest('.calendar-day:not(.other-month)')) {
+                 if (e.target.closest('.calendar-day:not(.other-month)') || e.target.closest('.reminder-card')) {
                     e.preventDefault();
                 }
             });
 
             calendarView.addEventListener('dragleave', e => {
                 const day = e.target.closest('.calendar-day');
-                if (day) {
-                    day.classList.remove('drop-target');
-                }
+                if (day) day.classList.remove('drop-target');
             });
 
             calendarView.addEventListener('dragend', () => {
@@ -3465,9 +3381,55 @@ body.dark-mode .snackbar.hint {
             calendarView.addEventListener('drop', e => {
                 e.preventDefault();
                 const day = e.target.closest('.calendar-day:not(.other-month)');
+                const targetCard = e.target.closest('.reminder-card');
+                const listContainer = e.target.closest('.calendar-day-reminders-list');
+
                 if (day && draggedReminderId) {
                     const newDate = day.dataset.date;
                     remindersRef.child(draggedReminderId).update({ date: newDate });
+                } else if (listContainer && draggedReminderId) {
+                    const draggedEl = listContainer.querySelector(`[data-id="${draggedReminderId}"]`);
+                    if (!draggedEl) return;
+                    
+                    if (targetCard) {
+                         const rect = targetCard.getBoundingClientRect();
+                         const isBefore = e.clientY < rect.top + rect.height / 2;
+                         if (isBefore) {
+                            listContainer.insertBefore(draggedEl, targetCard);
+                         } else {
+                            listContainer.insertBefore(draggedEl, targetCard.nextSibling);
+                         }
+                    } else {
+                        listContainer.appendChild(draggedEl);
+                    }
+                    
+                    // Update order for the day
+                    const allSortedReminders = [...reminders].sort((a,b) => (a.order ?? Infinity) - (b.order ?? Infinity));
+                    const newDayOrderIds = Array.from(listContainer.querySelectorAll('.reminder-card')).map(c => c.dataset.id);
+                    const dayIdsSet = new Set(newDayOrderIds);
+                    
+                    const finalOrder = [];
+                    let dayItemsInserted = false;
+
+                    for(const rem of allSortedReminders) {
+                        if (dayIdsSet.has(rem.id)) {
+                            if (!dayItemsInserted) {
+                                for (const id of newDayOrderIds) {
+                                    const reminderToInsert = reminders.find(r => r.id === id);
+                                    if(reminderToInsert) finalOrder.push(reminderToInsert);
+                                }
+                                dayItemsInserted = true;
+                            }
+                        } else {
+                            finalOrder.push(rem);
+                        }
+                    }
+                    
+                    const updates = {};
+                    finalOrder.forEach((rem, index) => {
+                        updates[`${rem.id}/order`] = index;
+                    });
+                    remindersRef.update(updates);
                 }
             });
         }
