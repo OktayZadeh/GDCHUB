@@ -764,11 +764,9 @@ body.dark-mode .color-indicator { background-color: var(--dark-medium); }
     box-shadow: none; 
     color: var(--primary-dark);
 }
-/* MODIFICATION START: Back Button Dark Mode Text Color */
 body.dark-mode #expanded-back-btn {
     color: #FFFFFF;
 }
-/* MODIFICATION END */
 body.dark-mode #expanded-back-btn:hover {
     background-color: var(--dark-light-gray);
     border-color: var(--dark-light);
@@ -1031,6 +1029,15 @@ body.dark-mode .reminder-action-btn:hover { background: var(--dark-primary-light
     transform: translateY(0);
     pointer-events: auto;
 }
+/* MODIFICATION START: Dropdown Menu Fix */
+.calendar-dropdown-menu.fixed-dropdown {
+    position: fixed;
+    z-index: 2500; /* High z-index */
+    bottom: auto; /* Reset position */
+    right: auto;
+    transform: none;
+}
+/* MODIFICATION END */
 .calendar-dropdown-item {
     color: var(--dark);
     padding: var(--space-sm) var(--space-md);
@@ -1199,6 +1206,31 @@ body.dark-mode .calendar-dropdown-item:hover {
 .calendar-day-reminders .reminder-card .reminder-description { font-size: var(--text-xs); margin-bottom: var(--space-xs); }
 .calendar-day-reminders .reminder-card .reminder-footer { margin-top: var(--space-xs); }
 
+/* Drag and Drop and Quick Add Styles */
+.calendar.is-dragging-reminder .calendar-day:not(.other-month) {
+    background-color: var(--primary-light);
+}
+.calendar.is-dragging-reminder .calendar-day.drop-target {
+    border: 2px dashed var(--primary);
+    transform: scale(1.05);
+}
+.quick-add-reminder-form {
+    padding: var(--space-xs);
+    margin-bottom: var(--space-sm);
+    background-color: var(--light);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--light-gray);
+}
+.quick-add-reminder-input {
+    width: 100%;
+    border: 1px solid var(--light-gray);
+    border-radius: var(--radius-sm);
+    padding: var(--space-xs);
+    font-size: var(--text-sm);
+    background-color: white;
+    margin: 0;
+}
+
 /* Dark Mode for Calendar */
 body.dark-mode .calendar {
     border-color: var(--dark-light);
@@ -1224,6 +1256,15 @@ body.dark-mode .calendar-day.selected {
 }
 body.dark-mode .calendar-day-reminders h4 {
     border-bottom-color: var(--dark-light);
+}
+body.dark-mode .quick-add-reminder-form {
+    background-color: var(--dark-dark-gray);
+    border-color: var(--dark-light);
+}
+body.dark-mode .quick-add-reminder-input {
+    background-color: var(--dark-dark-gray);
+    border-color: var(--dark-light);
+    color: white;
 }
 @media(max-width: 1024px) {
     .calendar-container {
@@ -1480,8 +1521,10 @@ body.dark-mode .snackbar.hint {
                 <div class="reminders-header-left">
                     <h2>Upcoming Reminders</h2>
                      <div class="reminders-view-toggle">
-                        <button class="view-toggle-btn active" id="reminders-list-view-btn" title="List View"><i class="fas fa-list-ul"></i></button>
-                        <button class="view-toggle-btn" id="reminders-calendar-view-btn" title="Calendar View"><i class="fas fa-calendar-alt"></i></button>
+                        <button class="view-toggle-btn" id="reminders-list-view-btn" title="List View"><i class="fas fa-list-ul"></i></button>
+                        <button class="view-toggle-btn" id="reminders-day-view-btn" title="Day View"><i class="fas fa-calendar-day"></i></button>
+                        <button class="view-toggle-btn" id="reminders-week-view-btn" title="Week View"><i class="fas fa-calendar-week"></i></button>
+                        <button class="view-toggle-btn" id="reminders-month-view-btn" title="Month View"><i class="fas fa-calendar-alt"></i></button>
                     </div>
                     <div class="reminder-filter-container">
                         <label for="reminder-category-filter">Class:</label>
@@ -1806,7 +1849,9 @@ body.dark-mode .snackbar.hint {
         const reminderCategoryEditorSelect = document.getElementById('reminder-category');
         const remindersCalendarView = document.getElementById('reminders-calendar-view');
         const listViewBtn = document.getElementById('reminders-list-view-btn');
-        const calendarViewBtn = document.getElementById('reminders-calendar-view-btn');
+        const dayViewBtn = document.getElementById('reminders-day-view-btn');
+        const weekViewBtn = document.getElementById('reminders-week-view-btn');
+        const monthViewBtn = document.getElementById('reminders-month-view-btn');
 
 
         let tabs = [];
@@ -1824,6 +1869,7 @@ body.dark-mode .snackbar.hint {
         let savedEditorSelection = null;
         let currentCalendarDate = new Date();
         let currentReminderView = localStorage.getItem('reminderView') || 'list';
+        let quickAddEl = null;
         
         const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
 
@@ -1846,6 +1892,7 @@ body.dark-mode .snackbar.hint {
                 setupSidebarDragAndDrop();
                 setupPostsDragAndDrop();
                 setupRemindersDragAndDrop();
+                setupCalendarDragAndDrop();
             }
 
             tabNameInput.addEventListener('keydown', (event) => {
@@ -2750,10 +2797,16 @@ body.dark-mode .snackbar.hint {
         }
 
         function renderReminders() {
-             if (currentReminderView === 'list') {
-                renderRemindersList();
-            } else {
-                renderCalendarView();
+             switch(currentReminderView) {
+                case 'list': renderRemindersList(); break;
+                case 'month': renderCalendarView(); break;
+                case 'week':
+                case 'day':
+                    remindersList.style.display = 'none';
+                    remindersCalendarView.innerHTML = `<p style="padding: var(--space-md); text-align: center;">${currentReminderView.charAt(0).toUpperCase() + currentReminderView.slice(1)} view is not yet implemented.</p>`;
+                    remindersCalendarView.style.display = 'block';
+                    break;
+                default: renderRemindersList();
             }
         }
 
@@ -2822,39 +2875,33 @@ body.dark-mode .snackbar.hint {
         }
 
         function setupReminderViewToggle() {
-            if (currentReminderView === 'calendar') {
-                switchToCalendarView(true);
-            } else {
-                switchToListView(true);
-            }
-            listViewBtn.addEventListener('click', () => switchToListView());
-            calendarViewBtn.addEventListener('click', () => switchToCalendarView());
-        }
+            const buttons = {
+                list: listViewBtn,
+                day: dayViewBtn,
+                week: weekViewBtn,
+                month: monthViewBtn,
+            };
 
-        function switchToListView(isInitial = false) {
-            currentReminderView = 'list';
-            if (!isInitial) localStorage.setItem('reminderView', 'list');
+            const switchView = (view, isInitial = false) => {
+                currentReminderView = view;
+                if (!isInitial) localStorage.setItem('reminderView', view);
+                
+                Object.values(buttons).forEach(btn => btn.classList.remove('active'));
+                if (buttons[view]) buttons[view].classList.add('active');
+
+                remindersList.style.display = view === 'list' ? 'block' : 'none';
+                remindersCalendarView.style.display = view !== 'list' ? 'block' : 'none';
+                
+                renderReminders();
+            };
+
+            switchView(currentReminderView, true);
             
-            listViewBtn.classList.add('active');
-            calendarViewBtn.classList.remove('active');
-            
-            remindersList.style.display = 'block';
-            remindersCalendarView.style.display = 'none';
-            renderRemindersList();
+            Object.entries(buttons).forEach(([view, btn]) => {
+                btn.addEventListener('click', () => switchView(view));
+            });
         }
-
-        function switchToCalendarView(isInitial = false) {
-            currentReminderView = 'calendar';
-            if (!isInitial) localStorage.setItem('reminderView', 'calendar');
-
-            calendarViewBtn.classList.add('active');
-            listViewBtn.classList.remove('active');
-
-            remindersList.style.display = 'none';
-            remindersCalendarView.style.display = 'block';
-            renderCalendarView();
-        }
-
+        
         function renderCalendarView(date = currentCalendarDate) {
             currentCalendarDate = date;
             const year = date.getFullYear();
@@ -2887,7 +2934,7 @@ body.dark-mode .snackbar.hint {
 
             remindersCalendarView.innerHTML = `
                 <div class="calendar-container">
-                    <div class="calendar">
+                    <div class="calendar" id="main-calendar">
                         <div class="calendar-header">
                             <button class="calendar-nav-btn" id="prev-month-btn"><i class="fas fa-chevron-left"></i></button>
                             <h3>${monthNames[month]} ${year}</h3>
@@ -2904,14 +2951,24 @@ body.dark-mode .snackbar.hint {
             document.getElementById('prev-month-btn').onclick = () => renderCalendarView(new Date(year, month - 1, 1));
             document.getElementById('next-month-btn').onclick = () => renderCalendarView(new Date(year, month + 1, 1));
             
-            remindersCalendarView.querySelectorAll('.calendar-day:not(.other-month)').forEach(dayEl => {
-                dayEl.addEventListener('click', () => showRemindersForDay(dayEl.dataset.date));
+            const calendarGrid = remindersCalendarView.querySelector('.calendar-grid');
+            calendarGrid.addEventListener('click', (e) => {
+                const dayEl = e.target.closest('.calendar-day:not(.other-month)');
+                if (dayEl) showRemindersForDay(dayEl.dataset.date);
             });
+
+            if (isAdmin) {
+                calendarGrid.addEventListener('dblclick', (e) => {
+                    const dayEl = e.target.closest('.calendar-day:not(.other-month)');
+                    if (dayEl) handleCalendarQuickAdd(dayEl.dataset.date);
+                });
+            }
         }
 
         function showRemindersForDay(dateStr) {
             document.querySelectorAll('.calendar-day.selected').forEach(d => d.classList.remove('selected'));
-            document.querySelector(`.calendar-day[data-date="${dateStr}"]`).classList.add('selected');
+            const dayEl = document.querySelector(`.calendar-day[data-date="${dateStr}"]`);
+            if (dayEl) dayEl.classList.add('selected');
 
             const dayReminders = getFilteredReminders().filter(r => r.date === dateStr);
             const container = document.getElementById('calendar-day-reminders');
@@ -2921,10 +2978,57 @@ body.dark-mode .snackbar.hint {
             container.querySelector('h4').textContent = `Reminders for ${dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`;
 
             if (dayReminders.length > 0) {
-                listContainer.innerHTML = dayReminders.sort((a,b) => (a.order ?? Infinity) - (b.order ?? Infinity)).map(rem => createReminderCard(rem, false, true)).join('');
+                listContainer.innerHTML = dayReminders.sort((a,b) => (a.order ?? Infinity) - (b.order ?? Infinity)).map(rem => createReminderCard(rem, true, true)).join('');
             } else {
                 listContainer.innerHTML = '<p>No reminders for this day.</p>';
             }
+        }
+        
+        function handleCalendarQuickAdd(dateStr) {
+            if (!isAdmin || quickAddEl) return;
+
+            showRemindersForDay(dateStr);
+            const listContainer = document.querySelector('.calendar-day-reminders-list');
+
+            quickAddEl = document.createElement('div');
+            quickAddEl.className = 'quick-add-reminder-form';
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'New reminder title... (Enter to save)';
+            input.className = 'quick-add-reminder-input';
+            quickAddEl.appendChild(input);
+
+            listContainer.prepend(quickAddEl);
+            input.focus();
+
+            const save = () => {
+                const title = input.value.trim();
+                if (title) {
+                    const newReminderRef = remindersRef.push();
+                    const newReminder = {
+                        id: newReminderRef.key,
+                        title: title,
+                        date: dateStr,
+                        type: 'deadline', // Default type
+                        category: selectedReminderCategory === 'ALL_CLASSES' ? 'ALL' : selectedReminderCategory,
+                        order: reminders.length
+                    };
+                    newReminderRef.set(newReminder);
+                }
+                quickAddEl.remove();
+                quickAddEl = null;
+            };
+
+            input.addEventListener('blur', save);
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    save();
+                } else if (e.key === 'Escape') {
+                    quickAddEl.remove();
+                    quickAddEl = null;
+                }
+            });
         }
 
         function handleCategoryFilterChange() {
@@ -3241,10 +3345,14 @@ body.dark-mode .snackbar.hint {
                 document.querySelectorAll('.calendar-dropdown.open').forEach(dropdown => {
                     if (!dropdown.contains(e.target)) {
                         dropdown.classList.remove('open');
+                        if (dropdown.classList.contains('fixed-dropdown')) {
+                           dropdown.classList.remove('fixed-dropdown');
+                        }
                     }
                 });
             });
         }
+        
         function setupReminderActionDelegation() {
             const remindersContainer = document.querySelector('.reminders-container');
             remindersContainer.addEventListener('click', (e) => {
@@ -3255,39 +3363,115 @@ body.dark-mode .snackbar.hint {
                     e.stopPropagation();
                     const dropdown = calendarToggle.closest('.calendar-dropdown');
                     if (dropdown) {
-                        document.querySelectorAll('.calendar-dropdown.open').forEach(d => {
-                            if (d !== dropdown) d.classList.remove('open');
-                        });
-                        dropdown.classList.toggle('open');
+                        const menu = dropdown.querySelector('.calendar-dropdown-menu');
+                        if (dropdown.closest('.reminders-calendar-view')) {
+                            handleFixedDropdown(calendarToggle, menu);
+                        } else {
+                            dropdown.classList.toggle('open');
+                        }
                     }
                     return;
                 }
                 
                 if (calendarOption) {
-                    e.preventDefault();
-                    e.stopPropagation();
+                    e.preventDefault(); e.stopPropagation();
                     const reminderId = calendarOption.dataset.reminderId;
                     const calendarType = calendarOption.dataset.calendarType;
                     const reminder = reminders.find(r => r.id === reminderId);
                     
                     if (reminder) {
-                        if (calendarType === 'google') {
-                            handleGoogleCalendar(reminder);
-                        } else if (calendarType === 'apple') {
-                            if (isAppleDevice()) {
-                                showAppleCalendarHint();
-                            }
+                        if (calendarType === 'google') handleGoogleCalendar(reminder);
+                        else if (calendarType === 'apple') {
+                            if (isAppleDevice()) showAppleCalendarHint();
                             handleIcsDownload(reminder);
-                        } else if (calendarType === 'outlook') {
-                            handleOutlookWebCalendar(reminder);
-                        }
+                        } else if (calendarType === 'outlook') handleOutlookWebCalendar(reminder);
                     }
                     
                     const dropdown = calendarOption.closest('.calendar-dropdown');
-                    if (dropdown) dropdown.classList.remove('open');
+                    if (dropdown) {
+                        dropdown.classList.remove('open');
+                        dropdown.querySelector('.calendar-dropdown-menu')?.classList.remove('fixed-dropdown');
+                    }
                 }
             });
         }
+
+        function handleFixedDropdown(button, menu) {
+            const isOpen = menu.classList.contains('fixed-dropdown');
+            document.querySelectorAll('.calendar-dropdown.open .fixed-dropdown').forEach(m => {
+                m.parentElement.classList.remove('open');
+                m.classList.remove('fixed-dropdown');
+            });
+            if (isOpen) return;
+
+            menu.parentElement.classList.add('open');
+            menu.classList.add('fixed-dropdown');
+            const rect = button.getBoundingClientRect();
+            
+            let top = rect.bottom + 4;
+            let left = rect.left;
+
+            if (top + menu.offsetHeight > window.innerHeight) {
+                top = rect.top - menu.offsetHeight - 4;
+            }
+            if (left + menu.offsetWidth > window.innerWidth) {
+                left = rect.right - menu.offsetWidth;
+            }
+            menu.style.top = `${top}px`;
+            menu.style.left = `${left}px`;
+        }
+
+        function setupCalendarDragAndDrop() {
+            let draggedReminderId = null;
+            const calendarView = document.getElementById('reminders-calendar-view');
+
+            calendarView.addEventListener('dragstart', e => {
+                const card = e.target.closest('.reminder-card[draggable="true"]');
+                if (card) {
+                    draggedReminderId = card.dataset.id;
+                    e.dataTransfer.setData('text/plain', draggedReminderId);
+                    e.dataTransfer.effectAllowed = 'move';
+                    setTimeout(() => document.getElementById('main-calendar')?.classList.add('is-dragging-reminder'), 0);
+                }
+            });
+
+            calendarView.addEventListener('dragenter', e => {
+                const day = e.target.closest('.calendar-day:not(.other-month)');
+                if (day) {
+                    e.preventDefault();
+                    day.classList.add('drop-target');
+                }
+            });
+
+            calendarView.addEventListener('dragover', e => {
+                if (e.target.closest('.calendar-day:not(.other-month)')) {
+                    e.preventDefault();
+                }
+            });
+
+            calendarView.addEventListener('dragleave', e => {
+                const day = e.target.closest('.calendar-day');
+                if (day) {
+                    day.classList.remove('drop-target');
+                }
+            });
+
+            calendarView.addEventListener('dragend', () => {
+                document.getElementById('main-calendar')?.classList.remove('is-dragging-reminder');
+                document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
+                draggedReminderId = null;
+            });
+
+            calendarView.addEventListener('drop', e => {
+                e.preventDefault();
+                const day = e.target.closest('.calendar-day:not(.other-month)');
+                if (day && draggedReminderId) {
+                    const newDate = day.dataset.date;
+                    remindersRef.child(draggedReminderId).update({ date: newDate });
+                }
+            });
+        }
+
     </script>
 </body>
 </html>
