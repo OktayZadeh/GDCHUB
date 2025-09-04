@@ -1188,7 +1188,30 @@ body.dark-mode .calendar-dropdown-item:hover {
     max-height: 290px;
     overflow-y: auto;
     padding-right: var(--space-sm);
+    min-height: 50px;
 }
+
+/* IMPROVED STYLES START */
+.calendar-day-reminders-list .reminder-placeholder {
+    height: 60px;
+    margin-bottom: var(--space-sm);
+    background: var(--primary-light);
+    border: 2px dashed var(--primary);
+    border-radius: var(--radius-md);
+}
+.calendar-day-reminders .reminder-card .reminder-actions {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.9);
+    transition: all var(--transition-fast);
+}
+.calendar-day-reminders .reminder-card:hover .reminder-actions {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+}
+/* IMPROVED STYLES END */
+
 .calendar-day-reminders .reminder-card {
     margin-bottom: var(--space-sm);
     padding: var(--space-sm);
@@ -2416,7 +2439,25 @@ body.dark-mode .snackbar.hint {
                     unpinnedPostsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
                 }
             });
-            remindersRef.on('value', snapshot => { reminders = snapshot.val() ? Object.values(snapshot.val()) : []; renderReminders(); });
+
+            remindersRef.on('value', snapshot => {
+                reminders = snapshot.val() ? Object.values(snapshot.val()) : [];
+                // Instead of one big render function, update what's visible
+                if (currentReminderView === 'list') {
+                    renderRemindersList();
+                } else if (currentReminderView === 'month' && document.getElementById('main-calendar')) {
+                    // The calendar exists, so let's update it intelligently.
+                    updateCalendarGrid();
+                    const selectedDay = document.querySelector('.calendar-day.selected');
+                    if (selectedDay) {
+                        // Re-render the list for the currently selected day.
+                        showRemindersForDay(selectedDay.dataset.date);
+                    }
+                } else if (currentReminderView === 'month') {
+                    renderCalendarView(); // Initial render
+                }
+            });
+
             reminderCategoriesRef.on('value', snapshot => {
                 const categoriesData = snapshot.val();
                 reminderCategories = categoriesData ? Object.values(categoriesData).filter(cat => cat && cat.name) : [];
@@ -2790,7 +2831,7 @@ body.dark-mode .snackbar.hint {
 
         function createReminderCard(rem, isDraggable = true, inCalendar = false) {
              if (!rem || !rem.id) return '';
-            const actionsHtml = isAdmin && !inCalendar ? `<div class="reminder-actions"><button class="reminder-action-btn" onclick="editReminder(event, '${rem.id}')"><i class="fas fa-pencil-alt"></i></button><button class="reminder-action-btn" onclick="deleteReminder(event, '${rem.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
+            const actionsHtml = isAdmin ? `<div class="reminder-actions"><button class="reminder-action-btn" onclick="editReminder(event, '${rem.id}')"><i class="fas fa-pencil-alt"></i></button><button class="reminder-action-btn" onclick="deleteReminder(event, '${rem.id}')"><i class="fas fa-trash-alt"></i></button></div>` : '';
             
             const location = rem.location || '';
             let locationHtml = '';
@@ -2863,18 +2904,17 @@ body.dark-mode .snackbar.hint {
             });
         }
         
-        function renderCalendarView(date = currentCalendarDate) {
-            currentCalendarDate = date;
-            const year = date.getFullYear();
-            const month = date.getMonth();
+        function updateCalendarGrid() {
+            const gridEl = document.querySelector('.reminders-calendar-view .calendar-grid');
+            if (!gridEl) return;
+
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
             const filteredReminders = getFilteredReminders();
-
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
             const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
-
+            
             let gridHtml = dayNames.map(name => `<div class="calendar-day-header">${name}</div>`).join('');
             
             for (let i = 0; i < firstDay; i++) { gridHtml += `<div class="calendar-day other-month"></div>`; }
@@ -2886,12 +2926,21 @@ body.dark-mode .snackbar.hint {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const hasEvent = filteredReminders.some(r => r.date === dateStr);
                 const isToday = dateStr === todayStr;
+                const isSelected = document.querySelector(`.calendar-day.selected[data-date="${dateStr}"]`);
 
-                gridHtml += `<div class="calendar-day ${isToday ? 'today' : ''}" data-date="${dateStr}">
+                gridHtml += `<div class="calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" data-date="${dateStr}">
                                 ${day}
                                 ${hasEvent ? '<div class="event-dot"></div>' : ''}
                              </div>`;
             }
+            gridEl.innerHTML = gridHtml;
+        }
+        
+        function renderCalendarView(date = currentCalendarDate) {
+            currentCalendarDate = date;
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
             remindersCalendarView.innerHTML = `
                 <div class="calendar-container">
@@ -2901,13 +2950,15 @@ body.dark-mode .snackbar.hint {
                             <h3>${monthNames[month]} ${year}</h3>
                             <button class="calendar-nav-btn" id="next-month-btn"><i class="fas fa-chevron-right"></i></button>
                         </div>
-                        <div class="calendar-grid">${gridHtml}</div>
+                        <div class="calendar-grid"></div>
                     </div>
                     <div class="calendar-day-reminders" id="calendar-day-reminders">
                         <h4>Select a day to see reminders</h4>
                         <div class="calendar-day-reminders-list"></div>
                     </div>
                 </div>`;
+            
+            updateCalendarGrid();
             
             document.getElementById('prev-month-btn').onclick = () => renderCalendarView(new Date(year, month - 1, 1));
             document.getElementById('next-month-btn').onclick = () => renderCalendarView(new Date(year, month + 1, 1));
@@ -3342,6 +3393,7 @@ body.dark-mode .snackbar.hint {
 
         function setupCalendarDragAndDrop() {
             let draggedReminderId = null;
+            let placeholder = null;
             const calendarView = document.getElementById('reminders-calendar-view');
 
             calendarView.addEventListener('dragstart', e => {
@@ -3350,20 +3402,43 @@ body.dark-mode .snackbar.hint {
                     draggedReminderId = card.dataset.id;
                     e.dataTransfer.setData('text/plain', draggedReminderId);
                     e.dataTransfer.effectAllowed = 'move';
-                    setTimeout(() => document.getElementById('main-calendar')?.classList.add('is-dragging-reminder'), 0);
+                    
+                    placeholder = document.createElement('div');
+                    placeholder.className = 'reminder-placeholder';
+                    placeholder.style.height = `${card.offsetHeight}px`;
+
+                    setTimeout(() => {
+                        document.getElementById('main-calendar')?.classList.add('is-dragging-reminder');
+                        card.classList.add('dragging');
+                    }, 0);
                 }
             });
 
             calendarView.addEventListener('dragenter', e => {
                 const day = e.target.closest('.calendar-day:not(.other-month)');
-                const card = e.target.closest('.reminder-card');
+                const list = e.target.closest('.calendar-day-reminders-list');
+
                 if (day) { e.preventDefault(); day.classList.add('drop-target'); }
-                if (card) { e.preventDefault(); } // Allow dropping on cards for reordering
+                if (list) { e.preventDefault(); }
             });
 
             calendarView.addEventListener('dragover', e => {
-                 if (e.target.closest('.calendar-day:not(.other-month)') || e.target.closest('.reminder-card')) {
-                    e.preventDefault();
+                e.preventDefault();
+                const list = e.target.closest('.calendar-day-reminders-list');
+                if (!list) return;
+
+                const overElement = e.target.closest('.reminder-card');
+                const draggedElement = list.querySelector('.dragging');
+                if (overElement && overElement !== draggedElement) {
+                    const rect = overElement.getBoundingClientRect();
+                    const isBefore = e.clientY < rect.top + rect.height / 2;
+                    if (isBefore) {
+                        list.insertBefore(placeholder, overElement);
+                    } else {
+                        list.insertBefore(placeholder, overElement.nextSibling);
+                    }
+                } else if (!overElement && !list.contains(placeholder)) {
+                     list.appendChild(placeholder);
                 }
             });
 
@@ -3372,65 +3447,61 @@ body.dark-mode .snackbar.hint {
                 if (day) day.classList.remove('drop-target');
             });
 
-            calendarView.addEventListener('dragend', () => {
+            const endDrag = (e) => {
                 document.getElementById('main-calendar')?.classList.remove('is-dragging-reminder');
                 document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
+                document.querySelector('.reminder-card.dragging')?.classList.remove('dragging');
+                placeholder?.remove();
                 draggedReminderId = null;
-            });
+                placeholder = null;
+            };
 
+            calendarView.addEventListener('dragend', endDrag);
             calendarView.addEventListener('drop', e => {
                 e.preventDefault();
                 const day = e.target.closest('.calendar-day:not(.other-month)');
-                const targetCard = e.target.closest('.reminder-card');
                 const listContainer = e.target.closest('.calendar-day-reminders-list');
 
                 if (day && draggedReminderId) {
                     const newDate = day.dataset.date;
-                    remindersRef.child(draggedReminderId).update({ date: newDate });
-                } else if (listContainer && draggedReminderId) {
-                    const draggedEl = listContainer.querySelector(`[data-id="${draggedReminderId}"]`);
-                    if (!draggedEl) return;
-                    
-                    if (targetCard) {
-                         const rect = targetCard.getBoundingClientRect();
-                         const isBefore = e.clientY < rect.top + rect.height / 2;
-                         if (isBefore) {
-                            listContainer.insertBefore(draggedEl, targetCard);
-                         } else {
-                            listContainer.insertBefore(draggedEl, targetCard.nextSibling);
-                         }
-                    } else {
-                        listContainer.appendChild(draggedEl);
+                    const reminderToUpdate = reminders.find(r => r.id === draggedReminderId);
+                    if (reminderToUpdate && reminderToUpdate.date !== newDate) {
+                        remindersRef.child(draggedReminderId).update({ date: newDate });
                     }
+                } else if (listContainer && placeholder?.parentNode === listContainer && draggedReminderId) {
+                    const draggedEl = document.querySelector(`[data-id="${draggedReminderId}"]`);
+                    listContainer.insertBefore(draggedEl, placeholder);
+
+                    const currentDayDate = document.querySelector('.calendar-day.selected')?.dataset.date;
+                    if (!currentDayDate) { endDrag(); return; }
                     
-                    // Update order for the day
                     const allSortedReminders = [...reminders].sort((a,b) => (a.order ?? Infinity) - (b.order ?? Infinity));
                     const newDayOrderIds = Array.from(listContainer.querySelectorAll('.reminder-card')).map(c => c.dataset.id);
-                    const dayIdsSet = new Set(newDayOrderIds);
-                    
-                    const finalOrder = [];
-                    let dayItemsInserted = false;
 
+                    const finalOrder = [];
+                    const dayItems = new Map(newDayOrderIds.map(id => [id, reminders.find(r => r.id === id)]));
+                    
+                    let dayItemsInserted = false;
                     for(const rem of allSortedReminders) {
-                        if (dayIdsSet.has(rem.id)) {
-                            if (!dayItemsInserted) {
-                                for (const id of newDayOrderIds) {
-                                    const reminderToInsert = reminders.find(r => r.id === id);
-                                    if(reminderToInsert) finalOrder.push(reminderToInsert);
-                                }
-                                dayItemsInserted = true;
-                            }
-                        } else {
+                        if(rem.date !== currentDayDate) {
                             finalOrder.push(rem);
+                        } else if (!dayItemsInserted) {
+                            newDayOrderIds.forEach(id => finalOrder.push(dayItems.get(id)));
+                            dayItemsInserted = true;
                         }
                     }
-                    
+
                     const updates = {};
                     finalOrder.forEach((rem, index) => {
-                        updates[`${rem.id}/order`] = index;
+                        if (rem) {
+                           updates[`${rem.id}/order`] = index;
+                        }
                     });
-                    remindersRef.update(updates);
+                    if (Object.keys(updates).length > 0) {
+                        remindersRef.update(updates);
+                    }
                 }
+                endDrag(e);
             });
         }
 
