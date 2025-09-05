@@ -1889,7 +1889,6 @@ body.dark-mode .snackbar.hint {
         const announcementsRef = database.ref('announcements');
         const remindersRef = database.ref('reminders');
         const reminderCategoriesRef = database.ref('reminder_categories');
-        const userPreferencesRef = database.ref('userPreferences');
 
         const sidebarMenu = document.getElementById('sidebar-menu');
         const tabEditorModal = document.getElementById('tab-editor-modal');
@@ -1925,6 +1924,7 @@ body.dark-mode .snackbar.hint {
         let expandedPost = null;
         let reminders = [];
         let reminderCategories = [];
+        let selectedReminderCategory = localStorage.getItem('selectedReminderCategory') || 'ALL_CLASSES';
         let currentReminderBeingEdited = null;
         let isAdmin = false;
         let currentAnnouncementBeingEdited = null;
@@ -1932,41 +1932,24 @@ body.dark-mode .snackbar.hint {
         let suppressPostAnimation = false;
         let savedEditorSelection = null;
         let currentCalendarDate = new Date();
-        
-        // --- User Preference Variables ---
-        let currentUserUid = null;
-        let userPreferences = {
-            darkMode: false,
-            remindersCollapsed: false,
-            reminderView: 'list',
-            selectedReminderCategory: 'ALL_CLASSES',
-            activeTabId: null
-        };
+        let currentReminderView = localStorage.getItem('reminderView') || 'list';
         
         const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            checkUserProfile(); // Sets currentUserUid
-            if (currentUserUid) {
-                await loadUserPreferences(); // Wait for preferences to load
-            }
-            
-            // Initialize UI based on loaded or default preferences
-            setupDarkMode();
-            setupReminderCollapse();
-            setupReminderViewToggle();
-            
-            // Setup the rest of the app
+        document.addEventListener('DOMContentLoaded', () => {
+            checkUserProfile();
             setupFirebaseListeners();
             setupGlobalClickHandlers();
             setupConfirmationModal();
             setupSearch();
             setupMobileMenu();
+            setupDarkMode();
             setupProfileDropdown();
             setupCustomEditor();
             setupReminderActionDelegation();
             setupCustomSelectAll();
-            
+            setupReminderViewToggle();
+            setupReminderCollapse(); // New setup function
             reminderCategoryFilter.addEventListener('change', handleCategoryFilterChange);
             UndoManager.init();
             if (isAdmin) {
@@ -1983,212 +1966,37 @@ body.dark-mode .snackbar.hint {
                 }
             });
         });
-        
-        // --- USER PREFERENCE MANAGEMENT ---
-
-        async function loadUserPreferences() {
-            if (!currentUserUid) return;
-            const snapshot = await userPreferencesRef.child(currentUserUid).once('value');
-            const prefs = snapshot.val();
-            if (prefs) {
-                userPreferences = { ...userPreferences, ...prefs };
-            }
-        }
-        
-        function saveUserPreference(key, value) {
-            if (!currentUserUid) return;
-            userPreferences[key] = value; // Update local state immediately
-            const update = { [key]: value };
-            userPreferencesRef.child(currentUserUid).update(update);
-        }
-        
-        function checkUserProfile() {
-            const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
-            if (userInfo && userInfo.email && userInfo.uid) {
-                profilePicElement.src = userInfo.picture || '';
-                isAdmin = ADMIN_EMAILS.includes(userInfo.email.toLowerCase());
-                currentUserUid = userInfo.uid; // *** Crucial: Get the user's UID ***
-                document.body.classList.toggle('non-admin', !isAdmin);
-            } else {
-                isAdmin = false;
-                document.body.classList.add('non-admin');
-            }
-        }
-        
-        // --- UI SETUP FUNCTIONS (Updated for Firebase Prefs) ---
-        
-        function setupDarkMode() {
-            const isDarkMode = userPreferences.darkMode;
-            const icon = darkModeToggle.querySelector('i');
-            
-            document.body.classList.toggle('dark-mode', isDarkMode);
-            icon.classList.toggle('fa-moon', !isDarkMode);
-            icon.classList.toggle('fa-sun', isDarkMode);
-            darkModeToggle.querySelector('span').textContent = isDarkMode ? 'Light Mode' : 'Dark Mode';
-        }
 
         function setupReminderCollapse() {
             const container = document.getElementById('reminders-container');
             const toggleButton = document.getElementById('reminders-toggle-collapse');
             const icon = toggleButton.querySelector('i');
 
-            const applyState = (isCollapsed) => {
-                container.classList.toggle('collapsed', isCollapsed);
-                icon.classList.toggle('fa-chevron-down', isCollapsed);
-                icon.classList.toggle('fa-chevron-up', !isCollapsed);
+            const applyState = (state) => {
+                if (state === 'collapsed') {
+                    container.classList.add('collapsed');
+                    icon.classList.remove('fa-chevron-up');
+                    icon.classList.add('fa-chevron-down');
+                } else {
+                    container.classList.remove('collapsed');
+                    icon.classList.remove('fa-chevron-down');
+                    icon.classList.add('fa-chevron-up');
+                }
             };
-            
-            applyState(userPreferences.remindersCollapsed);
+
+            // On load, check localStorage
+            const savedState = localStorage.getItem('remindersCollapsedState');
+            if (savedState) {
+                applyState(savedState);
+            }
 
             toggleButton.addEventListener('click', () => {
-                const isNowCollapsed = !container.classList.contains('collapsed');
-                saveUserPreference('remindersCollapsed', isNowCollapsed);
-                applyState(isNowCollapsed);
+                const isCollapsed = container.classList.contains('collapsed');
+                const newState = isCollapsed ? 'expanded' : 'collapsed';
+                localStorage.setItem('remindersCollapsedState', newState);
+                applyState(newState);
             });
         }
-        
-        function setupReminderViewToggle() {
-            const buttons = { list: listViewBtn, month: monthViewBtn };
-
-            const switchView = (view, fromClick = false) => {
-                userPreferences.reminderView = view;
-                if (fromClick) {
-                    saveUserPreference('reminderView', view);
-                }
-                
-                Object.values(buttons).forEach(btn => btn.classList.remove('active'));
-                if (buttons[view]) buttons[view].classList.add('active');
-
-                remindersList.style.display = view === 'list' ? 'block' : 'none';
-                remindersCalendarView.style.display = view !== 'list' ? 'block' : 'none';
-                
-                renderReminders();
-            };
-
-            switchView(userPreferences.reminderView); // Initial setup
-            
-            Object.entries(buttons).forEach(([view, btn]) => {
-                btn.addEventListener('click', () => switchView(view, true));
-            });
-        }
-        
-        // --- EVENT HANDLERS (Updated for Firebase Prefs) ---
-        
-        function setupProfileDropdown() {
-            let dropdownHoverTimeout;
-            const content = document.querySelector('.profile-dropdown-content');
-            profileDropdown.addEventListener('mouseenter', () => { clearTimeout(dropdownHoverTimeout); content.style.display = 'block'; setTimeout(() => { content.style.opacity = '1'; content.style.transform = 'translateY(0)'; content.style.pointerEvents = 'auto'; }, 10); });
-            const hideDropdown = () => { dropdownHoverTimeout = setTimeout(() => { content.style.opacity = '0'; content.style.transform = 'translateY(-10px)'; content.style.pointerEvents = 'none'; setTimeout(() => { content.style.display = 'none'; }, 200); }, 300); };
-            profileDropdown.addEventListener('mouseleave', hideDropdown);
-            content.addEventListener('mouseenter', () => clearTimeout(dropdownHoverTimeout));
-            content.addEventListener('mouseleave', hideDropdown);
-            
-            darkModeToggle.addEventListener('click', e => {
-                e.preventDefault();
-                const isNowDarkMode = !document.body.classList.contains('dark-mode');
-                saveUserPreference('darkMode', isNowDarkMode);
-                setupDarkMode(); // Re-run setup to apply changes
-            });
-        }
-        
-        function handleCategoryFilterChange() {
-            userPreferences.selectedReminderCategory = reminderCategoryFilter.value;
-            saveUserPreference('selectedReminderCategory', reminderCategoryFilter.value);
-            renderReminders();
-        }
-        
-        // --- CORE APPLICATION LOGIC (Updated for Firebase Prefs) ---
-        
-        function setupFirebaseListeners() {
-            tabsRef.on('value', snapshot => {
-                const tabsData = snapshot.val();
-                tabs = tabsData ? Object.values(tabsData) : [];
-                tabs.sort((a, b) => (a.order || 0) - (b.order || 0));
-                renderTabs();
-
-                if (tabs.length > 0) {
-                    // Use the loaded preference, otherwise fallback to the first tab
-                    const targetTabId = (userPreferences.activeTabId && tabs.some(t => t.id === userPreferences.activeTabId))
-                        ? userPreferences.activeTabId
-                        : tabs[0].id;
-
-                    if (currentTabId !== targetTabId || currentTabId === null) {
-                         setActiveTab(targetTabId);
-                    }
-                } else {
-                    currentTabId = null;
-                    currentTabTitleElement.textContent = "No Tabs";
-                    pinnedPostsFeed.innerHTML = "";
-                    unpinnedPostsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
-                }
-            });
-
-            remindersRef.on('value', snapshot => {
-                reminders = snapshot.val() ? Object.values(snapshot.val()) : [];
-                renderReminders(); // Render based on current view preference
-            });
-
-            reminderCategoriesRef.on('value', snapshot => {
-                const categoriesData = snapshot.val();
-                reminderCategories = categoriesData ? Object.values(categoriesData).filter(cat => cat && cat.name) : [];
-                reminderCategories.sort((a, b) => a.name.localeCompare(b.name));
-                populateCategoryDropdowns();
-                renderReminders();
-                if (categoryManagerModal.style.display === 'flex') {
-                    renderCategoryManagerList();
-                }
-            });
-        }
-        
-        function setActiveTab(tabId) {
-            if (expandedPost) {
-                collapsePost(expandedPost);
-            }
-            currentTabId = tabId;
-            saveUserPreference('activeTabId', tabId); // Save the new active tab
-            const tab = tabs.find(t => t.id === tabId);
-            if (tab) {
-                currentTabTitleElement.textContent = tab.name;
-                document.querySelectorAll('.sidebar-link.active').forEach(l => l.classList.remove('active'));
-                const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
-                if (activeLink) activeLink.classList.add('active');
-                announcementsRef.child(tabId).off();
-                announcementsRef.child(tabId).on('value', snapshot => { currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : []; filterAnnouncements(); });
-            }
-        }
-        
-        function populateCategoryDropdowns() {
-            const validCategories = reminderCategories.filter(cat => cat && cat.name);
-            
-            const filterOptions = validCategories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
-            reminderCategoryFilter.innerHTML = `<option value="ALL_CLASSES">All Classes</option>${filterOptions}`;
-
-            // Set the dropdown to the saved preference
-            const savedCategory = userPreferences.selectedReminderCategory;
-            if ([...reminderCategoryFilter.options].some(opt => opt.value === savedCategory)) {
-                reminderCategoryFilter.value = savedCategory;
-            } else {
-                reminderCategoryFilter.value = 'ALL_CLASSES';
-            }
-
-            const editorOptions = validCategories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
-            reminderCategoryEditorSelect.innerHTML = `
-                <option value="" disabled selected>Select a category...</option>
-                <option value="ALL">ALL (Visible to Everyone)</option>
-                ${editorOptions}`;
-        }
-
-        function getFilteredReminders() {
-            const selectedCategory = userPreferences.selectedReminderCategory;
-            if (selectedCategory !== 'ALL_CLASSES') {
-                return reminders.filter(rem => rem.category === selectedCategory || rem.category === 'ALL');
-            }
-            return reminders;
-        }
-
-        // -------------------------------------------------------------------------- //
-        // --- The rest of the script remains largely the same, no changes needed --- //
-        // -------------------------------------------------------------------------- //
         
         function setupCustomEditor() {
             const toolbar = document.getElementById('custom-toolbar');
@@ -2652,8 +2460,46 @@ body.dark-mode .snackbar.hint {
             } else { alert('Invalid URL. Please use a valid share URL from YouTube, Google Docs, or Google Slides.'); }
         }
 
-        function setupMobileMenu() { menuToggle.addEventListener('click', () => sidebar.classList.toggle('visible')); }
+        function checkUserProfile() {
+            const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
+            if (userInfo && userInfo.email) {
+                profilePicElement.src = userInfo.picture || '';
+                isAdmin = ADMIN_EMAILS.includes(userInfo.email.toLowerCase());
+                document.body.classList.toggle('non-admin', !isAdmin);
+            } else {
+                isAdmin = false;
+                document.body.classList.add('non-admin');
+            }
+        }
+
+        function setupProfileDropdown() {
+            let dropdownHoverTimeout;
+            const content = document.querySelector('.profile-dropdown-content');
+            profileDropdown.addEventListener('mouseenter', () => { clearTimeout(dropdownHoverTimeout); content.style.display = 'block'; setTimeout(() => { content.style.opacity = '1'; content.style.transform = 'translateY(0)'; content.style.pointerEvents = 'auto'; }, 10); });
+            const hideDropdown = () => { dropdownHoverTimeout = setTimeout(() => { content.style.opacity = '0'; content.style.transform = 'translateY(-10px)'; content.style.pointerEvents = 'none'; setTimeout(() => { content.style.display = 'none'; }, 200); }, 300); };
+            profileDropdown.addEventListener('mouseleave', hideDropdown);
+            content.addEventListener('mouseenter', () => clearTimeout(dropdownHoverTimeout));
+            content.addEventListener('mouseleave', hideDropdown);
+            darkModeToggle.addEventListener('click', e => {
+                e.preventDefault();
+                document.body.classList.toggle('dark-mode');
+                const isDarkMode = document.body.classList.contains('dark-mode');
+                localStorage.setItem('darkMode', isDarkMode);
+                const icon = darkModeToggle.querySelector('i');
+                icon.classList.toggle('fa-moon', !isDarkMode); icon.classList.toggle('fa-sun', isDarkMode);
+                darkModeToggle.querySelector('span').textContent = isDarkMode ? 'Light Mode' : 'Dark Mode';
+            });
+        }
         
+        function setupMobileMenu() { menuToggle.addEventListener('click', () => sidebar.classList.toggle('visible')); }
+        function setupDarkMode() {
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+                const icon = darkModeToggle.querySelector('i');
+                icon.classList.replace('fa-moon', 'fa-sun');
+                darkModeToggle.querySelector('span').textContent = 'Light Mode';
+            }
+        }
         function setupSearch() { announcementSearchInput.addEventListener('input', filterAnnouncements); searchClearButton.addEventListener('click', clearSearch); }
         function filterAnnouncements() {
             const searchTerm = announcementSearchInput.value.toLowerCase().trim();
@@ -2672,7 +2518,82 @@ body.dark-mode .snackbar.hint {
             suppressPostAnimation = false;
         }
         function clearSearch() { announcementSearchInput.value = ''; filterAnnouncements(); }
+
+        function setupFirebaseListeners() {
+            tabsRef.on('value', snapshot => {
+                const tabsData = snapshot.val();
+                tabs = tabsData ? Object.values(tabsData) : [];
+                tabs.sort((a, b) => (a.order || 0) - (b.order || 0));
+                renderTabs();
+
+                if (tabs.length > 0) {
+                    const savedTabId = localStorage.getItem('lastActiveTabId');
+                    const targetTabId = (savedTabId && tabs.some(t => t.id === savedTabId))
+                        ? savedTabId
+                        : tabs[0].id;
+
+                    if (currentTabId !== targetTabId || currentTabId === null) {
+                         setActiveTab(targetTabId);
+                    }
+                } else {
+                    currentTabId = null;
+                    currentTabTitleElement.textContent = "No Tabs";
+                    pinnedPostsFeed.innerHTML = "";
+                    unpinnedPostsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
+                }
+            });
+
+            remindersRef.on('value', snapshot => {
+                reminders = snapshot.val() ? Object.values(snapshot.val()) : [];
+                // Instead of one big render function, update what's visible
+                if (currentReminderView === 'list') {
+                    renderRemindersList();
+                } else if (currentReminderView === 'month' && document.getElementById('main-calendar')) {
+                    // The calendar exists, so let's update it intelligently.
+                    updateCalendarGrid();
+                    const selectedDay = document.querySelector('.calendar-day.selected');
+                    if (selectedDay) {
+                        // Re-render the list for the currently selected day.
+                        showRemindersForDay(selectedDay.dataset.date);
+                    }
+                } else if (currentReminderView === 'month') {
+                    renderCalendarView(); // Initial render
+                }
+            });
+
+            reminderCategoriesRef.on('value', snapshot => {
+                const categoriesData = snapshot.val();
+                reminderCategories = categoriesData ? Object.values(categoriesData).filter(cat => cat && cat.name) : [];
+                reminderCategories.sort((a, b) => a.name.localeCompare(b.name));
+                populateCategoryDropdowns();
+                renderReminders();
+                if (categoryManagerModal.style.display === 'flex') {
+                    renderCategoryManagerList();
+                }
+            });
+        }
         
+        function populateCategoryDropdowns() {
+            const validCategories = reminderCategories.filter(cat => cat && cat.name);
+            
+            const filterOptions = validCategories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
+            reminderCategoryFilter.innerHTML = `<option value="ALL_CLASSES">All Classes</option>${filterOptions}`;
+
+            if ([...reminderCategoryFilter.options].some(opt => opt.value === selectedReminderCategory)) {
+                reminderCategoryFilter.value = selectedReminderCategory;
+            } else {
+                selectedReminderCategory = 'ALL_CLASSES';
+                localStorage.setItem('selectedReminderCategory', selectedReminderCategory);
+                reminderCategoryFilter.value = selectedReminderCategory;
+            }
+
+            const editorOptions = validCategories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
+            reminderCategoryEditorSelect.innerHTML = `
+                <option value="" disabled selected>Select a category...</option>
+                <option value="ALL">ALL (Visible to Everyone)</option>
+                ${editorOptions}`;
+        }
+
         function autoEmbed(htmlContent) {
             if (!htmlContent) return '';
             const tempDiv = document.createElement('div'); tempDiv.innerHTML = htmlContent;
@@ -2766,7 +2687,24 @@ body.dark-mode .snackbar.hint {
                 saveTabs(); endDrag();
             });
         }
-        
+
+        function setActiveTab(tabId) {
+            if (expandedPost) {
+                collapsePost(expandedPost);
+            }
+            currentTabId = tabId;
+            localStorage.setItem('lastActiveTabId', tabId);
+            const tab = tabs.find(t => t.id === tabId);
+            if (tab) {
+                currentTabTitleElement.textContent = tab.name;
+                document.querySelectorAll('.sidebar-link.active').forEach(l => l.classList.remove('active'));
+                const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
+                if (activeLink) activeLink.classList.add('active');
+                announcementsRef.child(tabId).off();
+                announcementsRef.child(tabId).on('value', snapshot => { currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : []; filterAnnouncements(); });
+            }
+        }
+
         function openTabEditor(tabId = null) {
             if (!isAdmin) return;
             tabEditorModal.style.display = 'flex'; currentTabBeingEdited = tabId; const isEditing = !!tabId;
@@ -2965,12 +2903,22 @@ body.dark-mode .snackbar.hint {
                 endDrag();
             });
         }
+        
+        function getFilteredReminders() {
+            if (selectedReminderCategory !== 'ALL_CLASSES') {
+                return reminders.filter(rem => rem.category === selectedReminderCategory || rem.category === 'ALL');
+            }
+            return reminders;
+        }
 
         function renderReminders() {
-             switch(userPreferences.reminderView) {
+             switch(currentReminderView) {
                 case 'list': renderRemindersList(); break;
                 case 'month': renderCalendarView(); break;
-                default: renderRemindersList();
+                default: 
+                    currentReminderView = 'list';
+                    localStorage.setItem('reminderView', 'list');
+                    renderRemindersList();
             }
         }
 
@@ -3036,6 +2984,29 @@ body.dark-mode .snackbar.hint {
                     </div>
                 </div>
             </div>`;
+        }
+
+        function setupReminderViewToggle() {
+            const buttons = { list: listViewBtn, month: monthViewBtn };
+
+            const switchView = (view, isInitial = false) => {
+                currentReminderView = view;
+                if (!isInitial) localStorage.setItem('reminderView', view);
+                
+                Object.values(buttons).forEach(btn => btn.classList.remove('active'));
+                if (buttons[view]) buttons[view].classList.add('active');
+
+                remindersList.style.display = view === 'list' ? 'block' : 'none';
+                remindersCalendarView.style.display = view !== 'list' ? 'block' : 'none';
+                
+                renderReminders();
+            };
+
+            switchView(currentReminderView, true);
+            
+            Object.entries(buttons).forEach(([view, btn]) => {
+                btn.addEventListener('click', () => switchView(view));
+            });
         }
         
         function updateCalendarGrid() {
@@ -3128,6 +3099,12 @@ body.dark-mode .snackbar.hint {
             } else {
                 listContainer.innerHTML = '<p>No reminders for this day.</p>';
             }
+        }
+        
+        function handleCategoryFilterChange() {
+            selectedReminderCategory = reminderCategoryFilter.value;
+            localStorage.setItem('selectedReminderCategory', selectedReminderCategory);
+            renderReminders();
         }
         
         function formatDateForCalendar(dateStr, format) {
