@@ -255,6 +255,11 @@ body {
     -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
     transition: background-color var(--transition-normal);
 }
+/* Scrollbar fix */
+body.post-expanded {
+    overflow: hidden;
+}
+
 h1, h2, h3, h4 { font-weight: 600; color: var(--dark); margin-bottom: var(--space-md); line-height: 1.25; }
 h1 { font-size: var(--text-3xl); } h2 { font-size: var(--text-2xl); } h3 { font-size: var(--text-xl); } h4 { font-size: var(--text-lg); }
 p { margin-bottom: var(--space-md); color: var(--medium); line-height: 1.6; }
@@ -856,10 +861,16 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
 
 /* Reminders UI */
 .reminders-container {
-    background: var(--lighter); border-radius: var(--radius-lg); padding: var(--space-lg);
-    margin-bottom: var(--space-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
+    background: var(--lighter);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--light-gray);
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    transition: all var(--transition-normal);
 }
 
 .reminders-header {
@@ -869,6 +880,7 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
     margin-bottom: var(--space-md);
     flex-wrap: wrap;
     gap: var(--space-md);
+    flex-shrink: 0; /* Prevents header from shrinking when collapsed */
 }
 .reminders-header-left {
     display: flex;
@@ -880,6 +892,58 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
 .reminders-header h2 {
     margin: 0;
 }
+
+/* Collapsible Button */
+.reminders-toggle-collapse {
+    background: transparent;
+    border: none;
+    color: var(--medium);
+    cursor: pointer;
+    font-size: var(--text-lg);
+    padding: var(--space-xs);
+    border-radius: var(--radius-full);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+}
+.reminders-toggle-collapse:hover {
+    background-color: var(--light);
+    color: var(--primary-dark);
+}
+body.dark-mode .reminders-toggle-collapse:hover {
+    background-color: var(--dark-light-gray);
+}
+.reminders-toggle-collapse i {
+    transition: transform var(--transition-normal);
+}
+.reminders-container.collapsed .reminders-toggle-collapse i {
+    transform: rotate(-90deg);
+}
+
+/* Collapsed State */
+.reminders-container.collapsed {
+    padding-top: var(--space-lg);
+    padding-bottom: var(--space-lg);
+    height: 86px; /* Adjust based on header height */
+}
+.reminders-container.collapsed .reminders-header {
+    margin-bottom: 0;
+}
+.reminders-container.collapsed .reminders-list,
+.reminders-container.collapsed .reminders-calendar-view {
+    visibility: hidden;
+    opacity: 0;
+    max-height: 0;
+}
+.reminders-list, .reminders-calendar-view {
+    transition: opacity var(--transition-fast), visibility var(--transition-fast), max-height var(--transition-normal);
+    opacity: 1;
+    visibility: visible;
+}
+
 
 .reminders-view-toggle {
     display: flex;
@@ -1518,9 +1582,12 @@ body.dark-mode .snackbar.hint {
     </aside>
 
     <main class="main-content">
-        <div class="reminders-container">
+        <div class="reminders-container" id="reminders-container">
             <div class="reminders-header">
                 <div class="reminders-header-left">
+                    <button class="reminders-toggle-collapse" id="reminders-toggle-collapse" title="Toggle Reminders">
+                        <i class="fas fa-chevron-up"></i>
+                    </button>
                     <h2>Upcoming Reminders</h2>
                      <div class="reminders-view-toggle">
                         <button class="view-toggle-btn active" id="reminders-list-view-btn" title="List View"><i class="fas fa-list-ul"></i></button>
@@ -1882,6 +1949,7 @@ body.dark-mode .snackbar.hint {
             setupReminderActionDelegation();
             setupCustomSelectAll();
             setupReminderViewToggle();
+            setupReminderCollapse(); // New setup function
             reminderCategoryFilter.addEventListener('change', handleCategoryFilterChange);
             UndoManager.init();
             if (isAdmin) {
@@ -1898,6 +1966,37 @@ body.dark-mode .snackbar.hint {
                 }
             });
         });
+
+        function setupReminderCollapse() {
+            const container = document.getElementById('reminders-container');
+            const toggleButton = document.getElementById('reminders-toggle-collapse');
+            const icon = toggleButton.querySelector('i');
+
+            const applyState = (state) => {
+                if (state === 'collapsed') {
+                    container.classList.add('collapsed');
+                    icon.classList.remove('fa-chevron-up');
+                    icon.classList.add('fa-chevron-down');
+                } else {
+                    container.classList.remove('collapsed');
+                    icon.classList.remove('fa-chevron-down');
+                    icon.classList.add('fa-chevron-up');
+                }
+            };
+
+            // On load, check localStorage
+            const savedState = localStorage.getItem('remindersCollapsedState');
+            if (savedState) {
+                applyState(savedState);
+            }
+
+            toggleButton.addEventListener('click', () => {
+                const isCollapsed = container.classList.contains('collapsed');
+                const newState = isCollapsed ? 'expanded' : 'collapsed';
+                localStorage.setItem('remindersCollapsedState', newState);
+                applyState(newState);
+            });
+        }
         
         function setupCustomEditor() {
             const toolbar = document.getElementById('custom-toolbar');
@@ -2705,6 +2804,7 @@ body.dark-mode .snackbar.hint {
             if (expandedPost && expandedPost !== postElement) {
                 collapsePost(expandedPost);
             }
+            document.body.classList.add('post-expanded'); // Add class to body to disable scroll
             postElement.classList.add('expanded');
             postElement.draggable = false;
             
@@ -2722,6 +2822,7 @@ body.dark-mode .snackbar.hint {
 
         function collapsePost(postElement) {
             if (!postElement) return;
+            document.body.classList.remove('post-expanded'); // Remove class from body to re-enable scroll
             postElement.classList.remove('expanded');
             postElement.classList.remove('embed-only-dark-mode'); 
             if (isAdmin) {
