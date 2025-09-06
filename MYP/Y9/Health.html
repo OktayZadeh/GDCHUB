@@ -533,14 +533,19 @@ body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gra
 .toolbar-dropdown-item {
     display: block; width: 100%; padding: var(--space-sm) var(--space-md); color: var(--dark);
     font-size: var(--text-sm); text-decoration: none; cursor: pointer; border: none; background: none; text-align: left;
+    white-space: nowrap; /* ADDED: Prevent wrapping */
 }
 .toolbar-dropdown-item:hover { background: var(--light); }
 
+/* --- UPDATED: Heading styles in dropdown --- */
 #format-block-menu .toolbar-dropdown-item[data-value="h2"],
 #format-block-menu .toolbar-dropdown-item[data-value="h3"],
 #format-block-menu .toolbar-dropdown-item[data-value="h4"] {
     font-weight: 600;
 }
+#format-block-menu .toolbar-dropdown-item[data-value="h2"] { font-size: 1.25rem; }
+#format-block-menu .toolbar-dropdown-item[data-value="h3"] { font-size: 1.1rem; }
+#format-block-menu .toolbar-dropdown-item[data-value="h4"] { font-size: 1.0rem; }
 #format-block-menu .toolbar-dropdown-item[data-value="blockquote"] {
     font-style: italic;
 }
@@ -685,7 +690,8 @@ body.dark-mode .custom-toolbar { background: var(--dark-dark-gray); border-color
 body.dark-mode .toolbar-group { border-right-color: var(--dark-light); }
 body.dark-mode .toolbar-button, body.dark-mode .toolbar-dropdown-toggle { color: var(--dark-medium); }
 body.dark-mode .toolbar-button:hover, body.dark-mode .toolbar-dropdown-toggle:hover { background: var(--dark-light-gray); color: white; }
-body.dark-mode .toolbar-button.active { background: var(--dark-primary-light); color: var(--primary); }
+/* --- UPDATED: Dark Mode Active Button --- */
+body.dark-mode .toolbar-button.active { background: var(--dark-primary-light); color: #FFFFFF; }
 body.dark-mode .custom-editor-area { color: var(--dark-medium); }
 body.dark-mode .custom-editor-area h1, body.dark-mode .custom-editor-area h2, body.dark-mode .custom-editor-area h3 { color: white; }
 body.dark-mode .toolbar-dropdown-menu { background: var(--dark-lighter); border-color: var(--dark-light); }
@@ -859,7 +865,7 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
 }
 .pinned-posts-feed, .unpinned-posts-feed { min-height: 50px; }
 
-/* Reminders UI */
+/* --- REVERTED: Reminders UI --- */
 .reminders-container {
     background: var(--lighter);
     border-radius: var(--radius-lg);
@@ -880,20 +886,19 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
     margin-bottom: var(--space-md);
     flex-wrap: wrap;
     gap: var(--space-md);
-    flex-shrink: 0; /* Prevents header from shrinking when collapsed */
+    flex-shrink: 0;
 }
 .reminders-header-left {
     display: flex;
     align-items: center;
     gap: var(--space-lg);
     flex-wrap: wrap;
-    margin-right: auto; /* Push other items to the right */
+    margin-right: auto;
 }
 .reminders-header h2 {
     margin: 0;
 }
 
-/* Collapsible Button */
 .reminders-toggle-collapse {
     background: transparent;
     border: none;
@@ -923,11 +928,10 @@ body.dark-mode .reminders-toggle-collapse:hover {
     transform: rotate(-90deg);
 }
 
-/* Collapsed State */
 .reminders-container.collapsed {
     padding-top: var(--space-lg);
     padding-bottom: var(--space-lg);
-    height: 86px; /* Adjust based on header height */
+    height: 86px;
 }
 .reminders-container.collapsed .reminders-header {
     margin-bottom: 0;
@@ -985,7 +989,7 @@ body.dark-mode .view-toggle-btn:hover:not(.active) { background: var(--dark-ligh
     display: flex;
     align-items: center;
     gap: var(--space-sm);
-    flex-shrink: 0; /* Prevent buttons from shrinking/wrapping weirdly */
+    flex-shrink: 0;
 }
 #manage-categories-btn {
     height: 36px;
@@ -1005,7 +1009,6 @@ body.dark-mode .view-toggle-btn:hover:not(.active) { background: var(--dark-ligh
     max-width: 220px;
     height: 36px;
 }
-/* --- UPDATED: Reminder List Layout for Dynamic Sizing --- */
 .reminders-list {
     column-count: 3;
     column-gap: var(--space-md);
@@ -1016,17 +1019,14 @@ body.dark-mode .view-toggle-btn:hover:not(.active) { background: var(--dark-ligh
     background: var(--lighter);
     border-left: 5px solid var(--primary);
     padding: var(--space-md);
-    border-radius: var(--radius-md); 
-    position: relative; 
-    transition: all var(--transition-normal);
-    box-shadow: var(--shadow-sm); 
-    border: 1px solid var(--light-gray);
+    border-radius: var(--radius-md); position: relative; transition: all var(--transition-normal);
+    box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
     cursor: grab;
     display: inline-flex; 
     flex-direction: column;
     width: 100%;
     margin-bottom: var(--space-md);
-    break-inside: avoid; /* Prevents cards from splitting across columns */
+    break-inside: avoid;
 }
 .reminder-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
 .reminder-card.trip { border-left-color: var(--success); }
@@ -1347,9 +1347,6 @@ body.dark-mode .calendar-day-reminders h4 {
     .calendar-day-reminders {
         width: 100%;
         margin-top: var(--space-lg);
-    }
-    .reminders-list {
-        column-count: 2;
     }
 }
 
@@ -1826,7 +1823,7 @@ body.dark-mode .snackbar.hint {
                 <label>Text to display</label>
             </div>
             <div class="input-group">
-                <input type="text" id="link-url-input" placeholder="e.g., www.google.com">
+                <input type="text" id="link-url-input" placeholder=" ">
                 <label>Link (URL)</label>
             </div>
             <div class="modal-buttons">
@@ -2016,7 +2013,6 @@ body.dark-mode .snackbar.hint {
                 }
             };
 
-            // On load, check localStorage
             const savedState = localStorage.getItem('remindersCollapsedState');
             if (savedState) {
                 applyState(savedState);
@@ -2143,7 +2139,6 @@ body.dark-mode .snackbar.hint {
             editor.addEventListener('focus', updateToolbarState);
             editor.addEventListener('blur', saveSelection);
             
-            // ADDED: Keyboard shortcuts and paste listener
             editor.addEventListener('keydown', e => {
                 if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
                     e.preventDefault();
@@ -2163,19 +2158,15 @@ body.dark-mode .snackbar.hint {
             editor.addEventListener('paste', e => {
                 e.preventDefault();
                 const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-                
                 const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])|(\bwww\.[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+                let processedHtml = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
 
-                const tempDiv = document.createElement('div');
-                tempDiv.textContent = text;
-                let safeHTML = tempDiv.innerHTML;
-                
-                safeHTML = safeHTML.replace(urlRegex, (url) => {
+                processedHtml = processedHtml.replace(urlRegex, (url) => {
                     const properUrl = url.startsWith('www.') ? `https://${url}` : url;
                     return `<a href="${properUrl}" target="_blank" rel="noopener noreferrer">${url}</a>`;
                 });
                 
-                document.execCommand('insertHTML', false, safeHTML);
+                document.execCommand('insertHTML', false, processedHtml);
             });
         }
         
@@ -2508,7 +2499,6 @@ body.dark-mode .snackbar.hint {
         function openEmbedModal() { document.getElementById('embed-url-input').value = ''; embedModal.style.display = 'flex'; }
         function closeEmbedModal() { embedModal.style.display = 'none'; }
         
-        // --- UPDATED: Link Modal Functions ---
         function openLinkModal() {
             const displayTextInput = document.getElementById('link-display-text-input');
             const urlInput = document.getElementById('link-url-input');
@@ -2675,19 +2665,16 @@ body.dark-mode .snackbar.hint {
 
             remindersRef.on('value', snapshot => {
                 reminders = snapshot.val() ? Object.values(snapshot.val()) : [];
-                // Instead of one big render function, update what's visible
                 if (currentReminderView === 'list') {
                     renderRemindersList();
                 } else if (currentReminderView === 'month' && document.getElementById('main-calendar')) {
-                    // The calendar exists, so let's update it intelligently.
                     updateCalendarGrid();
                     const selectedDay = document.querySelector('.calendar-day.selected');
                     if (selectedDay) {
-                        // Re-render the list for the currently selected day.
                         showRemindersForDay(selectedDay.dataset.date);
                     }
                 } else if (currentReminderView === 'month') {
-                    renderCalendarView(); // Initial render
+                    renderCalendarView();
                 }
             });
 
@@ -2934,7 +2921,7 @@ body.dark-mode .snackbar.hint {
             if (expandedPost && expandedPost !== postElement) {
                 collapsePost(expandedPost);
             }
-            document.body.classList.add('post-expanded'); // Add class to body to disable scroll
+            document.body.classList.add('post-expanded');
             postElement.classList.add('expanded');
             postElement.draggable = false;
             
@@ -2952,7 +2939,7 @@ body.dark-mode .snackbar.hint {
 
         function collapsePost(postElement) {
             if (!postElement) return;
-            document.body.classList.remove('post-expanded'); // Remove class from body to re-enable scroll
+            document.body.classList.remove('post-expanded');
             postElement.classList.remove('expanded');
             postElement.classList.remove('embed-only-dark-mode'); 
             if (isAdmin) {
@@ -2963,9 +2950,6 @@ body.dark-mode .snackbar.hint {
                 expandedPost = null;
             }
         }
-        
-        // This function is no longer needed as the logic is now inside setupCustomEditor
-        // function setupCustomSelectAll() {}
         
         window.editAnnouncement = (event, id) => { event.stopPropagation(); openAnnouncementEditor(id); }
         window.deleteAnnouncement = (event, id) => {
