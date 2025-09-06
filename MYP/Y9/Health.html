@@ -442,7 +442,7 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);
     z-index: 2050; justify-content: center; align-items: center; backdrop-filter: blur(4px); animation: modalFadeIn var(--transition-fast) forwards;
 }
-#embed-modal, #category-manager-modal, #reminder-editor, #tab-editor-modal {
+#embed-modal, #category-manager-modal, #reminder-editor, #tab-editor-modal, #link-modal {
     z-index: 2100;
 }
 #confirmation-modal {
@@ -684,7 +684,7 @@ body.dark-mode .eyedropper-btn:hover { background: var(--dark-light-gray); }
 body.dark-mode .custom-toolbar { background: var(--dark-dark-gray); border-color: var(--dark-light); }
 body.dark-mode .toolbar-group { border-right-color: var(--dark-light); }
 body.dark-mode .toolbar-button, body.dark-mode .toolbar-dropdown-toggle { color: var(--dark-medium); }
-body.dark-mode .toolbar-button:hover, body.dark-mode .toolbar-dropdown-toggle:hover { background: var(--dark-light-gray); color: var(--light); }
+body.dark-mode .toolbar-button:hover, body.dark-mode .toolbar-dropdown-toggle:hover { background: var(--dark-light-gray); color: white; }
 body.dark-mode .toolbar-button.active { background: var(--dark-primary-light); color: var(--primary); }
 body.dark-mode .custom-editor-area { color: var(--dark-medium); }
 body.dark-mode .custom-editor-area h1, body.dark-mode .custom-editor-area h2, body.dark-mode .custom-editor-area h3 { color: white; }
@@ -1005,9 +1005,11 @@ body.dark-mode .view-toggle-btn:hover:not(.active) { background: var(--dark-ligh
     max-width: 220px;
     height: 36px;
 }
+/* --- MODIFIED: Reminder List Layout --- */
 .reminders-list {
-    column-count: 3;
-    column-gap: var(--space-md);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
     transition: opacity var(--transition-normal);
 }
 
@@ -1018,10 +1020,10 @@ body.dark-mode .view-toggle-btn:hover:not(.active) { background: var(--dark-ligh
     border-radius: var(--radius-md); position: relative; transition: all var(--transition-normal);
     box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
     cursor: grab;
-    display: inline-flex; 
+    display: flex; 
     flex-direction: column;
-    width: 100%;
-    margin-bottom: var(--space-md);
+    flex: 1 1 300px; /* Allow cards to grow and shrink, with a base width of 300px */
+    min-width: 280px; /* Prevent cards from becoming too narrow */
     break-inside: avoid;
 }
 .reminder-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
@@ -1431,7 +1433,6 @@ body.non-admin .reminder-card { cursor: default; }
     .sidebar { width: 240px; }
     .main-content { max-width: calc(100% - 240px); margin-left: 240px; }
     .post-card.expanded, .expanded-post-controls { left: 240px; }
-    .reminders-list { column-count: 2; } 
 }
 @media (max-width: 768px) {
     body { flex-direction: column; }
@@ -1439,7 +1440,7 @@ body.non-admin .reminder-card { cursor: default; }
     .main-content { max-width: 100%; margin-left: 0; padding: var(--space-lg); margin-top: 54px; }
     .post-card.expanded, .expanded-post-controls { left: 0; }
     .post-card.expanded { padding: var(--space-lg); padding-top: calc(56px + var(--space-lg)); }
-    .reminders-list { column-count: 1; }
+    .reminders-list { flex-direction: column; }
     .header-content { flex-direction: column; align-items: flex-start; gap: var(--space-md); }
     .search-container { max-width: 100%; }
     .modal-content { padding: var(--space-lg); max-width: 90%; }
@@ -1525,6 +1526,12 @@ body.non-admin .reminder-card { cursor: default; }
     bottom: auto;
     background-color: var(--secondary);
     transform: translate(-50%, -150px);
+}
+
+/* --- FIXED: Night Mode Snackbar --- */
+body.dark-mode .snackbar {
+    background-color: var(--dark-light-gray);
+    color: #FFFFFF;
 }
 body.dark-mode .snackbar.hint {
     background-color: var(--dark-secondary);
@@ -1803,6 +1810,25 @@ body.dark-mode .snackbar.hint {
         </div>
     </div>
 
+    <!-- ADDED: Link Modal -->
+    <div id="link-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeLinkModal()">×</span>
+            <h2>Insert Link</h2>
+            <div class="input-group">
+                <input type="text" id="link-display-text-input" placeholder=" ">
+                <label>Text to display</label>
+            </div>
+            <div class="input-group">
+                <input type="text" id="link-url-input" placeholder="e.g., https://www.google.com">
+                <label>Link (URL)</label>
+            </div>
+            <div class="modal-buttons">
+                <button class="button" id="link-action-button" onclick="saveLink()">Insert</button>
+            </div>
+        </div>
+    </div>
+
     <div id="category-manager-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeCategoryManager()">×</span>
@@ -1911,6 +1937,7 @@ body.dark-mode .snackbar.hint {
         const darkModeToggle = document.querySelector('.dark-mode-toggle');
         const profileDropdown = document.querySelector('.profile-dropdown');
         const embedModal = document.getElementById('embed-modal');
+        const linkModal = document.getElementById('link-modal');
         const categoryManagerModal = document.getElementById('category-manager-modal');
         const reminderCategoryFilter = document.getElementById('reminder-category-filter');
         const reminderCategoryEditorSelect = document.getElementById('reminder-category');
@@ -2038,8 +2065,7 @@ body.dark-mode .snackbar.hint {
 
                 if (command) {
                     if (command === 'createLink') {
-                        const url = prompt('Enter the URL:');
-                        if (url) document.execCommand('createLink', false, url);
+                        openLinkModal();
                     } else if (command === 'embedContent') {
                         openEmbedModal();
                     } else if (command === 'hiliteColor') {
@@ -2111,6 +2137,14 @@ body.dark-mode .snackbar.hint {
             editor.addEventListener('mouseup', () => { saveSelection(); updateToolbarState(); });
             editor.addEventListener('focus', updateToolbarState);
             editor.addEventListener('blur', saveSelection);
+            
+            // ADDED: Ctrl+K shortcut listener
+            editor.addEventListener('keydown', e => {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    openLinkModal();
+                }
+            });
         }
         
         function populateFontDropdown() {
@@ -2441,6 +2475,67 @@ body.dark-mode .snackbar.hint {
         
         function openEmbedModal() { document.getElementById('embed-url-input').value = ''; embedModal.style.display = 'flex'; }
         function closeEmbedModal() { embedModal.style.display = 'none'; }
+        
+        // --- ADDED: Link Modal Functions ---
+        function openLinkModal() {
+            const displayTextInput = document.getElementById('link-display-text-input');
+            const urlInput = document.getElementById('link-url-input');
+
+            // Save the current selection before opening the modal
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+               const range = selection.getRangeAt(0);
+               if (announcementContentEditor.contains(range.commonAncestorContainer)) {
+                   savedEditorSelection = range;
+               }
+            }
+
+            // Pre-fill with selected text
+            if (savedEditorSelection && !savedEditorSelection.collapsed) {
+                displayTextInput.value = savedEditorSelection.toString();
+            } else {
+                displayTextInput.value = '';
+            }
+            urlInput.value = 'https://';
+
+            linkModal.style.display = 'flex';
+            setTimeout(() => {
+                urlInput.focus();
+                urlInput.setSelectionRange(urlInput.value.length, urlInput.value.length);
+            }, 100);
+        }
+
+        function closeLinkModal() {
+            linkModal.style.display = 'none';
+        }
+
+        function saveLink() {
+            const display_text = document.getElementById('link-display-text-input').value.trim();
+            const url = document.getElementById('link-url-input').value.trim();
+
+            if (!url || url === 'https://') {
+                alert('Please enter a valid URL.');
+                return;
+            }
+            
+            const finalUrl = (url.startsWith('http://') || url.startsWith('https://')) ? url : `https://${url}`;
+
+            announcementContentEditor.focus();
+            if (savedEditorSelection) {
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(savedEditorSelection);
+            }
+
+            const text = display_text || finalUrl;
+            
+            document.execCommand('unlink', false, null);
+            const linkHtml = `<a href="${finalUrl}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+            document.execCommand('insertHTML', false, linkHtml);
+
+            closeLinkModal();
+        }
+
         function saveEmbed() {
             const urlInput = document.getElementById('embed-url-input');
             const url = urlInput.value.trim();
@@ -2996,7 +3091,7 @@ body.dark-mode .snackbar.hint {
                 Object.values(buttons).forEach(btn => btn.classList.remove('active'));
                 if (buttons[view]) buttons[view].classList.add('active');
 
-                remindersList.style.display = view === 'list' ? 'block' : 'none';
+                remindersList.style.display = view === 'list' ? '' : 'none';
                 remindersCalendarView.style.display = view !== 'list' ? 'block' : 'none';
                 
                 renderReminders();
