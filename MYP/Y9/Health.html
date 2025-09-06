@@ -1005,11 +1005,10 @@ body.dark-mode .view-toggle-btn:hover:not(.active) { background: var(--dark-ligh
     max-width: 220px;
     height: 36px;
 }
-/* --- MODIFIED: Reminder List Layout --- */
+/* --- UPDATED: Reminder List Layout for Dynamic Sizing --- */
 .reminders-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-md);
+    column-count: 3;
+    column-gap: var(--space-md);
     transition: opacity var(--transition-normal);
 }
 
@@ -1017,14 +1016,17 @@ body.dark-mode .view-toggle-btn:hover:not(.active) { background: var(--dark-ligh
     background: var(--lighter);
     border-left: 5px solid var(--primary);
     padding: var(--space-md);
-    border-radius: var(--radius-md); position: relative; transition: all var(--transition-normal);
-    box-shadow: var(--shadow-sm); border: 1px solid var(--light-gray);
+    border-radius: var(--radius-md); 
+    position: relative; 
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-sm); 
+    border: 1px solid var(--light-gray);
     cursor: grab;
-    display: flex; 
+    display: inline-flex; 
     flex-direction: column;
-    flex: 1 1 300px; /* Allow cards to grow and shrink, with a base width of 300px */
-    min-width: 280px; /* Prevent cards from becoming too narrow */
-    break-inside: avoid;
+    width: 100%;
+    margin-bottom: var(--space-md);
+    break-inside: avoid; /* Prevents cards from splitting across columns */
 }
 .reminder-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
 .reminder-card.trip { border-left-color: var(--success); }
@@ -1346,6 +1348,9 @@ body.dark-mode .calendar-day-reminders h4 {
         width: 100%;
         margin-top: var(--space-lg);
     }
+    .reminders-list {
+        column-count: 2;
+    }
 }
 
 .category-manager-list {
@@ -1433,6 +1438,7 @@ body.non-admin .reminder-card { cursor: default; }
     .sidebar { width: 240px; }
     .main-content { max-width: calc(100% - 240px); margin-left: 240px; }
     .post-card.expanded, .expanded-post-controls { left: 240px; }
+    .reminders-list { column-count: 2; } 
 }
 @media (max-width: 768px) {
     body { flex-direction: column; }
@@ -1440,7 +1446,7 @@ body.non-admin .reminder-card { cursor: default; }
     .main-content { max-width: 100%; margin-left: 0; padding: var(--space-lg); margin-top: 54px; }
     .post-card.expanded, .expanded-post-controls { left: 0; }
     .post-card.expanded { padding: var(--space-lg); padding-top: calc(56px + var(--space-lg)); }
-    .reminders-list { flex-direction: column; }
+    .reminders-list { column-count: 1; }
     .header-content { flex-direction: column; align-items: flex-start; gap: var(--space-md); }
     .search-container { max-width: 100%; }
     .modal-content { padding: var(--space-lg); max-width: 90%; }
@@ -1810,7 +1816,7 @@ body.dark-mode .snackbar.hint {
         </div>
     </div>
 
-    <!-- ADDED: Link Modal -->
+    <!-- UPDATED: Link Modal -->
     <div id="link-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeLinkModal()">×</span>
@@ -1820,7 +1826,7 @@ body.dark-mode .snackbar.hint {
                 <label>Text to display</label>
             </div>
             <div class="input-group">
-                <input type="text" id="link-url-input" placeholder="e.g., https://www.google.com">
+                <input type="text" id="link-url-input" placeholder="e.g., www.google.com">
                 <label>Link (URL)</label>
             </div>
             <div class="modal-buttons">
@@ -1974,9 +1980,8 @@ body.dark-mode .snackbar.hint {
             setupProfileDropdown();
             setupCustomEditor();
             setupReminderActionDelegation();
-            setupCustomSelectAll();
             setupReminderViewToggle();
-            setupReminderCollapse(); // New setup function
+            setupReminderCollapse();
             reminderCategoryFilter.addEventListener('change', handleCategoryFilterChange);
             UndoManager.init();
             if (isAdmin) {
@@ -2138,12 +2143,39 @@ body.dark-mode .snackbar.hint {
             editor.addEventListener('focus', updateToolbarState);
             editor.addEventListener('blur', saveSelection);
             
-            // ADDED: Ctrl+K shortcut listener
+            // ADDED: Keyboard shortcuts and paste listener
             editor.addEventListener('keydown', e => {
                 if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
                     e.preventDefault();
                     openLinkModal();
                 }
+                
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+                    e.preventDefault();
+                    const selection = window.getSelection();
+                    const range = document.createRange();
+                    range.selectNodeContents(editor);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
+            });
+
+            editor.addEventListener('paste', e => {
+                e.preventDefault();
+                const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+                
+                const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])|(\bwww\.[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+
+                const tempDiv = document.createElement('div');
+                tempDiv.textContent = text;
+                let safeHTML = tempDiv.innerHTML;
+                
+                safeHTML = safeHTML.replace(urlRegex, (url) => {
+                    const properUrl = url.startsWith('www.') ? `https://${url}` : url;
+                    return `<a href="${properUrl}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+                });
+                
+                document.execCommand('insertHTML', false, safeHTML);
             });
         }
         
@@ -2476,12 +2508,11 @@ body.dark-mode .snackbar.hint {
         function openEmbedModal() { document.getElementById('embed-url-input').value = ''; embedModal.style.display = 'flex'; }
         function closeEmbedModal() { embedModal.style.display = 'none'; }
         
-        // --- ADDED: Link Modal Functions ---
+        // --- UPDATED: Link Modal Functions ---
         function openLinkModal() {
             const displayTextInput = document.getElementById('link-display-text-input');
             const urlInput = document.getElementById('link-url-input');
 
-            // Save the current selection before opening the modal
             const selection = window.getSelection();
             if (selection.rangeCount > 0) {
                const range = selection.getRangeAt(0);
@@ -2490,18 +2521,20 @@ body.dark-mode .snackbar.hint {
                }
             }
 
-            // Pre-fill with selected text
             if (savedEditorSelection && !savedEditorSelection.collapsed) {
                 displayTextInput.value = savedEditorSelection.toString();
             } else {
                 displayTextInput.value = '';
             }
-            urlInput.value = 'https://';
+            urlInput.value = '';
 
             linkModal.style.display = 'flex';
             setTimeout(() => {
-                urlInput.focus();
-                urlInput.setSelectionRange(urlInput.value.length, urlInput.value.length);
+                if(displayTextInput.value) {
+                    urlInput.focus();
+                } else {
+                    displayTextInput.focus();
+                }
             }, 100);
         }
 
@@ -2511,14 +2544,16 @@ body.dark-mode .snackbar.hint {
 
         function saveLink() {
             const display_text = document.getElementById('link-display-text-input').value.trim();
-            const url = document.getElementById('link-url-input').value.trim();
+            let url = document.getElementById('link-url-input').value.trim();
 
-            if (!url || url === 'https://') {
-                alert('Please enter a valid URL.');
+            if (!url) {
+                alert('Please enter a URL.');
                 return;
             }
             
-            const finalUrl = (url.startsWith('http://') || url.startsWith('https://')) ? url : `https://${url}`;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = `https://${url}`;
+            }
 
             announcementContentEditor.focus();
             if (savedEditorSelection) {
@@ -2527,10 +2562,10 @@ body.dark-mode .snackbar.hint {
                 selection.addRange(savedEditorSelection);
             }
 
-            const text = display_text || finalUrl;
+            const text = display_text || url;
             
             document.execCommand('unlink', false, null);
-            const linkHtml = `<a href="${finalUrl}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+            const linkHtml = `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
             document.execCommand('insertHTML', false, linkHtml);
 
             closeLinkModal();
@@ -2929,31 +2964,8 @@ body.dark-mode .snackbar.hint {
             }
         }
         
-        function setupCustomSelectAll() {
-            document.addEventListener('keydown', (event) => {
-                if (expandedPost && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
-                    event.preventDefault();
-
-                    const titleEl = expandedPost.querySelector('h3');
-                    const detailsEl = expandedPost.querySelector('.post-details');
-
-                    if (titleEl && detailsEl) {
-                        try {
-                            const selection = window.getSelection();
-                            const range = document.createRange();
-                            
-                            range.setStartBefore(titleEl);
-                            range.setEndAfter(detailsEl);
-                            
-                            selection.removeAllRanges();
-                            selection.addRange(range);
-                        } catch (e) {
-                            console.error("Could not perform custom text selection:", e);
-                        }
-                    }
-                }
-            });
-        }
+        // This function is no longer needed as the logic is now inside setupCustomEditor
+        // function setupCustomSelectAll() {}
         
         window.editAnnouncement = (event, id) => { event.stopPropagation(); openAnnouncementEditor(id); }
         window.deleteAnnouncement = (event, id) => {
