@@ -486,17 +486,12 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 }
 #announcement-title:focus { outline: none; box-shadow: none; }
 #announcement-title::placeholder { color: var(--light-gray); }
-body.dark-mode #announcement-editor-overlay { background-color: var(--dark-dark-gray); }
-body.dark-mode .editor-header { background-color: var(--dark-lighter); border-bottom-color: var(--dark-light); }
-body.dark-mode #announcement-title { color: white; }
-body.dark-mode #announcement-title::placeholder { color: var(--dark-light); }
 
 /* --- Editor Toolbar --- */
 .custom-toolbar-container {
     position: sticky; top: 0; z-index: 5; background-color: var(--light);
     padding: var(--space-md) 0; margin-bottom: var(--space-md);
 }
-body.dark-mode .custom-toolbar-container { background-color: var(--dark-dark-gray); }
 .custom-toolbar {
     background: var(--lighter); border: 1px solid var(--light-gray); border-radius: var(--radius-lg); padding: var(--space-xs);
     display: flex; flex-wrap: wrap; gap: var(--space-xs); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
@@ -685,20 +680,6 @@ body.dark-mode .eyedropper-btn:hover { background: var(--dark-light-gray); }
 .custom-editor-area img { max-width: 100%; height: auto; border-radius: var(--radius-md); }
 .custom-editor-area blockquote { border-left: 3px solid var(--light-gray); padding-left: var(--space-md); margin-left: 0; font-style: italic; color: var(--medium); }
 
-/* Dark Mode Toolbar */
-body.dark-mode .custom-toolbar { background: var(--dark-dark-gray); border-color: var(--dark-light); }
-body.dark-mode .toolbar-group { border-right-color: var(--dark-light); }
-body.dark-mode .toolbar-button, body.dark-mode .toolbar-dropdown-toggle { color: var(--dark-medium); }
-body.dark-mode .toolbar-button:hover, body.dark-mode .toolbar-dropdown-toggle:hover { background: var(--dark-light-gray); color: white; }
-/* --- UPDATED: Dark Mode Active Button --- */
-body.dark-mode .toolbar-button.active { background: var(--dark-primary-light); color: #FFFFFF; }
-body.dark-mode .custom-editor-area { color: var(--dark-medium); }
-body.dark-mode .custom-editor-area h1, body.dark-mode .custom-editor-area h2, body.dark-mode .custom-editor-area h3 { color: white; }
-body.dark-mode .toolbar-dropdown-menu { background: var(--dark-lighter); border-color: var(--dark-light); }
-body.dark-mode .toolbar-dropdown-item { color: var(--dark-medium); }
-body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray); }
-body.dark-mode .color-indicator { background-color: var(--dark-medium); }
-
 /* --- WYSIWYG Editor in Dark Mode --- */
 body.dark-mode #announcement-editor-overlay {
     background-color: var(--light) !important;
@@ -755,6 +736,7 @@ body.dark-mode #announcement-editor-overlay .custom-editor-area h2,
 body.dark-mode #announcement-editor-overlay .custom-editor-area h3 {
     color: var(--dark) !important;
 }
+
 
 #pinned-posts-header { 
     margin-bottom: var(--space-lg); 
