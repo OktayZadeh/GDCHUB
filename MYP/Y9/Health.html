@@ -680,63 +680,52 @@ body.dark-mode .eyedropper-btn:hover { background: var(--dark-light-gray); }
 .custom-editor-area img { max-width: 100%; height: auto; border-radius: var(--radius-md); }
 .custom-editor-area blockquote { border-left: 3px solid var(--light-gray); padding-left: var(--space-md); margin-left: 0; font-style: italic; color: var(--medium); }
 
-/* --- WYSIWYG Editor in Dark Mode --- */
+/* --- CORRECTED: WYSIWYG Editor in Dark Mode --- */
 body.dark-mode #announcement-editor-overlay {
-    background-color: var(--light) !important;
+    /* Resets all variables to their root (light) values within this component */
+    --primary: #3EA899;
+    --primary-light: #E0F2F1;
+    --primary-dark: #2D7D78;
+    --dark: #1A202C;
+    --dark-gray: #2D3748;
+    --medium: #718096;
+    --light-gray: #E2E8F0;
+    --light: #F7FAFC;
+    --lighter: #FFFFFF;
+    background-color: var(--light);
 }
-body.dark-mode #announcement-editor-overlay .editor-header {
-    background-color: var(--lighter) !important;
-    border-bottom-color: var(--light-gray) !important;
+/* The original light-mode styles for the editor elements will now apply correctly */
+body.dark-mode #announcement-editor-overlay .editor-header,
+body.dark-mode #announcement-editor-overlay .custom-toolbar,
+body.dark-mode #announcement-editor-overlay .toolbar-dropdown-menu {
+    background-color: var(--lighter);
+    border-color: var(--light-gray);
 }
 body.dark-mode #announcement-editor-overlay h2,
-body.dark-mode #announcement-editor-overlay #announcement-title {
-    color: var(--dark) !important;
+body.dark-mode #announcement-editor-overlay #announcement-title,
+body.dark-mode #announcement-editor-overlay .custom-editor-area,
+body.dark-mode #announcement-editor-overlay .toolbar-dropdown-item {
+    color: var(--dark);
 }
 body.dark-mode #announcement-editor-overlay #announcement-title::placeholder {
-    color: var(--light-gray) !important;
-}
-body.dark-mode #announcement-editor-overlay .custom-toolbar-container {
-    background-color: var(--light) !important;
-}
-body.dark-mode #announcement-editor-overlay .custom-toolbar {
-    background: var(--lighter) !important;
-    border-color: var(--light-gray) !important;
-}
-body.dark-mode #announcement-editor-overlay .toolbar-group {
-    border-right-color: var(--light-gray) !important;
+    color: var(--light-gray);
 }
 body.dark-mode #announcement-editor-overlay .toolbar-button,
 body.dark-mode #announcement-editor-overlay .toolbar-dropdown-toggle {
-    color: var(--medium) !important;
+    color: var(--medium);
 }
 body.dark-mode #announcement-editor-overlay .toolbar-button:hover,
 body.dark-mode #announcement-editor-overlay .toolbar-dropdown-toggle:hover {
-    background: var(--light) !important;
-    color: var(--dark) !important;
+    background: var(--light);
+    color: var(--dark);
 }
 body.dark-mode #announcement-editor-overlay .toolbar-button.active {
-    background: var(--primary-light) !important;
-    color: var(--primary-dark) !important;
+    background: var(--primary-light);
+    color: var(--primary-dark);
 }
-body.dark-mode #announcement-editor-overlay .toolbar-dropdown-menu {
-    background: var(--lighter) !important;
-    border-color: var(--light-gray) !important;
+body.dark-mode #announcement-editor-overlay .toolbar-group {
+    border-right-color: var(--light-gray);
 }
-body.dark-mode #announcement-editor-overlay .toolbar-dropdown-item {
-    color: var(--dark) !important;
-}
-body.dark-mode #announcement-editor-overlay .toolbar-dropdown-item:hover {
-    background: var(--light) !important;
-}
-body.dark-mode #announcement-editor-overlay .custom-editor-area {
-    color: var(--dark) !important;
-}
-body.dark-mode #announcement-editor-overlay .custom-editor-area h1,
-body.dark-mode #announcement-editor-overlay .custom-editor-area h2,
-body.dark-mode #announcement-editor-overlay .custom-editor-area h3 {
-    color: var(--dark) !important;
-}
-
 
 #pinned-posts-header { 
     margin-bottom: var(--space-lg); 
