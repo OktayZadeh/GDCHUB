@@ -727,6 +727,19 @@ body.dark-mode #announcement-editor-overlay .toolbar-group {
     border-right-color: var(--light-gray);
 }
 
+/* --- FIXED: WYSIWYG Editor Buttons in Dark Mode --- */
+body.dark-mode #announcement-editor-overlay .button.secondary {
+    background-color: var(--lighter);
+    color: var(--primary);
+    border: 1px solid var(--light-gray);
+}
+body.dark-mode #announcement-editor-overlay .button.secondary:hover {
+    background-color: var(--light);
+    border-color: var(--primary);
+    color: var(--primary-dark);
+}
+
+
 #pinned-posts-header { 
     margin-bottom: var(--space-lg); 
     padding-bottom: var(--space-md); 
