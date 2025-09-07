@@ -467,14 +467,15 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 #announcement-editor-overlay {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: var(--light); z-index: 2000;
     display: flex; flex-direction: column; transform: translateY(100%); visibility: hidden;
-    transition: transform var(--transition-normal), visibility var(--transition-normal);
+    transition: transform var(--transition-normal), visibility var(--transition-normal), background-color var(--transition-normal);
 }
 #announcement-editor-overlay.visible { transform: translateY(0); visibility: visible; }
 .editor-header {
     flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; padding: var(--space-sm) var(--space-xl);
     background-color: var(--lighter); border-bottom: 1px solid var(--light-gray); z-index: 10;
+    transition: background-color var(--transition-normal), border-color var(--transition-normal);
 }
-.editor-header h2 { margin: 0; }
+.editor-header h2 { margin: 0; transition: color var(--transition-normal); }
 .editor-content { flex-grow: 1; overflow-y: auto; padding: 0; display: flex; flex-direction: column; }
 .editor-main-area {
     width: 100%; max-width: 900px; margin: 0 auto; padding: var(--space-md) var(--space-xl) var(--space-2xl);
@@ -483,23 +484,27 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 #announcement-title {
     font-size: var(--text-4xl); font-weight: 700; border: none; background: transparent; padding: var(--space-lg) 0;
     margin-bottom: var(--space-md); color: var(--dark); width: 100%; font-family: var(--font-main);
+    transition: color var(--transition-normal);
 }
 #announcement-title:focus { outline: none; box-shadow: none; }
-#announcement-title::placeholder { color: var(--light-gray); }
+#announcement-title::placeholder { color: var(--light-gray); transition: color var(--transition-normal); }
 
 /* --- Editor Toolbar --- */
 .custom-toolbar-container {
     position: sticky; top: 0; z-index: 5; background-color: var(--light);
     padding: var(--space-md) 0; margin-bottom: var(--space-md);
+    transition: background-color var(--transition-normal);
 }
 .custom-toolbar {
     background: var(--lighter); border: 1px solid var(--light-gray); border-radius: var(--radius-lg); padding: var(--space-xs);
     display: flex; flex-wrap: wrap; gap: var(--space-xs); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
     width: 100%; max-width: 900px; margin: 0 auto;
+    transition: background-color var(--transition-normal), border-color var(--transition-normal);
 }
 .toolbar-group {
     display: flex; align-items: center; border-right: 1px solid var(--light-gray);
     padding-right: var(--space-sm); margin-right: var(--space-sm);
+    transition: border-color var(--transition-normal);
 }
 .toolbar-group:last-child { border-right: none; margin-right: 0; padding-right: 0; }
 .toolbar-button, .toolbar-dropdown-toggle {
@@ -523,12 +528,13 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
     display: none; position: absolute; top: calc(100% + 4px); left: 0; background: var(--lighter);
     border-radius: var(--radius-md); box-shadow: var(--shadow-lg); border: 1px solid var(--light-gray);
     padding: 0; z-index: 10; min-width: auto;
+    transition: background-color var(--transition-normal), border-color var(--transition-normal);
 }
 .toolbar-dropdown.open .toolbar-dropdown-menu { display: block; }
 .toolbar-dropdown-item {
     display: block; width: 100%; padding: var(--space-sm) var(--space-md); color: var(--dark);
     font-size: var(--text-sm); text-decoration: none; cursor: pointer; border: none; background: none; text-align: left;
-    white-space: nowrap; /* ADDED: Prevent wrapping */
+    white-space: nowrap; transition: color var(--transition-normal);
 }
 .toolbar-dropdown-item:hover { background: var(--light); }
 
@@ -662,15 +668,6 @@ body.dark-mode .gdocs-color-picker .color-swatch[data-value="transparent"] {
     width: 100%; border: 1px solid var(--light-gray); border-radius: var(--radius-sm);
     padding: 4px 6px; font-size: var(--text-xs); margin-bottom: 0;
 }
-body.dark-mode .gdocs-color-picker .swatch-divider,
-body.dark-mode .gdocs-color-picker .custom-section-toggle,
-body.dark-mode .gdocs-color-picker .custom-color-preview,
-body.dark-mode .gdocs-color-picker .eyedropper-btn,
-body.dark-mode .gdocs-color-picker .color-input-group input {
-    border-color: var(--dark-light);
-}
-body.dark-mode .custom-color-add-btn:hover { background: var(--dark-light-gray); }
-body.dark-mode .eyedropper-btn:hover { background: var(--dark-light-gray); }
 
 .custom-editor-area {
     flex-grow: 1; padding: 0; outline: none; line-height: 1.7; color: var(--dark); font-size: 16px; min-height: 300px;
@@ -680,63 +677,55 @@ body.dark-mode .eyedropper-btn:hover { background: var(--dark-light-gray); }
 .custom-editor-area img { max-width: 100%; height: auto; border-radius: var(--radius-md); }
 .custom-editor-area blockquote { border-left: 3px solid var(--light-gray); padding-left: var(--space-md); margin-left: 0; font-style: italic; color: var(--medium); }
 
-/* --- CORRECTED: WYSIWYG Editor in Dark Mode --- */
-body.dark-mode #announcement-editor-overlay {
-    /* Resets all variables to their root (light) values within this component */
-    --primary: #3EA899;
-    --primary-light: #E0F2F1;
-    --primary-dark: #2D7D78;
-    --dark: #1A202C;
-    --dark-gray: #2D3748;
-    --medium: #718096;
-    --light-gray: #E2E8F0;
-    --light: #F7FAFC;
-    --lighter: #FFFFFF;
-    background-color: var(--light);
-}
-/* The original light-mode styles for the editor elements will now apply correctly */
-body.dark-mode #announcement-editor-overlay .editor-header,
-body.dark-mode #announcement-editor-overlay .custom-toolbar,
-body.dark-mode #announcement-editor-overlay .toolbar-dropdown-menu {
-    background-color: var(--lighter);
-    border-color: var(--light-gray);
-}
-body.dark-mode #announcement-editor-overlay h2,
-body.dark-mode #announcement-editor-overlay #announcement-title,
-body.dark-mode #announcement-editor-overlay .custom-editor-area,
-body.dark-mode #announcement-editor-overlay .toolbar-dropdown-item {
-    color: var(--dark);
-}
-body.dark-mode #announcement-editor-overlay #announcement-title::placeholder {
-    color: var(--light-gray);
-}
-body.dark-mode #announcement-editor-overlay .toolbar-button,
-body.dark-mode #announcement-editor-overlay .toolbar-dropdown-toggle {
-    color: var(--medium);
-}
-body.dark-mode #announcement-editor-overlay .toolbar-button:hover,
-body.dark-mode #announcement-editor-overlay .toolbar-dropdown-toggle:hover {
-    background: var(--light);
-    color: var(--dark);
-}
-body.dark-mode #announcement-editor-overlay .toolbar-button.active {
-    background: var(--primary-light);
-    color: var(--primary-dark);
-}
-body.dark-mode #announcement-editor-overlay .toolbar-group {
-    border-right-color: var(--light-gray);
-}
+/* Default Dark Mode Editor Styles */
+body.dark-mode #announcement-editor-overlay { background-color: var(--dark-dark-gray); }
+body.dark-mode #announcement-editor-overlay .editor-header { background-color: var(--dark-lighter); border-bottom-color: var(--dark-light); }
+body.dark-mode #announcement-editor-overlay #announcement-title { color: white; }
+body.dark-mode #announcement-editor-overlay #announcement-title::placeholder { color: var(--dark-light); }
+body.dark-mode #announcement-editor-overlay .custom-toolbar-container { background-color: var(--dark-dark-gray); }
+body.dark-mode #announcement-editor-overlay .custom-toolbar { background: var(--dark-dark-gray); border-color: var(--dark-light); }
+body.dark-mode #announcement-editor-overlay .toolbar-group { border-right-color: var(--dark-light); }
+body.dark-mode #announcement-editor-overlay .toolbar-button, body.dark-mode #announcement-editor-overlay .toolbar-dropdown-toggle { color: var(--dark-medium); }
+body.dark-mode #announcement-editor-overlay .toolbar-button:hover, body.dark-mode #announcement-editor-overlay .toolbar-dropdown-toggle:hover { background: var(--dark-light-gray); color: white; }
+body.dark-mode #announcement-editor-overlay .toolbar-button.active { background: var(--dark-primary-light); color: #FFFFFF; }
+body.dark-mode #announcement-editor-overlay .custom-editor-area { color: var(--dark-medium); }
+body.dark-mode #announcement-editor-overlay .custom-editor-area h1, body.dark-mode #announcement-editor-overlay .custom-editor-area h2, body.dark-mode #announcement-editor-overlay .custom-editor-area h3 { color: white; }
+body.dark-mode #announcement-editor-overlay .toolbar-dropdown-menu { background: var(--dark-lighter); border-color: var(--dark-light); }
+body.dark-mode #announcement-editor-overlay .toolbar-dropdown-item { color: var(--dark-medium); }
+body.dark-mode #announcement-editor-overlay .toolbar-dropdown-item:hover { background: var(--dark-light-gray); }
+body.dark-mode #announcement-editor-overlay .color-indicator { background-color: var(--dark-medium); }
 
-/* --- FIXED: WYSIWYG Editor Buttons in Dark Mode --- */
-body.dark-mode #announcement-editor-overlay .button.secondary {
-    background-color: var(--lighter);
-    color: var(--primary);
-    border: 1px solid var(--light-gray);
-}
-body.dark-mode #announcement-editor-overlay .button.secondary:hover {
+/* --- DYNAMIC WYSIWYG LIGHT THEME OVERRIDE --- */
+body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme {
+    /* Resets all variables to their root (light) values */
+    --primary: #3EA899; --primary-light: #E0F2F1; --primary-dark: #2D7D78;
+    --dark: #1A202C; --dark-gray: #2D3748; --medium: #718096;
+    --light-gray: #E2E8F0; --light: #F7FAFC; --lighter: #FFFFFF;
     background-color: var(--light);
-    border-color: var(--primary);
-    color: var(--primary-dark);
+}
+body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .editor-header,
+body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .custom-toolbar,
+body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .toolbar-dropdown-menu {
+    background-color: var(--lighter); border-color: var(--light-gray);
+}
+body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme h2,
+body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme #announcement-title,
+body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .custom-editor-area,
+body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .toolbar-dropdown-item {
+    color: var(--dark);
+}
+body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme #announcement-title::placeholder { color: var(--light-gray); }
+body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .toolbar-button,
+body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .toolbar-dropdown-toggle { color: var(--medium); }
+body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .toolbar-button:hover,
+body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .toolbar-dropdown-toggle:hover { background: var(--light); color: var(--dark); }
+body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .toolbar-button.active { background: var(--primary-light); color: var(--primary-dark); }
+body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .toolbar-group { border-right-color: var(--light-gray); }
+body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .button.secondary {
+    background-color: white; color: var(--primary); border: 1px solid var(--light-gray);
+}
+body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .button.secondary:hover {
+    background-color: var(--light); border-color: var(--primary); color: var(--primary-dark);
 }
 
 
@@ -2067,9 +2056,30 @@ body.dark-mode .snackbar.hint {
             });
         }
         
+        // --- NEW AND IMPROVED EDITOR LOGIC ---
+
+        function isMediaOnly(contentElement) {
+            const contentClone = contentElement.cloneNode(true);
+            contentClone.querySelectorAll('.embed-container, iframe, a').forEach(el => el.remove());
+            return contentClone.textContent.trim() === '';
+        }
+
+        function updateEditorTheme() {
+            const editorOverlay = document.getElementById('announcement-editor-overlay');
+            const editorContent = document.getElementById('announcement-content');
+            if (!isMediaOnly(editorContent)) {
+                editorOverlay.classList.add('wysiwyg-light-theme');
+            } else {
+                editorOverlay.classList.remove('wysiwyg-light-theme');
+            }
+        }
+
         function setupCustomEditor() {
             const toolbar = document.getElementById('custom-toolbar');
             const editor = document.getElementById('announcement-content');
+            
+            // Listen for any input to dynamically update the theme
+            editor.addEventListener('input', updateEditorTheme);
 
             populateFontDropdown();
             populateColorPickers();
@@ -2156,6 +2166,7 @@ body.dark-mode .snackbar.hint {
                     }
                 }
                 updateToolbarState();
+                updateEditorTheme(); // Update theme after command execution
             });
 
             document.addEventListener('click', (e) => {
@@ -2598,7 +2609,8 @@ body.dark-mode .snackbar.hint {
             document.execCommand('unlink', false, null);
             const linkHtml = `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
             document.execCommand('insertHTML', false, linkHtml);
-
+            
+            updateEditorTheme();
             closeLinkModal();
         }
 
@@ -2617,6 +2629,7 @@ body.dark-mode .snackbar.hint {
                 if (savedEditorSelection) { const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(savedEditorSelection); }
                 const embedHtml = `<div class="embed-container"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><p><br></p>`;
                 document.execCommand('insertHTML', false, embedHtml);
+                updateEditorTheme();
                 closeEmbedModal();
             } else { alert('Invalid URL. Please use a valid share URL from YouTube, Google Docs, or Google Slides.'); }
         }
@@ -2907,8 +2920,14 @@ body.dark-mode .snackbar.hint {
             announcementTitleInput.value = ''; announcementContentEditor.innerHTML = '';
             if (isEditing) {
                 announcementsRef.child(currentTabId).child(id).once('value').then(s => {
-                    const ann = s.val(); if(ann) { announcementTitleInput.value = ann.title; announcementContentEditor.innerHTML = ann.content || ''; }
+                    const ann = s.val(); if(ann) { 
+                        announcementTitleInput.value = ann.title; 
+                        announcementContentEditor.innerHTML = ann.content || ''; 
+                    }
+                    updateEditorTheme(); // Set initial theme based on loaded content
                 });
+            } else {
+                updateEditorTheme(); // Set initial theme for new post
             }
             announcementEditorOverlay.classList.add('visible');
             document.documentElement.style.overflow = 'hidden'; document.body.style.overflow = 'hidden';
@@ -2946,13 +2965,7 @@ body.dark-mode .snackbar.hint {
             const content = postElement.querySelector('.post-content');
             if (!content) return false;
             
-            const hasMediaOrLink = content.querySelector('.embed-container, iframe, a');
-            if (!hasMediaOrLink) {
-                return false;
-            }
-            
             const contentClone = content.cloneNode(true);
-            
             contentClone.querySelectorAll('.embed-container, iframe, a').forEach(el => el.remove());
             
             return contentClone.textContent.trim() === '';
