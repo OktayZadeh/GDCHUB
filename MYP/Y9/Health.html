@@ -699,6 +699,63 @@ body.dark-mode .toolbar-dropdown-item { color: var(--dark-medium); }
 body.dark-mode .toolbar-dropdown-item:hover { background: var(--dark-light-gray); }
 body.dark-mode .color-indicator { background-color: var(--dark-medium); }
 
+/* --- WYSIWYG Editor in Dark Mode --- */
+body.dark-mode #announcement-editor-overlay {
+    background-color: var(--light) !important;
+}
+body.dark-mode #announcement-editor-overlay .editor-header {
+    background-color: var(--lighter) !important;
+    border-bottom-color: var(--light-gray) !important;
+}
+body.dark-mode #announcement-editor-overlay h2,
+body.dark-mode #announcement-editor-overlay #announcement-title {
+    color: var(--dark) !important;
+}
+body.dark-mode #announcement-editor-overlay #announcement-title::placeholder {
+    color: var(--light-gray) !important;
+}
+body.dark-mode #announcement-editor-overlay .custom-toolbar-container {
+    background-color: var(--light) !important;
+}
+body.dark-mode #announcement-editor-overlay .custom-toolbar {
+    background: var(--lighter) !important;
+    border-color: var(--light-gray) !important;
+}
+body.dark-mode #announcement-editor-overlay .toolbar-group {
+    border-right-color: var(--light-gray) !important;
+}
+body.dark-mode #announcement-editor-overlay .toolbar-button,
+body.dark-mode #announcement-editor-overlay .toolbar-dropdown-toggle {
+    color: var(--medium) !important;
+}
+body.dark-mode #announcement-editor-overlay .toolbar-button:hover,
+body.dark-mode #announcement-editor-overlay .toolbar-dropdown-toggle:hover {
+    background: var(--light) !important;
+    color: var(--dark) !important;
+}
+body.dark-mode #announcement-editor-overlay .toolbar-button.active {
+    background: var(--primary-light) !important;
+    color: var(--primary-dark) !important;
+}
+body.dark-mode #announcement-editor-overlay .toolbar-dropdown-menu {
+    background: var(--lighter) !important;
+    border-color: var(--light-gray) !important;
+}
+body.dark-mode #announcement-editor-overlay .toolbar-dropdown-item {
+    color: var(--dark) !important;
+}
+body.dark-mode #announcement-editor-overlay .toolbar-dropdown-item:hover {
+    background: var(--light) !important;
+}
+body.dark-mode #announcement-editor-overlay .custom-editor-area {
+    color: var(--dark) !important;
+}
+body.dark-mode #announcement-editor-overlay .custom-editor-area h1,
+body.dark-mode #announcement-editor-overlay .custom-editor-area h2,
+body.dark-mode #announcement-editor-overlay .custom-editor-area h3 {
+    color: var(--dark) !important;
+}
+
 #pinned-posts-header { 
     margin-bottom: var(--space-lg); 
     padding-bottom: var(--space-md); 
