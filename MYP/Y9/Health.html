@@ -1590,7 +1590,6 @@ body.dark-mode .snackbar.hint {
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
-    <!-- ADDED: Firestore SDK for notifications -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
     
 </head>
@@ -1611,10 +1610,12 @@ body.dark-mode .snackbar.hint {
                 <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
                     <i class="fas fa-envelope"></i> <span>Student Portal</span>
                 </a>
-                <!-- CORRECTED: Added the missing bell icon button -->
+                
+                <!-- THIS IS THE CORRECTED, INCLUDED BELL ICON -->
                 <button id="notification-bell" class="topbar-button" title="Toggle Notifications">
                     <i class="fas fa-bell-slash"></i>
                 </button>
+                
                 <div class="profile-dropdown">
                     <img id="profile-pic" src="" alt="Profile Picture" class="topbar-button" style="width: 36px; height: 36px; padding: 0; border-radius: 50%;">
                     <div class="profile-dropdown-content">
@@ -1954,13 +1955,13 @@ body.dark-mode .snackbar.hint {
 
         // IMPORTANT: Replace this with the config from your NEW Firebase project
         const firebaseConfig = {
-            apiKey: "...",
-            authDomain: "mygdchub-5e68a.firebaseapp.com",
-            databaseURL: "https://mygdchub-5e68a-default-rtdb.firebaseio.com",
-            projectId: "mygdchub-5e68a",
-            storageBucket: "mygdchub-5e68a.appspot.com",
-            messagingSenderId: "...",
-            appId: "..."
+          apiKey: "AIzaSyAZL-tP1-REDACTED-YOUR-KEY-HERE",
+          authDomain: "mygdchub-5e68a.firebaseapp.com",
+          projectId: "mygdchub-5e68a",
+          storageBucket: "mygdchub-5e68a.appspot.com",
+          messagingSenderId: "REDACTED",
+          appId: "REDACTED",
+          databaseURL: "https://mygdchub-5e68a-default-rtdb.firebaseio.com"
         };
 
         const app = firebase.initializeApp(firebaseConfig);
