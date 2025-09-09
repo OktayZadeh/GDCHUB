@@ -703,6 +703,10 @@ body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme {
     --light-gray: #E2E8F0; --light: #F7FAFC; --lighter: #FFFFFF;
     background-color: var(--light);
 }
+/* FIXED: This rule ensures the toolbar background updates correctly with the theme switch */
+body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .custom-toolbar-container {
+    background-color: var(--light);
+}
 body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .editor-header,
 body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .custom-toolbar,
 body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .toolbar-dropdown-menu {
