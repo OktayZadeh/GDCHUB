@@ -191,6 +191,9 @@ body.dark-mode .sidebar-link.active {
 }
 body.dark-mode .topbar-button { color: white; border-color: var(--dark-light); }
 body.dark-mode .topbar-button:hover { color: var(--dark-primary); background-color: var(--dark-light-gray); border-color: var(--dark-primary); }
+/* Notification Bell Dark Mode */
+body.dark-mode #notification-bell.active { color: var(--warning); border-color: var(--warning); }
+
 
 body.dark-mode input,
 body.dark-mode textarea,
@@ -305,6 +308,15 @@ body.dark-mode .profile-dropdown-content { background-color: var(--dark-lighter)
 body.dark-mode .profile-dropdown-content::before { border-bottom-color: var(--dark-lighter); }
 body.dark-mode .profile-dropdown-content a { color: var(--dark-medium); }
 body.dark-mode .profile-dropdown-content a:hover { background-color: var(--dark-light-gray); color: var(--primary); }
+
+/* Notification Bell */
+#notification-bell {
+    display: none; /* Hidden by default until user logs in */
+}
+#notification-bell.active {
+    color: var(--warning);
+    border-color: var(--warning);
+}
 
 /* Button Styles */
 .button {
@@ -1578,6 +1590,8 @@ body.dark-mode .snackbar.hint {
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <!-- ADDED: Firestore SDK for notifications -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
     
 </head>
 <body class="non-admin">
@@ -1597,6 +1611,10 @@ body.dark-mode .snackbar.hint {
                 <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
                     <i class="fas fa-envelope"></i> <span>Student Portal</span>
                 </a>
+                <!-- ADDED: Notification Bell Icon -->
+                <button id="notification-bell" class="topbar-button" title="Toggle Notifications">
+                    <i class="fas fa-bell-slash"></i>
+                </button>
                 <div class="profile-dropdown">
                     <img id="profile-pic" src="" alt="Profile Picture" class="topbar-button" style="width: 36px; height: 36px; padding: 0; border-radius: 50%;">
                     <div class="profile-dropdown-content">
@@ -1947,6 +1965,8 @@ body.dark-mode .snackbar.hint {
 
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        // ADDED: Initialize Firestore
+        const firestore = firebase.firestore();
         
         const tabsRef = database.ref('tabs');
         const announcementsRef = database.ref('announcements');
@@ -2013,6 +2033,7 @@ body.dark-mode .snackbar.hint {
             setupReminderActionDelegation();
             setupReminderViewToggle();
             setupReminderCollapse();
+            setupNotificationBell(); // ADDED
             reminderCategoryFilter.addEventListener('change', handleCategoryFilterChange);
             UndoManager.init();
             if (isAdmin) {
@@ -2082,7 +2103,6 @@ body.dark-mode .snackbar.hint {
             const toolbar = document.getElementById('custom-toolbar');
             const editor = document.getElementById('announcement-content');
             
-            // Listen for any input to dynamically update the theme
             editor.addEventListener('input', updateEditorTheme);
 
             populateFontDropdown();
@@ -2170,7 +2190,7 @@ body.dark-mode .snackbar.hint {
                     }
                 }
                 updateToolbarState();
-                updateEditorTheme(); // Update theme after command execution
+                updateEditorTheme();
             });
 
             document.addEventListener('click', (e) => {
@@ -2928,24 +2948,98 @@ body.dark-mode .snackbar.hint {
                         announcementTitleInput.value = ann.title; 
                         announcementContentEditor.innerHTML = ann.content || ''; 
                     }
-                    updateEditorTheme(); // Set initial theme based on loaded content
+                    updateEditorTheme(); 
                 });
             } else {
-                updateEditorTheme(); // Set initial theme for new post
+                updateEditorTheme(); 
             }
             announcementEditorOverlay.classList.add('visible');
             document.documentElement.style.overflow = 'hidden'; document.body.style.overflow = 'hidden';
         }
         function closeAnnouncementEditor() { announcementEditorOverlay.classList.remove('visible'); document.documentElement.style.overflow = ''; document.body.style.overflow = ''; }
-
-        function postAnnouncement() {
+        
+        // MODIFIED: Function to post announcement and trigger notifications
+        async function postAnnouncement() {
             if (!isAdmin || !currentTabId) return;
-            const title = announcementTitleInput.value.trim(); const content = announcementContentEditor.innerHTML;
-            if (!title) return alert('Please enter a title.');
+            const title = announcementTitleInput.value.trim();
+            const content = announcementContentEditor.innerHTML;
+            if (!title) {
+                alert('Please enter a title.');
+                return;
+            }
             const newAnnRef = announcementsRef.child(currentTabId).push();
-            const newAnn = { id: newAnnRef.key, title, content, pinned: false, order: Date.now() };
-            newAnnRef.set(newAnn).then(closeAnnouncementEditor);
+            const newAnnouncement = {
+                id: newAnnRef.key,
+                title,
+                content,
+                pinned: false,
+                order: Date.now()
+            };
+
+            try {
+                await newAnnRef.set(newAnnouncement);
+                console.log("Announcement saved successfully.");
+                closeAnnouncementEditor();
+                // Trigger emails for subscribed users
+                await sendNotificationsForPost(newAnnouncement);
+            } catch (error) {
+                console.error("Error posting announcement or sending notifications: ", error);
+                alert("There was an error posting the announcement.");
+            }
         }
+        
+        // NEW: Function to handle notification sending logic
+        async function sendNotificationsForPost(post) {
+            console.log("Searching for users with notifications enabled...");
+            const mailCollection = firestore.collection('mail');
+            const usersCollection = firestore.collection('users');
+
+            const q = usersCollection.where("notificationsEnabled", "==", true);
+            
+            try {
+                const querySnapshot = await q.get();
+                if (querySnapshot.empty) {
+                    console.log("No users have notifications enabled. No emails sent.");
+                    return;
+                }
+
+                let emailsSent = 0;
+                const batch = firestore.batch();
+                querySnapshot.forEach(userDoc => {
+                    const userData = userDoc.data();
+                    if (userData.email) {
+                        const emailDocument = {
+                            to: [userData.email],
+                            message: {
+                                subject: `New Announcement: ${post.title}`,
+                                html: `
+                                    <div style="font-family: sans-serif; padding: 20px; color: #333;">
+                                        <h2>A new announcement has been posted in GDCHUB</h2>
+                                        <hr>
+                                        <h3>${post.title}</h3>
+                                        <div>${post.content}</div>
+                                        <br>
+                                        <p style="font-size: 12px; color: #777;">
+                                            You are receiving this because you enabled notifications. 
+                                            You can disable them in the app.
+                                        </p>
+                                    </div>`
+                            }
+                        };
+                        const newMailRef = mailCollection.doc();
+                        batch.set(newMailRef, emailDocument);
+                        emailsSent++;
+                    }
+                });
+                await batch.commit();
+                console.log(`Successfully queued ${emailsSent} emails for sending.`);
+                UndoManager.show(`${emailsSent} notifications sent.`, () => {});
+            } catch (error) {
+                console.error("Error querying users or creating email documents:", error);
+            }
+        }
+
+
         function saveEditedAnnouncement(id) {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim(); const content = announcementContentEditor.innerHTML;
@@ -3521,6 +3615,66 @@ body.dark-mode .snackbar.hint {
             });
         }
         
+        // --- ADDED: Notification Bell Logic ---
+        function setupNotificationBell() {
+            const notificationBell = document.getElementById('notification-bell');
+            let currentUserNotificationState = false;
+
+            firebase.auth().onAuthStateChanged(user => {
+                if (user) {
+                    notificationBell.style.display = 'flex';
+                    const userDocRef = firestore.collection('users').doc(user.uid);
+
+                    userDocRef.onSnapshot((doc) => {
+                        if (doc.exists) {
+                            currentUserNotificationState = doc.data().notificationsEnabled === true;
+                            updateBellIcon(currentUserNotificationState);
+                        } else {
+                            // If user document doesn't exist, create it.
+                            userDocRef.set({
+                                email: user.email,
+                                name: user.displayName || 'Unnamed User',
+                                notificationsEnabled: false
+                            }, { merge: true });
+                        }
+                    }, (error) => {
+                        console.error("Error listening to user doc:", error);
+                    });
+
+                } else {
+                    notificationBell.style.display = 'none';
+                }
+            });
+
+            function updateBellIcon(isEnabled) {
+                const icon = notificationBell.querySelector('i');
+                if (isEnabled) {
+                    notificationBell.classList.add('active');
+                    icon.classList.remove('fa-bell-slash');
+                    icon.classList.add('fa-bell');
+                    notificationBell.title = "Disable Notifications";
+                } else {
+                    notificationBell.classList.remove('active');
+                    icon.classList.remove('fa-bell-slash');
+                    icon.classList.add('fa-bell');
+                    // This logic is tricky, let's simplify for clarity
+                    icon.classList.add('fa-bell-slash');
+                    notificationBell.title = "Enable Notifications";
+                }
+            }
+
+            notificationBell.addEventListener('click', () => {
+                const user = firebase.auth().currentUser;
+                if (!user) return;
+
+                const newState = !currentUserNotificationState;
+                const userDocRef = firestore.collection('users').doc(user.uid);
+
+                userDocRef.set({ notificationsEnabled: newState }, { merge: true })
+                    .catch(error => console.error("Error updating notification preference: ", error));
+            });
+        }
+
         const UndoManager = {
             queue: [], isShowing: false,
             init() {},
