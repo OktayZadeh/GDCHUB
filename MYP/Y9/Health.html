@@ -84,6 +84,46 @@
     --transition-slow: 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* --- NEW FLOATING NOTIFICATION BELL --- */
+#notification-fab {
+    position: fixed; /* Ensures it's always visible on screen */
+    bottom: 25px;
+    right: 25px;
+    width: 60px;
+    height: 60px;
+    background-color: var(--medium); /* A neutral gray color when disabled */
+    color: white;
+    border-radius: 50%; /* Makes it a circle */
+    border: none;
+    box-shadow: var(--shadow-lg); /* Gives it a nice pop from the page */
+    font-size: 24px; /* Makes the icon inside larger */
+    display: none; /* Starts hidden, JavaScript will show it when the user logs in */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1050; /* Ensures it's on top of most other content */
+    transition: all var(--transition-fast);
+}
+
+#notification-fab:hover {
+    transform: scale(1.1); /* A nice little hover effect */
+}
+
+/* This is the 'active' state for when notifications are ON */
+#notification-fab.active {
+    background-color: var(--warning); /* A vibrant gold/orange color */
+}
+
+body.dark-mode #notification-fab {
+    background-color: var(--dark-light);
+}
+
+body.dark-mode #notification-fab.active {
+    background-color: var(--warning);
+}
+/* ------------------------------------ */
+
+
 /* Dark mode styles - ENHANCED */
 body.dark-mode {
     --primary: var(--dark-primary);
@@ -191,9 +231,6 @@ body.dark-mode .sidebar-link.active {
 }
 body.dark-mode .topbar-button { color: white; border-color: var(--dark-light); }
 body.dark-mode .topbar-button:hover { color: var(--dark-primary); background-color: var(--dark-light-gray); border-color: var(--dark-primary); }
-/* Notification Bell Dark Mode */
-body.dark-mode #notification-bell.active { color: var(--warning); border-color: var(--warning); }
-
 
 body.dark-mode input,
 body.dark-mode textarea,
@@ -309,15 +346,6 @@ body.dark-mode .profile-dropdown-content::before { border-bottom-color: var(--da
 body.dark-mode .profile-dropdown-content a { color: var(--dark-medium); }
 body.dark-mode .profile-dropdown-content a:hover { background-color: var(--dark-light-gray); color: var(--primary); }
 
-/* Notification Bell */
-#notification-bell {
-    display: none; /* Hidden by default until user logs in */
-}
-#notification-bell.active {
-    color: var(--warning);
-    border-color: var(--warning);
-}
-
 /* Button Styles */
 .button {
     display: inline-flex; align-items: center; justify-content: center; padding: var(--space-sm) var(--space-md); border-radius: var(--radius-md);
@@ -330,7 +358,7 @@ body.dark-mode .profile-dropdown-content a:hover { background-color: var(--dark-
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
     text-decoration: none;
-    color: white; /* Ensures text remains white on hover */
+    color: white;
 }
 
 .button:active { transform: translateY(0); box-shadow: var(--shadow-sm); }
@@ -715,7 +743,6 @@ body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme {
     --light-gray: #E2E8F0; --light: #F7FAFC; --lighter: #FFFFFF;
     background-color: var(--light);
 }
-/* FIXED: This rule ensures the toolbar background updates correctly with the theme switch */
 body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .custom-toolbar-container {
     background-color: var(--light);
 }
@@ -1610,12 +1637,6 @@ body.dark-mode .snackbar.hint {
                 <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
                     <i class="fas fa-envelope"></i> <span>Student Portal</span>
                 </a>
-                
-                <!-- THIS IS THE CORRECTED, INCLUDED BELL ICON -->
-                <button id="notification-bell" class="topbar-button" title="Toggle Notifications">
-                    <i class="fas fa-bell-slash"></i>
-                </button>
-                
                 <div class="profile-dropdown">
                     <img id="profile-pic" src="" alt="Profile Picture" class="topbar-button" style="width: 36px; height: 36px; padding: 0; border-radius: 50%;">
                     <div class="profile-dropdown-content">
@@ -1866,7 +1887,6 @@ body.dark-mode .snackbar.hint {
         </div>
     </div>
 
-    <!-- UPDATED: Link Modal -->
     <div id="link-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeLinkModal()">×</span>
@@ -1890,9 +1910,7 @@ body.dark-mode .snackbar.hint {
             <span class="close-button" onclick="closeCategoryManager()">×</span>
             <h2>Manage Reminder Categories</h2>
             <p style="font-size: var(--text-sm); color: var(--medium); margin-bottom: var(--space-md);">Add or remove class categories for reminders.</p>
-            <div class="category-manager-list" id="category-manager-list">
-                <!-- Categories will be dynamically inserted here -->
-            </div>
+            <div class="category-manager-list" id="category-manager-list"></div>
             <form class="add-category-form" onsubmit="addCategory(event)">
                 <input type="text" id="new-category-name" placeholder="e.g., 9Health-A" required>
                 <button type="submit" class="button">Add</button>
@@ -1911,6 +1929,11 @@ body.dark-mode .snackbar.hint {
         <i class="fas fa-download"></i>
         <span>Download started. Tap the file in your browser's downloads to add to Calendar.</span>
     </div>
+
+    <!-- NEW FLOATING BELL BUTTON: This is placed just before the closing </body> tag to ensure it's visible. -->
+    <button id="notification-fab" title="Toggle Notifications">
+        <i class="fas fa-bell-slash"></i>
+    </button>
 
     <script>
         (function() {
@@ -3611,12 +3634,12 @@ body.dark-mode .snackbar.hint {
         }
         
         function setupNotificationBell() {
-            const notificationBell = document.getElementById('notification-bell');
+            const notificationBell = document.getElementById('notification-fab'); // Corrected to target the FAB
             let currentUserNotificationState = false;
 
             firebase.auth().onAuthStateChanged(user => {
                 if (user) {
-                    notificationBell.style.display = 'flex';
+                    notificationBell.style.display = 'flex'; // Use flex to center the icon
                     const userDocRef = firestore.collection('users').doc(user.uid);
 
                     userDocRef.onSnapshot((doc) => {
