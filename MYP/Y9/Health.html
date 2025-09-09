@@ -29,7 +29,7 @@
     --dark-primary: #38B2AC;
     --dark-primary-light: #2C7A7B;
     --dark-primary-dark: #285E61;
-    --dark-secondary: #4299E1;
+    --dark-secondary: #429E1;
     --dark-accent: #0BC5EA;
     --dark-success: #48BB78;
     --dark-warning: #ED8936;
@@ -1611,7 +1611,7 @@ body.dark-mode .snackbar.hint {
                 <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
                     <i class="fas fa-envelope"></i> <span>Student Portal</span>
                 </a>
-                <!-- ADDED: Notification Bell Icon -->
+                <!-- CORRECTED: Added the missing bell icon button -->
                 <button id="notification-bell" class="topbar-button" title="Toggle Notifications">
                     <i class="fas fa-bell-slash"></i>
                 </button>
@@ -1952,20 +1952,19 @@ body.dark-mode .snackbar.hint {
             });
         })();
 
+        // IMPORTANT: Replace this with the config from your NEW Firebase project
         const firebaseConfig = {
-            apiKey: "AIzaSyCSTEJ3LevxY2_rlGROzajNnNBrVG3oRR4",
-            authDomain: "gdchub-3b40a.firebaseapp.com",
-            databaseURL: "https://gdchub-3b40a-default-rtdb.firebaseio.com",
-            projectId: "gdchub-3b40a",
-            storageBucket: "gdchub-3b40a.appspot.com",
-            messagingSenderId: "399894468887",
-            appId: "1:399894468887:web:e3b8669a038fec20d9bf52",
-            measurementId: "G-E25TMDFLFX"
+            apiKey: "...",
+            authDomain: "mygdchub-5e68a.firebaseapp.com",
+            databaseURL: "https://mygdchub-5e68a-default-rtdb.firebaseio.com",
+            projectId: "mygdchub-5e68a",
+            storageBucket: "mygdchub-5e68a.appspot.com",
+            messagingSenderId: "...",
+            appId: "..."
         };
 
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        // ADDED: Initialize Firestore
         const firestore = firebase.firestore();
         
         const tabsRef = database.ref('tabs');
@@ -2033,7 +2032,7 @@ body.dark-mode .snackbar.hint {
             setupReminderActionDelegation();
             setupReminderViewToggle();
             setupReminderCollapse();
-            setupNotificationBell(); // ADDED
+            setupNotificationBell();
             reminderCategoryFilter.addEventListener('change', handleCategoryFilterChange);
             UndoManager.init();
             if (isAdmin) {
@@ -2081,8 +2080,6 @@ body.dark-mode .snackbar.hint {
             });
         }
         
-        // --- NEW AND IMPROVED EDITOR LOGIC ---
-
         function isMediaOnly(contentElement) {
             const contentClone = contentElement.cloneNode(true);
             contentClone.querySelectorAll('.embed-container, iframe, a').forEach(el => el.remove());
@@ -2958,7 +2955,6 @@ body.dark-mode .snackbar.hint {
         }
         function closeAnnouncementEditor() { announcementEditorOverlay.classList.remove('visible'); document.documentElement.style.overflow = ''; document.body.style.overflow = ''; }
         
-        // MODIFIED: Function to post announcement and trigger notifications
         async function postAnnouncement() {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
@@ -2980,7 +2976,6 @@ body.dark-mode .snackbar.hint {
                 await newAnnRef.set(newAnnouncement);
                 console.log("Announcement saved successfully.");
                 closeAnnouncementEditor();
-                // Trigger emails for subscribed users
                 await sendNotificationsForPost(newAnnouncement);
             } catch (error) {
                 console.error("Error posting announcement or sending notifications: ", error);
@@ -2988,7 +2983,6 @@ body.dark-mode .snackbar.hint {
             }
         }
         
-        // NEW: Function to handle notification sending logic
         async function sendNotificationsForPost(post) {
             console.log("Searching for users with notifications enabled...");
             const mailCollection = firestore.collection('mail');
@@ -3615,7 +3609,6 @@ body.dark-mode .snackbar.hint {
             });
         }
         
-        // --- ADDED: Notification Bell Logic ---
         function setupNotificationBell() {
             const notificationBell = document.getElementById('notification-bell');
             let currentUserNotificationState = false;
@@ -3630,7 +3623,6 @@ body.dark-mode .snackbar.hint {
                             currentUserNotificationState = doc.data().notificationsEnabled === true;
                             updateBellIcon(currentUserNotificationState);
                         } else {
-                            // If user document doesn't exist, create it.
                             userDocRef.set({
                                 email: user.email,
                                 name: user.displayName || 'Unnamed User',
@@ -3655,10 +3647,8 @@ body.dark-mode .snackbar.hint {
                     notificationBell.title = "Disable Notifications";
                 } else {
                     notificationBell.classList.remove('active');
-                    icon.classList.remove('fa-bell-slash');
-                    icon.classList.add('fa-bell');
-                    // This logic is tricky, let's simplify for clarity
                     icon.classList.add('fa-bell-slash');
+                    icon.classList.remove('fa-bell');
                     notificationBell.title = "Enable Notifications";
                 }
             }
