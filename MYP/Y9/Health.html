@@ -191,8 +191,6 @@ body.dark-mode .sidebar-link.active {
 }
 body.dark-mode .topbar-button { color: white; border-color: var(--dark-light); }
 body.dark-mode .topbar-button:hover { color: var(--dark-primary); background-color: var(--dark-light-gray); border-color: var(--dark-primary); }
-/* Notification Bell Dark Mode */
-body.dark-mode #notification-bell.active { color: var(--warning); border-color: var(--warning); }
 
 
 body.dark-mode input,
@@ -309,13 +307,41 @@ body.dark-mode .profile-dropdown-content::before { border-bottom-color: var(--da
 body.dark-mode .profile-dropdown-content a { color: var(--dark-medium); }
 body.dark-mode .profile-dropdown-content a:hover { background-color: var(--dark-light-gray); color: var(--primary); }
 
-/* Notification Bell */
-#notification-bell {
-    /* Visibility is handled by JavaScript auth state */
+/* Generic Header Action Button (for notification bell, etc.) */
+.header-action-button {
+    background: transparent;
+    border: none;
+    width: 32px;
+    height: 32px;
+    color: var(--medium);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    font-size: var(--text-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
+.header-action-button:hover {
+    background: var(--light);
+}
+
+body.dark-mode .header-action-button {
+    color: var(--dark-medium);
+}
+
+body.dark-mode .header-action-button:hover {
+    background: var(--dark-light-gray);
+}
+
+/* Notification Bell Specifics */
 #notification-bell.active {
     color: var(--warning);
-    border-color: var(--warning);
+}
+
+body.dark-mode #notification-bell.active {
+    color: var(--dark-warning);
 }
 
 /* Button Styles */
@@ -1611,10 +1637,6 @@ body.dark-mode .snackbar.hint {
                 <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
                     <i class="fas fa-envelope"></i> <span>Student Portal</span>
                 </a>
-                <!-- ADDED: Notification Bell Icon -->
-                <button id="notification-bell" class="topbar-button" title="Toggle Notifications">
-                    <i class="fas fa-bell-slash"></i>
-                </button>
                 <div class="profile-dropdown">
                     <img id="profile-pic" src="" alt="Profile Picture" class="topbar-button" style="width: 36px; height: 36px; padding: 0; border-radius: 50%;">
                     <div class="profile-dropdown-content">
@@ -1651,6 +1673,10 @@ body.dark-mode .snackbar.hint {
                         <i class="fas fa-chevron-up"></i>
                     </button>
                     <h2>Upcoming Reminders</h2>
+                    <!-- MOVED: Notification Bell Icon is now here -->
+                    <button id="notification-bell" class="header-action-button" title="Toggle Notifications">
+                        <i class="fas fa-bell-slash"></i>
+                    </button>
                      <div class="reminders-view-toggle">
                         <button class="view-toggle-btn active" id="reminders-list-view-btn" title="List View"><i class="fas fa-list-ul"></i></button>
                         <button class="view-toggle-btn" id="reminders-month-view-btn" title="Month View"><i class="fas fa-calendar-alt"></i></button>
