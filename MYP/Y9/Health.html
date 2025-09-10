@@ -287,6 +287,20 @@ a:hover { color: var(--primary-dark); text-decoration: underline; }
 .topbar-button:hover { background: var(--light); color: var(--primary); border-color: var(--primary-light); text-decoration: none; }
 .topbar-button i { font-size: var(--text-sm); }
 
+/* --- SIMPLIFIED NOTIFICATION BELL STYLES --- */
+#notification-bell {
+    /* Styles are now identical to .topbar-button for consistency */
+    /* JavaScript will ONLY update the 'active' class, not visibility. */
+}
+#notification-bell.active {
+    color: var(--warning);
+    border-color: var(--warning);
+}
+body.dark-mode #notification-bell.active {
+    color: var(--dark-warning);
+    border-color: var(--dark-warning);
+}
+
 /* Profile dropdown - Improved */
 .profile-dropdown { position: relative; display: inline-block; }
 .profile-dropdown-content {
@@ -306,53 +320,6 @@ body.dark-mode .profile-dropdown-content { background-color: var(--dark-lighter)
 body.dark-mode .profile-dropdown-content::before { border-bottom-color: var(--dark-lighter); }
 body.dark-mode .profile-dropdown-content a { color: var(--dark-medium); }
 body.dark-mode .profile-dropdown-content a:hover { background-color: var(--dark-light-gray); color: var(--primary); }
-
-/* --- NEW FLOATING NOTIFICATION BELL STYLES --- */
-#notification-bell-container {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 3000; /* High z-index to ensure visibility */
-    display: none; /* Controlled by JavaScript */
-}
-
-#notification-bell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 50px;
-    height: 50px;
-    background-color: var(--primary);
-    color: white;
-    border-radius: 50%;
-    border: none;
-    box-shadow: var(--shadow-lg);
-    cursor: pointer;
-    font-size: var(--text-xl);
-    transition: all var(--transition-fast);
-}
-
-#notification-bell:hover {
-    background-color: var(--primary-dark);
-    transform: scale(1.1);
-}
-
-#notification-bell.active {
-    background-color: var(--warning);
-}
-
-body.dark-mode #notification-bell {
-    background-color: var(--dark-primary);
-    color: white;
-}
-
-body.dark-mode #notification-bell:hover {
-    background-color: var(--dark-primary-dark);
-}
-
-body.dark-mode #notification-bell.active {
-    background-color: var(--dark-warning);
-}
 
 /* Button Styles */
 .button {
@@ -1647,6 +1614,10 @@ body.dark-mode .snackbar.hint {
                 <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
                     <i class="fas fa-envelope"></i> <span>Student Portal</span>
                 </a>
+                <!-- NEW HARDCODED NOTIFICATION BELL -->
+                <button id="notification-bell" class="topbar-button" title="Toggle Notifications" style="display: none;">
+                    <i class="fas fa-bell-slash"></i>
+                </button>
                 <div class="profile-dropdown">
                     <img id="profile-pic" src="" alt="Profile Picture" class="topbar-button" style="width: 36px; height: 36px; padding: 0; border-radius: 50%;">
                     <div class="profile-dropdown-content">
@@ -1942,14 +1913,7 @@ body.dark-mode .snackbar.hint {
         <i class="fas fa-download"></i>
         <span>Download started. Tap the file in your browser's downloads to add to Calendar.</span>
     </div>
-
-    <!-- NEW DEDICATED NOTIFICATION BELL CONTAINER -->
-    <div id="notification-bell-container">
-        <button id="notification-bell" title="Toggle Notifications">
-            <i class="fas fa-bell-slash"></i>
-        </button>
-    </div>
-
+    
     <script>
         (function() {
             const USER_INFO_KEY = "googleUserInfo";
@@ -2091,15 +2055,14 @@ body.dark-mode .snackbar.hint {
 
         // --- REWRITTEN FOR FINAL RELIABILITY: Notification Bell Logic ---
         function setupNotificationBell() {
-            const bellContainer = document.getElementById('notification-bell-container');
             const notificationBell = document.getElementById('notification-bell');
             const bellIcon = notificationBell.querySelector('i');
             let currentUserNotificationState = false;
 
             firebase.auth().onAuthStateChanged(user => {
                 if (user) {
-                    // USER IS LOGGED IN: Make the container visible.
-                    bellContainer.style.display = 'block';
+                    // USER IS LOGGED IN: Make the bell visible.
+                    notificationBell.style.display = 'flex';
 
                     const userDocRef = firestore.collection('users').doc(user.uid);
                     userDocRef.onSnapshot((doc) => {
@@ -2117,12 +2080,12 @@ body.dark-mode .snackbar.hint {
                         updateBellIcon(currentUserNotificationState);
                     }, (error) => {
                         console.error("Error listening to user document:", error);
-                        // Hide on error
-                        bellContainer.style.display = 'none';
+                        notificationBell.style.display = 'none'; // Hide on error
                     });
+
                 } else {
-                    // USER IS LOGGED OUT: Hide the container.
-                    bellContainer.style.display = 'none';
+                    // USER IS LOGGED OUT: Hide the bell.
+                    notificationBell.style.display = 'none';
                 }
             });
 
@@ -2144,6 +2107,7 @@ body.dark-mode .snackbar.hint {
                     .catch(error => console.error("Error updating notification preference: ", error));
             });
         }
+
 
         function setupReminderCollapse() {
             const container = document.getElementById('reminders-container');
