@@ -288,7 +288,6 @@ a:hover { color: var(--primary-dark); text-decoration: underline; }
 .topbar-button i { font-size: var(--text-sm); }
 
 /* --- NEW, SIMPLIFIED NOTIFICATION BELL STYLES --- */
-/* The bell is now always visible. It is only functional when logged in. */
 #notification-bell.disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -2060,12 +2059,17 @@ body.dark-mode .snackbar.hint {
 
         // --- FINAL, SIMPLIFIED, AND RELIABLE NOTIFICATION BELL LOGIC ---
         function setupNotificationBell() {
+            console.log("--- Initializing Notification Bell ---");
             const notificationBell = document.getElementById('notification-bell');
+            if (!notificationBell) {
+                console.error("CRITICAL: Notification bell element not found in the DOM.");
+                return;
+            }
+            
             const bellIcon = notificationBell.querySelector('i');
             let currentUserNotificationState = false;
-            let unsubscribe; // To store the Firestore listener to detach it on logout
+            let unsubscribe; // To store the Firestore listener
 
-            // This function ONLY updates the UI based on a boolean state.
             function updateBellIcon(isEnabled) {
                 notificationBell.classList.toggle('active', isEnabled);
                 bellIcon.classList.toggle('fa-bell', isEnabled);
@@ -2073,40 +2077,42 @@ body.dark-mode .snackbar.hint {
                 notificationBell.title = isEnabled ? "Disable Email Notifications" : "Enable Email Notifications";
             }
 
-            // This function handles the logic when the bell is clicked.
-            async function handleBellClick() {
+            function handleBellClick() {
+                console.log("Bell clicked! Current state:", currentUserNotificationState);
                 const user = firebase.auth().currentUser;
-                if (!user) return; // Should not be clickable if no user, but a good safeguard
-
-                const userDocRef = firestore.collection('users').doc(user.uid);
-                // The new state is the opposite of the current state
-                const newState = !currentUserNotificationState; 
-                try {
-                    await userDocRef.set({ notificationsEnabled: newState }, { merge: true });
-                } catch (error) {
-                    console.error("Error toggling notification preference:", error);
+                if (!user) {
+                    console.error("Bell clicked but no user is logged in.");
+                    return;
                 }
+
+                const newState = !currentUserNotificationState;
+                const userDocRef = firestore.collection('users').doc(user.uid);
+                
+                console.log("Setting notificationsEnabled to:", newState);
+                userDocRef.set({ notificationsEnabled: newState }, { merge: true })
+                    .catch(error => console.error("Error toggling notification preference:", error));
             }
 
             firebase.auth().onAuthStateChanged(user => {
-                // If a listener from a previous session exists, detach it.
                 if (unsubscribe) {
+                    console.log("Detaching previous Firestore listener.");
                     unsubscribe();
                 }
 
                 if (user) {
-                    // USER IS LOGGED IN: Make the bell functional.
+                    console.log("User is signed in:", user.uid);
                     notificationBell.classList.remove('disabled');
                     notificationBell.addEventListener('click', handleBellClick);
 
                     const userDocRef = firestore.collection('users').doc(user.uid);
                     
-                    // Listen for real-time changes and update the UI accordingly.
                     unsubscribe = userDocRef.onSnapshot((doc) => {
+                        console.log("Received data from Firestore.");
                         if (doc.exists) {
                             currentUserNotificationState = doc.data().notificationsEnabled === true;
+                            console.log("Notifications enabled in DB:", currentUserNotificationState);
                         } else {
-                            // If it's the user's first time, create their profile.
+                            console.log("User document does not exist. Creating it.");
                             userDocRef.set({
                                 email: user.email,
                                 name: user.displayName || 'Unnamed User',
@@ -2114,17 +2120,18 @@ body.dark-mode .snackbar.hint {
                             }, { merge: true });
                             currentUserNotificationState = false;
                         }
+                        console.log("Updating bell icon.");
                         updateBellIcon(currentUserNotificationState);
                     }, (error) => {
                         console.error("Error listening to user document:", error);
-                        notificationBell.classList.add('disabled'); // Disable on error
+                        notificationBell.classList.add('disabled');
                     });
 
                 } else {
-                    // USER IS LOGGED OUT: Disable the bell and set to default state.
+                    console.log("User is signed out.");
                     notificationBell.classList.add('disabled');
                     notificationBell.removeEventListener('click', handleBellClick);
-                    updateBellIcon(false); // Reset icon to 'off'
+                    updateBellIcon(false);
                 }
             });
         }
