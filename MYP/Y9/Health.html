@@ -288,10 +288,7 @@ a:hover { color: var(--primary-dark); text-decoration: underline; }
 .topbar-button i { font-size: var(--text-sm); }
 
 /* --- SIMPLIFIED NOTIFICATION BELL STYLES --- */
-#notification-bell {
-    /* Styles are now identical to .topbar-button for consistency */
-    /* JavaScript will ONLY update the 'active' class, not visibility. */
-}
+/* The bell now inherits all styles from .topbar-button, ensuring it's always visible */
 #notification-bell.active {
     color: var(--warning);
     border-color: var(--warning);
@@ -1614,8 +1611,8 @@ body.dark-mode .snackbar.hint {
                 <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
                     <i class="fas fa-envelope"></i> <span>Student Portal</span>
                 </a>
-                <!-- NEW HARDCODED NOTIFICATION BELL -->
-                <button id="notification-bell" class="topbar-button" title="Toggle Notifications" style="display: none;">
+                <!-- SIMPLIFIED AND PERMANENT NOTIFICATION BELL -->
+                <button id="notification-bell" class="topbar-button" title="Toggle Notifications">
                     <i class="fas fa-bell-slash"></i>
                 </button>
                 <div class="profile-dropdown">
@@ -2053,23 +2050,24 @@ body.dark-mode .snackbar.hint {
             });
         });
 
-        // --- REWRITTEN FOR FINAL RELIABILITY: Notification Bell Logic ---
+        // --- NEW, SIMPLIFIED, AND RELIABLE NOTIFICATION BELL LOGIC ---
         function setupNotificationBell() {
             const notificationBell = document.getElementById('notification-bell');
             const bellIcon = notificationBell.querySelector('i');
             let currentUserNotificationState = false;
+            let clickListenerAttached = false; // Prevents multiple listeners
 
+            // The bell is always visible in the HTML. This function just adds functionality.
+            
             firebase.auth().onAuthStateChanged(user => {
                 if (user) {
-                    // USER IS LOGGED IN: Make the bell visible.
-                    notificationBell.style.display = 'flex';
-
                     const userDocRef = firestore.collection('users').doc(user.uid);
+
                     userDocRef.onSnapshot((doc) => {
                         if (doc.exists) {
                             currentUserNotificationState = doc.data().notificationsEnabled === true;
                         } else {
-                            // Create user doc if it doesn't exist
+                            // User document doesn't exist, create it.
                             userDocRef.set({
                                 email: user.email,
                                 name: user.displayName || 'Unnamed User',
@@ -2078,14 +2076,25 @@ body.dark-mode .snackbar.hint {
                             currentUserNotificationState = false;
                         }
                         updateBellIcon(currentUserNotificationState);
-                    }, (error) => {
-                        console.error("Error listening to user document:", error);
-                        notificationBell.style.display = 'none'; // Hide on error
                     });
 
+                    // Attach click listener only once
+                    if (!clickListenerAttached) {
+                        notificationBell.addEventListener('click', () => {
+                            const currentUser = firebase.auth().currentUser;
+                            if (!currentUser) return; // Safety check
+
+                            const newState = !currentUserNotificationState;
+                            const userDocRef = firestore.collection('users').doc(currentUser.uid);
+                            userDocRef.set({ notificationsEnabled: newState }, { merge: true });
+                        });
+                        clickListenerAttached = true;
+                    }
+
                 } else {
-                    // USER IS LOGGED OUT: Hide the bell.
-                    notificationBell.style.display = 'none';
+                    // If no user, reset the bell to its default 'off' state.
+                    // It remains visible but non-functional.
+                    updateBellIcon(false);
                 }
             });
 
@@ -2095,17 +2104,6 @@ body.dark-mode .snackbar.hint {
                 bellIcon.classList.toggle('fa-bell-slash', !isEnabled);
                 notificationBell.title = isEnabled ? "Disable Email Notifications" : "Enable Email Notifications";
             }
-
-            notificationBell.addEventListener('click', () => {
-                const user = firebase.auth().currentUser;
-                if (!user) return;
-
-                const newState = !currentUserNotificationState;
-                const userDocRef = firestore.collection('users').doc(user.uid);
-
-                userDocRef.set({ notificationsEnabled: newState }, { merge: true })
-                    .catch(error => console.error("Error updating notification preference: ", error));
-            });
         }
 
 
@@ -2120,8 +2118,7 @@ body.dark-mode .snackbar.hint {
                     icon.classList.remove('fa-chevron-up');
                     icon.classList.add('fa-chevron-down');
                 } else {
-                    container.classList.remove('collapsed');
-                    icon.classList.remove('fa-chevron-down');
+                    container.classList.remove('fa-chevron-down');
                     icon.classList.add('fa-chevron-up');
                 }
             };
@@ -3911,3 +3908,4 @@ body.dark-mode .snackbar.hint {
     </script>
 </body>
 </html>
+```
