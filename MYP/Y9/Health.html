@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -288,24 +287,19 @@ a:hover { color: var(--primary-dark); text-decoration: underline; }
 .topbar-button:hover { background: var(--light); color: var(--primary); border-color: var(--primary-light); text-decoration: none; }
 .topbar-button i { font-size: var(--text-sm); }
 
-/* --- NEW, SIMPLIFIED NOTIFICATION BELL STYLES --- */
-/* The bell is now always visible. It is only functional when logged in. */
-#notification-bell.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    pointer-events: none; /* Disables clicks */
+/* --- SIMPLIFIED NOTIFICATION BELL STYLES --- */
+#notification-bell {
+    /* Styles are now identical to .topbar-button for consistency */
+    /* JavaScript will ONLY update the 'active' class, not visibility. */
 }
-
 #notification-bell.active {
     color: var(--warning);
     border-color: var(--warning);
 }
-
 body.dark-mode #notification-bell.active {
     color: var(--dark-warning);
     border-color: var(--dark-warning);
 }
-
 
 /* Profile dropdown - Improved */
 .profile-dropdown { position: relative; display: inline-block; }
@@ -1620,8 +1614,8 @@ body.dark-mode .snackbar.hint {
                 <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
                     <i class="fas fa-envelope"></i> <span>Student Portal</span>
                 </a>
-                <!-- SIMPLIFIED AND PERMANENT NOTIFICATION BELL -->
-                <button id="notification-bell" class="topbar-button" title="Toggle Notifications">
+                <!-- NEW HARDCODED NOTIFICATION BELL -->
+                <button id="notification-bell" class="topbar-button" title="Toggle Notifications" style="display: none;">
                     <i class="fas fa-bell-slash"></i>
                 </button>
                 <div class="profile-dropdown">
@@ -2059,55 +2053,23 @@ body.dark-mode .snackbar.hint {
             });
         });
 
-        // --- FINAL, SIMPLIFIED, AND RELIABLE NOTIFICATION BELL LOGIC ---
+        // --- REWRITTEN FOR FINAL RELIABILITY: Notification Bell Logic ---
         function setupNotificationBell() {
             const notificationBell = document.getElementById('notification-bell');
             const bellIcon = notificationBell.querySelector('i');
             let currentUserNotificationState = false;
-            let unsubscribe; // To store the Firestore listener to detach it on logout
-
-            // This function ONLY updates the UI based on a boolean state.
-            function updateBellIcon(isEnabled) {
-                notificationBell.classList.toggle('active', isEnabled);
-                bellIcon.classList.toggle('fa-bell', isEnabled);
-                bellIcon.classList.toggle('fa-bell-slash', !isEnabled);
-                notificationBell.title = isEnabled ? "Disable Email Notifications" : "Enable Email Notifications";
-            }
-
-            // This function handles the logic when the bell is clicked.
-            async function handleBellClick() {
-                const user = firebase.auth().currentUser;
-                if (!user) return; // Should not be clickable if no user, but a good safeguard
-
-                const userDocRef = firestore.collection('users').doc(user.uid);
-                // The new state is the opposite of the current state
-                const newState = !currentUserNotificationState; 
-                try {
-                    await userDocRef.set({ notificationsEnabled: newState }, { merge: true });
-                } catch (error) {
-                    console.error("Error toggling notification preference:", error);
-                }
-            }
 
             firebase.auth().onAuthStateChanged(user => {
-                // If a listener from a previous session exists, detach it.
-                if (unsubscribe) {
-                    unsubscribe();
-                }
-
                 if (user) {
-                    // USER IS LOGGED IN: Make the bell functional.
-                    notificationBell.classList.remove('disabled');
-                    notificationBell.addEventListener('click', handleBellClick);
+                    // USER IS LOGGED IN: Make the bell visible.
+                    notificationBell.style.display = 'flex';
 
                     const userDocRef = firestore.collection('users').doc(user.uid);
-                    
-                    // Listen for real-time changes and update the UI accordingly.
-                    unsubscribe = userDocRef.onSnapshot((doc) => {
+                    userDocRef.onSnapshot((doc) => {
                         if (doc.exists) {
                             currentUserNotificationState = doc.data().notificationsEnabled === true;
                         } else {
-                            // If it's the user's first time, create their profile.
+                            // Create user doc if it doesn't exist
                             userDocRef.set({
                                 email: user.email,
                                 name: user.displayName || 'Unnamed User',
@@ -2118,15 +2080,31 @@ body.dark-mode .snackbar.hint {
                         updateBellIcon(currentUserNotificationState);
                     }, (error) => {
                         console.error("Error listening to user document:", error);
-                        notificationBell.classList.add('disabled'); // Disable on error
+                        notificationBell.style.display = 'none'; // Hide on error
                     });
 
                 } else {
-                    // USER IS LOGGED OUT: Disable the bell and set to default state.
-                    notificationBell.classList.add('disabled');
-                    notificationBell.removeEventListener('click', handleBellClick);
-                    updateBellIcon(false); // Reset icon to 'off'
+                    // USER IS LOGGED OUT: Hide the bell.
+                    notificationBell.style.display = 'none';
                 }
+            });
+
+            function updateBellIcon(isEnabled) {
+                notificationBell.classList.toggle('active', isEnabled);
+                bellIcon.classList.toggle('fa-bell', isEnabled);
+                bellIcon.classList.toggle('fa-bell-slash', !isEnabled);
+                notificationBell.title = isEnabled ? "Disable Email Notifications" : "Enable Email Notifications";
+            }
+
+            notificationBell.addEventListener('click', () => {
+                const user = firebase.auth().currentUser;
+                if (!user) return;
+
+                const newState = !currentUserNotificationState;
+                const userDocRef = firestore.collection('users').doc(user.uid);
+
+                userDocRef.set({ notificationsEnabled: newState }, { merge: true })
+                    .catch(error => console.error("Error updating notification preference: ", error));
             });
         }
 
