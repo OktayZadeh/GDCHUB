@@ -287,7 +287,12 @@ a:hover { color: var(--primary-dark); text-decoration: underline; }
 .topbar-button:hover { background: var(--light); color: var(--primary); border-color: var(--primary-light); text-decoration: none; }
 .topbar-button i { font-size: var(--text-sm); }
 
-/* --- SIMPLIFIED NOTIFICATION BELL STYLES --- */
+/* --- NEW, SIMPLIFIED NOTIFICATION BELL STYLES --- */
+#notification-bell.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
 #notification-bell.active {
     color: var(--warning);
     border-color: var(--warning);
@@ -2054,28 +2059,20 @@ body.dark-mode .snackbar.hint {
             const notificationBell = document.getElementById('notification-bell');
             const bellIcon = notificationBell.querySelector('i');
             let currentUserNotificationState = false;
+            let clickListenerAttached = false;
 
-            // This function is now the single source of truth for the bell's appearance
-            function updateBellIcon(isEnabled) {
-                notificationBell.classList.toggle('active', isEnabled);
-                bellIcon.classList.toggle('fa-bell', isEnabled);
-                bellIcon.classList.toggle('fa-bell-slash', !isEnabled);
-                notificationBell.title = isEnabled ? "Disable Email Notifications" : "Enable Email Notifications";
-            }
-
+            // The bell is always visible. This function just adds functionality.
             firebase.auth().onAuthStateChanged(user => {
                 if (user) {
-                    // USER IS LOGGED IN: Make the bell visible. This is the crucial change.
-                    notificationBell.style.display = 'flex';
+                    // User is logged in. Remove the disabled state.
+                    notificationBell.classList.remove('disabled');
 
                     const userDocRef = firestore.collection('users').doc(user.uid);
                     
-                    // Attach a listener that updates the UI whenever the database changes
-                    userDocRef.onSnapshot((doc) => {
+                    const unsubscribe = userDocRef.onSnapshot((doc) => {
                         if (doc.exists) {
                             currentUserNotificationState = doc.data().notificationsEnabled === true;
                         } else {
-                            // If the user document doesn't exist, create it with notifications off.
                             userDocRef.set({
                                 email: user.email,
                                 name: user.displayName || 'Unnamed User',
@@ -2084,30 +2081,34 @@ body.dark-mode .snackbar.hint {
                             currentUserNotificationState = false;
                         }
                         updateBellIcon(currentUserNotificationState);
-                    }, (error) => {
-                        console.error("Error listening to user document:", error);
                     });
 
+                    if (!clickListenerAttached) {
+                        notificationBell.addEventListener('click', () => {
+                            const currentUser = firebase.auth().currentUser;
+                            if (!currentUser) return;
+
+                            const newState = !currentUserNotificationState;
+                            const userDocRef = firestore.collection('users').doc(currentUser.uid);
+                            userDocRef.set({ notificationsEnabled: newState }, { merge: true });
+                        });
+                        clickListenerAttached = true;
+                    }
+
                 } else {
-                    // USER IS LOGGED OUT: Hide the bell.
-                    notificationBell.style.display = 'none';
+                    // User is logged out. Add the disabled state.
+                    notificationBell.classList.add('disabled');
+                    updateBellIcon(false); // Reset to default off state
                 }
             });
 
-            // The click listener simply tells the database to change the state.
-            // The onSnapshot listener above will handle the UI update automatically.
-            notificationBell.addEventListener('click', () => {
-                const user = firebase.auth().currentUser;
-                if (!user) return; // Safety check
-
-                const newState = !currentUserNotificationState;
-                const userDocRef = firestore.collection('users').doc(user.uid);
-                
-                userDocRef.set({ notificationsEnabled: newState }, { merge: true })
-                    .catch(error => console.error("Error updating notification preference: ", error));
-            });
+            function updateBellIcon(isEnabled) {
+                notificationBell.classList.toggle('active', isEnabled);
+                bellIcon.classList.toggle('fa-bell', isEnabled);
+                bellIcon.classList.toggle('fa-bell-slash', !isEnabled);
+                notificationBell.title = isEnabled ? "Disable Email Notifications" : "Enable Email Notifications";
+            }
         }
-
 
         function setupReminderCollapse() {
             const container = document.getElementById('reminders-container');
