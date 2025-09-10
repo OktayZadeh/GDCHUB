@@ -29,7 +29,7 @@
     --dark-primary: #38B2AC;
     --dark-primary-light: #2C7A7B;
     --dark-primary-dark: #285E61;
-    --dark-secondary: #429E1;
+    --dark-secondary: #4299E1;
     --dark-accent: #0BC5EA;
     --dark-success: #48BB78;
     --dark-warning: #ED8936;
@@ -83,46 +83,6 @@
     --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-/* --- NEW FLOATING NOTIFICATION BELL --- */
-#notification-fab {
-    position: fixed; /* Ensures it's always visible on screen */
-    bottom: 25px;
-    right: 25px;
-    width: 60px;
-    height: 60px;
-    background-color: var(--medium); /* A neutral gray color when disabled */
-    color: white;
-    border-radius: 50%; /* Makes it a circle */
-    border: none;
-    box-shadow: var(--shadow-lg); /* Gives it a nice pop from the page */
-    font-size: 24px; /* Makes the icon inside larger */
-    display: none; /* Starts hidden, JavaScript will show it when the user logs in */
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 1050; /* Ensures it's on top of most other content */
-    transition: all var(--transition-fast);
-}
-
-#notification-fab:hover {
-    transform: scale(1.1); /* A nice little hover effect */
-}
-
-/* This is the 'active' state for when notifications are ON */
-#notification-fab.active {
-    background-color: var(--warning); /* A vibrant gold/orange color */
-}
-
-body.dark-mode #notification-fab {
-    background-color: var(--dark-light);
-}
-
-body.dark-mode #notification-fab.active {
-    background-color: var(--warning);
-}
-/* ------------------------------------ */
-
 
 /* Dark mode styles - ENHANCED */
 body.dark-mode {
@@ -231,6 +191,9 @@ body.dark-mode .sidebar-link.active {
 }
 body.dark-mode .topbar-button { color: white; border-color: var(--dark-light); }
 body.dark-mode .topbar-button:hover { color: var(--dark-primary); background-color: var(--dark-light-gray); border-color: var(--dark-primary); }
+/* Notification Bell Dark Mode */
+body.dark-mode #notification-bell.active { color: var(--warning); border-color: var(--warning); }
+
 
 body.dark-mode input,
 body.dark-mode textarea,
@@ -346,6 +309,15 @@ body.dark-mode .profile-dropdown-content::before { border-bottom-color: var(--da
 body.dark-mode .profile-dropdown-content a { color: var(--dark-medium); }
 body.dark-mode .profile-dropdown-content a:hover { background-color: var(--dark-light-gray); color: var(--primary); }
 
+/* Notification Bell */
+#notification-bell {
+    display: none; /* Hidden by default until user logs in */
+}
+#notification-bell.active {
+    color: var(--warning);
+    border-color: var(--warning);
+}
+
 /* Button Styles */
 .button {
     display: inline-flex; align-items: center; justify-content: center; padding: var(--space-sm) var(--space-md); border-radius: var(--radius-md);
@@ -358,7 +330,7 @@ body.dark-mode .profile-dropdown-content a:hover { background-color: var(--dark-
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
     text-decoration: none;
-    color: white;
+    color: white; /* Ensures text remains white on hover */
 }
 
 .button:active { transform: translateY(0); box-shadow: var(--shadow-sm); }
@@ -743,6 +715,7 @@ body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme {
     --light-gray: #E2E8F0; --light: #F7FAFC; --lighter: #FFFFFF;
     background-color: var(--light);
 }
+/* FIXED: This rule ensures the toolbar background updates correctly with the theme switch */
 body.dark-mode #announcement-editor-overlay.wysiwyg-light-theme .custom-toolbar-container {
     background-color: var(--light);
 }
@@ -1617,6 +1590,7 @@ body.dark-mode .snackbar.hint {
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <!-- ADDED: Firestore SDK for notifications -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
     
 </head>
@@ -1637,6 +1611,10 @@ body.dark-mode .snackbar.hint {
                 <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
                     <i class="fas fa-envelope"></i> <span>Student Portal</span>
                 </a>
+                <!-- ADDED: Notification Bell Icon -->
+                <button id="notification-bell" class="topbar-button" title="Toggle Notifications">
+                    <i class="fas fa-bell-slash"></i>
+                </button>
                 <div class="profile-dropdown">
                     <img id="profile-pic" src="" alt="Profile Picture" class="topbar-button" style="width: 36px; height: 36px; padding: 0; border-radius: 50%;">
                     <div class="profile-dropdown-content">
@@ -1887,6 +1865,7 @@ body.dark-mode .snackbar.hint {
         </div>
     </div>
 
+    <!-- UPDATED: Link Modal -->
     <div id="link-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeLinkModal()">×</span>
@@ -1910,7 +1889,9 @@ body.dark-mode .snackbar.hint {
             <span class="close-button" onclick="closeCategoryManager()">×</span>
             <h2>Manage Reminder Categories</h2>
             <p style="font-size: var(--text-sm); color: var(--medium); margin-bottom: var(--space-md);">Add or remove class categories for reminders.</p>
-            <div class="category-manager-list" id="category-manager-list"></div>
+            <div class="category-manager-list" id="category-manager-list">
+                <!-- Categories will be dynamically inserted here -->
+            </div>
             <form class="add-category-form" onsubmit="addCategory(event)">
                 <input type="text" id="new-category-name" placeholder="e.g., 9Health-A" required>
                 <button type="submit" class="button">Add</button>
@@ -1929,11 +1910,6 @@ body.dark-mode .snackbar.hint {
         <i class="fas fa-download"></i>
         <span>Download started. Tap the file in your browser's downloads to add to Calendar.</span>
     </div>
-
-    <!-- NEW FLOATING BELL BUTTON: This is placed just before the closing </body> tag to ensure it's visible. -->
-    <button id="notification-fab" title="Toggle Notifications">
-        <i class="fas fa-bell-slash"></i>
-    </button>
 
     <script>
         (function() {
@@ -1976,19 +1952,20 @@ body.dark-mode .snackbar.hint {
             });
         })();
 
-        // IMPORTANT: Replace this with the config from your NEW Firebase project
         const firebaseConfig = {
-          apiKey: "AIzaSyAZL-tP1-REDACTED-YOUR-KEY-HERE",
-          authDomain: "mygdchub-5e68a.firebaseapp.com",
-          projectId: "mygdchub-5e68a",
-          storageBucket: "mygdchub-5e68a.appspot.com",
-          messagingSenderId: "REDACTED",
-          appId: "REDACTED",
-          databaseURL: "https://mygdchub-5e68a-default-rtdb.firebaseio.com"
+            apiKey: "AIzaSyCSTEJ3LevxY2_rlGROzajNnNBrVG3oRR4",
+            authDomain: "gdchub-3b40a.firebaseapp.com",
+            databaseURL: "https://gdchub-3b40a-default-rtdb.firebaseio.com",
+            projectId: "gdchub-3b40a",
+            storageBucket: "gdchub-3b40a.appspot.com",
+            messagingSenderId: "399894468887",
+            appId: "1:399894468887:web:e3b8669a038fec20d9bf52",
+            measurementId: "G-E25TMDFLFX"
         };
 
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        // ADDED: Initialize Firestore
         const firestore = firebase.firestore();
         
         const tabsRef = database.ref('tabs');
@@ -2056,7 +2033,7 @@ body.dark-mode .snackbar.hint {
             setupReminderActionDelegation();
             setupReminderViewToggle();
             setupReminderCollapse();
-            setupNotificationBell();
+            setupNotificationBell(); // ADDED
             reminderCategoryFilter.addEventListener('change', handleCategoryFilterChange);
             UndoManager.init();
             if (isAdmin) {
@@ -2104,6 +2081,8 @@ body.dark-mode .snackbar.hint {
             });
         }
         
+        // --- NEW AND IMPROVED EDITOR LOGIC ---
+
         function isMediaOnly(contentElement) {
             const contentClone = contentElement.cloneNode(true);
             contentClone.querySelectorAll('.embed-container, iframe, a').forEach(el => el.remove());
@@ -2979,6 +2958,7 @@ body.dark-mode .snackbar.hint {
         }
         function closeAnnouncementEditor() { announcementEditorOverlay.classList.remove('visible'); document.documentElement.style.overflow = ''; document.body.style.overflow = ''; }
         
+        // MODIFIED: Function to post announcement and trigger notifications
         async function postAnnouncement() {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
@@ -3000,6 +2980,7 @@ body.dark-mode .snackbar.hint {
                 await newAnnRef.set(newAnnouncement);
                 console.log("Announcement saved successfully.");
                 closeAnnouncementEditor();
+                // Trigger emails for subscribed users
                 await sendNotificationsForPost(newAnnouncement);
             } catch (error) {
                 console.error("Error posting announcement or sending notifications: ", error);
@@ -3007,6 +2988,7 @@ body.dark-mode .snackbar.hint {
             }
         }
         
+        // NEW: Function to handle notification sending logic
         async function sendNotificationsForPost(post) {
             console.log("Searching for users with notifications enabled...");
             const mailCollection = firestore.collection('mail');
@@ -3633,13 +3615,14 @@ body.dark-mode .snackbar.hint {
             });
         }
         
+        // --- ADDED: Notification Bell Logic ---
         function setupNotificationBell() {
-            const notificationBell = document.getElementById('notification-fab'); // Corrected to target the FAB
+            const notificationBell = document.getElementById('notification-bell');
             let currentUserNotificationState = false;
 
             firebase.auth().onAuthStateChanged(user => {
                 if (user) {
-                    notificationBell.style.display = 'flex'; // Use flex to center the icon
+                    notificationBell.style.display = 'flex';
                     const userDocRef = firestore.collection('users').doc(user.uid);
 
                     userDocRef.onSnapshot((doc) => {
@@ -3647,6 +3630,7 @@ body.dark-mode .snackbar.hint {
                             currentUserNotificationState = doc.data().notificationsEnabled === true;
                             updateBellIcon(currentUserNotificationState);
                         } else {
+                            // If user document doesn't exist, create it.
                             userDocRef.set({
                                 email: user.email,
                                 name: user.displayName || 'Unnamed User',
@@ -3671,8 +3655,10 @@ body.dark-mode .snackbar.hint {
                     notificationBell.title = "Disable Notifications";
                 } else {
                     notificationBell.classList.remove('active');
+                    icon.classList.remove('fa-bell-slash');
+                    icon.classList.add('fa-bell');
+                    // This logic is tricky, let's simplify for clarity
                     icon.classList.add('fa-bell-slash');
-                    icon.classList.remove('fa-bell');
                     notificationBell.title = "Enable Notifications";
                 }
             }
