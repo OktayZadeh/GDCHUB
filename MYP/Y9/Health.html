@@ -307,20 +307,9 @@ body.dark-mode .profile-dropdown-content::before { border-bottom-color: var(--da
 body.dark-mode .profile-dropdown-content a { color: var(--dark-medium); }
 body.dark-mode .profile-dropdown-content a:hover { background-color: var(--dark-light-gray); color: var(--primary); }
 
-/* --- NEW: Rebuilt Notification Bell UI --- */
-.notification-bell-wrapper {
-    /* This class ensures the bell is hidden by default using a robust method. */
-    /* The 'is-visible' class, added by JavaScript, will override this. */
-    display: none !important;
-}
-.notification-bell-wrapper.is-visible {
-    display: flex !important; /* Use flex to ensure content is centered */
-    align-items: center;
-    justify-content: center;
-}
-
-/* Base styling for the bell button */
-.notification-bell-button {
+/* --- NEW, RELIABLE NOTIFICATION BELL STYLES --- */
+#notification-bell {
+    display: none; /* Hidden by default. JS will show it reliably on auth. */
     background: transparent;
     border: none;
     width: 32px;
@@ -330,30 +319,30 @@ body.dark-mode .profile-dropdown-content a:hover { background-color: var(--dark-
     border-radius: var(--radius-sm);
     transition: all var(--transition-fast);
     font-size: var(--text-base);
-    display: flex;
     align-items: center;
     justify-content: center;
 }
-.notification-bell-button:hover {
+
+#notification-bell:hover {
     background: var(--light);
 }
 
-/* Active state for when notifications are ON */
-.notification-bell-button.is-active {
+#notification-bell.active {
     color: var(--warning);
 }
 
-/* Dark Mode Styles for the bell */
-body.dark-mode .notification-bell-button {
+/* Dark Mode Styles */
+body.dark-mode #notification-bell {
     color: var(--dark-medium);
 }
-body.dark-mode .notification-bell-button:hover {
+
+body.dark-mode #notification-bell:hover {
     background: var(--dark-light-gray);
 }
-body.dark-mode .notification-bell-button.is-active {
+
+body.dark-mode #notification-bell.active {
     color: var(--dark-warning);
 }
-
 
 /* Button Styles */
 .button {
@@ -1684,11 +1673,9 @@ body.dark-mode .snackbar.hint {
                         <i class="fas fa-chevron-up"></i>
                     </button>
                     <h2>Upcoming Reminders</h2>
-                    <!-- REBUILT NOTIFICATION BELL UI -->
-                    <button id="notification-bell" class="notification-bell-wrapper" title="Toggle Notifications">
-                        <div class="notification-bell-button">
-                            <i class="fas fa-bell-slash"></i>
-                        </div>
+                    <!-- REBUILT NOTIFICATION BELL PLACEMENT -->
+                    <button id="notification-bell" title="Toggle Notifications">
+                        <i class="fas fa-bell-slash"></i>
                     </button>
                      <div class="reminders-view-toggle">
                         <button class="view-toggle-btn active" id="reminders-list-view-btn" title="List View"><i class="fas fa-list-ul"></i></button>
@@ -2011,8 +1998,6 @@ body.dark-mode .snackbar.hint {
         const remindersRef = database.ref('reminders');
         const reminderCategoriesRef = database.ref('reminder_categories');
 
-        // ... (all other const declarations remain the same)
-
         const sidebarMenu = document.getElementById('sidebar-menu');
         const tabEditorModal = document.getElementById('tab-editor-modal');
         const tabNameInput = document.getElementById('tab-name-input');
@@ -2091,64 +2076,61 @@ body.dark-mode .snackbar.hint {
             });
         });
 
-        // --- REBUILT AND RELIABLE NOTIFICATION BELL LOGIC ---
+        // --- REWRITTEN FOR RELIABILITY: Notification Bell Logic ---
         function setupNotificationBell() {
-            const bellWrapper = document.getElementById('notification-bell');
-            const bellButton = bellWrapper.querySelector('.notification-bell-button');
-            const bellIcon = bellButton.querySelector('i');
+            const notificationBell = document.getElementById('notification-bell');
+            const bellIcon = notificationBell.querySelector('i');
             let currentUserNotificationState = false;
 
             firebase.auth().onAuthStateChanged(user => {
                 if (user) {
-                    // Make the bell visible only when a user is logged in
-                    bellWrapper.classList.add('is-visible');
-                    const userDocRef = firestore.collection('users').doc(user.uid);
+                    // 1. If user is logged in, make the bell visible.
+                    // This is the most important change.
+                    notificationBell.style.display = 'flex';
 
+                    // 2. Listen for notification preferences from Firestore.
+                    const userDocRef = firestore.collection('users').doc(user.uid);
                     userDocRef.onSnapshot((doc) => {
                         if (doc.exists) {
                             currentUserNotificationState = doc.data().notificationsEnabled === true;
-                            updateBellIcon(currentUserNotificationState);
                         } else {
-                            // If user document doesn't exist, create it with notifications off.
+                            // User document doesn't exist, create it with notifications off.
                             userDocRef.set({
                                 email: user.email,
                                 name: user.displayName || 'Unnamed User',
                                 notificationsEnabled: false
                             }, { merge: true });
-                             currentUserNotificationState = false;
-                             updateBellIcon(false);
+                            currentUserNotificationState = false;
                         }
+                        // 3. Update the icon based on the preference.
+                        updateBellIcon(currentUserNotificationState);
                     }, (error) => {
-                        console.error("Error listening to user doc:", error);
+                        console.error("Error listening to user document:", error);
+                        // Even if Firestore fails, the bell is visible. Hide it on error.
+                        notificationBell.style.display = 'none';
                     });
 
                 } else {
-                    // Hide the bell when no user is logged in
-                    bellWrapper.classList.remove('is-visible');
+                    // 4. If no user is logged in, explicitly hide the bell.
+                    notificationBell.style.display = 'none';
                 }
             });
 
             function updateBellIcon(isEnabled) {
-                if (isEnabled) {
-                    bellButton.classList.add('is-active');
-                    bellIcon.classList.remove('fa-bell-slash');
-                    bellIcon.classList.add('fa-bell');
-                    bellWrapper.title = "Disable Email Notifications";
-                } else {
-                    bellButton.classList.remove('is-active');
-                    bellIcon.classList.remove('fa-bell');
-                    bellIcon.classList.add('fa-bell-slash');
-                    bellWrapper.title = "Enable Email Notifications";
-                }
+                notificationBell.classList.toggle('active', isEnabled);
+                bellIcon.classList.toggle('fa-bell', isEnabled);
+                bellIcon.classList.toggle('fa-bell-slash', !isEnabled);
+                notificationBell.title = isEnabled ? "Disable Email Notifications" : "Enable Email Notifications";
             }
 
-            bellWrapper.addEventListener('click', () => {
+            notificationBell.addEventListener('click', () => {
                 const user = firebase.auth().currentUser;
-                if (!user) return;
+                if (!user) return; // Safety check
 
                 const newState = !currentUserNotificationState;
                 const userDocRef = firestore.collection('users').doc(user.uid);
 
+                // Update the state in Firestore. The onSnapshot listener will handle the UI update.
                 userDocRef.set({ notificationsEnabled: newState }, { merge: true })
                     .catch(error => console.error("Error updating notification preference: ", error));
             });
