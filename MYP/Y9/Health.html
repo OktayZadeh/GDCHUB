@@ -342,11 +342,12 @@ body.dark-mode .profile-dropdown-content a:hover { background-color: var(--dark-
 .button.small { padding: var(--space-xs) var(--space-sm); font-size: var(--text-sm); height: 30px; }
 
 /* Input Styles */
-input[type="text"], input[type="date"], textarea, select {
+input[type="text"], input[type="date"], input[type="color"], textarea, select {
     width: 100%; padding: var(--space-sm) var(--space-md); border: 1px solid var(--light-gray); border-radius: var(--radius-md);
     font-size: var(--text-base); font-family: var(--font-main); transition: all var(--transition-fast); margin-bottom: var(--space-md); background-color: white;
 }
-input[type="text"]:focus, input[type="date"]:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: var(--shadow-primary); }
+input[type="color"] { padding: var(--space-xs); height: 40px; }
+input[type="text"]:focus, input[type="date"]:focus, input[type="color"]:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: var(--shadow-primary); }
 textarea { min-height: 120px; resize: vertical; line-height: 1.5; }
 select {
     appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
@@ -414,8 +415,11 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 .main-content {
     flex-grow: 1; padding: var(--space-xl); max-width: calc(100% - 260px); box-sizing: border-box;
     margin-left: 260px; margin-top: 54px; display: flex; flex-direction: column; gap: var(--space-xl);
+    background-size: cover; background-position: center; transition: background var(--transition-normal);
 }
 .header-content { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 1px solid var(--light-gray); }
+.header-buttons { display: flex; gap: var(--space-sm); }
+
 
 /* --- FIXED: Search Bar Styles --- */
 .search-container { position: relative; width: 100%; max-width: 400px; }
@@ -454,7 +458,7 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);
     z-index: 2050; justify-content: center; align-items: center; backdrop-filter: blur(4px); animation: modalFadeIn var(--transition-fast) forwards;
 }
-#embed-modal, #category-manager-modal, #reminder-editor, #tab-editor-modal, #link-modal {
+#embed-modal, #category-manager-modal, #reminder-editor, #tab-editor-modal, #link-modal, #background-customizer-modal {
     z-index: 2100;
 }
 #confirmation-modal {
@@ -1440,7 +1444,7 @@ body.dark-mode .category-manager-list { border-color: var(--dark-light); }
 /* General UI & Layout */
 body.non-admin .add-tab-header-button, body.non-admin .button[onclick="openAnnouncementEditor()"],
 body.non-admin .tab-actions, body.non-admin .post-actions, body.non-admin #add-reminder-btn,
-body.non-admin .move-handle, body.non-admin #manage-categories-btn { display: none !important; }
+body.non-admin .move-handle, body.non-admin #manage-categories-btn, body.non-admin #customize-bg-btn { display: none !important; }
 body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 body.non-admin .reminder-card { cursor: default; }
 
@@ -1467,6 +1471,21 @@ body.non-admin .reminder-card { cursor: default; }
     color: var(--primary);
     transform: scale(0.85);
 }
+
+/* Background Customizer Modal Styles */
+#background-customizer-modal .modal-content { max-width: 450px; }
+.background-option { margin-bottom: var(--space-lg); }
+.background-option h4 { font-size: var(--text-base); color: var(--dark); margin-bottom: var(--space-sm); border-bottom: 1px solid var(--light-gray); padding-bottom: var(--space-xs);}
+.color-picker-container { display: flex; align-items: center; gap: var(--space-md); }
+.color-picker-container input[type="color"] { flex-shrink: 0; width: 50px; height: 50px; padding: 4px; border-radius: var(--radius-md); cursor: pointer; margin-bottom: 0; }
+.color-picker-container .color-preview { width: 100%; height: 50px; border-radius: var(--radius-md); border: 1px solid var(--light-gray); }
+#image-upload-preview { max-width: 100%; max-height: 150px; border-radius: var(--radius-md); border: 1px solid var(--light-gray); margin-top: var(--space-md); object-fit: cover; display: none; }
+#image-upload-label { display: inline-block; padding: var(--space-sm) var(--space-md); background-color: var(--light); border: 1px dashed var(--light-gray); border-radius: var(--radius-md); cursor: pointer; transition: all var(--transition-fast); text-align: center; width: 100%; }
+#image-upload-label:hover { background-color: var(--primary-light); border-color: var(--primary); }
+#image-upload-input { display: none; }
+.current-background-preview { margin-top: var(--space-lg); border-top: 1px solid var(--light-gray); padding-top: var(--space-lg); }
+.current-background-preview h4 { margin-top: 0; }
+#current-bg-display { width: 100%; height: 80px; border-radius: var(--radius-md); background-size: cover; background-position: center; border: 1px solid var(--light-gray); display: flex; align-items: center; justify-content: center; font-style: italic; color: var(--medium); }
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .post-card:nth-child(1) { animation-delay: 0.1s; }
@@ -1590,8 +1609,9 @@ body.dark-mode .snackbar.hint {
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
-    <!-- ADDED: Firestore SDK for notifications -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <!-- ADDED: Firebase Storage SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
     
 </head>
 <body class="non-admin">
@@ -1611,7 +1631,6 @@ body.dark-mode .snackbar.hint {
                 <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
                     <i class="fas fa-envelope"></i> <span>Student Portal</span>
                 </a>
-                <!-- ADDED: Notification Bell Icon -->
                 <button id="notification-bell" class="topbar-button" title="Toggle Notifications">
                     <i class="fas fa-bell-slash"></i>
                 </button>
@@ -1643,7 +1662,7 @@ body.dark-mode .snackbar.hint {
         <ul class="sidebar-menu" id="sidebar-menu"></ul>
     </aside>
 
-    <main class="main-content">
+    <main class="main-content" id="main-content">
         <div class="reminders-container" id="reminders-container">
             <div class="reminders-header">
                 <div class="reminders-header-left">
@@ -1674,7 +1693,10 @@ body.dark-mode .snackbar.hint {
         
         <header class="header-content">
             <h1 id="current-tab-title">Classroom</h1>
-            <button class="button" onclick="openAnnouncementEditor()">Create Announcement</button>
+            <div class="header-buttons">
+                <button class="button secondary" id="customize-bg-btn" onclick="openBackgroundCustomizer()"><i class="fas fa-palette"></i></button>
+                <button class="button" onclick="openAnnouncementEditor()">Create Announcement</button>
+            </div>
         </header>
 
         <div class="search-container">
@@ -1865,7 +1887,6 @@ body.dark-mode .snackbar.hint {
         </div>
     </div>
 
-    <!-- UPDATED: Link Modal -->
     <div id="link-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeLinkModal()">×</span>
@@ -1899,6 +1920,38 @@ body.dark-mode .snackbar.hint {
         </div>
     </div>
 
+    <div id="background-customizer-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeBackgroundCustomizer()">×</span>
+            <h2>Customize Background</h2>
+            <div class="background-option">
+                <h4>Color</h4>
+                <div class="color-picker-container">
+                    <input type="color" id="background-color-picker" value="#F7FAFC">
+                    <div id="background-color-preview" class="color-preview"></div>
+                </div>
+                 <button class="button secondary small" style="margin-top: var(--space-sm);" onclick="revertBackgroundColor()">Revert to Default</button>
+            </div>
+            <div class="background-option">
+                <h4>Image</h4>
+                <input type="file" id="image-upload-input" accept="image/*">
+                <label for="image-upload-input" id="image-upload-label">
+                    <i class="fas fa-upload"></i> Choose an image
+                </label>
+                <img id="image-upload-preview" src="#" alt="Image Preview"/>
+            </div>
+            <div class="current-background-preview">
+                <h4>Current Background</h4>
+                <div id="current-bg-display">Default Grey</div>
+            </div>
+            <div class="modal-buttons">
+                <button class="button secondary" onclick="closeBackgroundCustomizer()">Cancel</button>
+                <button class="button" id="save-background-button" onclick="saveBackground()">Save</button>
+            </div>
+        </div>
+    </div>
+
+
     <div id="undo-snackbar" class="snackbar">
         <i class="fas fa-check-circle"></i>
         <span id="undo-message"></span>
@@ -1921,9 +1974,9 @@ body.dark-mode .snackbar.hint {
             function checkAuth() {
                 try {
                     const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-                    const cookieToken = document.cookie.split('; ').find(row => row.startsWith('gdcAuth='))?.split('=')[1];
+                    const cookieToken = document.cookie.split('; ').find(row => row.startsWith('gdcAuth='))?.split('=')[[1](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQHDi7wAkw7MFcIst_kOWlMtf8gOXzOEh0iG4_2sszsOxULqYptf9cDIhZombpnpM8dwVozxB6Xg6iAel3nNxNMDIUA48kJJjhhxZvPdhaLiHoWRmNeB7oAZM1vKOIY6l6SpBydcfqZoQPiD7fCuKg-vFEq4rig7wahjQU-ZrX9P7AJ0WoJ5Z3LbkJTaspJF8SvDKYp4Cxk%3D)];
                     if (!authToken || !cookieToken || authToken !== cookieToken) { clearAuthData(); return false; }
-                    const tokenTimestamp = parseInt(authToken.split('-')[0]);
+                    const tokenTimestamp = parseInt(authToken.split('-'));
                     if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) { clearAuthData(); return false; }
                     return true;
                 } catch (error) { clearAuthData(); return false; }
@@ -1958,15 +2011,15 @@ body.dark-mode .snackbar.hint {
             databaseURL: "https://gdchub-3b40a-default-rtdb.firebaseio.com",
             projectId: "gdchub-3b40a",
             storageBucket: "gdchub-3b40a.appspot.com",
-            messagingSenderId: "399894468887",
-            appId: "1:399894468887:web:e3b8669a038fec20d9bf52",
+            messagingSenderId: "399884468887",
+            appId: "1:399884468887:web:e3b8669a038fec20d9bf52",
             measurementId: "G-E25TMDFLFX"
         };
 
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        // ADDED: Initialize Firestore
         const firestore = firebase.firestore();
+        const storage = firebase.storage();
         
         const tabsRef = database.ref('tabs');
         const announcementsRef = database.ref('announcements');
@@ -1974,6 +2027,7 @@ body.dark-mode .snackbar.hint {
         const reminderCategoriesRef = database.ref('reminder_categories');
 
         const sidebarMenu = document.getElementById('sidebar-menu');
+        const mainContent = document.getElementById('main-content');
         const tabEditorModal = document.getElementById('tab-editor-modal');
         const tabNameInput = document.getElementById('tab-name-input');
         const profilePicElement = document.getElementById('profile-pic');
@@ -2001,6 +2055,7 @@ body.dark-mode .snackbar.hint {
         const remindersCalendarView = document.getElementById('reminders-calendar-view');
         const listViewBtn = document.getElementById('reminders-list-view-btn');
         const monthViewBtn = document.getElementById('reminders-month-view-btn');
+        const backgroundCustomizerModal = document.getElementById('background-customizer-modal');
 
         let tabs = [];
         let currentTabId = null;
@@ -2017,6 +2072,7 @@ body.dark-mode .snackbar.hint {
         let savedEditorSelection = null;
         let currentCalendarDate = new Date();
         let currentReminderView = localStorage.getItem('reminderView') || 'list';
+        let newBackgroundImageFile = null;
         
         const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
 
@@ -2033,7 +2089,8 @@ body.dark-mode .snackbar.hint {
             setupReminderActionDelegation();
             setupReminderViewToggle();
             setupReminderCollapse();
-            setupNotificationBell(); // ADDED
+            setupNotificationBell();
+            setupBackgroundCustomizer();
             reminderCategoryFilter.addEventListener('change', handleCategoryFilterChange);
             UndoManager.init();
             if (isAdmin) {
@@ -2530,8 +2587,8 @@ body.dark-mode .snackbar.hint {
 
         function hexToHsl(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            if (!result) return [0, 0, 0];
-            return rgbToHsl(parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16));
+            if (!result) return;
+            return rgbToHsl(parseInt(result[[1](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQHDi7wAkw7MFcIst_kOWlMtf8gOXzOEh0iG4_2sszsOxULqYptf9cDIhZombpnpM8dwVozxB6Xg6iAel3nNxNMDIUA48kJJjhhxZvPdhaLiHoWRmNeB7oAZM1vKOIY6l6SpBydcfqZoQPiD7fCuKg-vFEq4rig7wahjQU-ZrX9P7AJ0WoJ5Z3LbkJTaspJF8SvDKYp4Cxk%3D)], 16), parseInt(result[[2](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQGnn_d473Feloa331SVRHTIWiuELlZftCnbL02rL-HmxqoQ8IQqYXacq3veUDUp2x1_2xssQ0rZeOxvSAbJGDlJLT7sqM2ONxOZ05Hk98nU0L2fQlXP684CWNvYHMq-Xhr0DT3GrZjW8snmTVdhjtjJX-QiF3VSKQhwoC_447kT7jJm0UjrB6xxKIkyc7iSA06RRJuSYQdBbiK7gVPcVw%3D%3D)], 16), parseInt(result[[3](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQG2-zsuTKmofwjlOglCVrctyaFUnz6qOyCPZF9Cpj2wM9giFfxliFxSyHoOjmgZDMNKM3PQ1fB0z_nMQ8PLoWOm-wEkTgJba7iDEzm1QOLfmtr0Ik1-UCBWp-1Mya3YlGERR1ztLQQ%3D)], 16));
         }
         
         function updateToolbarState() {
@@ -2728,16 +2785,21 @@ body.dark-mode .snackbar.hint {
                     const savedTabId = localStorage.getItem('lastActiveTabId');
                     const targetTabId = (savedTabId && tabs.some(t => t.id === savedTabId))
                         ? savedTabId
-                        : tabs[0].id;
+                        : tabs.id;
 
                     if (currentTabId !== targetTabId || currentTabId === null) {
                          setActiveTab(targetTabId);
+                    } else {
+                        // Re-apply background if tab data was updated but tab ID didn't change
+                        const currentTab = tabs.find(t => t.id === currentTabId);
+                        applyTabBackground(currentTab);
                     }
                 } else {
                     currentTabId = null;
                     currentTabTitleElement.textContent = "No Tabs";
                     pinnedPostsFeed.innerHTML = "";
                     unpinnedPostsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
+                    applyTabBackground(null); // Apply default background
                 }
             });
 
@@ -2895,8 +2957,24 @@ body.dark-mode .snackbar.hint {
                 document.querySelectorAll('.sidebar-link.active').forEach(l => l.classList.remove('active'));
                 const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
                 if (activeLink) activeLink.classList.add('active');
+                
+                applyTabBackground(tab);
+
                 announcementsRef.child(tabId).off();
                 announcementsRef.child(tabId).on('value', snapshot => { currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : []; filterAnnouncements(); });
+            }
+        }
+        
+        function applyTabBackground(tab) {
+            if (tab && tab.backgroundImageURL) {
+                mainContent.style.backgroundImage = `url(${tab.backgroundImageURL})`;
+                mainContent.style.backgroundColor = '';
+            } else if (tab && tab.backgroundColor) {
+                mainContent.style.backgroundColor = tab.backgroundColor;
+                mainContent.style.backgroundImage = 'none';
+            } else {
+                mainContent.style.backgroundColor = 'var(--light)';
+                mainContent.style.backgroundImage = 'none';
             }
         }
 
@@ -2927,6 +3005,12 @@ body.dark-mode .snackbar.hint {
                     const tabData = tabSnapshot.val(); const announcementsData = announcementsSnapshot.val();
                     if (!tabData) return;
                     tabsRef.child(id).remove(); announcementsRef.child(id).remove();
+                    
+                    // Also delete any associated background image from storage
+                    if (tabData.backgroundImagePath) {
+                        storage.ref().child(tabData.backgroundImagePath).delete().catch(err => console.error("Error deleting old background image from storage:", err));
+                    }
+
                     const undo = () => { tabsRef.child(id).set(tabData); if (announcementsData) { announcementsRef.child(id).set(announcementsData); } };
                     UndoManager.show('Tab deleted.', undo);
                 });
@@ -2958,7 +3042,6 @@ body.dark-mode .snackbar.hint {
         }
         function closeAnnouncementEditor() { announcementEditorOverlay.classList.remove('visible'); document.documentElement.style.overflow = ''; document.body.style.overflow = ''; }
         
-        // MODIFIED: Function to post announcement and trigger notifications
         async function postAnnouncement() {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
@@ -2980,7 +3063,6 @@ body.dark-mode .snackbar.hint {
                 await newAnnRef.set(newAnnouncement);
                 console.log("Announcement saved successfully.");
                 closeAnnouncementEditor();
-                // Trigger emails for subscribed users
                 await sendNotificationsForPost(newAnnouncement);
             } catch (error) {
                 console.error("Error posting announcement or sending notifications: ", error);
@@ -2988,7 +3070,6 @@ body.dark-mode .snackbar.hint {
             }
         }
         
-        // NEW: Function to handle notification sending logic
         async function sendNotificationsForPost(post) {
             console.log("Searching for users with notifications enabled...");
             const mailCollection = firestore.collection('mail');
@@ -3615,7 +3696,6 @@ body.dark-mode .snackbar.hint {
             });
         }
         
-        // --- ADDED: Notification Bell Logic ---
         function setupNotificationBell() {
             const notificationBell = document.getElementById('notification-bell');
             let currentUserNotificationState = false;
@@ -3630,7 +3710,6 @@ body.dark-mode .snackbar.hint {
                             currentUserNotificationState = doc.data().notificationsEnabled === true;
                             updateBellIcon(currentUserNotificationState);
                         } else {
-                            // If user document doesn't exist, create it.
                             userDocRef.set({
                                 email: user.email,
                                 name: user.displayName || 'Unnamed User',
@@ -3655,9 +3734,7 @@ body.dark-mode .snackbar.hint {
                     notificationBell.title = "Disable Notifications";
                 } else {
                     notificationBell.classList.remove('active');
-                    icon.classList.remove('fa-bell-slash');
-                    icon.classList.add('fa-bell');
-                    // This logic is tricky, let's simplify for clarity
+                    icon.classList.remove('fa-bell');
                     icon.classList.add('fa-bell-slash');
                     notificationBell.title = "Enable Notifications";
                 }
@@ -3674,6 +3751,141 @@ body.dark-mode .snackbar.hint {
                     .catch(error => console.error("Error updating notification preference: ", error));
             });
         }
+        
+        function setupBackgroundCustomizer() {
+            const colorPicker = document.getElementById('background-color-picker');
+            const colorPreview = document.getElementById('background-color-preview');
+            const imageInput = document.getElementById('image-upload-input');
+            const imagePreview = document.getElementById('image-upload-preview');
+
+            colorPicker.addEventListener('input', (e) => {
+                colorPreview.style.backgroundColor = e.target.value;
+                newBackgroundImageFile = null; // Clear image if color is chosen
+                imagePreview.style.display = 'none';
+                imageInput.value = '';
+            });
+
+            imageInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files) {
+                    newBackgroundImageFile = e.target.files;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        imagePreview.src = event.target.result;
+                        imagePreview.style.display = 'block';
+                    }
+                    reader.readAsDataURL(newBackgroundImageFile);
+                }
+            });
+        }
+
+        function openBackgroundCustomizer() {
+            if (!isAdmin || !currentTabId) return;
+            const tab = tabs.find(t => t.id === currentTabId);
+            if (!tab) return;
+
+            newBackgroundImageFile = null;
+            
+            const colorPicker = document.getElementById('background-color-picker');
+            const colorPreview = document.getElementById('background-color-preview');
+            const imagePreview = document.getElementById('image-upload-preview');
+            const currentBgDisplay = document.getElementById('current-bg-display');
+            
+            const defaultColor = '#F7FAFC';
+            const currentColor = tab.backgroundColor || defaultColor;
+
+            colorPicker.value = currentColor;
+            colorPreview.style.backgroundColor = currentColor;
+
+            imagePreview.style.display = 'none';
+            imagePreview.src = '#';
+            document.getElementById('image-upload-input').value = '';
+
+            if (tab.backgroundImageURL) {
+                currentBgDisplay.style.backgroundImage = `url(${tab.backgroundImageURL})`;
+                currentBgDisplay.style.backgroundColor = '';
+                currentBgDisplay.textContent = '';
+            } else if (tab.backgroundColor) {
+                currentBgDisplay.style.backgroundColor = tab.backgroundColor;
+                currentBgDisplay.style.backgroundImage = 'none';
+                currentBgDisplay.textContent = '';
+            } else {
+                currentBgDisplay.style.backgroundColor = defaultColor;
+                currentBgDisplay.style.backgroundImage = 'none';
+                currentBgDisplay.textContent = 'Default Grey';
+            }
+
+            backgroundCustomizerModal.style.display = 'flex';
+        }
+
+        function closeBackgroundCustomizer() {
+            backgroundCustomizerModal.style.display = 'none';
+        }
+
+        function revertBackgroundColor() {
+            const defaultColor = '#F7FAFC';
+            const colorPicker = document.getElementById('background-color-picker');
+            const colorPreview = document.getElementById('background-color-preview');
+            colorPicker.value = defaultColor;
+            colorPreview.style.backgroundColor = defaultColor;
+            newBackgroundImageFile = null;
+            document.getElementById('image-upload-preview').style.display = 'none';
+            document.getElementById('image-upload-input').value = '';
+        }
+        
+        async function saveBackground() {
+            if (!isAdmin || !currentTabId) return;
+
+            const saveButton = document.getElementById('save-background-button');
+            saveButton.disabled = true;
+            saveButton.innerHTML = `<span class="loading-spinner"></span> Saving...`;
+
+            const tab = tabs.find(t => t.id === currentTabId);
+            const color = document.getElementById('background-color-picker').value;
+            let updates = {};
+
+            try {
+                // If a new image is selected, upload it
+                if (newBackgroundImageFile) {
+                    // If there was an old image, delete it from storage
+                    if (tab.backgroundImagePath) {
+                        await storage.ref().child(tab.backgroundImagePath).delete().catch(err => console.error("Could not delete old image, may not exist:", err));
+                    }
+                    
+                    const imagePath = `tab-backgrounds/${currentTabId}/${newBackgroundImageFile.name}`;
+                    const storageRef = storage.ref(imagePath);
+                    const snapshot = await storageRef.put(newBackgroundImageFile);
+                    const downloadURL = await snapshot.ref.getDownloadURL();
+                    
+                    updates = {
+                        backgroundImageURL: downloadURL,
+                        backgroundImagePath: imagePath, // Store path for future deletion
+                        backgroundColor: null // Clear color if image is set
+                    };
+                } else {
+                    // If no new image, just update the color
+                    // Check if an image should be removed
+                    if (tab.backgroundImagePath) {
+                       await storage.ref().child(tab.backgroundImagePath).delete().catch(err => console.error("Could not delete old image:", err));
+                    }
+                     updates = {
+                        backgroundColor: color,
+                        backgroundImageURL: null,
+                        backgroundImagePath: null
+                    };
+                }
+
+                await tabsRef.child(currentTabId).update(updates);
+                closeBackgroundCustomizer();
+
+            } catch (error) {
+                console.error("Error saving background:", error);
+                alert("An error occurred while saving. Please try again.");
+            } finally {
+                saveButton.disabled = false;
+                saveButton.innerHTML = `Save`;
+            }
+        }
+
 
         const UndoManager = {
             queue: [], isShowing: false,
