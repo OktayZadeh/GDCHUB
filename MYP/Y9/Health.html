@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1975,12 +1974,23 @@ body.dark-mode .snackbar.hint {
             function checkAuth() {
                 try {
                     const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-                    const cookieToken = document.cookie.split('; ').find(row => row.startsWith('gdcAuth='))?.split('=');
-                    if (!authToken || !cookieToken || authToken !== cookieToken) { clearAuthData(); return false; }
+                    const cookieString = document.cookie.split('; ').find(row => row.startsWith('gdcAuth='));
+                    const cookieToken = cookieString ? cookieString.substring('gdcAuth='.length) : null;
+                    
+                    if (!authToken || !cookieToken || authToken !== cookieToken) {
+                        clearAuthData();
+                        return false;
+                    }
                     const tokenTimestamp = parseInt(authToken.split('-'));
-                    if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) { clearAuthData(); return false; }
+                    if (isNaN(tokenTimestamp) || Date.now() - tokenTimestamp > SESSION_TIMEOUT) {
+                        clearAuthData();
+                        return false;
+                    }
                     return true;
-                } catch (error) { clearAuthData(); return false; }
+                } catch (error) {
+                    clearAuthData();
+                    return false;
+                }
             }
             
             function clearAuthData() {
@@ -2746,6 +2756,7 @@ body.dark-mode .snackbar.hint {
                 const icon = darkModeToggle.querySelector('i');
                 icon.classList.toggle('fa-moon', !isDarkMode); icon.classList.toggle('fa-sun', isDarkMode);
                 darkModeToggle.querySelector('span').textContent = isDarkMode ? 'Light Mode' : 'Dark Mode';
+                applyTabBackground(tabs.find(t => t.id === currentTabId));
             });
         }
         
@@ -3792,7 +3803,7 @@ body.dark-mode .snackbar.hint {
             const imagePreview = document.getElementById('image-upload-preview');
             const currentBgDisplay = document.getElementById('current-bg-display');
             
-            const defaultColor = '#F7FAFC';
+            const defaultColor = document.body.classList.contains('dark-mode') ? '#1A202C' : '#F7FAFC';
             const currentColor = tab.backgroundColor || defaultColor;
 
             colorPicker.value = currentColor;
@@ -3813,7 +3824,7 @@ body.dark-mode .snackbar.hint {
             } else {
                 currentBgDisplay.style.backgroundColor = defaultColor;
                 currentBgDisplay.style.backgroundImage = 'none';
-                currentBgDisplay.textContent = 'Default Grey';
+                currentBgDisplay.textContent = 'Default';
             }
 
             backgroundCustomizerModal.style.display = 'flex';
@@ -3825,16 +3836,20 @@ body.dark-mode .snackbar.hint {
 
         function revertBackgroundColor() {
             const defaultColor = document.body.classList.contains('dark-mode') ? '#1A202C' : '#F7FAFC';
-            const colorPicker = document.getElementById('background-color-picker');
-            const colorPreview = document.getElementById('background-color-preview');
-            colorPicker.value = defaultColor;
-            colorPreview.style.backgroundColor = defaultColor;
+            document.getElementById('background-color-picker').value = defaultColor;
+            document.getElementById('background-color-preview').style.backgroundColor = defaultColor;
+            
+            // This function will just reset the picker UI. The actual save logic handles DB update.
+            // If an image was selected, clear it
             newBackgroundImageFile = null;
             document.getElementById('image-upload-preview').style.display = 'none';
             document.getElementById('image-upload-input').value = '';
+
+            // We will save an empty string for the color to signify default
+            saveBackground(true); // pass a flag to indicate revert
         }
         
-        async function saveBackground() {
+        async function saveBackground(revertToDefault = false) {
             if (!isAdmin || !currentTabId) return;
 
             const saveButton = document.getElementById('save-background-button');
@@ -3842,15 +3857,21 @@ body.dark-mode .snackbar.hint {
             saveButton.innerHTML = `<span class="loading-spinner"></span> Saving...`;
 
             const tab = tabs.find(t => t.id === currentTabId);
-            const color = document.getElementById('background-color-picker').value;
             let updates = {};
 
             try {
-                if (newBackgroundImageFile) {
-                    if (tab.backgroundImagePath) {
-                        await storage.ref().child(tab.backgroundImagePath).delete().catch(err => console.error("Could not delete old image, may not exist:", err));
-                    }
-                    
+                // If there was an old image, delete it from storage first for all cases except new image upload
+                 if (tab.backgroundImagePath && (newBackgroundImageFile || revertToDefault || !document.getElementById('image-upload-input').value)) {
+                    await storage.ref().child(tab.backgroundImagePath).delete().catch(err => console.error("Old image not found, skipping delete:", err));
+                }
+
+                if (revertToDefault) {
+                     updates = {
+                        backgroundColor: null,
+                        backgroundImageURL: null,
+                        backgroundImagePath: null
+                    };
+                } else if (newBackgroundImageFile) {
                     const imagePath = `tab-backgrounds/${currentTabId}/${newBackgroundImageFile.name}`;
                     const storageRef = storage.ref(imagePath);
                     const snapshot = await storageRef.put(newBackgroundImageFile);
@@ -3862,11 +3883,8 @@ body.dark-mode .snackbar.hint {
                         backgroundColor: null
                     };
                 } else {
-                    if (tab.backgroundImagePath) {
-                       await storage.ref().child(tab.backgroundImagePath).delete().catch(err => console.error("Could not delete old image:", err));
-                    }
                      updates = {
-                        backgroundColor: color,
+                        backgroundColor: document.getElementById('background-color-picker').value,
                         backgroundImageURL: null,
                         backgroundImagePath: null
                     };
