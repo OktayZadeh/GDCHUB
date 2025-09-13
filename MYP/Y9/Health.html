@@ -310,13 +310,17 @@ body.dark-mode .profile-dropdown-content::before { border-bottom-color: var(--da
 body.dark-mode .profile-dropdown-content a { color: var(--dark-medium); }
 body.dark-mode .profile-dropdown-content a:hover { background-color: var(--dark-light-gray); color: var(--primary); }
 
-/* --- NEW: Appearance Panel Styles --- */
-.appearance-panel {
-    padding: var(--space-sm) var(--space-md);
-    border-top: 1px solid var(--light-gray);
-    margin-top: var(--space-xs);
+/* --- NEW: Appearance Panel & Dropdown Structure --- */
+.profile-dropdown-main {
+    padding-bottom: var(--space-xs);
+    margin-bottom: var(--space-xs);
+    border-bottom: 1px solid var(--light-gray);
 }
-body.dark-mode .appearance-panel { border-top-color: var(--dark-light); }
+body.dark-mode .profile-dropdown-main { border-bottom-color: var(--dark-light); }
+
+.appearance-panel {
+    padding: var(--space-sm) var(--space-md) 0;
+}
 .appearance-panel h4 {
     font-size: var(--text-sm);
     font-weight: 600;
@@ -1687,28 +1691,29 @@ body.dark-mode .snackbar.hint {
                 <div class="profile-dropdown">
                     <img id="profile-pic" src="" alt="Profile Picture" class="topbar-button" style="width: 36px; height: 36px; padding: 0; border-radius: 50%;">
                     <div class="profile-dropdown-content">
-                        <a href="#" class="dark-mode-toggle">
-                            <i class="fas fa-moon"></i> <span>Dark Mode</span>
-                        </a>
-                        <!-- NEW: Appearance Panel -->
-                        <div class="appearance-panel">
-                            <h4>Appearance</h4>
-                            <div class="appearance-controls">
-                                <div class="appearance-control-row">
-                                    <label>Background Color</label>
-                                    <div class="color-picker-wrapper">
-                                        <input type="color" id="background-color-picker" title="Select background color">
+                        <div class="profile-dropdown-main">
+                            <a href="#" class="dark-mode-toggle">
+                                <i class="fas fa-moon"></i> <span>Dark Mode</span>
+                            </a>
+                            <div class="appearance-panel">
+                                <h4>Tab Appearance</h4>
+                                <div class="appearance-controls">
+                                    <div class="appearance-control-row">
+                                        <label>Background Color</label>
+                                        <div class="color-picker-wrapper">
+                                            <input type="color" id="background-color-picker" value="#F7FAFC" title="Select background color">
+                                        </div>
                                     </div>
+                                    <div class="appearance-control-row">
+                                        <label for="background-image-upload">Background Image</label>
+                                        <input type="file" id="background-image-upload" accept="image/png, image/jpeg">
+                                        <label for="background-image-upload" class="upload-btn-label">Upload</label>
+                                    </div>
+                                    <button class="button small secondary" id="revert-background-btn" style="width: 100%; height: auto;">Revert to Default</button>
                                 </div>
-                                <div class="appearance-control-row">
-                                    <label for="background-image-upload">Background Image</label>
-                                    <input type="file" id="background-image-upload" accept="image/png, image/jpeg">
-                                    <label for="background-image-upload" class="upload-btn-label">Upload</label>
-                                </div>
-                                <button class="button small secondary" id="revert-background-btn" style="width: 100%; height: auto;">Revert to Default</button>
                             </div>
                         </div>
-                        <a href="#" class="logout-btn" style="margin-top: var(--space-xs); border-top: 1px solid var(--light-gray); padding-top: var(--space-sm);">
+                        <a href="#" class="logout-btn">
                             <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
                         </a>
                     </div>
@@ -2052,7 +2057,6 @@ body.dark-mode .snackbar.hint {
 
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        // ADDED: Initialize Firestore
         const firestore = firebase.firestore();
         
         const tabsRef = database.ref('tabs');
@@ -2088,7 +2092,7 @@ body.dark-mode .snackbar.hint {
         const remindersCalendarView = document.getElementById('reminders-calendar-view');
         const listViewBtn = document.getElementById('reminders-list-view-btn');
         const monthViewBtn = document.getElementById('reminders-month-view-btn');
-        const mainContent = document.getElementById('main-content'); // NEW
+        const mainContent = document.getElementById('main-content');
 
         let tabs = [];
         let currentTabId = null;
@@ -2121,8 +2125,8 @@ body.dark-mode .snackbar.hint {
             setupReminderActionDelegation();
             setupReminderViewToggle();
             setupReminderCollapse();
-            setupNotificationBell(); // ADDED
-            setupAppearanceControls(); // NEW
+            setupNotificationBell();
+            setupAppearanceControls();
             reminderCategoryFilter.addEventListener('change', handleCategoryFilterChange);
             UndoManager.init();
             if (isAdmin) {
@@ -2140,79 +2144,68 @@ body.dark-mode .snackbar.hint {
             });
         });
 
-        // --- NEW: Appearance Customization Logic ---
+        // --- UPDATED: Per-Tab Appearance Logic ---
         function setupAppearanceControls() {
             const colorPicker = document.getElementById('background-color-picker');
             const imageUpload = document.getElementById('background-image-upload');
             const revertButton = document.getElementById('revert-background-btn');
             
-            // 1. Apply saved theme on load
-            applySavedBackground();
-
-            // 2. Event Listeners
             colorPicker.addEventListener('input', (e) => {
+                if (!currentTabId) return;
                 const color = e.target.value;
-                applyBackgroundColor(color);
-                localStorage.setItem('dashboardBgColor', color);
-                localStorage.removeItem('dashboardBgImage'); // Color overrides image
+                setBackgroundColor(color);
+                tabsRef.child(currentTabId).update({ bgColor: color, bgImage: null });
             });
 
             imageUpload.addEventListener('change', (e) => {
+                if (!currentTabId) return;
                 const file = e.target.files[0];
                 if (file && file.type.startsWith('image/')) {
                     const reader = new FileReader();
                     reader.onload = (event) => {
                         const imageDataUrl = event.target.result;
-                        // Be cautious with large images in localStorage
-                        try {
-                            localStorage.setItem('dashboardBgImage', imageDataUrl);
-                            localStorage.removeItem('dashboardBgColor'); // Image overrides color
-                            applyBackgroundImage(imageDataUrl);
-                        } catch (error) {
-                            console.error("Error saving image to localStorage:", error);
-                            alert("Image is too large to save. Please choose a smaller file.");
-                        }
+                        setBackgroundImage(imageDataUrl);
+                        tabsRef.child(currentTabId).update({ bgImage: imageDataUrl, bgColor: null });
                     };
                     reader.readAsDataURL(file);
                 }
             });
 
             revertButton.addEventListener('click', () => {
-                localStorage.removeItem('dashboardBgColor');
-                localStorage.removeItem('dashboardBgImage');
-                applyDefaultBackground();
+                if (!currentTabId) return;
+                setDefaultBackground();
+                tabsRef.child(currentTabId).update({ bgColor: null, bgImage: null });
             });
         }
         
-        function applySavedBackground() {
-            const savedColor = localStorage.getItem('dashboardBgColor');
-            const savedImage = localStorage.getItem('dashboardBgImage');
-
-            if (savedImage) {
-                applyBackgroundImage(savedImage);
-            } else if (savedColor) {
-                applyBackgroundColor(savedColor);
-                document.getElementById('background-color-picker').value = savedColor;
-            } else {
-                applyDefaultBackground();
-            }
-        }
-
-        function applyBackgroundColor(color) {
+        function setBackgroundColor(color) {
             mainContent.style.backgroundImage = 'none';
             mainContent.style.backgroundColor = color;
         }
 
-        function applyBackgroundImage(imageDataUrl) {
+        function setBackgroundImage(imageDataUrl) {
             mainContent.style.backgroundColor = 'transparent';
             mainContent.style.backgroundImage = `url(${imageDataUrl})`;
         }
 
-        function applyDefaultBackground() {
+        function setDefaultBackground() {
             mainContent.style.backgroundImage = 'none';
-            mainContent.style.backgroundColor = 'var(--light)'; // Uses the CSS variable for default
+            const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--light').trim();
+            mainContent.style.backgroundColor = defaultColor;
         }
 
+        function updateAppearancePanelState() {
+            const colorPicker = document.getElementById('background-color-picker');
+            const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--light').trim();
+            const tab = tabs.find(t => t.id === currentTabId);
+            
+            if (tab && tab.bgColor) {
+                colorPicker.value = tab.bgColor;
+            } else {
+                // Approximate the CSS variable for the color picker
+                colorPicker.value = defaultColor.toLowerCase() === '#f7fafc' ? '#f7fafc' : '#ffffff';
+            }
+        }
 
         function setupReminderCollapse() {
             const container = document.getElementById('reminders-container');
@@ -2244,8 +2237,6 @@ body.dark-mode .snackbar.hint {
             });
         }
         
-        // --- NEW AND IMPROVED EDITOR LOGIC ---
-
         function isMediaOnly(contentElement) {
             const contentClone = contentElement.cloneNode(true);
             contentClone.querySelectorAll('.embed-container, iframe, a').forEach(el => el.remove());
@@ -2895,12 +2886,16 @@ body.dark-mode .snackbar.hint {
 
                     if (currentTabId !== targetTabId || currentTabId === null) {
                          setActiveTab(targetTabId);
+                    } else {
+                        // If the active tab data updated (e.g. background color), re-apply its settings
+                        setActiveTab(currentTabId, true);
                     }
                 } else {
                     currentTabId = null;
                     currentTabTitleElement.textContent = "No Tabs";
                     pinnedPostsFeed.innerHTML = "";
                     unpinnedPostsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
+                    setDefaultBackground();
                 }
             });
 
@@ -3046,20 +3041,34 @@ body.dark-mode .snackbar.hint {
             });
         }
 
-        function setActiveTab(tabId) {
-            if (expandedPost) {
+        function setActiveTab(tabId, forceUpdate = false) {
+            if (!forceUpdate && expandedPost) {
                 collapsePost(expandedPost);
             }
             currentTabId = tabId;
             localStorage.setItem('lastActiveTabId', tabId);
             const tab = tabs.find(t => t.id === tabId);
             if (tab) {
+                // Apply background first
+                if (tab.bgImage) {
+                    setBackgroundImage(tab.bgImage);
+                } else if (tab.bgColor) {
+                    setBackgroundColor(tab.bgColor);
+                } else {
+                    setDefaultBackground();
+                }
+                updateAppearancePanelState();
+
+                // Then update content
                 currentTabTitleElement.textContent = tab.name;
                 document.querySelectorAll('.sidebar-link.active').forEach(l => l.classList.remove('active'));
                 const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
                 if (activeLink) activeLink.classList.add('active');
-                announcementsRef.child(tabId).off();
-                announcementsRef.child(tabId).on('value', snapshot => { currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : []; filterAnnouncements(); });
+
+                if (!forceUpdate) {
+                    announcementsRef.child(tabId).off();
+                    announcementsRef.child(tabId).on('value', snapshot => { currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : []; filterAnnouncements(); });
+                }
             }
         }
 
@@ -3121,7 +3130,6 @@ body.dark-mode .snackbar.hint {
         }
         function closeAnnouncementEditor() { announcementEditorOverlay.classList.remove('visible'); document.documentElement.style.overflow = ''; document.body.style.overflow = ''; }
         
-        // MODIFIED: Function to post announcement and trigger notifications
         async function postAnnouncement() {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
@@ -3143,7 +3151,6 @@ body.dark-mode .snackbar.hint {
                 await newAnnRef.set(newAnnouncement);
                 console.log("Announcement saved successfully.");
                 closeAnnouncementEditor();
-                // Trigger emails for subscribed users
                 await sendNotificationsForPost(newAnnouncement);
             } catch (error) {
                 console.error("Error posting announcement or sending notifications: ", error);
@@ -3151,7 +3158,6 @@ body.dark-mode .snackbar.hint {
             }
         }
         
-        // NEW: Function to handle notification sending logic
         async function sendNotificationsForPost(post) {
             console.log("Searching for users with notifications enabled...");
             const mailCollection = firestore.collection('mail');
@@ -3778,7 +3784,6 @@ body.dark-mode .snackbar.hint {
             });
         }
         
-        // --- ADDED: Notification Bell Logic ---
         function setupNotificationBell() {
             const notificationBell = document.getElementById('notification-bell');
             let currentUserNotificationState = false;
@@ -3793,7 +3798,6 @@ body.dark-mode .snackbar.hint {
                             currentUserNotificationState = doc.data().notificationsEnabled === true;
                             updateBellIcon(currentUserNotificationState);
                         } else {
-                            // If user document doesn't exist, create it.
                             userDocRef.set({
                                 email: user.email,
                                 name: user.displayName || 'Unnamed User',
@@ -3818,9 +3822,7 @@ body.dark-mode .snackbar.hint {
                     notificationBell.title = "Disable Notifications";
                 } else {
                     notificationBell.classList.remove('active');
-                    icon.classList.remove('fa-bell-slash');
-                    icon.classList.add('fa-bell');
-                    // This logic is tricky, let's simplify for clarity
+                    icon.classList.remove('fa-bell');
                     icon.classList.add('fa-bell-slash');
                     notificationBell.title = "Enable Notifications";
                 }
