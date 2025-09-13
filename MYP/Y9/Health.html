@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -202,6 +203,7 @@ body.dark-mode select {
     border-color: var(--dark-light);
     color: white;
 }
+body.dark-mode input[type="color"] { background-color: var(--dark-lighter); }
 body.dark-mode input:focus,
 body.dark-mode textarea:focus,
 body.dark-mode select:focus {
@@ -324,7 +326,7 @@ body.dark-mode .profile-dropdown-content a:hover { background-color: var(--dark-
     font-weight: 500; font-size: var(--text-sm); line-height: 1; cursor: pointer; transition: all var(--transition-fast); border: none;
     background-color: var(--primary); color: white; box-shadow: var(--shadow-sm); height: 36px;
 }
-
+.button:disabled { background-color: var(--medium); cursor: not-allowed; }
 .button:hover {
     background-color: var(--primary-dark);
     transform: translateY(-1px);
@@ -415,7 +417,7 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 .main-content {
     flex-grow: 1; padding: var(--space-xl); max-width: calc(100% - 260px); box-sizing: border-box;
     margin-left: 260px; margin-top: 54px; display: flex; flex-direction: column; gap: var(--space-xl);
-    background-size: cover; background-position: center; transition: background var(--transition-normal);
+    background-size: cover; background-position: center; transition: background 0.5s ease-in-out;
 }
 .header-content { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 1px solid var(--light-gray); }
 .header-buttons { display: flex; gap: var(--space-sm); }
@@ -1610,7 +1612,6 @@ body.dark-mode .snackbar.hint {
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
-    <!-- ADDED: Firebase Storage SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
     
 </head>
@@ -1919,7 +1920,7 @@ body.dark-mode .snackbar.hint {
             </form>
         </div>
     </div>
-
+    
     <div id="background-customizer-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeBackgroundCustomizer()">×</span>
@@ -1951,7 +1952,6 @@ body.dark-mode .snackbar.hint {
         </div>
     </div>
 
-
     <div id="undo-snackbar" class="snackbar">
         <i class="fas fa-check-circle"></i>
         <span id="undo-message"></span>
@@ -1971,10 +1971,11 @@ body.dark-mode .snackbar.hint {
             const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
             const SESSION_TIMEOUT = 30 * 60 * 1000;
             
+            // CORRECTED: Restored the original, working checkAuth function
             function checkAuth() {
                 try {
                     const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-                    const cookieToken = document.cookie.split('; ').find(row => row.startsWith('gdcAuth='))?.split('=')[[1](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQHDi7wAkw7MFcIst_kOWlMtf8gOXzOEh0iG4_2sszsOxULqYptf9cDIhZombpnpM8dwVozxB6Xg6iAel3nNxNMDIUA48kJJjhhxZvPdhaLiHoWRmNeB7oAZM1vKOIY6l6SpBydcfqZoQPiD7fCuKg-vFEq4rig7wahjQU-ZrX9P7AJ0WoJ5Z3LbkJTaspJF8SvDKYp4Cxk%3D)];
+                    const cookieToken = document.cookie.split('; ').find(row => row.startsWith('gdcAuth='))?.split('=');
                     if (!authToken || !cookieToken || authToken !== cookieToken) { clearAuthData(); return false; }
                     const tokenTimestamp = parseInt(authToken.split('-'));
                     if (Date.now() - tokenTimestamp > SESSION_TIMEOUT) { clearAuthData(); return false; }
@@ -2005,14 +2006,15 @@ body.dark-mode .snackbar.hint {
             });
         })();
 
+        // CORRECTED: Restored the original Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyCSTEJ3LevxY2_rlGROzajNnNBrVG3oRR4",
             authDomain: "gdchub-3b40a.firebaseapp.com",
             databaseURL: "https://gdchub-3b40a-default-rtdb.firebaseio.com",
             projectId: "gdchub-3b40a",
             storageBucket: "gdchub-3b40a.appspot.com",
-            messagingSenderId: "399884468887",
-            appId: "1:399884468887:web:e3b8669a038fec20d9bf52",
+            messagingSenderId: "399894468887",
+            appId: "1:399894468887:web:e3b8669a038fec20d9bf52",
             measurementId: "G-E25TMDFLFX"
         };
 
@@ -2138,8 +2140,6 @@ body.dark-mode .snackbar.hint {
             });
         }
         
-        // --- NEW AND IMPROVED EDITOR LOGIC ---
-
         function isMediaOnly(contentElement) {
             const contentClone = contentElement.cloneNode(true);
             contentClone.querySelectorAll('.embed-container, iframe, a').forEach(el => el.remove());
@@ -2588,7 +2588,10 @@ body.dark-mode .snackbar.hint {
         function hexToHsl(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
             if (!result) return;
-            return rgbToHsl(parseInt(result[[1](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQHDi7wAkw7MFcIst_kOWlMtf8gOXzOEh0iG4_2sszsOxULqYptf9cDIhZombpnpM8dwVozxB6Xg6iAel3nNxNMDIUA48kJJjhhxZvPdhaLiHoWRmNeB7oAZM1vKOIY6l6SpBydcfqZoQPiD7fCuKg-vFEq4rig7wahjQU-ZrX9P7AJ0WoJ5Z3LbkJTaspJF8SvDKYp4Cxk%3D)], 16), parseInt(result[[2](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQGnn_d473Feloa331SVRHTIWiuELlZftCnbL02rL-HmxqoQ8IQqYXacq3veUDUp2x1_2xssQ0rZeOxvSAbJGDlJLT7sqM2ONxOZ05Hk98nU0L2fQlXP684CWNvYHMq-Xhr0DT3GrZjW8snmTVdhjtjJX-QiF3VSKQhwoC_447kT7jJm0UjrB6xxKIkyc7iSA06RRJuSYQdBbiK7gVPcVw%3D%3D)], 16), parseInt(result[[3](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQG2-zsuTKmofwjlOglCVrctyaFUnz6qOyCPZF9Cpj2wM9giFfxliFxSyHoOjmgZDMNKM3PQ1fB0z_nMQ8PLoWOm-wEkTgJba7iDEzm1QOLfmtr0Ik1-UCBWp-1Mya3YlGERR1ztLQQ%3D)], 16));
+            const r = parseInt(result, 16);
+            const g = parseInt(result, 16);
+            const b = parseInt(result, 16);
+            return rgbToHsl(r, g, b);
         }
         
         function updateToolbarState() {
@@ -2790,7 +2793,6 @@ body.dark-mode .snackbar.hint {
                     if (currentTabId !== targetTabId || currentTabId === null) {
                          setActiveTab(targetTabId);
                     } else {
-                        // Re-apply background if tab data was updated but tab ID didn't change
                         const currentTab = tabs.find(t => t.id === currentTabId);
                         applyTabBackground(currentTab);
                     }
@@ -2799,7 +2801,7 @@ body.dark-mode .snackbar.hint {
                     currentTabTitleElement.textContent = "No Tabs";
                     pinnedPostsFeed.innerHTML = "";
                     unpinnedPostsFeed.innerHTML = "<p>Create a new tab to get started.</p>";
-                    applyTabBackground(null); // Apply default background
+                    applyTabBackground(null);
                 }
             });
 
@@ -2966,6 +2968,7 @@ body.dark-mode .snackbar.hint {
         }
         
         function applyTabBackground(tab) {
+            const defaultBg = document.body.classList.contains('dark-mode') ? 'var(--dark-dark-gray)' : 'var(--light)';
             if (tab && tab.backgroundImageURL) {
                 mainContent.style.backgroundImage = `url(${tab.backgroundImageURL})`;
                 mainContent.style.backgroundColor = '';
@@ -2973,7 +2976,7 @@ body.dark-mode .snackbar.hint {
                 mainContent.style.backgroundColor = tab.backgroundColor;
                 mainContent.style.backgroundImage = 'none';
             } else {
-                mainContent.style.backgroundColor = 'var(--light)';
+                mainContent.style.backgroundColor = defaultBg;
                 mainContent.style.backgroundImage = 'none';
             }
         }
@@ -3006,9 +3009,8 @@ body.dark-mode .snackbar.hint {
                     if (!tabData) return;
                     tabsRef.child(id).remove(); announcementsRef.child(id).remove();
                     
-                    // Also delete any associated background image from storage
                     if (tabData.backgroundImagePath) {
-                        storage.ref().child(tabData.backgroundImagePath).delete().catch(err => console.error("Error deleting old background image from storage:", err));
+                        storage.ref().child(tabData.backgroundImagePath).delete().catch(err => console.error("Error deleting background image from storage:", err));
                     }
 
                     const undo = () => { tabsRef.child(id).set(tabData); if (announcementsData) { announcementsRef.child(id).set(announcementsData); } };
@@ -3760,7 +3762,7 @@ body.dark-mode .snackbar.hint {
 
             colorPicker.addEventListener('input', (e) => {
                 colorPreview.style.backgroundColor = e.target.value;
-                newBackgroundImageFile = null; // Clear image if color is chosen
+                newBackgroundImageFile = null;
                 imagePreview.style.display = 'none';
                 imageInput.value = '';
             });
@@ -3807,7 +3809,7 @@ body.dark-mode .snackbar.hint {
             } else if (tab.backgroundColor) {
                 currentBgDisplay.style.backgroundColor = tab.backgroundColor;
                 currentBgDisplay.style.backgroundImage = 'none';
-                currentBgDisplay.textContent = '';
+                currentBgDisplay.textContent = tab.backgroundColor;
             } else {
                 currentBgDisplay.style.backgroundColor = defaultColor;
                 currentBgDisplay.style.backgroundImage = 'none';
@@ -3822,7 +3824,7 @@ body.dark-mode .snackbar.hint {
         }
 
         function revertBackgroundColor() {
-            const defaultColor = '#F7FAFC';
+            const defaultColor = document.body.classList.contains('dark-mode') ? '#1A202C' : '#F7FAFC';
             const colorPicker = document.getElementById('background-color-picker');
             const colorPreview = document.getElementById('background-color-preview');
             colorPicker.value = defaultColor;
@@ -3844,9 +3846,7 @@ body.dark-mode .snackbar.hint {
             let updates = {};
 
             try {
-                // If a new image is selected, upload it
                 if (newBackgroundImageFile) {
-                    // If there was an old image, delete it from storage
                     if (tab.backgroundImagePath) {
                         await storage.ref().child(tab.backgroundImagePath).delete().catch(err => console.error("Could not delete old image, may not exist:", err));
                     }
@@ -3858,12 +3858,10 @@ body.dark-mode .snackbar.hint {
                     
                     updates = {
                         backgroundImageURL: downloadURL,
-                        backgroundImagePath: imagePath, // Store path for future deletion
-                        backgroundColor: null // Clear color if image is set
+                        backgroundImagePath: imagePath,
+                        backgroundColor: null
                     };
                 } else {
-                    // If no new image, just update the color
-                    // Check if an image should be removed
                     if (tab.backgroundImagePath) {
                        await storage.ref().child(tab.backgroundImagePath).delete().catch(err => console.error("Could not delete old image:", err));
                     }
