@@ -191,6 +191,8 @@ body.dark-mode .sidebar-link.active {
 }
 body.dark-mode .topbar-button { color: white; border-color: var(--dark-light); }
 body.dark-mode .topbar-button:hover { color: var(--dark-primary); background-color: var(--dark-light-gray); border-color: var(--dark-primary); }
+/* Notification Bell Dark Mode */
+body.dark-mode #notification-bell.active { color: var(--warning); border-color: var(--warning); }
 
 
 body.dark-mode input,
@@ -287,24 +289,6 @@ a:hover { color: var(--primary-dark); text-decoration: underline; }
 .topbar-button:hover { background: var(--light); color: var(--primary); border-color: var(--primary-light); text-decoration: none; }
 .topbar-button i { font-size: var(--text-sm); }
 
-/* --- SIMPLIFIED NOTIFICATION BELL STYLES --- */
-#notification-bell.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    pointer-events: none; /* Disables clicks */
-}
-
-#notification-bell.active {
-    color: var(--warning);
-    border-color: var(--warning);
-}
-
-body.dark-mode #notification-bell.active {
-    color: var(--dark-warning);
-    border-color: var(--dark-warning);
-}
-
-
 /* Profile dropdown - Improved */
 .profile-dropdown { position: relative; display: inline-block; }
 .profile-dropdown-content {
@@ -324,6 +308,15 @@ body.dark-mode .profile-dropdown-content { background-color: var(--dark-lighter)
 body.dark-mode .profile-dropdown-content::before { border-bottom-color: var(--dark-lighter); }
 body.dark-mode .profile-dropdown-content a { color: var(--dark-medium); }
 body.dark-mode .profile-dropdown-content a:hover { background-color: var(--dark-light-gray); color: var(--primary); }
+
+/* Notification Bell */
+#notification-bell {
+    display: none; /* Hidden by default until user logs in */
+}
+#notification-bell.active {
+    color: var(--warning);
+    border-color: var(--warning);
+}
 
 /* Button Styles */
 .button {
@@ -1618,7 +1611,7 @@ body.dark-mode .snackbar.hint {
                 <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
                     <i class="fas fa-envelope"></i> <span>Student Portal</span>
                 </a>
-                <!-- SIMPLIFIED AND PERMANENT NOTIFICATION BELL -->
+                <!-- ADDED: Notification Bell Icon -->
                 <button id="notification-bell" class="topbar-button" title="Toggle Notifications">
                     <i class="fas fa-bell-slash"></i>
                 </button>
@@ -1917,7 +1910,7 @@ body.dark-mode .snackbar.hint {
         <i class="fas fa-download"></i>
         <span>Download started. Tap the file in your browser's downloads to add to Calendar.</span>
     </div>
-    
+
     <script>
         (function() {
             const USER_INFO_KEY = "googleUserInfo";
@@ -1959,19 +1952,20 @@ body.dark-mode .snackbar.hint {
             });
         })();
 
-        // --- CORRECT FIREBASE CONFIG ---
         const firebaseConfig = {
-          apiKey: "AIzaSyBTBLKCbkHTyxn8C5v9jo7skRxbT-GB72Y",
-          authDomain: "mygdchub-5e68a.firebaseapp.com",
-          databaseURL: "https://mygdchub-5e68a-default-rtdb.firebaseio.com",
-          projectId: "mygdchub-5e68a",
-          storageBucket: "mygdchub-5e68a.appspot.com",
-          messagingSenderId: "733542932079",
-          appId: "1:733542932079:web:fcaca229ebab684269379a"
+            apiKey: "AIzaSyCSTEJ3LevxY2_rlGROzajNnNBrVG3oRR4",
+            authDomain: "gdchub-3b40a.firebaseapp.com",
+            databaseURL: "https://gdchub-3b40a-default-rtdb.firebaseio.com",
+            projectId: "gdchub-3b40a",
+            storageBucket: "gdchub-3b40a.appspot.com",
+            messagingSenderId: "399894468887",
+            appId: "1:399894468887:web:e3b8669a038fec20d9bf52",
+            measurementId: "G-E25TMDFLFX"
         };
 
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        // ADDED: Initialize Firestore
         const firestore = firebase.firestore();
         
         const tabsRef = database.ref('tabs');
@@ -2039,7 +2033,7 @@ body.dark-mode .snackbar.hint {
             setupReminderActionDelegation();
             setupReminderViewToggle();
             setupReminderCollapse();
-            setupNotificationBell(); // REBUILT
+            setupNotificationBell(); // ADDED
             reminderCategoryFilter.addEventListener('change', handleCategoryFilterChange);
             UndoManager.init();
             if (isAdmin) {
@@ -2056,76 +2050,6 @@ body.dark-mode .snackbar.hint {
                 }
             });
         });
-
-        // --- FINAL, SIMPLIFIED, AND RELIABLE NOTIFICATION BELL LOGIC ---
-        function setupNotificationBell() {
-            const notificationBell = document.getElementById('notification-bell');
-            const bellIcon = notificationBell.querySelector('i');
-            let currentUserNotificationState = false;
-            let unsubscribe; // To store the Firestore listener to detach it on logout
-
-            // This function ONLY updates the UI based on a boolean state.
-            function updateBellIcon(isEnabled) {
-                notificationBell.classList.toggle('active', isEnabled);
-                bellIcon.classList.toggle('fa-bell', isEnabled);
-                bellIcon.classList.toggle('fa-bell-slash', !isEnabled);
-                notificationBell.title = isEnabled ? "Disable Email Notifications" : "Enable Email Notifications";
-            }
-
-            // This function handles the logic when the bell is clicked.
-            function handleBellClick() {
-                const user = firebase.auth().currentUser;
-                if (!user) return; // Safeguard
-
-                const newState = !currentUserNotificationState; 
-                const userDocRef = firestore.collection('users').doc(user.uid);
-                
-                // Set the new state in the database. The `onSnapshot` listener will handle the UI update.
-                userDocRef.set({ notificationsEnabled: newState }, { merge: true })
-                    .catch(error => console.error("Error toggling notification preference:", error));
-            }
-
-            firebase.auth().onAuthStateChanged(user => {
-                // If a listener from a previous user session exists, detach it.
-                if (unsubscribe) {
-                    unsubscribe();
-                }
-
-                if (user) {
-                    // USER IS LOGGED IN: Make the bell functional.
-                    notificationBell.classList.remove('disabled');
-                    notificationBell.addEventListener('click', handleBellClick);
-
-                    const userDocRef = firestore.collection('users').doc(user.uid);
-                    
-                    // Listen for real-time changes from Firestore.
-                    unsubscribe = userDocRef.onSnapshot((doc) => {
-                        if (doc.exists) {
-                            currentUserNotificationState = doc.data().notificationsEnabled === true;
-                        } else {
-                            // If it's the user's first time, create their profile with notifications off.
-                            userDocRef.set({
-                                email: user.email,
-                                name: user.displayName || 'Unnamed User',
-                                notificationsEnabled: false
-                            }, { merge: true });
-                            currentUserNotificationState = false;
-                        }
-                        updateBellIcon(currentUserNotificationState);
-                    }, (error) => {
-                        console.error("Error listening to user document:", error);
-                        notificationBell.classList.add('disabled'); // Disable on error
-                    });
-
-                } else {
-                    // USER IS LOGGED OUT: Disable the bell and set to default 'off' state.
-                    notificationBell.classList.add('disabled');
-                    notificationBell.removeEventListener('click', handleBellClick);
-                    updateBellIcon(false);
-                }
-            });
-        }
-
 
         function setupReminderCollapse() {
             const container = document.getElementById('reminders-container');
@@ -3034,6 +2958,7 @@ body.dark-mode .snackbar.hint {
         }
         function closeAnnouncementEditor() { announcementEditorOverlay.classList.remove('visible'); document.documentElement.style.overflow = ''; document.body.style.overflow = ''; }
         
+        // MODIFIED: Function to post announcement and trigger notifications
         async function postAnnouncement() {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
@@ -3055,6 +2980,7 @@ body.dark-mode .snackbar.hint {
                 await newAnnRef.set(newAnnouncement);
                 console.log("Announcement saved successfully.");
                 closeAnnouncementEditor();
+                // Trigger emails for subscribed users
                 await sendNotificationsForPost(newAnnouncement);
             } catch (error) {
                 console.error("Error posting announcement or sending notifications: ", error);
@@ -3062,6 +2988,7 @@ body.dark-mode .snackbar.hint {
             }
         }
         
+        // NEW: Function to handle notification sending logic
         async function sendNotificationsForPost(post) {
             console.log("Searching for users with notifications enabled...");
             const mailCollection = firestore.collection('mail');
@@ -3688,6 +3615,66 @@ body.dark-mode .snackbar.hint {
             });
         }
         
+        // --- ADDED: Notification Bell Logic ---
+        function setupNotificationBell() {
+            const notificationBell = document.getElementById('notification-bell');
+            let currentUserNotificationState = false;
+
+            firebase.auth().onAuthStateChanged(user => {
+                if (user) {
+                    notificationBell.style.display = 'flex';
+                    const userDocRef = firestore.collection('users').doc(user.uid);
+
+                    userDocRef.onSnapshot((doc) => {
+                        if (doc.exists) {
+                            currentUserNotificationState = doc.data().notificationsEnabled === true;
+                            updateBellIcon(currentUserNotificationState);
+                        } else {
+                            // If user document doesn't exist, create it.
+                            userDocRef.set({
+                                email: user.email,
+                                name: user.displayName || 'Unnamed User',
+                                notificationsEnabled: false
+                            }, { merge: true });
+                        }
+                    }, (error) => {
+                        console.error("Error listening to user doc:", error);
+                    });
+
+                } else {
+                    notificationBell.style.display = 'none';
+                }
+            });
+
+            function updateBellIcon(isEnabled) {
+                const icon = notificationBell.querySelector('i');
+                if (isEnabled) {
+                    notificationBell.classList.add('active');
+                    icon.classList.remove('fa-bell-slash');
+                    icon.classList.add('fa-bell');
+                    notificationBell.title = "Disable Notifications";
+                } else {
+                    notificationBell.classList.remove('active');
+                    icon.classList.remove('fa-bell-slash');
+                    icon.classList.add('fa-bell');
+                    // This logic is tricky, let's simplify for clarity
+                    icon.classList.add('fa-bell-slash');
+                    notificationBell.title = "Enable Notifications";
+                }
+            }
+
+            notificationBell.addEventListener('click', () => {
+                const user = firebase.auth().currentUser;
+                if (!user) return;
+
+                const newState = !currentUserNotificationState;
+                const userDocRef = firestore.collection('users').doc(user.uid);
+
+                userDocRef.set({ notificationsEnabled: newState }, { merge: true })
+                    .catch(error => console.error("Error updating notification preference: ", error));
+            });
+        }
+
         const UndoManager = {
             queue: [], isShowing: false,
             init() {},
