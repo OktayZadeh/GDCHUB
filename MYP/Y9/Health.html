@@ -310,7 +310,7 @@ body.dark-mode .profile-dropdown-content::before { border-bottom-color: var(--da
 body.dark-mode .profile-dropdown-content a { color: var(--dark-medium); }
 body.dark-mode .profile-dropdown-content a:hover { background-color: var(--dark-light-gray); color: var(--primary); }
 
-/* --- NEW: Appearance Panel & Dropdown Structure --- */
+/* --- Appearance Panel & Dropdown Structure --- */
 .profile-dropdown-main {
     padding-bottom: var(--space-xs);
     margin-bottom: var(--space-xs);
@@ -375,7 +375,8 @@ body.dark-mode .color-picker-wrapper { border-color: var(--dark-light); }
 }
 .upload-btn-label:hover { background-color: var(--light); }
 body.dark-mode .upload-btn-label { border-color: var(--dark-light); }
-body.dark-mode .upload-btn-label:hover { background-color: var(--dark-light-gray); }
+/* UPDATED: Dark mode hover effect for upload button */
+body.dark-mode .upload-btn-label:hover { background-color: var(--dark-light); }
 
 /* Notification Bell */
 #notification-bell {
@@ -1663,7 +1664,6 @@ body.dark-mode .snackbar.hint {
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
-    <!-- ADDED: Firestore SDK for notifications -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
     
 </head>
@@ -1684,36 +1684,35 @@ body.dark-mode .snackbar.hint {
                 <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
                     <i class="fas fa-envelope"></i> <span>Student Portal</span>
                 </a>
-                <!-- ADDED: Notification Bell Icon -->
                 <button id="notification-bell" class="topbar-button" title="Toggle Notifications">
                     <i class="fas fa-bell-slash"></i>
                 </button>
                 <div class="profile-dropdown">
                     <img id="profile-pic" src="" alt="Profile Picture" class="topbar-button" style="width: 36px; height: 36px; padding: 0; border-radius: 50%;">
                     <div class="profile-dropdown-content">
-                        <div class="profile-dropdown-main">
+                         <div class="profile-dropdown-main">
                             <a href="#" class="dark-mode-toggle">
                                 <i class="fas fa-moon"></i> <span>Dark Mode</span>
                             </a>
-                            <div class="appearance-panel">
-                                <h4>Tab Appearance</h4>
-                                <div class="appearance-controls">
-                                    <div class="appearance-control-row">
-                                        <label>Background Color</label>
-                                        <div class="color-picker-wrapper">
-                                            <input type="color" id="background-color-picker" value="#F7FAFC" title="Select background color">
-                                        </div>
+                        </div>
+                        <div class="appearance-panel">
+                            <h4>Tab Appearance</h4>
+                            <div class="appearance-controls">
+                                <div class="appearance-control-row">
+                                    <label>Background Color</label>
+                                    <div class="color-picker-wrapper">
+                                        <input type="color" id="background-color-picker" value="#F7FAFC" title="Select background color">
                                     </div>
-                                    <div class="appearance-control-row">
-                                        <label for="background-image-upload">Background Image</label>
-                                        <input type="file" id="background-image-upload" accept="image/png, image/jpeg">
-                                        <label for="background-image-upload" class="upload-btn-label">Upload</label>
-                                    </div>
-                                    <button class="button small secondary" id="revert-background-btn" style="width: 100%; height: auto;">Revert to Default</button>
                                 </div>
+                                <div class="appearance-control-row">
+                                    <label for="background-image-upload">Background Image</label>
+                                    <input type="file" id="background-image-upload" accept="image/png, image/jpeg">
+                                    <label for="background-image-upload" class="upload-btn-label">Upload</label>
+                                </div>
+                                <button class="button small secondary" id="revert-background-btn" style="width: 100%; height: auto;">Revert to Default</button>
                             </div>
                         </div>
-                        <a href="#" class="logout-btn">
+                        <a href="#" class="logout-btn" style="margin-top: var(--space-md); border-top: 1px solid var(--light-gray); padding-top: var(--space-sm);">
                             <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
                         </a>
                     </div>
@@ -2154,6 +2153,7 @@ body.dark-mode .snackbar.hint {
                 if (!currentTabId) return;
                 const color = e.target.value;
                 setBackgroundColor(color);
+                // Save color and remove image for this tab
                 tabsRef.child(currentTabId).update({ bgColor: color, bgImage: null });
             });
 
@@ -2165,6 +2165,7 @@ body.dark-mode .snackbar.hint {
                     reader.onload = (event) => {
                         const imageDataUrl = event.target.result;
                         setBackgroundImage(imageDataUrl);
+                        // Save image and remove color for this tab
                         tabsRef.child(currentTabId).update({ bgImage: imageDataUrl, bgColor: null });
                     };
                     reader.readAsDataURL(file);
@@ -2174,6 +2175,7 @@ body.dark-mode .snackbar.hint {
             revertButton.addEventListener('click', () => {
                 if (!currentTabId) return;
                 setDefaultBackground();
+                // Remove both color and image for this tab
                 tabsRef.child(currentTabId).update({ bgColor: null, bgImage: null });
             });
         }
@@ -2184,7 +2186,7 @@ body.dark-mode .snackbar.hint {
         }
 
         function setBackgroundImage(imageDataUrl) {
-            mainContent.style.backgroundColor = 'transparent';
+            mainContent.style.backgroundColor = 'transparent'; // Important for image to show
             mainContent.style.backgroundImage = `url(${imageDataUrl})`;
         }
 
@@ -2193,17 +2195,18 @@ body.dark-mode .snackbar.hint {
             const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--light').trim();
             mainContent.style.backgroundColor = defaultColor;
         }
-
+        
+        // This function updates the color picker to reflect the current tab's saved color
         function updateAppearancePanelState() {
             const colorPicker = document.getElementById('background-color-picker');
-            const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--light').trim();
             const tab = tabs.find(t => t.id === currentTabId);
+            const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--light').trim();
             
             if (tab && tab.bgColor) {
                 colorPicker.value = tab.bgColor;
             } else {
-                // Approximate the CSS variable for the color picker
-                colorPicker.value = defaultColor.toLowerCase() === '#f7fafc' ? '#f7fafc' : '#ffffff';
+                // Set to the actual default light grey color
+                colorPicker.value = defaultColor;
             }
         }
 
@@ -2887,7 +2890,7 @@ body.dark-mode .snackbar.hint {
                     if (currentTabId !== targetTabId || currentTabId === null) {
                          setActiveTab(targetTabId);
                     } else {
-                        // If the active tab data updated (e.g. background color), re-apply its settings
+                        // Re-apply settings if the active tab's data (like background) was updated
                         setActiveTab(currentTabId, true);
                     }
                 } else {
@@ -3048,8 +3051,9 @@ body.dark-mode .snackbar.hint {
             currentTabId = tabId;
             localStorage.setItem('lastActiveTabId', tabId);
             const tab = tabs.find(t => t.id === tabId);
+
             if (tab) {
-                // Apply background first
+                // Apply this tab's specific background
                 if (tab.bgImage) {
                     setBackgroundImage(tab.bgImage);
                 } else if (tab.bgColor) {
@@ -3059,15 +3063,19 @@ body.dark-mode .snackbar.hint {
                 }
                 updateAppearancePanelState();
 
-                // Then update content
+                // Update the rest of the UI
                 currentTabTitleElement.textContent = tab.name;
                 document.querySelectorAll('.sidebar-link.active').forEach(l => l.classList.remove('active'));
                 const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
                 if (activeLink) activeLink.classList.add('active');
 
+                // Only re-attach the listener if it's a new tab selection, not a refresh
                 if (!forceUpdate) {
-                    announcementsRef.child(tabId).off();
-                    announcementsRef.child(tabId).on('value', snapshot => { currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : []; filterAnnouncements(); });
+                    announcementsRef.child(tabId).off(); // Detach previous listener
+                    announcementsRef.child(tabId).on('value', snapshot => {
+                        currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : [];
+                        filterAnnouncements();
+                    });
                 }
             }
         }
