@@ -375,8 +375,8 @@ body.dark-mode .color-picker-wrapper { border-color: var(--dark-light); }
 }
 .upload-btn-label:hover { background-color: var(--light); }
 body.dark-mode .upload-btn-label { border-color: var(--dark-light); }
-/* UPDATED: Dark mode hover effect for upload button */
 body.dark-mode .upload-btn-label:hover { background-color: var(--dark-light); }
+
 
 /* Notification Bell */
 #notification-bell {
@@ -2143,7 +2143,7 @@ body.dark-mode .snackbar.hint {
             });
         });
 
-        // --- UPDATED: Per-Tab Appearance Logic ---
+        // --- Per-Tab Appearance Logic ---
         function setupAppearanceControls() {
             const colorPicker = document.getElementById('background-color-picker');
             const imageUpload = document.getElementById('background-image-upload');
@@ -2153,7 +2153,6 @@ body.dark-mode .snackbar.hint {
                 if (!currentTabId) return;
                 const color = e.target.value;
                 setBackgroundColor(color);
-                // Save color and remove image for this tab
                 tabsRef.child(currentTabId).update({ bgColor: color, bgImage: null });
             });
 
@@ -2165,7 +2164,6 @@ body.dark-mode .snackbar.hint {
                     reader.onload = (event) => {
                         const imageDataUrl = event.target.result;
                         setBackgroundImage(imageDataUrl);
-                        // Save image and remove color for this tab
                         tabsRef.child(currentTabId).update({ bgImage: imageDataUrl, bgColor: null });
                     };
                     reader.readAsDataURL(file);
@@ -2175,7 +2173,6 @@ body.dark-mode .snackbar.hint {
             revertButton.addEventListener('click', () => {
                 if (!currentTabId) return;
                 setDefaultBackground();
-                // Remove both color and image for this tab
                 tabsRef.child(currentTabId).update({ bgColor: null, bgImage: null });
             });
         }
@@ -2186,28 +2183,49 @@ body.dark-mode .snackbar.hint {
         }
 
         function setBackgroundImage(imageDataUrl) {
-            mainContent.style.backgroundColor = 'transparent'; // Important for image to show
+            mainContent.style.backgroundColor = 'transparent';
             mainContent.style.backgroundImage = `url(${imageDataUrl})`;
         }
-
+        
+        // UPDATED: This function now correctly determines the default based on the theme
         function setDefaultBackground() {
             mainContent.style.backgroundImage = 'none';
-            const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--light').trim();
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            const defaultColor = getComputedStyle(document.documentElement).getPropertyValue(
+                isDarkMode ? '--dark-dark-gray' : '--light'
+            ).trim();
             mainContent.style.backgroundColor = defaultColor;
+            updateAppearancePanelState(); // Also reset the color picker
         }
         
-        // This function updates the color picker to reflect the current tab's saved color
         function updateAppearancePanelState() {
             const colorPicker = document.getElementById('background-color-picker');
             const tab = tabs.find(t => t.id === currentTabId);
-            const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--light').trim();
             
             if (tab && tab.bgColor) {
                 colorPicker.value = tab.bgColor;
             } else {
-                // Set to the actual default light grey color
-                colorPicker.value = defaultColor;
+                // When there's no custom color, set the picker to the current theme's default
+                const isDarkMode = document.body.classList.contains('dark-mode');
+                const defaultColor = getComputedStyle(document.documentElement).getPropertyValue(
+                    isDarkMode ? '--dark-dark-gray' : '--light'
+                ).trim();
+                // Convert CSS variable result to a hex value the picker understands
+                colorPicker.value = rgbToHex(defaultColor) || defaultColor;
             }
+        }
+        
+        // Helper to convert rgb(x, y, z) to #xxyyzz
+        function rgbToHex(rgb) {
+            let sep = rgb.indexOf(",") > -1 ? "," : " ";
+            rgb = rgb.substr(4).split(")")[0].split(sep);
+            let r = (+rgb[0]).toString(16),
+                g = (+rgb[1]).toString(16),
+                b = (+rgb[2]).toString(16);
+            if (r.length == 1) r = "0" + r;
+            if (g.length == 1) g = "0" + g;
+            if (b.length == 1) b = "0" + b;
+            return "#" + r + g + b;
         }
 
         function setupReminderCollapse() {
@@ -2835,26 +2853,39 @@ body.dark-mode .snackbar.hint {
             profileDropdown.addEventListener('mouseleave', hideDropdown);
             content.addEventListener('mouseenter', () => clearTimeout(dropdownHoverTimeout));
             content.addEventListener('mouseleave', hideDropdown);
-            darkModeToggle.addEventListener('click', e => {
-                e.preventDefault();
-                document.body.classList.toggle('dark-mode');
-                const isDarkMode = document.body.classList.contains('dark-mode');
-                localStorage.setItem('darkMode', isDarkMode);
-                const icon = darkModeToggle.querySelector('i');
-                icon.classList.toggle('fa-moon', !isDarkMode); icon.classList.toggle('fa-sun', isDarkMode);
-                darkModeToggle.querySelector('span').textContent = isDarkMode ? 'Light Mode' : 'Dark Mode';
-            });
         }
         
         function setupMobileMenu() { menuToggle.addEventListener('click', () => sidebar.classList.toggle('visible')); }
+        
         function setupDarkMode() {
+            // Apply theme on initial load
             if (localStorage.getItem('darkMode') === 'true') {
                 document.body.classList.add('dark-mode');
-                const icon = darkModeToggle.querySelector('i');
-                icon.classList.replace('fa-moon', 'fa-sun');
-                darkModeToggle.querySelector('span').textContent = 'Light Mode';
             }
+            updateDarkModeUIText();
+
+            // Handle toggle click
+            darkModeToggle.addEventListener('click', e => {
+                e.preventDefault();
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+                updateDarkModeUIText();
+                
+                // CRITICAL: Re-apply the active tab's background settings to respect the new default
+                if (currentTabId) {
+                    setActiveTab(currentTabId, true); // Use forceUpdate to only refresh settings
+                }
+            });
         }
+
+        function updateDarkModeUIText() {
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            const icon = darkModeToggle.querySelector('i');
+            icon.classList.toggle('fa-moon', !isDarkMode);
+            icon.classList.toggle('fa-sun', isDarkMode);
+            darkModeToggle.querySelector('span').textContent = isDarkMode ? 'Light Mode' : 'Dark Mode';
+        }
+        
         function setupSearch() { announcementSearchInput.addEventListener('input', filterAnnouncements); searchClearButton.addEventListener('click', clearSearch); }
         function filterAnnouncements() {
             const searchTerm = announcementSearchInput.value.toLowerCase().trim();
@@ -2890,7 +2921,6 @@ body.dark-mode .snackbar.hint {
                     if (currentTabId !== targetTabId || currentTabId === null) {
                          setActiveTab(targetTabId);
                     } else {
-                        // Re-apply settings if the active tab's data (like background) was updated
                         setActiveTab(currentTabId, true);
                     }
                 } else {
@@ -3053,7 +3083,6 @@ body.dark-mode .snackbar.hint {
             const tab = tabs.find(t => t.id === tabId);
 
             if (tab) {
-                // Apply this tab's specific background
                 if (tab.bgImage) {
                     setBackgroundImage(tab.bgImage);
                 } else if (tab.bgColor) {
@@ -3063,15 +3092,13 @@ body.dark-mode .snackbar.hint {
                 }
                 updateAppearancePanelState();
 
-                // Update the rest of the UI
                 currentTabTitleElement.textContent = tab.name;
                 document.querySelectorAll('.sidebar-link.active').forEach(l => l.classList.remove('active'));
                 const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
                 if (activeLink) activeLink.classList.add('active');
 
-                // Only re-attach the listener if it's a new tab selection, not a refresh
                 if (!forceUpdate) {
-                    announcementsRef.child(tabId).off(); // Detach previous listener
+                    announcementsRef.child(tabId).off();
                     announcementsRef.child(tabId).on('value', snapshot => {
                         currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : [];
                         filterAnnouncements();
