@@ -10,116 +10,261 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <!-- NEW: Firebase Storage -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
-    
-    <!-- 
-    ============================================================================
-    BUG FIX: SAFE AUTHENTICATION FLOW
-    ----------------------------------------------------------------------------
-    1. The problematic <head> script has been REMOVED.
-    2. The body is hidden by default with CSS to prevent any flash of content.
-    3. The main script will make the body visible ONLY AFTER Firebase confirms
-       the user's authentication status, solving the blank page bug.
-    ============================================================================
-    -->
-    <style>
-        body {
-            visibility: hidden; /* Hide page until auth status is known */
-        }
-    </style>
 
+    <script>
+        (function() {
+            // Configuration constants
+            const USER_INFO_KEY = "googleUserInfo";
+            const AUTH_TOKEN_KEY = "gdcAuthToken";
+            const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
+
+            // Helper function to get the authentication cookie
+            function getCookieToken() {
+                const cookie = document.cookie.split('; ')
+                    .find(row => row.startsWith('gdcAuth='));
+                return cookie ? cookie.split('=')[1] : null;
+            }
+
+            // Perform the authentication check
+            try {
+                const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+                const cookieToken = getCookieToken();
+                if (!authToken || !cookieToken || authToken !== cookieToken) {
+                    // If check fails, stop the page and write the redirect message
+                    document.write(`
+                        <style>
+                            body { margin: 0; padding: 0; }
+                            @keyframes progress { to { transform: translateX(100%); } }
+                        </style>
+                        <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Poppins',sans-serif;z-index:9999;">
+                            <div style="text-align:center;padding:30px;max-width:400px;">
+                                <h2 style="color:#2b2d42;margin-bottom:20px;">Authentication Required</h2>
+                                <p style="color:#5f6a7d;margin-bottom:25px;">Please sign in to access this content. Redirecting...</p>
+                                <div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;overflow:hidden;"><div style="width:100%;height:100%;background:#4361ee;border-radius:2px;animation:progress 2s ease-in-out infinite;transform:translateX(-100%);"></div></div>
+                            </div>
+                        </div>`);
+                    setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
+                    // Throw an error to halt any further script execution on the page
+                    throw new Error("Authentication required");
+                }
+            } catch (error) {
+                // If the check throws an error (e.g., from localStorage access), redirect as a failsafe
+                console.error("Auth check error:", error.message);
+                if (error.message !== "Authentication required") {
+                    window.location.href = LOGIN_PAGE;
+                }
+                // We re-throw the error to ensure the script execution is stopped.
+                throw error;
+            }
+        })();
+    </script>
+    
     <style>
         /* ========== CSS Variables ========== */
         :root {
             /* Color Scheme */
-            --primary: #4361ee; --primary-light: #4895ef; --secondary: #3a0ca3;
-            --dark: #1a1a2e; --light: #f8f9fa; --accent: #f72585; --danger: #F56565;
-            --text: #2b2d42; --text-light: #8d99ae; --white: #ffffff;
+            --primary: #4361ee;
+            --primary-light: #4895ef;
+            --secondary: #3a0ca3;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --accent: #f72585;
+            --danger: #F56565;
+            --text: #2b2d42;
+            --text-light: #8d99ae;
+            --white: #ffffff;
+            
             /* Glass Effect */
-            --glass: rgba(255, 255, 255, 0.9); --glass-border: rgba(255, 255, 255, 0.2);
+            --glass: rgba(255, 255, 255, 0.9);
+            --glass-border: rgba(255, 255, 255, 0.2);
             --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            
             /* Card Colors */
-            --myp-color: #4cc9f0; --pe-color: #4361ee;
-            --outdoor-color: #3a0ca3; --health-color: #f72585;
+            --myp-color: #4cc9f0;
+            --pe-color: #4361ee;
+            --outdoor-color: #3a0ca3;
+            --health-color: #f72585;
+            
             /* Card Dimensions */
-            --card-width: 300px; --card-height: 480px; --card-media-height: 160px;
+            --card-width: 300px;
+            --card-height: 480px;
+            --card-media-height: 160px;
         }
-        /* Base Styles */
+
+        /* ========== Base Styles ========== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { height: 100%; font-family: 'Open Sans', sans-serif; color: var(--text); line-height: 1.6; position: relative; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+
+        html, body {
+            height: 100%;
+            font-family: 'Open Sans', sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            position: relative;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body { background-color: #1d6a76; }
-        body::before, body::after { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: -1; transition: opacity 0.5s ease; }
-        body::before { background-image: url('https://projectspace.nz/ujalvxpj/Main/Official%20Website/Content/LogInPageWallpaper.png'); background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed; z-index: -2; }
+
+        body::before, body::after {
+            content: '';
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -1;
+            transition: opacity 0.5s ease;
+        }
+
+        body::before {
+            background-image: url('https://projectspace.nz/ujalvxpj/Main/Official%20Website/Content/LogInPageWallpaper.png');
+            background-size: cover; background-position: center;
+            background-repeat: no-repeat; background-attachment: fixed;
+            z-index: -2;
+        }
+
         body::after { background-color: rgba(0, 0, 0, 0.5); }
         #background-video { display: none; }
-        /* Top Navigation Bar */
-        .topbar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: var(--glass); backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%); border-bottom: 1px solid var(--glass-border); box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08); z-index: 1000; display: flex; align-items: center; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); padding: 0 24px; }
+
+        /* ========== Top Navigation Bar ========== */
+        .topbar {
+            position: fixed; top: 0; left: 0; right: 0; height: 60px;
+            background: var(--glass);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            z-index: 1000; display: flex; align-items: center;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            padding: 0 24px;
+        }
         .topbar-content { width: 100%; max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
         .topbar-left { display: flex; align-items: center; gap: 12px; }
         .topbar-logo { height: 40px; transition: all 0.3s ease; }
         .topbar-title { font-size: 18px; font-weight: 600; font-family: 'Montserrat', sans-serif; color: var(--dark); position: relative; }
         .topbar-links { display: flex; gap: 12px; align-items: center; }
-        .topbar-button { padding: 8px 16px; background: transparent; color: var(--text); text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 14px; transition: all 0.2s ease; border: 1px solid rgba(0, 0, 0, 0.08); display: flex; align-items: center; gap: 8px; }
+        .topbar-button {
+            padding: 8px 16px; background: transparent; color: var(--text);
+            text-decoration: none; border-radius: 8px; font-weight: 500;
+            font-size: 14px; transition: all 0.2s ease;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            display: flex; align-items: center; gap: 8px;
+        }
         .topbar-button:hover { background: rgba(67, 97, 238, 0.05); color: var(--primary); border-color: rgba(67, 97, 238, 0.2); }
         .topbar-button i { font-size: 14px; }
+
         /* Profile Dropdown */
         .profile-dropdown { position: relative; display: inline-block; }
-        #profile-pic { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #007bb5; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; position: relative; background-color: #f0f0f0; }
+        #profile-pic {
+            width: 40px; height: 40px; border-radius: 50%; border: 2px solid #007bb5;
+            cursor: pointer; transition: all 0.2s ease; display: flex;
+            align-items: center; justify-content: center; position: relative;
+            background-color: #f0f0f0;
+        }
         #profile-pic::after { content: '▼'; position: absolute; bottom: -12px; font-size: 10px; color: var(--primary); opacity: 0; transition: opacity 0.2s ease; }
         #profile-pic:hover::after, #profile-pic[aria-expanded="true"]::after { opacity: 1; }
         #profile-pic:hover { transform: scale(1.05); box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
         #profile-pic[aria-expanded="true"] { transform: scale(1.05); box-shadow: 0 0 0 2px var(--primary); }
-        .dropdown-content { display: none; position: absolute; right: 0; top: 50px; background-color: var(--glass); backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%); min-width: 160px; border-radius: 8px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); border: 1px solid var(--glass-border); z-index: 1001; overflow: hidden; transform: translateY(-5px); opacity: 0; transition: transform 0.2s ease, opacity 0.2s ease; }
+        .dropdown-content {
+            display: none; position: absolute; right: 0; top: 50px;
+            background-color: var(--glass);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            min-width: 160px; border-radius: 8px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--glass-border); z-index: 1001;
+            overflow: hidden; transform: translateY(-5px); opacity: 0;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
         .dropdown-content.show { display: block; transform: translateY(0); opacity: 1; }
-        .dropdown-item { padding: 12px 16px; display: flex; align-items: center; gap: 8px; color: var(--text); text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s ease; width: 100%; background: none; border: none; text-align: left; cursor: pointer; }
+        .dropdown-item {
+            padding: 12px 16px; display: flex; align-items: center; gap: 8px;
+            color: var(--text); text-decoration: none; font-size: 14px;
+            font-weight: 500; transition: all 0.2s ease; width: 100%;
+            background: none; border: none; text-align: left; cursor: pointer;
+        }
         .dropdown-item:hover, .dropdown-item:focus { background-color: rgba(67, 97, 238, 0.1); color: var(--primary); outline: none; }
         .dropdown-item i { width: 18px; text-align: center; color: var(--primary); }
-        /* Main Content & Footer */
+
+        /* ========== Main Content & Footer ========== */
         .main-content-container { position: fixed; top: 60px; bottom: 10px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; padding: 20px; overflow: hidden; z-index: 1; }
         .main-content { display: flex; gap: 24px; padding: 20px; width: max-content; max-width: 100%; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -ms-overflow-style: none; }
         .main-content::-webkit-scrollbar { display: none; }
         .copyright { position: fixed; bottom: 5px; left: 0; right: 0; color: rgba(255, 255, 255, 0.6); font-size: 12px; text-align: center; padding: 5px 0; z-index: 1; }
-        /* Subject Cards */
-        .subject-card { width: var(--card-width); min-width: var(--card-width); background: rgba(255, 255, 255, 0.98); border-radius: 16px; position: relative; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; text-decoration: none; display: flex; flex-direction: column; border: 1px solid rgba(255, 255, 255, 0.2); opacity: 0; transform: translateY(20px); animation: fadeInUp 0.6s forwards; height: var(--card-height); -webkit-tap-highlight-color: transparent; transform-style: preserve-3d; backface-visibility: hidden; will-change: transform; flex-shrink: 0; }
+
+        /* ========== Subject Cards ========== */
+        .subject-card {
+            width: var(--card-width); min-width: var(--card-width);
+            background: rgba(255, 255, 255, 0.98); border-radius: 16px;
+            position: relative; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease; text-decoration: none; display: flex;
+            flex-direction: column; border: 1px solid rgba(255, 255, 255, 0.2);
+            opacity: 0; transform: translateY(20px); animation: fadeInUp 0.6s forwards;
+            height: var(--card-height); -webkit-tap-highlight-color: transparent;
+            transform-style: preserve-3d; backface-visibility: hidden;
+            will-change: transform; flex-shrink: 0;
+        }
         @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
-        .subject-card:nth-child(1) { animation-delay: 0.1s; } .subject-card:nth-child(2) { animation-delay: 0.2s; }
-        .subject-card:nth-child(3) { animation-delay: 0.3s; } .subject-card:nth-child(4) { animation-delay: 0.4s; }
+        .subject-card:nth-child(1) { animation-delay: 0.1s; }
+        .subject-card:nth-child(2) { animation-delay: 0.2s; }
+        .subject-card:nth-child(3) { animation-delay: 0.3s; }
+        .subject-card:nth-child(4) { animation-delay: 0.4s; }
         .subject-card:hover { transform: translateY(-8px) !important; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15); }
         .subject-card::after { content: ''; position: absolute; left: 0; right: 0; bottom: -8px; height: 8px; }
+
         .card-media-container { height: var(--card-media-height); position: relative; overflow: hidden; transform: translateZ(0); border-radius: 16px 16px 0 0; }
         .card-media { width: 100%; height: 100%; object-fit: cover; object-position: center; transition: transform 0.5s ease; transform: translateZ(0); }
         .subject-card:hover .card-media { transform: scale(1.05) translateZ(0); }
         .card-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 100%); opacity: 0; transition: opacity 0.3s ease; z-index: 1; }
         .subject-card:hover .card-overlay { opacity: 1; }
+
         .card-content { padding: 20px; display: flex; flex-direction: column; gap: 16px; flex-grow: 1; height: calc(var(--card-height) - var(--card-media-height)); position: relative; z-index: 1; }
         .subject-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; min-height: 50px; }
         .subject-name { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 20px; color: var(--dark); line-height: 1.3; margin: 0; }
         .subject-icon { font-size: 24px; color: var(--subject-color); flex-shrink: 0; margin-top: 3px; transition: all 0.5s ease; }
         .subject-card:hover .subject-icon { transform: scale(1.4) rotate(15deg); filter: drop-shadow(0 0 6px var(--subject-color)); }
         .subject-description { font-size: 14px; color: var(--text-light); line-height: 1.5; margin: 0 0 6px 0; flex-grow: 1; min-height: 60px; }
+
         .year-selection { margin-top: auto; display: flex; flex-direction: column; gap: 14px; position: relative; z-index: 2; }
         .year-selection-title { font-size: 13px; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
         .year-selection-title::after { content: ''; flex: 1; height: 1px; background: rgba(0,0,0,0.1); }
         .year-buttons { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(65px, 1fr)); }
-        .year-button { padding: 10px 0; background: var(--subject-light); border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--subject-color); cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); text-decoration: none; display: flex; align-items: center; justify-content: center; border: none; min-height: 40px; text-align: center; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; overflow: hidden; transform: translateZ(0); }
+        .year-button {
+            padding: 10px 0; background: var(--subject-light); border-radius: 8px;
+            font-size: 14px; font-weight: 600; color: var(--subject-color);
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-decoration: none; display: flex; align-items: center; justify-content: center;
+            border: none; min-height: 40px; text-align: center;
+            border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative; overflow: hidden; transform: translateZ(0);
+        }
         .year-button::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 60%); opacity: 0; transition: opacity 0.3s ease; }
         .year-button:hover { background: var(--subject-color); color: white; transform: translateY(-2px) translateZ(0); box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
         .year-button:hover::before { opacity: 1; }
         .year-button:active { transform: translateY(0) translateZ(0); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
         .year-dropdown { position: relative; }
         .year-dropdown .dropdown-toggle { width: 100%; }
         .dropdown-toggle::after { content: '▲'; font-size: 10px; margin-left: 6px; display: inline-block; transition: transform 0.3s ease-out; transform: rotate(180deg); }
         .year-dropdown:hover .dropdown-toggle::after, .year-dropdown.show .dropdown-toggle::after { transform: rotate(0deg); }
-        .year-dropdown-menu { position: absolute; bottom: calc(100% + 8px); left: 50%; width: 140px; z-index: 100; background: var(--glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 8px; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); overflow: hidden; opacity: 0; visibility: hidden; transform: translateY(10px) translateX(-50%); transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s; }
+        .year-dropdown-menu {
+            position: absolute; bottom: calc(100% + 8px); left: 50%;
+            width: 140px; z-index: 100;
+            background: var(--glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border-radius: 8px; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
+            overflow: hidden; opacity: 0; visibility: hidden;
+            transform: translateY(10px) translateX(-50%);
+            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+        }
         .year-dropdown:hover .year-dropdown-menu, .year-dropdown.show .year-dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0) translateX(-50%); }
         .year-dropdown-item { display: block; padding: 12px; color: var(--text); font-size: 14px; font-weight: 500; text-decoration: none; text-align: center; transition: all 0.2s ease; }
         .year-dropdown-item:hover { background-color: var(--subject-light); color: var(--subject-color); }
         .year-dropdown-item:not(:last-child) { border-bottom: 1px solid rgba(0, 0, 0, 0.05); }
+
         /* Subject Specific Styles */
         .myp-card { --subject-color: var(--myp-color); --subject-light: rgba(76, 201, 240, 0.1); }
         .myp-card .year-buttons { grid-template-columns: 1fr 1fr; }
@@ -127,50 +272,188 @@
         .outdoor-card { --subject-color: var(--outdoor-color); --subject-light: rgba(58, 12, 163, 0.1); }
         .health-card { --subject-color: var(--health-color); --subject-light: rgba(247, 37, 133, 0.1); }
         .health-card .year-buttons { grid-template-columns: repeat(3, 1fr); }
-        /* Admin-Only Styles */
-        .admin-video-controls { position: absolute; top: 10px; right: 10px; z-index: 5; display: none; }
-        body:not(.non-admin) .admin-video-controls { display: block; }
-        .edit-video-btn { background-color: rgba(0, 0, 0, 0.5); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .edit-video-btn:hover { background-color: var(--primary); transform: scale(1.1); }
-        body.non-admin .admin-video-controls { display: none !important; }
-        /* Modal Styles */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 2000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
-        .modal-overlay.visible { display: flex; opacity: 1; }
-        .modal-content { background: var(--white); padding: 24px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transform: scale(0.95); transition: transform 0.3s ease; }
-        .modal-overlay.visible .modal-content { transform: scale(1); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; }
-        .modal-header h2 { font-family: 'Montserrat', sans-serif; color: var(--dark); font-size: 20px; }
-        .modal-close-btn { background: none; border: none; font-size: 24px; color: var(--text-light); cursor: pointer; transition: color 0.2s ease; }
+
+        /* ========== NEW: Admin-Only Styles ========== */
+        .admin-video-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 5;
+            display: none; /* Hidden by default */
+        }
+        body:not(.non-admin) .admin-video-controls {
+            display: block; /* Visible for admins */
+        }
+        .edit-video-btn {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .edit-video-btn:hover {
+            background-color: var(--primary);
+            transform: scale(1.1);
+        }
+        body.non-admin .admin-video-controls {
+            display: none !important;
+        }
+
+        /* NEW: Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.visible {
+            display: flex;
+            opacity: 1;
+        }
+        .modal-content {
+            background: var(--white);
+            padding: 24px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.visible .modal-content {
+            transform: scale(1);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 12px;
+        }
+        .modal-header h2 {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--dark);
+            font-size: 20px;
+        }
+        .modal-close-btn {
+            background: none; border: none; font-size: 24px;
+            color: var(--text-light); cursor: pointer; transition: color 0.2s ease;
+        }
         .modal-close-btn:hover { color: var(--danger); }
+
         .input-group { position: relative; margin: 20px 0; }
-        .input-group label { position: absolute; top: 12px; left: 12px; color: var(--text-light); pointer-events: none; transition: all 0.2s ease; background: var(--white); padding: 0 4px; }
-        .input-group input { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 16px; }
+        .input-group label {
+            position: absolute; top: 12px; left: 12px; color: var(--text-light);
+            pointer-events: none; transition: all 0.2s ease;
+            background: var(--white); padding: 0 4px;
+        }
+        .input-group input {
+            width: 100%; padding: 12px; border: 1px solid #ced4da;
+            border-radius: 8px; font-size: 16px;
+        }
         .input-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2); }
-        .input-group input:focus + label, .input-group input:not(:placeholder-shown) + label { top: -10px; font-size: 12px; color: var(--primary); }
-        .modal-buttons { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
-        .modal-button { padding: 10px 20px; font-size: 14px; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s ease; }
-        .modal-button:disabled { background-color: #ced4da !important; color: #6c757d !important; cursor: not-allowed; }
+        .input-group input:focus + label, .input-group input:not(:placeholder-shown) + label {
+            top: -10px; font-size: 12px; color: var(--primary);
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        .modal-button {
+            padding: 10px 20px; font-size: 14px; font-weight: 600;
+            border-radius: 8px; border: none; cursor: pointer;
+            transition: all 0.2s ease;
+        }
         .modal-button.primary { background-color: var(--primary); color: white; }
-        .modal-button.primary:hover:not(:disabled) { background-color: #3a53c4; }
+        .modal-button.primary:hover { background-color: #3a53c4; }
         .modal-button.secondary { background-color: #e2e8f0; color: var(--text); }
-        .modal-button.secondary:hover:not(:disabled) { background-color: #ced4da; }
+        .modal-button.secondary:hover { background-color: #ced4da; }
         .modal-button.danger { background-color: transparent; color: var(--danger); }
-        .modal-button.danger:hover:not(:disabled) { background-color: rgba(245, 101, 101, 0.1); }
-        .modal-tabs { display: flex; border-bottom: 1px solid #e2e8f0; margin-bottom: 20px; }
-        .modal-tab-btn { padding: 10px 16px; background: none; border: none; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-light); position: relative; transition: color 0.2s ease; }
-        .modal-tab-btn.active { color: var(--primary); }
-        .modal-tab-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background-color: var(--primary); }
-        .modal-tab-panel { display: none; }
-        .modal-tab-panel.active { display: block; }
-        #video-file-input { display: none; }
-        .file-upload-label { display: inline-block; padding: 10px 20px; background-color: var(--primary-light); color: var(--primary); border-radius: 8px; cursor: pointer; transition: background-color 0.2s ease; font-weight: 600; }
-        .file-upload-label:hover { background-color: #a8c1f8; }
-        .file-name { margin-left: 12px; color: var(--text-light); font-style: italic; }
-        .progress-container { display: none; margin-top: 16px; }
-        .progress-bar { width: 100%; height: 8px; background-color: #e2e8f0; border-radius: 4px; overflow: hidden; }
-        .progress-bar-inner { width: 0%; height: 100%; background-color: var(--primary); transition: width 0.3s ease; }
-        .progress-text { text-align: right; font-size: 12px; color: var(--text-light); margin-top: 4px; }
-        
+        .modal-button.danger:hover { background-color: rgba(245, 101, 101, 0.1); }
+
+        /* NEW: File Upload Styles */
+        .file-upload-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .file-upload-label {
+            display: block;
+            padding: 40px 20px;
+            border: 2px dashed #ced4da;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .file-upload-label:hover, .file-upload-label.dragover {
+            border-color: var(--primary);
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+        .file-upload-icon {
+            font-size: 48px;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+        .file-upload-text {
+            font-size: 16px;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        .file-upload-subtext {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+        .file-upload-input {
+            position: absolute;
+            width: 0;
+            height: 0;
+            opacity: 0;
+        }
+        .file-preview-container {
+            margin-top: 20px;
+            display: none;
+        }
+        .file-preview {
+            width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .upload-progress {
+            margin-top: 16px;
+            width: 100%;
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            display: none;
+        }
+        .upload-progress-bar {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .topbar { padding: 0 16px; height: 56px; }
@@ -190,19 +473,191 @@
 </head>
 <body class="non-admin">
     
-    <!-- Top Navigation Bar, Main Content, and Copyright (HTML structure is correct) -->
-    <!-- ... HTML content ... -->
+    <!-- Top Navigation Bar -->
+    <div class="topbar" id="topbar">
+        <div class="topbar-content">
+            <div class="topbar-left">
+                <img src="https://i.imgur.com/AYocV6k.png" alt="Glendowie College Logo" class="topbar-logo">
+                <span class="topbar-title">Glendowie College</span>
+            </div>
+            <div class="topbar-links">
+                <a href="https://www.gdc.school.nz/" target="_blank" class="topbar-button"><i class="fas fa-school"></i> <span>College Site</span></a>
+                <a href="https://gdc.bridge.school.nz/" target="_blank" class="topbar-button"><i class="fas fa-book-open"></i> <span>School Point</span></a>
+                <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button"><i class="fas fa-envelope"></i> <span>Student Portal</span></a>
+                <div class="profile-dropdown">
+                    <img id="profile-pic" src="" alt="Profile Picture" aria-haspopup="true" aria-expanded="false">
+                    <div class="dropdown-content" id="dropdown-content">
+                        <button class="dropdown-item" id="logout-button"><i class="fas fa-sign-out-alt"></i><span>Log Out</span></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- Video Editor Modal (HTML structure is correct) -->
-    <!-- ... HTML content ... -->
+    <!-- Main Content -->
+    <div class="main-content-container">
+        <div class="main-content">
+            <!-- MYP Card -->
+            <div class="subject-card myp-card" data-subject-id="myp">
+                <div class="card-media-container">
+                    <div class="admin-video-controls"><button class="edit-video-btn"><i class="fas fa-video"></i></button></div>
+                    <video class="card-media" loop muted playsinline preload="metadata">
+                        <source src="https://i.imgur.com/zw3viPp.mp4" type="video/mp4">
+                    </video>
+                    <div class="card-overlay"></div>
+                </div>
+                <div class="card-content">
+                    <div class="subject-header">
+                        <h3 class="subject-name">Middle Years Programme</h3>
+                        <i class="fas fa-graduation-cap subject-icon"></i>
+                    </div>
+                    <p class="subject-description">The IB Middle Years Programme (MYP) provides a framework of academic challenge for students aged 11-15.</p>
+                    <div class="year-selection">
+                        <div class="year-selection-title">Select Year Level</div>
+                        <div class="year-buttons">
+                            <div class="year-dropdown">
+                                <button class="year-button dropdown-toggle">Year 9</button>
+                                <div class="year-dropdown-menu">
+                                    <a href="https://oktayzadeh.github.io/GDCHUB/MYP/Y9/SportsScience.html" class="year-dropdown-item">Sports Science</a>
+                                    <a href="https://oktayzadeh.github.io/GDCHUB/MYP/Y9/Health.html" class="year-dropdown-item">Health</a>
+                                </div>
+                            </div>
+                            <div class="year-dropdown">
+                                <button class="year-button dropdown-toggle">Year 10</button>
+                                <div class="year-dropdown-menu">
+                                    <a href="https://oktayzadeh.github.io/GDCHUB/MYP/Y10/SportsScience.html" class="year-dropdown-item">Sports Science</a>
+                                    <a href="https://oktayzadeh.github.io/GDCHUB/MYP/Y10/Health.html" class="year-dropdown-item">Health</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Physical Education Card -->
+            <div class="subject-card pe-card" data-subject-id="pe">
+                <div class="card-media-container">
+                    <div class="admin-video-controls"><button class="edit-video-btn"><i class="fas fa-video"></i></button></div>
+                    <video class="card-media" loop muted playsinline preload="metadata">
+                        <source src="https://i.imgur.com/DH39YQe.mp4" type="video/mp4">
+                    </video>
+                    <div class="card-overlay"></div>
+                </div>
+                <div class="card-content">
+                    <div class="subject-header">
+                        <h3 class="subject-name">Sports Science (Physical Education)</h3>
+                        <i class="fas fa-running subject-icon"></i>
+                    </div>
+                    <p class="subject-description">Develop physical skills and knowledge through practical activities and theoretical understanding of human movement.</p>
+                    <div class="year-selection">
+                        <div class="year-selection-title">Select Year Level</div>
+                        <div class="year-buttons">
+                            <a href="https://oktayzadeh.github.io/GDCHUB/SportsScience/Y11.html" class="year-button">Year 11</a>
+                            <a href="https://oktayzadeh.github.io/GDCHUB/SportsScience/Y12.html" class="year-button">Year 12</a>
+                            <a href="https://oktayzadeh.github.io/GDCHUB/SportsScience/Y13.html" class="year-button">Year 13</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Outdoor Education Card -->
+            <div class="subject-card outdoor-card" data-subject-id="outdoor">
+                <div class="card-media-container">
+                    <div class="admin-video-controls"><button class="edit-video-btn"><i class="fas fa-video"></i></button></div>
+                    <video class="card-media" loop muted playsinline preload="metadata">
+                        <source src="https://i.imgur.com/baeEc27.mp4" type="video/mp4">
+                    </video>
+                    <div class="card-overlay"></div>
+                </div>
+                <div class="card-content">
+                    <div class="subject-header">
+                        <h3 class="subject-name">Outdoor Education</h3>
+                        <i class="fas fa-mountain subject-icon"></i>
+                    </div>
+                    <p class="subject-description">Explore adventure activities and develop skills in leadership, risk management, and environmental awareness.</p>
+                    <div class="year-selection">
+                        <div class="year-selection-title">Select Year Level</div>
+                        <div class="year-buttons">
+                            <a href="https://oktayzadeh.github.io/GDCHUB/OutdoorEducation/Y11.html" class="year-button">Year 11</a>
+                            <a href="https://oktayzadeh.github.io/GDCHUB/OutdoorEducation/Y12.html" class="year-button">Year 12</a>
+                            <a href="https://oktayzadeh.github.io/GDCHUB/OutdoorEducation/Y13.html" class="year-button">Year 13</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Health Card -->
+            <div class="subject-card health-card" data-subject-id="health">
+                <div class="card-media-container">
+                    <div class="admin-video-controls"><button class="edit-video-btn"><i class="fas fa-video"></i></button></div>
+                    <video class="card-media" loop muted playsinline preload="metadata">
+                        <source src="https://i.imgur.com/1s0hopX.mp4" type="video/mp4">
+                    </video>
+                    <div class="card-overlay"></div>
+                </div>
+                <div class="card-content">
+                    <div class="subject-header">
+                        <h3 class="subject-name">Health</h3>
+                        <i class="fas fa-heartbeat subject-icon"></i>
+                    </div>
+                    <p class="subject-description">Learn about personal well-being, relationships and societal health issues to make informed life choices.</p>
+                    <div class="year-selection">
+                        <div class="year-selection-title">Select Year Level</div>
+                        <div class="year-buttons">
+                            <a href="https://oktayzadeh.github.io/GDCHUB/Health/Y11.html" class="year-button">Year 11</a>
+                            <a href="https://oktayzadeh.github.io/GDCHUB/Health/Y12.html" class="year-button">Year 12</a>
+                            <a href="https://oktayzadeh.github.io/GDCHUB/Health/Y13.html" class="year-button">Year 13</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copyright Notice -->
+    <div class="copyright">© 2025 Glendowie College. All Rights Reserved.</div>
+
+    <!-- NEW: Video Editor Modal -->
+    <div class="modal-overlay" id="video-editor-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Edit Subject Video</h2>
+                <button class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="file-upload-container">
+                    <label for="video-file-input" class="file-upload-label" id="file-upload-label">
+                        <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
+                        <div class="file-upload-text">Click to upload or drag and drop</div>
+                        <div class="file-upload-subtext">MP4 files only (max 50MB)</div>
+                        <input type="file" id="video-file-input" class="file-upload-input" accept="video/mp4">
+                    </label>
+                    <div class="file-preview-container" id="file-preview-container">
+                        <video class="file-preview" id="file-preview" controls></video>
+                    </div>
+                    <div class="upload-progress" id="upload-progress">
+                        <div class="upload-progress-bar" id="upload-progress-bar"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-button danger" id="revert-video-btn" style="margin-right: auto;">Revert to Default</button>
+                <button class="modal-button secondary" id="cancel-video-btn">Cancel</button>
+                <button class="modal-button primary" id="save-video-btn" disabled>Upload & Save</button>
+            </div>
+        </div>
+    </div>
 
 <script>
-// This script now contains the sole, reliable method for authentication and page initialization.
 document.addEventListener('DOMContentLoaded', function() {
     // --- CONFIGURATION ---
+    const USER_INFO_KEY = "googleUserInfo";
+    const AUTH_TOKEN_KEY = "gdcAuthToken";
     const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
     const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
+
+    // --- NEW: Firebase Configuration ---
     const firebaseConfig = {
         apiKey: "AIzaSyCSTEJ3LevxY2_rlGROzajNnNBrVG3oRR4",
         authDomain: "gdchub-3b40a.firebaseapp.com",
@@ -212,207 +667,368 @@ document.addEventListener('DOMContentLoaded', function() {
         messagingSenderId: "399894468887",
         appId: "1:399894468887:web:e3b8669a038fec20d9bf52"
     };
+
+    // --- NEW: Default Video URLs ---
     const DEFAULT_VIDEOS = {
-        myp: 'https://i.imgur.com/zw3viPp.mp4', pe: 'https://i.imgur.com/DH39YQe.mp4',
-        outdoor: 'https://i.imgur.com/baeEc27.mp4', health: 'https://i.imgur.com/1s0hopX.mp4'
+        myp: 'https://i.imgur.com/zw3viPp.mp4',
+        pe: 'https://i.imgur.com/DH39YQe.mp4',
+        outdoor: 'https://i.imgur.com/baeEc27.mp4',
+        health: 'https://i.imgur.com/1s0hopX.mp4'
     };
 
-    // --- DOM ELEMENTS & STATE ---
+    // --- DOM ELEMENTS ---
     const profilePicElement = document.getElementById('profile-pic');
     const dropdownContent = document.getElementById('dropdown-content');
     const logoutButton = document.getElementById('logout-button');
     const videoEditorModal = document.getElementById('video-editor-modal');
+    
+    // NEW: File upload elements
+    const fileUploadLabel = document.getElementById('file-upload-label');
+    const fileInput = document.getElementById('video-file-input');
+    const filePreviewContainer = document.getElementById('file-preview-container');
+    const filePreview = document.getElementById('file-preview');
+    const uploadProgress = document.getElementById('upload-progress');
+    const uploadProgressBar = document.getElementById('upload-progress-bar');
+    const saveVideoBtn = document.getElementById('save-video-btn');
+    const revertVideoBtn = document.getElementById('revert-video-btn');
+    
     let isAdmin = false;
     let currentEditingSubjectId = null;
     let selectedFile = null;
 
-    // --- FIREBASE INITIALIZATION ---
-    let app, database, storage, auth, videoRef;
+    // --- NEW: Firebase Initialization ---
     try {
-        app = firebase.initializeApp(firebaseConfig);
-        database = firebase.database();
-        storage = firebase.storage();
-        auth = firebase.auth();
-        videoRef = database.ref('subjectSelectionVideos');
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const storage = firebase.storage();
+        var videoRef = database.ref('subjectSelectionVideos');
     } catch (e) {
         console.error("Firebase initialization failed:", e);
-        document.body.innerHTML = "Error connecting to services. Please try again later.";
-        document.body.style.visibility = 'visible';
+        alert("Could not connect to the configuration database. Please try again later.");
     }
 
     // --- CORE FUNCTIONS ---
+
     function clearAuthData() {
-        localStorage.removeItem("googleUserInfo");
-        localStorage.removeItem("gdcAuthToken");
+        localStorage.removeItem(USER_INFO_KEY);
+        localStorage.removeItem(AUTH_TOKEN_KEY);
         document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     }
-    function isMobileDevice() { return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
-    function forceVideoPlay(video) { if (video && video.paused) { video.play().catch(() => { video.muted = true; video.play().catch(e => console.error("Video play error:", e)); }); } }
-    
-    function handleProfilePicture(user) { 
-        try { 
-            const userInfo = JSON.parse(localStorage.getItem("googleUserInfo"));
+
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+
+    function forceVideoPlay(video) {
+        if (video && video.paused) {
+            video.play().catch(() => {
+                video.muted = true;
+                video.play().catch(e => console.error("Video play error:", e));
+            });
+        }
+    }
+
+    function handleProfilePicture() {
+        try {
+            const userInfo = JSON.parse(localStorage.getItem(USER_INFO_KEY));
             if (userInfo?.picture) {
                 profilePicElement.src = userInfo.picture;
-            } else if (user?.photoURL) {
-                profilePicElement.src = user.photoURL;
-            } else {
-                throw new Error("No picture found");
-            }
+            } else { throw new Error("No picture found"); }
         } catch {
             profilePicElement.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234361ee'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
         }
     }
-    
-    function checkAdminStatus(user) { 
-        if (user && user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())) {
-            isAdmin = true;
-            document.body.classList.remove('non-admin');
-        } else {
+
+    // --- NEW: Admin Check ---
+    function checkAdminStatus() {
+        try {
+            const userInfo = JSON.parse(localStorage.getItem(USER_INFO_KEY));
+            if (userInfo && userInfo.email) {
+                isAdmin = ADMIN_EMAILS.includes(userInfo.email.toLowerCase());
+                if (isAdmin) {
+                    document.body.classList.remove('non-admin');
+                }
+            }
+        } catch (e) {
+            console.error("Could not verify user info for admin check.", e);
             isAdmin = false;
-            document.body.classList.add('non-admin');
+        }
+    }
+
+    // --- NEW: File Upload Functions ---
+    function setupFileUpload() {
+        // Click to select file
+        fileUploadLabel.addEventListener('click', (e) => {
+            if (e.target !== fileInput) {
+                fileInput.click();
+            }
+        });
+
+        // Drag and drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileUploadLabel.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileUploadLabel.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileUploadLabel.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            fileUploadLabel.classList.add('dragover');
+        }
+
+        function unhighlight() {
+            fileUploadLabel.classList.remove('dragover');
+        }
+
+        fileUploadLabel.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length) {
+                fileInput.files = files;
+                handleFileSelection(files[0]);
+            }
+        }
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFileSelection(e.target.files[0]);
+            }
+        });
+    }
+
+    function handleFileSelection(file) {
+        // Validate file
+        if (!file.type.includes('video/mp4')) {
+            alert('Please select an MP4 video file.');
+            resetFileInput();
+            return;
+        }
+
+        if (file.size > MAX_FILE_SIZE) {
+            alert('File size exceeds the 50MB limit. Please choose a smaller file.');
+            resetFileInput();
+            return;
+        }
+
+        selectedFile = file;
+        
+        // Show preview
+        const videoURL = URL.createObjectURL(file);
+        filePreview.src = videoURL;
+        filePreviewContainer.style.display = 'block';
+        
+        // Enable save button
+        saveVideoBtn.disabled = false;
+        
+        // Update UI text
+        fileUploadLabel.querySelector('.file-upload-text').textContent = 'File selected: ' + file.name;
+        fileUploadLabel.querySelector('.file-upload-subtext').textContent = 'Click to choose a different file';
+    }
+
+    function resetFileInput() {
+        fileInput.value = '';
+        selectedFile = null;
+        filePreviewContainer.style.display = 'none';
+        filePreview.src = '';
+        saveVideoBtn.disabled = true;
+        fileUploadLabel.querySelector('.file-upload-text').textContent = 'Click to upload or drag and drop';
+        fileUploadLabel.querySelector('.file-upload-subtext').textContent = 'MP4 files only (max 50MB)';
+    }
+
+    async function uploadVideoFile() {
+        if (!selectedFile || !currentEditingSubjectId) return;
+        
+        try {
+            // Show progress bar
+            uploadProgress.style.display = 'block';
+            saveVideoBtn.disabled = true;
+            saveVideoBtn.textContent = 'Uploading...';
+            
+            // Create a reference to the storage location
+            const fileExtension = selectedFile.name.split('.').pop();
+            const fileName = `subject_videos/${currentEditingSubjectId}_${Date.now()}.${fileExtension}`;
+            const storageRef = storage.ref().child(fileName);
+            
+            // Upload file
+            const uploadTask = storageRef.put(selectedFile);
+            
+            // Monitor upload progress
+            uploadTask.on('state_changed', 
+                (snapshot) => {
+                    // Progress monitoring
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    uploadProgressBar.style.width = progress + '%';
+                },
+                (error) => {
+                    // Handle errors
+                    console.error('Upload failed:', error);
+                    alert('Upload failed: ' + error.message);
+                    uploadProgress.style.display = 'none';
+                    saveVideoBtn.disabled = false;
+                    saveVideoBtn.textContent = 'Upload & Save';
+                },
+                async () => {
+                    // Upload completed successfully
+                    try {
+                        // Get download URL
+                        const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                        
+                        // Save URL to database
+                        await videoRef.child(currentEditingSubjectId).set(downloadURL);
+                        
+                        // Reset UI
+                        uploadProgress.style.display = 'none';
+                        videoEditorModal.classList.remove('visible');
+                        resetFileInput();
+                        saveVideoBtn.textContent = 'Upload & Save';
+                        
+                    } catch (error) {
+                        console.error('Error getting download URL:', error);
+                        alert('Upload completed but failed to save URL: ' + error.message);
+                        uploadProgress.style.display = 'none';
+                        saveVideoBtn.disabled = false;
+                        saveVideoBtn.textContent = 'Upload & Save';
+                    }
+                }
+            );
+            
+        } catch (error) {
+            console.error('Upload error:', error);
+            alert('Upload error: ' + error.message);
+            uploadProgress.style.display = 'none';
+            saveVideoBtn.disabled = false;
+            saveVideoBtn.textContent = 'Upload & Save';
+        }
+    }
+
+    async function revertToDefaultVideo() {
+        if (!currentEditingSubjectId) return;
+        
+        try {
+            revertVideoBtn.disabled = true;
+            revertVideoBtn.textContent = 'Reverting...';
+            
+            // Remove from database
+            await videoRef.child(currentEditingSubjectId).remove();
+            
+            // Close modal
+            videoEditorModal.classList.remove('visible');
+            revertVideoBtn.textContent = 'Revert to Default';
+            revertVideoBtn.disabled = false;
+            
+        } catch (error) {
+            console.error('Error reverting video:', error);
+            alert('Error reverting to default video: ' + error.message);
+            revertVideoBtn.textContent = 'Revert to Default';
+            revertVideoBtn.disabled = false;
         }
     }
 
     // --- EVENT LISTENERS & SETUP ---
+
     function setupDropdowns() {
-        profilePicElement.addEventListener('click', (e) => { e.stopPropagation(); const i = dropdownContent.classList.toggle('show'); profilePicElement.setAttribute('aria-expanded', i); });
-        logoutButton.addEventListener('click', () => { 
-            auth.signOut().then(() => {
-                clearAuthData(); 
-                window.location.href = LOGIN_PAGE;
-            });
+        profilePicElement.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isExpanded = dropdownContent.classList.toggle('show');
+            profilePicElement.setAttribute('aria-expanded', isExpanded);
         });
-        if (isMobileDevice()) { document.querySelectorAll('.year-dropdown .dropdown-toggle').forEach(d => d.addEventListener('click', (e) => { e.preventDefault(); const w = d.parentElement.classList.contains('show'); document.querySelectorAll('.year-dropdown.show').forEach(el => el.classList.remove('show')); if (!w) d.parentElement.classList.add('show'); })); }
-        document.addEventListener('click', (e) => { if (!e.target.closest('.profile-dropdown')) { dropdownContent.classList.remove('show'); profilePicElement.setAttribute('aria-expanded', 'false'); } if (isMobileDevice() && !e.target.closest('.year-dropdown')) { document.querySelectorAll('.year-dropdown.show').forEach(d => d.classList.remove('show')); } });
+        logoutButton.addEventListener('click', () => {
+            clearAuthData();
+            window.location.href = LOGIN_PAGE;
+        });
+
+        if (isMobileDevice()) {
+            document.querySelectorAll('.year-dropdown').forEach(dropdown => {
+                dropdown.querySelector('.dropdown-toggle').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const wasOpen = dropdown.classList.contains('show');
+                    document.querySelectorAll('.year-dropdown.show').forEach(d => d.classList.remove('show'));
+                    if (!wasOpen) dropdown.classList.add('show');
+                });
+            });
+        }
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.profile-dropdown')) {
+                dropdownContent.classList.remove('show');
+                profilePicElement.setAttribute('aria-expanded', 'false');
+            }
+            if (isMobileDevice() && !e.target.closest('.year-dropdown')) {
+                document.querySelectorAll('.year-dropdown.show').forEach(d => d.classList.remove('show'));
+            }
+        });
     }
     
     function initializeCardVideos() {
-        if (isMobileDevice()) { document.querySelectorAll('.card-media').forEach(v => { v.setAttribute('autoplay', ''); v.setAttribute('playsinline', ''); v.muted = true; }); } 
-        else { document.querySelectorAll('.subject-card').forEach(c => { const v = c.querySelector('.card-media'); if (v) { c.addEventListener('mouseenter', () => forceVideoPlay(v)); c.addEventListener('mouseleave', () => { v.pause(); v.currentTime = 0; }); } }); }
-    }
-
-    // --- MODAL & UPLOAD LOGIC ---
-    function setModalUIState(isUploading) {
-        const modal = videoEditorModal;
-        const saveBtn = modal.querySelector('#save-video-btn');
-        modal.querySelector('#cancel-video-btn').disabled = isUploading;
-        modal.querySelector('#revert-video-btn').disabled = isUploading;
-        modal.querySelector('.modal-close-btn').disabled = isUploading;
-        modal.querySelectorAll('.modal-tab-btn').forEach(btn => btn.disabled = isUploading);
-        
-        saveBtn.disabled = isUploading;
-        saveBtn.innerHTML = isUploading ? '<i class="fas fa-spinner fa-spin"></i> Uploading...' : 'Save';
-        
-        modal.querySelector('.progress-container').style.display = isUploading ? 'block' : 'none';
-    }
-
-    function resetModal() {
-        const modal = videoEditorModal;
-        modal.querySelector('#video-url-input').value = '';
-        modal.querySelector('#video-file-input').value = '';
-        modal.querySelector('.file-name').textContent = 'No file selected.';
-        modal.querySelector('.progress-bar-inner').style.width = '0%';
-        modal.querySelector('.progress-text').textContent = '0%';
-        selectedFile = null;
-        setModalUIState(false);
-    }
-    
-    function handleFileUpload() {
-        if (!selectedFile || !currentEditingSubjectId || !auth.currentUser) {
-            alert("No file selected or user not properly authenticated.");
-            return;
-        }
-
-        setModalUIState(true);
-        const storageRef = storage.ref(`subject_videos/${currentEditingSubjectId}/${Date.now()}-${selectedFile.name}`);
-        const uploadTask = storageRef.put(selectedFile);
-
-        uploadTask.on('state_changed', 
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                videoEditorModal.querySelector('.progress-bar-inner').style.width = progress + '%';
-                videoEditorModal.querySelector('.progress-text').textContent = Math.round(progress) + '%';
-            }, 
-            (error) => {
-                console.error("Upload failed:", error);
-                let errorMessage = "Upload failed. Please try again.";
-                if (error.code === 'storage/unauthorized') {
-                    errorMessage = "Permission denied. Please ensure you are logged in as an admin and your storage rules are correct.";
+        if (isMobileDevice()) {
+            document.querySelectorAll('.card-media').forEach(v => {
+                v.setAttribute('autoplay', '');
+                v.setAttribute('playsinline', '');
+                v.muted = true;
+            });
+        } else {
+            document.querySelectorAll('.subject-card').forEach(card => {
+                const video = card.querySelector('.card-media');
+                if (video) {
+                    card.addEventListener('mouseenter', () => forceVideoPlay(video));
+                    card.addEventListener('mouseleave', () => { 
+                        video.pause(); 
+                        video.currentTime = 0; 
+                    });
                 }
-                alert(errorMessage);
-                setModalUIState(false);
-            }, 
-            () => {
-                uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-                    videoRef.child(currentEditingSubjectId).set(downloadURL);
-                    videoEditorModal.classList.remove('visible');
-                }).catch((error) => {
-                    console.error("Error getting download URL:", error);
-                    alert("Upload succeeded, but could not get the file URL.");
-                    setModalUIState(false);
-                });
-            }
-        );
+            });
+        }
     }
 
+    // --- NEW: Modal Logic ---
     function setupVideoEditorModal() {
-        const modal = videoEditorModal;
+        const modal = document.getElementById('video-editor-modal');
         if (!modal) return;
 
+        // Open modal
         document.querySelectorAll('.edit-video-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 currentEditingSubjectId = e.target.closest('.subject-card').dataset.subjectId;
                 const subjectName = e.target.closest('.subject-card').querySelector('.subject-name').textContent;
                 modal.querySelector('#modal-title').textContent = `Edit "${subjectName}" Video`;
-                resetModal();
+                resetFileInput();
                 modal.classList.add('visible');
             });
         });
+
+        // Close modal
+        const closeModal = () => {
+            modal.classList.remove('visible');
+            resetFileInput();
+        };
         
-        modal.querySelectorAll('.modal-tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (btn.disabled) return;
-                modal.querySelector('.modal-tab-btn.active').classList.remove('active');
-                btn.classList.add('active');
-                modal.querySelector('.modal-tab-panel.active').classList.remove('active');
-                modal.querySelector(`#${btn.dataset.tab}-panel`).classList.add('active');
-            });
-        });
-
-        modal.querySelector('#video-file-input').addEventListener('change', (e) => {
-            selectedFile = e.target.files[0];
-            modal.querySelector('.file-name').textContent = selectedFile ? selectedFile.name : 'No file selected.';
-        });
-
-        const closeModal = () => { if (!modal.querySelector('#save-video-btn').disabled) modal.classList.remove('visible'); };
         modal.querySelector('.modal-close-btn').addEventListener('click', closeModal);
         modal.querySelector('#cancel-video-btn').addEventListener('click', closeModal);
         
-        modal.querySelector('#save-video-btn').addEventListener('click', () => {
-            const activeTab = modal.querySelector('.modal-tab-btn.active').dataset.tab;
-            if (activeTab === 'url') {
-                const newUrl = modal.querySelector('#video-url-input').value.trim();
-                if (newUrl && currentEditingSubjectId && newUrl.endsWith('.mp4')) {
-                    videoRef.child(currentEditingSubjectId).set(newUrl);
-                    closeModal();
-                } else { alert('Please provide a valid URL ending in .mp4'); }
-            } else if (activeTab === 'upload') {
-                if (selectedFile) handleFileUpload();
-                else alert('Please choose a file to upload.');
-            }
-        });
-
-        modal.querySelector('#revert-video-btn').addEventListener('click', () => {
-            if (currentEditingSubjectId) {
-                videoRef.child(currentEditingSubjectId).remove();
-                closeModal();
-            }
-        });
+        // Save action
+        saveVideoBtn.addEventListener('click', uploadVideoFile);
+        
+        // Revert action
+        revertVideoBtn.addEventListener('click', revertToDefaultVideo);
+        
+        // Setup file upload
+        setupFileUpload();
     }
 
-    // --- FIREBASE DATA LISTENER ---
+    // --- NEW: Firebase Data Listener ---
     function listenForVideoChanges() {
         if (!videoRef) return;
         videoRef.on('value', (snapshot) => {
@@ -421,40 +1037,38 @@ document.addEventListener('DOMContentLoaded', function() {
                 const subjectId = card.dataset.subjectId;
                 const videoElement = card.querySelector('.card-media');
                 const sourceElement = videoElement.querySelector('source');
+                
                 const newUrl = customVideos[subjectId] || DEFAULT_VIDEOS[subjectId];
+                
                 if (sourceElement.src !== newUrl) {
                     sourceElement.src = newUrl;
-                    videoElement.load();
-                    if (!isMobileDevice() && card.matches(':hover')) { forceVideoPlay(videoElement); }
+                    videoElement.load(); // Reload the video to apply the new source
+                    if (!isMobileDevice() && card.matches(':hover')) {
+                        forceVideoPlay(videoElement);
+                    }
                 }
             });
         });
     }
 
     // --- INITIALIZATION ---
-    function initializePage(user) {
-        checkAdminStatus(user);
-        handleProfilePicture(user);
+    function initialize() {
+        window.history.replaceState(null, null, window.location.href);
+        window.addEventListener('popstate', () => window.history.forward());
+
+        handleProfilePicture();
+        checkAdminStatus(); // Check for admin rights
         setupDropdowns();
         initializeCardVideos();
-        if (isAdmin) setupVideoEditorModal();
-        listenForVideoChanges();
 
-        // Make the page visible now that everything is set up
-        document.body.style.visibility = 'visible';
-    }
-    
-    // --- AUTHENTICATION GATE ---
-    auth.onAuthStateChanged((user) => {
-        if (user) {
-            // User is signed in and their session is valid.
-            initializePage(user);
-        } else {
-            // No user is signed in, or the session is invalid/expired.
-            clearAuthData();
-            window.location.href = LOGIN_PAGE;
+        if (isAdmin) {
+            setupVideoEditorModal(); // Only set up modal listeners for admins
         }
-    });
+
+        listenForVideoChanges(); // Always listen for changes for all users
+    }
+
+    initialize();
 });
 </script>
 </body>
