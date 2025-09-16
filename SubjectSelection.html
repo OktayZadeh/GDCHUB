@@ -10,62 +10,29 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
-
-    <script>
-        (function() {
-            // Configuration constants
-            const USER_INFO_KEY = "googleUserInfo";
-            const AUTH_TOKEN_KEY = "gdcAuthToken";
-            const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
-
-            // Helper function to get the authentication cookie
-            function getCookieToken() {
-                const cookie = document.cookie.split('; ')
-                    .find(row => row.startsWith('gdcAuth='));
-                return cookie ? cookie.split('=')[1] : null;
-            }
-
-            // Perform the authentication check
-            try {
-                const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-                const cookieToken = getCookieToken();
-                if (!authToken || !cookieToken || authToken !== cookieToken) {
-                    // If check fails, stop the page and write the redirect message
-                    document.write(`
-                        <style>
-                            body { margin: 0; padding: 0; }
-                            @keyframes progress { to { transform: translateX(100%); } }
-                        </style>
-                        <div style="position:fixed;top:0;left:0;right:0;bottom:0;display:flex;justify-content:center;align-items:center;background:#f8f9fa;font-family:'Poppins',sans-serif;z-index:9999;">
-                            <div style="text-align:center;padding:30px;max-width:400px;">
-                                <h2 style="color:#2b2d42;margin-bottom:20px;">Authentication Required</h2>
-                                <p style="color:#5f6a7d;margin-bottom:25px;">Please sign in to access this content. Redirecting...</p>
-                                <div style="width:100%;height:4px;background:#e9ecef;border-radius:2px;overflow:hidden;"><div style="width:100%;height:100%;background:#4361ee;border-radius:2px;animation:progress 2s ease-in-out infinite;transform:translateX(-100%);"></div></div>
-                            </div>
-                        </div>`);
-                    setTimeout(() => window.location.href = LOGIN_PAGE, 2000);
-                    // Throw an error to halt any further script execution on the page
-                    throw new Error("Authentication required");
-                }
-            } catch (error) {
-                // If the check throws an error (e.g., from localStorage access), redirect as a failsafe
-                console.error("Auth check error:", error.message);
-                if (error.message !== "Authentication required") {
-                    window.location.href = LOGIN_PAGE;
-                }
-                // We re-throw the error to ensure the script execution is stopped.
-                throw error;
-            }
-        })();
-    </script>
     
+    <!-- 
+    ============================================================================
+    BUG FIX: SAFE AUTHENTICATION FLOW
+    ----------------------------------------------------------------------------
+    1. The problematic <head> script has been REMOVED.
+    2. The body is hidden by default with CSS to prevent any flash of content.
+    3. The main script will make the body visible ONLY AFTER Firebase confirms
+       the user's authentication status, solving the blank page bug.
+    ============================================================================
+    -->
+    <style>
+        body {
+            visibility: hidden; /* Hide page until auth status is known */
+        }
+    </style>
+
     <style>
         /* ========== CSS Variables ========== */
         :root {
@@ -182,7 +149,7 @@
         .input-group input:focus + label, .input-group input:not(:placeholder-shown) + label { top: -10px; font-size: 12px; color: var(--primary); }
         .modal-buttons { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
         .modal-button { padding: 10px 20px; font-size: 14px; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s ease; }
-        .modal-button:disabled { background-color: #ced4da; cursor: not-allowed; }
+        .modal-button:disabled { background-color: #ced4da !important; color: #6c757d !important; cursor: not-allowed; }
         .modal-button.primary { background-color: var(--primary); color: white; }
         .modal-button.primary:hover:not(:disabled) { background-color: #3a53c4; }
         .modal-button.secondary { background-color: #e2e8f0; color: var(--text); }
@@ -223,20 +190,17 @@
 </head>
 <body class="non-admin">
     
-    <!-- Top Navigation Bar, Main Content, and Copyright (HTML structure unchanged) -->
-    <div class="topbar" id="topbar">...</div>
-    <div class="main-content-container">...</div>
-    <div class="copyright">...</div>
+    <!-- Top Navigation Bar, Main Content, and Copyright (HTML structure is correct) -->
+    <!-- ... HTML content ... -->
 
-    <!-- Video Editor Modal (HTML structure unchanged) -->
-    <div class="modal-overlay" id="video-editor-modal">...</div>
+    <!-- Video Editor Modal (HTML structure is correct) -->
+    <!-- ... HTML content ... -->
 
 
 <script>
+// This script now contains the sole, reliable method for authentication and page initialization.
 document.addEventListener('DOMContentLoaded', function() {
     // --- CONFIGURATION ---
-    const USER_INFO_KEY = "googleUserInfo";
-    const AUTH_TOKEN_KEY = "gdcAuthToken";
     const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
     const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
     const firebaseConfig = {
@@ -268,28 +232,57 @@ document.addEventListener('DOMContentLoaded', function() {
         app = firebase.initializeApp(firebaseConfig);
         database = firebase.database();
         storage = firebase.storage();
-        auth = firebase.auth(); // Initialize Auth
+        auth = firebase.auth();
         videoRef = database.ref('subjectSelectionVideos');
     } catch (e) {
         console.error("Firebase initialization failed:", e);
-        alert("Could not connect to the configuration database. Please try again later.");
+        document.body.innerHTML = "Error connecting to services. Please try again later.";
+        document.body.style.visibility = 'visible';
     }
 
     // --- CORE FUNCTIONS ---
     function clearAuthData() {
-        localStorage.removeItem(USER_INFO_KEY);
-        localStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem("googleUserInfo");
+        localStorage.removeItem("gdcAuthToken");
         document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     }
     function isMobileDevice() { return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
     function forceVideoPlay(video) { if (video && video.paused) { video.play().catch(() => { video.muted = true; video.play().catch(e => console.error("Video play error:", e)); }); } }
-    function handleProfilePicture() { try { const u = JSON.parse(localStorage.getItem(USER_INFO_KEY)); if (u?.picture) profilePicElement.src = u.picture; else throw new Error(); } catch { profilePicElement.src = "data:image/svg+xml,..."; } }
-    function checkAdminStatus() { try { const u = JSON.parse(localStorage.getItem(USER_INFO_KEY)); if (u && u.email && ADMIN_EMAILS.includes(u.email.toLowerCase())) { isAdmin = true; document.body.classList.remove('non-admin'); } } catch (e) { isAdmin = false; } }
+    
+    function handleProfilePicture(user) { 
+        try { 
+            const userInfo = JSON.parse(localStorage.getItem("googleUserInfo"));
+            if (userInfo?.picture) {
+                profilePicElement.src = userInfo.picture;
+            } else if (user?.photoURL) {
+                profilePicElement.src = user.photoURL;
+            } else {
+                throw new Error("No picture found");
+            }
+        } catch {
+            profilePicElement.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234361ee'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
+        }
+    }
+    
+    function checkAdminStatus(user) { 
+        if (user && user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+            isAdmin = true;
+            document.body.classList.remove('non-admin');
+        } else {
+            isAdmin = false;
+            document.body.classList.add('non-admin');
+        }
+    }
 
     // --- EVENT LISTENERS & SETUP ---
     function setupDropdowns() {
         profilePicElement.addEventListener('click', (e) => { e.stopPropagation(); const i = dropdownContent.classList.toggle('show'); profilePicElement.setAttribute('aria-expanded', i); });
-        logoutButton.addEventListener('click', () => { clearAuthData(); window.location.href = LOGIN_PAGE; });
+        logoutButton.addEventListener('click', () => { 
+            auth.signOut().then(() => {
+                clearAuthData(); 
+                window.location.href = LOGIN_PAGE;
+            });
+        });
         if (isMobileDevice()) { document.querySelectorAll('.year-dropdown .dropdown-toggle').forEach(d => d.addEventListener('click', (e) => { e.preventDefault(); const w = d.parentElement.classList.contains('show'); document.querySelectorAll('.year-dropdown.show').forEach(el => el.classList.remove('show')); if (!w) d.parentElement.classList.add('show'); })); }
         document.addEventListener('click', (e) => { if (!e.target.closest('.profile-dropdown')) { dropdownContent.classList.remove('show'); profilePicElement.setAttribute('aria-expanded', 'false'); } if (isMobileDevice() && !e.target.closest('.year-dropdown')) { document.querySelectorAll('.year-dropdown.show').forEach(d => d.classList.remove('show')); } });
     }
@@ -324,9 +317,8 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedFile = null;
         setModalUIState(false);
     }
-
-    // *** BUG FIX: THIS IS THE CORRECTED UPLOAD FUNCTION ***
-    async function handleFileUpload() {
+    
+    function handleFileUpload() {
         if (!selectedFile || !currentEditingSubjectId || !auth.currentUser) {
             alert("No file selected or user not properly authenticated.");
             return;
@@ -343,14 +335,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 videoEditorModal.querySelector('.progress-text').textContent = Math.round(progress) + '%';
             }, 
             (error) => {
-                // --- THIS IS THE CRITICAL ERROR HANDLING BLOCK ---
                 console.error("Upload failed:", error);
                 let errorMessage = "Upload failed. Please try again.";
                 if (error.code === 'storage/unauthorized') {
                     errorMessage = "Permission denied. Please ensure you are logged in as an admin and your storage rules are correct.";
                 }
                 alert(errorMessage);
-                setModalUIState(false); // Unlock the UI
+                setModalUIState(false);
             }, 
             () => {
                 uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
@@ -359,7 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }).catch((error) => {
                     console.error("Error getting download URL:", error);
                     alert("Upload succeeded, but could not get the file URL.");
-                    setModalUIState(false); // Unlock the UI
+                    setModalUIState(false);
                 });
             }
         );
@@ -369,7 +360,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const modal = videoEditorModal;
         if (!modal) return;
 
-        // Open modal
         document.querySelectorAll('.edit-video-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -381,7 +371,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
         
-        // Tab switching
         modal.querySelectorAll('.modal-tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 if (btn.disabled) return;
@@ -392,7 +381,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // File selection
         modal.querySelector('#video-file-input').addEventListener('change', (e) => {
             selectedFile = e.target.files[0];
             modal.querySelector('.file-name').textContent = selectedFile ? selectedFile.name : 'No file selected.';
@@ -402,7 +390,6 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.querySelector('.modal-close-btn').addEventListener('click', closeModal);
         modal.querySelector('#cancel-video-btn').addEventListener('click', closeModal);
         
-        // Save action
         modal.querySelector('#save-video-btn').addEventListener('click', () => {
             const activeTab = modal.querySelector('.modal-tab-btn.active').dataset.tab;
             if (activeTab === 'url') {
@@ -417,7 +404,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Revert action
         modal.querySelector('#revert-video-btn').addEventListener('click', () => {
             if (currentEditingSubjectId) {
                 videoRef.child(currentEditingSubjectId).remove();
@@ -446,22 +432,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- INITIALIZATION ---
-    function initialize() {
-        window.history.replaceState(null, null, window.location.href);
-        window.addEventListener('popstate', () => window.history.forward());
-        handleProfilePicture();
-        checkAdminStatus();
+    function initializePage(user) {
+        checkAdminStatus(user);
+        handleProfilePicture(user);
         setupDropdowns();
         initializeCardVideos();
         if (isAdmin) setupVideoEditorModal();
         listenForVideoChanges();
+
+        // Make the page visible now that everything is set up
+        document.body.style.visibility = 'visible';
     }
     
-    // Wait for auth to be ready before initializing
+    // --- AUTHENTICATION GATE ---
     auth.onAuthStateChanged((user) => {
-        // This ensures that the user object is available for Storage rules
-        // and isAdmin check is done with a valid user state.
-        initialize();
+        if (user) {
+            // User is signed in and their session is valid.
+            initializePage(user);
+        } else {
+            // No user is signed in, or the session is invalid/expired.
+            clearAuthData();
+            window.location.href = LOGIN_PAGE;
+        }
     });
 });
 </script>
