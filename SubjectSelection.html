@@ -691,7 +691,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const saveVideoBtn = document.getElementById('save-video-btn');
     const revertVideoBtn = document.getElementById('revert-video-btn');
     
-    let isAdmin = false;
     let currentEditingSubjectId = null;
     let selectedFile = null;
 
@@ -751,10 +750,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return false;
     }
-
+    
     function setupAdminUI() {
-        isAdmin = checkAdminStatus();
-        if (isAdmin) {
+        if (checkAdminStatus()) {
             document.body.classList.remove('non-admin');
             setupVideoEditorModal();
         } else {
@@ -854,7 +852,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     try {
                         const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
                         await videoRef.child(currentEditingSubjectId).set(downloadURL);
-                        
                         videoEditorModal.classList.remove('visible');
                     } catch (error) {
                         console.error('Error getting download URL or saving to DB:', error);
@@ -998,18 +995,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         handleProfilePicture();
         setupDropdowns();
-        initializeCardVideos();
         listenForVideoChanges();
 
-        // --- FINAL AUTH LOGIC ---
-        // This listener waits for Firebase to be ready.
+        // --- FINAL, ROBUST AUTHENTICATION LOGIC ---
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
-                // Once a user is confirmed, setup the admin UI.
-                // This prevents the race condition.
+                // The user is signed in and the auth state is confirmed.
+                // It is now safe to initialize all interactive and user-specific UI.
+                initializeCardVideos();
                 setupAdminUI();
             } else {
-                // If there is no user, ensure admin UI is hidden.
+                // No user is signed in. Ensure admin UI is hidden.
                 document.body.classList.add('non-admin');
             }
         });
