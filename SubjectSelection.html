@@ -16,7 +16,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
-    <!-- NEW: Firebase Storage -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
 
     <script>
@@ -701,9 +700,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     try {
         const app = firebase.initializeApp(firebaseConfig);
-        database = firebase.database();       // Assign value
-        storage = firebase.storage();         // Assign value
-        videoRef = database.ref('subjectSelectionVideos'); // Assign value
+        database = firebase.database();
+        storage = firebase.storage();
+        videoRef = database.ref('subjectSelectionVideos');
     } catch (e) {
         console.error("Firebase initialization failed:", e);
         alert("Could not connect to the configuration database. Please try again later.");
@@ -741,69 +740,47 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- NEW: Admin Check ---
-    function checkAdminStatus() {
-        try {
-            const userInfo = JSON.parse(localStorage.getItem(USER_INFO_KEY));
-            if (userInfo && userInfo.email) {
-                isAdmin = ADMIN_EMAILS.includes(userInfo.email.toLowerCase());
-                if (isAdmin) {
-                    document.body.classList.remove('non-admin');
-                }
+    // --- NEW: Admin Check & UI Setup ---
+    function checkAndSetupAdminUI(user) {
+        if (user && user.email) {
+            isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase());
+            if (isAdmin) {
+                document.body.classList.remove('non-admin');
+                setupVideoEditorModal(); // Initialize admin features only when confirmed
             }
-        } catch (e) {
-            console.error("Could not verify user info for admin check.", e);
+        } else {
             isAdmin = false;
+            document.body.classList.add('non-admin');
         }
     }
 
     // --- NEW: File Upload Functions ---
     function setupFileUpload() {
-        // Click to select file
         fileUploadLabel.addEventListener('click', (e) => {
             if (e.target !== fileInput) {
                 fileInput.click();
             }
         });
-
-        // Drag and drop
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             fileUploadLabel.addEventListener(eventName, preventDefaults, false);
         });
-
         function preventDefaults(e) {
             e.preventDefault();
             e.stopPropagation();
         }
-
         ['dragenter', 'dragover'].forEach(eventName => {
-            fileUploadLabel.addEventListener(eventName, highlight, false);
+            fileUploadLabel.addEventListener(eventName, () => fileUploadLabel.classList.add('dragover'), false);
         });
-
         ['dragleave', 'drop'].forEach(eventName => {
-            fileUploadLabel.addEventListener(eventName, unhighlight, false);
+            fileUploadLabel.addEventListener(eventName, () => fileUploadLabel.classList.remove('dragover'), false);
         });
-
-        function highlight() {
-            fileUploadLabel.classList.add('dragover');
-        }
-
-        function unhighlight() {
-            fileUploadLabel.classList.remove('dragover');
-        }
-
-        fileUploadLabel.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
+        fileUploadLabel.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
             if (files.length) {
                 fileInput.files = files;
                 handleFileSelection(files[0]);
             }
-        }
-
-        // File input change
+        }, false);
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length) {
                 handleFileSelection(e.target.files[0]);
@@ -812,30 +789,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function handleFileSelection(file) {
-        // Validate file
         if (!file.type.includes('video/mp4')) {
             alert('Please select an MP4 video file.');
             resetFileInput();
             return;
         }
-
         if (file.size > MAX_FILE_SIZE) {
             alert('File size exceeds the 50MB limit. Please choose a smaller file.');
             resetFileInput();
             return;
         }
-
         selectedFile = file;
-        
-        // Show preview
-        const videoURL = URL.createObjectURL(file);
-        filePreview.src = videoURL;
+        filePreview.src = URL.createObjectURL(file);
         filePreviewContainer.style.display = 'block';
-        
-        // Enable save button
         saveVideoBtn.disabled = false;
-        
-        // Update UI text
         fileUploadLabel.querySelector('.file-upload-text').textContent = 'File selected: ' + file.name;
         fileUploadLabel.querySelector('.file-upload-subtext').textContent = 'Click to choose a different file';
     }
@@ -851,41 +818,32 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function uploadVideoFile() {
-        // --- ADDED THIS CHECK TO PREVENT RACE CONDITION ---
+        // This check remains as a final safeguard, but the UI should prevent this state.
         if (!firebase.auth().currentUser) {
-            alert("Authentication error. Please wait a moment and try again. If this persists, please refresh the page.");
-            // Reset button state
-            saveVideoBtn.disabled = false;
-            saveVideoBtn.textContent = 'Upload & Save';
+            console.error("Upload started without a confirmed user.");
+            alert("Authentication is still initializing. Please try again in a moment.");
             return;
         }
-        // --- END OF CHECK ---
 
         if (!selectedFile || !currentEditingSubjectId) return;
         
         try {
-            // Show progress bar
             uploadProgress.style.display = 'block';
             saveVideoBtn.disabled = true;
             saveVideoBtn.textContent = 'Uploading...';
             
-            // Create a reference to the storage location
             const fileExtension = selectedFile.name.split('.').pop();
             const fileName = `subject_videos/${currentEditingSubjectId}_${Date.now()}.${fileExtension}`;
             const storageRef = storage.ref().child(fileName);
             
-            // Upload file
             const uploadTask = storageRef.put(selectedFile);
             
-            // Monitor upload progress
             uploadTask.on('state_changed', 
                 (snapshot) => {
-                    // Progress monitoring
                     const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                     uploadProgressBar.style.width = progress + '%';
                 },
                 (error) => {
-                    // Handle errors
                     console.error('Upload failed:', error);
                     alert('Upload failed: ' + error.message);
                     uploadProgress.style.display = 'none';
@@ -893,30 +851,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     saveVideoBtn.textContent = 'Upload & Save';
                 },
                 async () => {
-                    // Upload completed successfully
                     try {
-                        // Get download URL
                         const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                        
-                        // Save URL to database
                         await videoRef.child(currentEditingSubjectId).set(downloadURL);
                         
-                        // Reset UI
-                        uploadProgress.style.display = 'none';
                         videoEditorModal.classList.remove('visible');
                         resetFileInput();
                         saveVideoBtn.textContent = 'Upload & Save';
-                        
-                    } catch (error) {
-                        console.error('Error getting download URL:', error);
-                        alert('Upload completed but failed to save URL: ' + error.message);
                         uploadProgress.style.display = 'none';
+                    } catch (error) {
+                        console.error('Error getting download URL or saving to DB:', error);
+                        alert('Upload completed but failed to save: ' + error.message);
                         saveVideoBtn.disabled = false;
                         saveVideoBtn.textContent = 'Upload & Save';
+                        uploadProgress.style.display = 'none';
                     }
                 }
             );
-            
         } catch (error) {
             console.error('Upload error:', error);
             alert('Upload error: ' + error.message);
@@ -928,22 +879,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function revertToDefaultVideo() {
         if (!currentEditingSubjectId) return;
-        
         try {
             revertVideoBtn.disabled = true;
             revertVideoBtn.textContent = 'Reverting...';
-            
-            // Remove from database
             await videoRef.child(currentEditingSubjectId).remove();
-            
-            // Close modal
             videoEditorModal.classList.remove('visible');
-            revertVideoBtn.textContent = 'Revert to Default';
-            revertVideoBtn.disabled = false;
-            
         } catch (error) {
             console.error('Error reverting video:', error);
             alert('Error reverting to default video: ' + error.message);
+        } finally {
             revertVideoBtn.textContent = 'Revert to Default';
             revertVideoBtn.disabled = false;
         }
@@ -961,7 +905,6 @@ document.addEventListener('DOMContentLoaded', function() {
             clearAuthData();
             window.location.href = LOGIN_PAGE;
         });
-
         if (isMobileDevice()) {
             document.querySelectorAll('.year-dropdown').forEach(dropdown => {
                 dropdown.querySelector('.dropdown-toggle').addEventListener('click', (e) => {
@@ -1009,7 +952,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const modal = document.getElementById('video-editor-modal');
         if (!modal) return;
 
-        // Open modal
         document.querySelectorAll('.edit-video-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -1020,23 +962,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 modal.classList.add('visible');
             });
         });
-
-        // Close modal
         const closeModal = () => {
             modal.classList.remove('visible');
             resetFileInput();
         };
-        
         modal.querySelector('.modal-close-btn').addEventListener('click', closeModal);
         modal.querySelector('#cancel-video-btn').addEventListener('click', closeModal);
-        
-        // Save action
         saveVideoBtn.addEventListener('click', uploadVideoFile);
-        
-        // Revert action
         revertVideoBtn.addEventListener('click', revertToDefaultVideo);
-        
-        // Setup file upload
         setupFileUpload();
     }
 
@@ -1054,7 +987,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (sourceElement.src !== newUrl) {
                     sourceElement.src = newUrl;
-                    videoElement.load(); // Reload the video to apply the new source
+                    videoElement.load();
                     if (!isMobileDevice() && card.matches(':hover')) {
                         forceVideoPlay(videoElement);
                     }
@@ -1069,15 +1002,22 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('popstate', () => window.history.forward());
 
         handleProfilePicture();
-        checkAdminStatus(); // Check for admin rights
         setupDropdowns();
         initializeCardVideos();
+        listenForVideoChanges();
 
-        if (isAdmin) {
-            setupVideoEditorModal(); // Only set up modal listeners for admins
-        }
-
-        listenForVideoChanges(); // Always listen for changes for all users
+        // --- THE NEW, ROBUST WAY TO HANDLE AUTH-DEPENDENT UI ---
+        firebase.auth().onAuthStateChanged(user => {
+            // This function is the single source of truth for auth status.
+            // It runs once the auth state is known.
+            if (user) {
+                // User is signed in and auth is ready.
+                checkAndSetupAdminUI(user);
+            } else {
+                // User is signed out.
+                checkAndSetupAdminUI(null);
+            }
+        });
     }
 
     initialize();
