@@ -851,6 +851,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function uploadVideoFile() {
+        // --- ADDED THIS CHECK TO PREVENT RACE CONDITION ---
+        if (!firebase.auth().currentUser) {
+            alert("Authentication error. Please wait a moment and try again. If this persists, please refresh the page.");
+            // Reset button state
+            saveVideoBtn.disabled = false;
+            saveVideoBtn.textContent = 'Upload & Save';
+            return;
+        }
+        // --- END OF CHECK ---
+
         if (!selectedFile || !currentEditingSubjectId) return;
         
         try {
