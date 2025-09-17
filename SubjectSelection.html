@@ -696,7 +696,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedFile = null;
 
     // --- NEW: Firebase Initialization ---
-    let database, storage, videoRef; // Declare variables in a higher scope
+    let database, storage, videoRef;
 
     try {
         const app = firebase.initializeApp(firebaseConfig);
@@ -740,21 +740,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- NEW: Admin Check & UI Setup ---
-    function checkAndSetupAdminUI(user) {
-        if (user && user.email) {
-            isAdmin = ADMIN_EMAILS.includes(user.email.toLowerCase());
-            if (isAdmin) {
-                document.body.classList.remove('non-admin');
-                setupVideoEditorModal(); // Initialize admin features only when confirmed
+    function checkAdminStatus() {
+        try {
+            const userInfo = JSON.parse(localStorage.getItem(USER_INFO_KEY));
+            if (userInfo && userInfo.email) {
+                return ADMIN_EMAILS.includes(userInfo.email.toLowerCase());
             }
+        } catch (e) {
+            console.error("Could not verify user info for admin check.", e);
+        }
+        return false;
+    }
+
+    function setupAdminUI() {
+        isAdmin = checkAdminStatus();
+        if (isAdmin) {
+            document.body.classList.remove('non-admin');
+            setupVideoEditorModal();
         } else {
-            isAdmin = false;
             document.body.classList.add('non-admin');
         }
     }
 
-    // --- NEW: File Upload Functions ---
     function setupFileUpload() {
         fileUploadLabel.addEventListener('click', (e) => {
             if (e.target !== fileInput) {
@@ -818,13 +825,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function uploadVideoFile() {
-        // This check remains as a final safeguard, but the UI should prevent this state.
-        if (!firebase.auth().currentUser) {
-            console.error("Upload started without a confirmed user.");
-            alert("Authentication is still initializing. Please try again in a moment.");
-            return;
-        }
-
         if (!selectedFile || !currentEditingSubjectId) return;
         
         try {
@@ -856,12 +856,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         await videoRef.child(currentEditingSubjectId).set(downloadURL);
                         
                         videoEditorModal.classList.remove('visible');
-                        resetFileInput();
-                        saveVideoBtn.textContent = 'Upload & Save';
-                        uploadProgress.style.display = 'none';
                     } catch (error) {
                         console.error('Error getting download URL or saving to DB:', error);
                         alert('Upload completed but failed to save: ' + error.message);
+                    } finally {
+                        resetFileInput();
                         saveVideoBtn.disabled = false;
                         saveVideoBtn.textContent = 'Upload & Save';
                         uploadProgress.style.display = 'none';
@@ -892,8 +891,6 @@ document.addEventListener('DOMContentLoaded', function() {
             revertVideoBtn.disabled = false;
         }
     }
-
-    // --- EVENT LISTENERS & SETUP ---
 
     function setupDropdowns() {
         profilePicElement.addEventListener('click', (e) => {
@@ -947,7 +944,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- NEW: Modal Logic ---
     function setupVideoEditorModal() {
         const modal = document.getElementById('video-editor-modal');
         if (!modal) return;
@@ -973,7 +969,6 @@ document.addEventListener('DOMContentLoaded', function() {
         setupFileUpload();
     }
 
-    // --- NEW: Firebase Data Listener ---
     function listenForVideoChanges() {
         if (!videoRef) return;
         videoRef.on('value', (snapshot) => {
@@ -1006,16 +1001,16 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeCardVideos();
         listenForVideoChanges();
 
-        // --- THE NEW, ROBUST WAY TO HANDLE AUTH-DEPENDENT UI ---
+        // --- FINAL AUTH LOGIC ---
+        // This listener waits for Firebase to be ready.
         firebase.auth().onAuthStateChanged(user => {
-            // This function is the single source of truth for auth status.
-            // It runs once the auth state is known.
             if (user) {
-                // User is signed in and auth is ready.
-                checkAndSetupAdminUI(user);
+                // Once a user is confirmed, setup the admin UI.
+                // This prevents the race condition.
+                setupAdminUI();
             } else {
-                // User is signed out.
-                checkAndSetupAdminUI(null);
+                // If there is no user, ensure admin UI is hidden.
+                document.body.classList.add('non-admin');
             }
         });
     }
