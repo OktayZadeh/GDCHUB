@@ -932,9 +932,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const video = card.querySelector('.card-media');
                 if (video) {
                     card.addEventListener('mouseenter', () => forceVideoPlay(video));
+                    // *** THIS IS THE CHANGED LOGIC ***
+                    // Instead of resetting the video, we just pause it to "freeze" it.
                     card.addEventListener('mouseleave', () => { 
                         video.pause(); 
-                        video.currentTime = 0; 
                     });
                 }
             });
