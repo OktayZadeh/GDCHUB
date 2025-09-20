@@ -1675,11 +1675,15 @@ body.dark-mode .snackbar.hint {
                 <span class="topbar-title">Glendowie College</span>
             </div>
             <div class="topbar-links">
-                <a href="index.html" class="topbar-button"> <!-- CHANGED: Link back to subject selection -->
-                    <i class="fas fa-arrow-left"></i> <span>Back to Subjects</span>
-                </a>
+                <!-- NAVBAR BUTTONS RESTORED TO ORIGINAL -->
                 <a href="https://www.gdc.school.nz/" target="_blank" class="topbar-button">
                     <i class="fas fa-school"></i> <span>College Site</span>
+                </a>
+                <a href="https://gdc.bridge.school.nz/" target="_blank" class="topbar-button">
+                    <i class="fas fa-book-open"></i> <span>School Point</span>
+                </a>
+                <a href="https://gdc.school.kiwi/" target="_blank" class="topbar-button">
+                    <i class="fas fa-envelope"></i> <span>Student Portal</span>
                 </a>
                 <button id="notification-bell" class="topbar-button" title="Toggle Notifications">
                     <i class="fas fa-bell-slash"></i>
@@ -2159,11 +2163,20 @@ body.dark-mode .snackbar.hint {
             });
         });
         
+        // FIXED: Correctly formats subject names, including "MYP"
+        function formatSubjectName(subject) {
+            if (!subject) return '';
+            if (subject.startsWith('MYP')) {
+                const rest = subject.substring(3);
+                return 'MYP ' + rest.replace(/([A-Z])/g, ' $1').trim();
+            }
+            return subject.replace(/([A-Z])/g, ' $1').trim();
+        }
+
         function updatePageHeader() {
             const topbarTitle = document.querySelector('.topbar-title');
             if (topbarTitle && currentSubject && currentYear) {
-                // Format subject name (e.g., "SportsScience" -> "Sports Science")
-                const formattedSubject = currentSubject.replace(/([A-Z])/g, ' $1').replace('MYP', 'MYP ').trim();
+                const formattedSubject = formatSubjectName(currentSubject);
                 document.title = `${formattedSubject} Y${currentYear} | GDCHUB`;
                 topbarTitle.textContent = `${formattedSubject} - Year ${currentYear}`;
             }
