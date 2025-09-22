@@ -2235,29 +2235,48 @@ body.dark-mode #global-tooltip {
         function setupTooltips() {
             const tooltipEl = document.getElementById('global-tooltip');
             if (!tooltipEl) return;
+            
+            let tooltipTimeout; // Variable to hold the timeout ID
 
             document.addEventListener('mouseover', (e) => {
                 const target = e.target.closest('[data-tooltip]');
                 if (target) {
-                    const text = target.getAttribute('data-tooltip');
-                    tooltipEl.textContent = text;
+                    // Clear any existing timeout to prevent multiple tooltips appearing
+                    clearTimeout(tooltipTimeout);
 
-                    const rect = target.getBoundingClientRect();
-                    
-                    // Position tooltip above the target element
-                    const top = rect.top - tooltipEl.offsetHeight - 8; // 8px gap
-                    const left = rect.left + (target.offsetWidth / 2) - (tooltipEl.offsetWidth / 2);
+                    // Set a new timeout to show the tooltip after a delay
+                    tooltipTimeout = setTimeout(() => {
+                        const text = target.getAttribute('data-tooltip');
+                        tooltipEl.textContent = text;
+                        
+                        // Make it visible briefly to calculate its dimensions for positioning
+                        tooltipEl.classList.add('visible');
 
-                    tooltipEl.style.top = `${top}px`;
-                    tooltipEl.style.left = `${left}px`;
-                    
-                    tooltipEl.classList.add('visible');
+                        const rect = target.getBoundingClientRect();
+                        const tooltipRect = tooltipEl.getBoundingClientRect();
+
+                        const top = rect.top - tooltipRect.height - 8; // 8px gap
+                        let left = rect.left + (target.offsetWidth / 2) - (tooltipRect.width / 2);
+
+                        // Prevent tooltip from going off-screen
+                        if (left < 0) left = var(--space-sm);
+                        if (left + tooltipRect.width > window.innerWidth) {
+                            left = window.innerWidth - tooltipRect.width - var(--space-sm);
+                        }
+
+                        tooltipEl.style.top = `${top}px`;
+                        tooltipEl.style.left = `${left}px`;
+                        
+                    }, 1000); // 1000ms = 1 second delay
                 }
             });
 
             document.addEventListener('mouseout', (e) => {
                 const target = e.target.closest('[data-tooltip]');
                 if (target) {
+                    // Clear the timeout if the mouse leaves before the delay is over
+                    clearTimeout(tooltipTimeout);
+                    // Hide the tooltip immediately
                     tooltipEl.classList.remove('visible');
                 }
             });
