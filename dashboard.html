@@ -527,7 +527,7 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 }
 .search-input:not(:placeholder-shown) + .search-clear { display: flex; align-items: center; justify-content: center; }
 .search-clear:hover { background: var(--light); color: var(--danger); }
-#announcement-category-filter {
+#class-filter {
     margin-bottom: 0;
     font-size: var(--text-sm);
     padding: var(--space-xs) var(--space-sm);
@@ -1021,7 +1021,6 @@ body:not(.non-admin) .post-card:not(.expanded):focus-within .post-actions {
     background: var(--lighter);
     border-radius: var(--radius-lg);
     padding: var(--space-lg);
-    margin-bottom: var(--space-lg);
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--light-gray);
     display: flex;
@@ -1598,7 +1597,7 @@ body.non-admin .reminder-card { cursor: default; }
     .header-content { flex-direction: column; align-items: flex-start; gap: var(--space-md); }
     .search-filter-container { flex-direction: column; align-items: stretch; gap: var(--space-md); }
     .search-container { max-width: 100%; }
-    #announcement-category-filter { max-width: 100%; }
+    #class-filter { max-width: 100%; }
     .modal-content { padding: var(--space-lg); max-width: 90%; }
     .custom-toolbar { flex-wrap: nowrap; overflow-x: auto; }
 
@@ -1782,16 +1781,10 @@ body.dark-mode .snackbar.hint {
                         <button class="view-toggle-btn active" id="reminders-list-view-btn" title="List View"><i class="fas fa-list-ul"></i></button>
                         <button class="view-toggle-btn" id="reminders-month-view-btn" title="Month View"><i class="fas fa-calendar-alt"></i></button>
                     </div>
-                    <div class="reminder-filter-container">
-                        <label for="reminder-category-filter">Category:</label>
-                        <select id="reminder-category-filter">
-                            <option value="ALL_CLASSES">All Categories</option>
-                        </select>
-                    </div>
                 </div>
                 
                 <div class="admin-buttons">
-                    <button class="button secondary" onclick="openCategoryManager()" id="manage-categories-btn">Manage Categories</button>
+                    <button class="button secondary" onclick="openCategoryManager()" id="manage-categories-btn">Manage Classes</button>
                     <button class="button" onclick="openReminderEditor()" id="add-reminder-btn">+ Add Reminder</button>
                 </div>
             </div>
@@ -1810,9 +1803,9 @@ body.dark-mode .snackbar.hint {
                 <button class="search-clear" onclick="clearSearch()">×</button>
             </div>
             <div class="reminder-filter-container">
-                <label for="announcement-category-filter">Category:</label>
-                <select id="announcement-category-filter">
-                    <option value="ALL_CLASSES">All Categories</option>
+                <label for="class-filter">Class:</label>
+                <select id="class-filter">
+                    <option value="ALL_CLASSES">All Classes</option>
                 </select>
             </div>
         </div>
@@ -1859,10 +1852,10 @@ body.dark-mode .snackbar.hint {
             </div>
             <div class="input-group">
                 <select id="reminder-category" required>
-                    <option value="" disabled selected>Select a category...</option>
+                    <option value="" disabled selected>Select a class...</option>
                     <option value="ALL">ALL (Visible to Everyone)</option>
                 </select>
-                <label for="reminder-category">Category</label>
+                <label for="reminder-category">Class</label>
             </div>
             <div class="input-group">
                 <input type="text" id="reminder-location" placeholder=" ">
@@ -1884,7 +1877,7 @@ body.dark-mode .snackbar.hint {
             <h2 id="announcement-editor-title">Create New Announcement</h2>
             <div class="editor-header-actions">
                 <select id="announcement-category" required>
-                    <option value="" disabled selected>Select a category...</option>
+                    <option value="" disabled selected>Select a class...</option>
                     <option value="ALL">ALL (Visible to Everyone)</option>
                 </select>
                 <button class="button secondary" onclick="closeAnnouncementEditor()">Cancel</button>
@@ -2026,8 +2019,8 @@ body.dark-mode .snackbar.hint {
     <div id="category-manager-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeCategoryManager()">×</span>
-            <h2>Manage Categories</h2>
-            <p style="font-size: var(--text-sm); color: var(--medium); margin-bottom: var(--space-md);">Add or remove categories for announcements and reminders.</p>
+            <h2>Manage Classes</h2>
+            <p style="font-size: var(--text-sm); color: var(--medium); margin-bottom: var(--space-md);">Add or remove classes for announcements and reminders.</p>
             <div class="category-manager-list" id="category-manager-list">
                 <!-- Categories will be dynamically inserted here -->
             </div>
@@ -2093,12 +2086,10 @@ body.dark-mode .snackbar.hint {
 
         // --- DYNAMIC DATA LOGIC START ---
 
-        // 1. Get Subject and Year from URL
         const urlParams = new URLSearchParams(window.location.search);
         const currentSubject = urlParams.get('subject');
         const currentYear = urlParams.get('year');
         
-        // 2. Validate URL Parameters
         if (!currentSubject || !currentYear) {
             document.body.innerHTML = `<div style="text-align:center; padding-top: 50px; font-family: 'Inter', sans-serif;"><h2>Error: Missing Information</h2><p>The subject and year were not specified. Please return to the subject selection page.</p></div>`;
             throw new Error("URL parameters for subject and year are required.");
@@ -2119,15 +2110,13 @@ body.dark-mode .snackbar.hint {
         const database = firebase.database();
         const firestore = firebase.firestore();
         
-        // 3. Create Dynamic Firebase References
         const basePath = `content/${currentSubject}/${currentYear}`;
         const tabsRef = database.ref(`${basePath}/tabs`);
         const announcementsRef = database.ref(`${basePath}/announcements`);
         const remindersRef = database.ref(`${basePath}/reminders`);
-        const categoriesRef = database.ref(`${basePath}/categories`); // Unified category reference
+        const categoriesRef = database.ref(`${basePath}/classes`); // UNIFIED "CLASS" REFERENCE
         
         // --- DYNAMIC DATA LOGIC END ---
-
 
         const sidebarMenu = document.getElementById('sidebar-menu');
         const tabEditorModal = document.getElementById('tab-editor-modal');
@@ -2152,8 +2141,7 @@ body.dark-mode .snackbar.hint {
         const embedModal = document.getElementById('embed-modal');
         const linkModal = document.getElementById('link-modal');
         const categoryManagerModal = document.getElementById('category-manager-modal');
-        const reminderCategoryFilter = document.getElementById('reminder-category-filter');
-        const announcementCategoryFilter = document.getElementById('announcement-category-filter');
+        const classFilter = document.getElementById('class-filter');
         const reminderCategoryEditorSelect = document.getElementById('reminder-category');
         const announcementCategoryEditorSelect = document.getElementById('announcement-category');
         const remindersCalendarView = document.getElementById('reminders-calendar-view');
@@ -2166,9 +2154,8 @@ body.dark-mode .snackbar.hint {
         let currentTabBeingEdited = null;
         let expandedPost = null;
         let reminders = [];
-        let unifiedCategories = [];
-        let selectedReminderCategory = localStorage.getItem(`selectedReminderCategory_${currentSubject}_${currentYear}`) || 'ALL_CLASSES';
-        let selectedAnnouncementCategory = localStorage.getItem(`selectedAnnouncementCategory_${currentSubject}_${currentYear}`) || 'ALL_CLASSES';
+        let unifiedClasses = [];
+        let selectedClass = localStorage.getItem(`selectedClass_${currentSubject}_${currentYear}`) || 'ALL_CLASSES';
         let currentReminderBeingEdited = null;
         let isAdmin = false;
         let currentAnnouncementBeingEdited = null;
@@ -2182,7 +2169,7 @@ body.dark-mode .snackbar.hint {
 
         document.addEventListener('DOMContentLoaded', () => {
             checkUserProfile();
-            updatePageHeader(); // Set the main page title
+            updatePageHeader();
             setupFirebaseListeners();
             setupGlobalClickHandlers();
             setupConfirmationModal();
@@ -2300,6 +2287,7 @@ body.dark-mode .snackbar.hint {
         }
         
         function rgbToHex(rgb) {
+            if (!rgb || !rgb.includes('(')) return rgb; // Return if not in rgb format
             let sep = rgb.indexOf(",") > -1 ? "," : " ";
             rgb = rgb.substr(4).split(")")[0].split(sep);
             let r = (+rgb[0]).toString(16),
@@ -2969,8 +2957,7 @@ body.dark-mode .snackbar.hint {
         function setupSearchAndFilter() { 
             announcementSearchInput.addEventListener('input', filterAnnouncements); 
             searchClearButton.addEventListener('click', clearSearch);
-            reminderCategoryFilter.addEventListener('change', handleReminderCategoryFilterChange);
-            announcementCategoryFilter.addEventListener('change', handleAnnouncementCategoryFilterChange);
+            classFilter.addEventListener('change', handleClassFilterChange);
         }
 
         function filterAnnouncements() {
@@ -2979,8 +2966,8 @@ body.dark-mode .snackbar.hint {
             
             let announcementsToRender = [...currentTabAnnouncements];
 
-            if (selectedAnnouncementCategory !== 'ALL_CLASSES') {
-                announcementsToRender = announcementsToRender.filter(ann => ann.category === selectedAnnouncementCategory || ann.category === 'ALL');
+            if (selectedClass !== 'ALL_CLASSES') {
+                announcementsToRender = announcementsToRender.filter(ann => ann.category === selectedClass || ann.category === 'ALL');
             }
             
             if (searchTerm) {
@@ -2995,6 +2982,7 @@ body.dark-mode .snackbar.hint {
             renderAnnouncements(announcementsToRender, suppressPostAnimation);
             suppressPostAnimation = false;
         }
+
         function clearSearch() { announcementSearchInput.value = ''; filterAnnouncements(); }
 
         function setupFirebaseListeners() {
@@ -3030,9 +3018,9 @@ body.dark-mode .snackbar.hint {
             });
 
             categoriesRef.on('value', snapshot => {
-                const categoriesData = snapshot.val();
-                unifiedCategories = categoriesData ? Object.values(categoriesData).filter(cat => cat && cat.name) : [];
-                unifiedCategories.sort((a, b) => a.name.localeCompare(b.name));
+                const classesData = snapshot.val();
+                unifiedClasses = classesData ? Object.values(classesData).filter(c => c && c.name) : [];
+                unifiedClasses.sort((a, b) => a.name.localeCompare(b.name));
                 populateCategoryDropdowns();
                 renderReminders();
                 filterAnnouncements();
@@ -3043,30 +3031,21 @@ body.dark-mode .snackbar.hint {
         }
         
         function populateCategoryDropdowns() {
-            const validCategories = unifiedCategories.filter(cat => cat && cat.name);
-            const optionsHtml = validCategories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
+            const validClasses = unifiedClasses.filter(c => c && c.name);
+            const optionsHtml = validClasses.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
 
-            // Populate Reminder Filter
-            reminderCategoryFilter.innerHTML = `<option value="ALL_CLASSES">All Categories</option>${optionsHtml}`;
-            if ([...reminderCategoryFilter.options].some(opt => opt.value === selectedReminderCategory)) {
-                reminderCategoryFilter.value = selectedReminderCategory;
+            // Populate Unified Filter
+            classFilter.innerHTML = `<option value="ALL_CLASSES">All Classes</option>${optionsHtml}`;
+            if ([...classFilter.options].some(opt => opt.value === selectedClass)) {
+                classFilter.value = selectedClass;
             } else {
-                selectedReminderCategory = 'ALL_CLASSES';
-                localStorage.setItem(`selectedReminderCategory_${currentSubject}_${currentYear}`, selectedReminderCategory);
-                reminderCategoryFilter.value = selectedReminderCategory;
+                selectedClass = 'ALL_CLASSES';
+                localStorage.setItem(`selectedClass_${currentSubject}_${currentYear}`, selectedClass);
+                classFilter.value = selectedClass;
             }
             
-            // Populate Announcement Filter
-            announcementCategoryFilter.innerHTML = `<option value="ALL_CLASSES">All Categories</option>${optionsHtml}`;
-            if ([...announcementCategoryFilter.options].some(opt => opt.value === selectedAnnouncementCategory)) {
-                announcementCategoryFilter.value = selectedAnnouncementCategory;
-            } else {
-                selectedAnnouncementCategory = 'ALL_CLASSES';
-                localStorage.setItem(`selectedAnnouncementCategory_${currentSubject}_${currentYear}`, selectedAnnouncementCategory);
-                announcementCategoryFilter.value = selectedAnnouncementCategory;
-            }
-
-            const editorOptionsHtml = `<option value="" disabled selected>Select category...</option><option value="ALL">ALL (Visible to Everyone)</option>${optionsHtml}`;
+            // Populate Editors
+            const editorOptionsHtml = `<option value="" disabled selected>Select a class...</option><option value="ALL">ALL (Visible to Everyone)</option>${optionsHtml}`;
             reminderCategoryEditorSelect.innerHTML = editorOptionsHtml;
             announcementCategoryEditorSelect.innerHTML = editorOptionsHtml;
         }
@@ -3091,7 +3070,7 @@ body.dark-mode .snackbar.hint {
             pinnedPostsHeader.style.display = pinned.length > 0 ? 'flex' : 'none';
             pinnedPostsFeed.innerHTML = pinned.map(ann => createPostElement(ann, skipAnimation)).join('');
             unpinnedPostsFeed.innerHTML = unpinned.map(ann => createPostElement(ann, skipAnimation)).join('');
-            if (announcements.length === 0) { unpinnedPostsFeed.innerHTML = '<p>No announcements found for this category.</p>'; }
+            if (announcements.length === 0) { unpinnedPostsFeed.innerHTML = '<p>No announcements found for this class.</p>'; }
             document.querySelectorAll('.post-card').forEach(card => card.addEventListener('click', (e) => { if (!e.target.closest('button, a, iframe')) { expandPost(card); } }));
             document.querySelectorAll('.post-actions button').forEach(button => button.addEventListener('click', e => e.stopPropagation()));
         }
@@ -3273,7 +3252,7 @@ body.dark-mode .snackbar.hint {
             const category = announcementCategoryEditorSelect.value;
             
             if (!title || !category) {
-                alert('Please provide a title and select a category.');
+                alert('Please provide a title and select a class.');
                 return;
             }
 
@@ -3449,8 +3428,8 @@ body.dark-mode .snackbar.hint {
         }
         
         function getFilteredReminders() {
-            if (selectedReminderCategory !== 'ALL_CLASSES') {
-                return reminders.filter(rem => rem.category === selectedReminderCategory || rem.category === 'ALL');
+            if (selectedClass !== 'ALL_CLASSES') {
+                return reminders.filter(rem => rem.category === selectedClass || rem.category === 'ALL');
             }
             return reminders;
         }
@@ -3484,7 +3463,7 @@ body.dark-mode .snackbar.hint {
             .map(rem => createReminderCard(rem)).join('');
             
             if (filteredReminders.length === 0) {
-                 remindersList.innerHTML = '<p>No reminders found for the selected category.</p>';
+                 remindersList.innerHTML = '<p>No reminders found for the selected class.</p>';
             }
         }
 
@@ -3514,7 +3493,7 @@ body.dark-mode .snackbar.hint {
                  locationHtml = `<div class="reminder-location"><i class="fas fa-map-marker-alt"></i> ${location}</div>`;
             }
             
-            const categoryBadge = isAdmin && rem.category && rem.category !== 'ALL' ? `<span style="font-size: 10px; background-color: var(--light-gray); color: var(--medium); padding: 2px 6px; border-radius: var(--radius-sm); margin-left: var(--space-xs);">${rem.category}</span>` : '';
+            const categoryBadge = isAdmin && rem.category && rem.category !== 'ALL' ? `<span style="font-size: 10px; background-color: var(--light-gray); color: var(--medium); padding: 2px 6px; border-radius: var(--radius-sm); margin-left: var(--space-sm);">${rem.category}</span>` : '';
             const draggableAttr = isAdmin && isDraggable ? 'draggable="true"' : '';
 
             return `
@@ -3655,15 +3634,10 @@ body.dark-mode .snackbar.hint {
             }
         }
         
-        function handleReminderCategoryFilterChange() {
-            selectedReminderCategory = reminderCategoryFilter.value;
-            localStorage.setItem(`selectedReminderCategory_${currentSubject}_${currentYear}`, selectedReminderCategory);
+        function handleClassFilterChange() {
+            selectedClass = classFilter.value;
+            localStorage.setItem(`selectedClass_${currentSubject}_${currentYear}`, selectedClass);
             renderReminders();
-        }
-
-        function handleAnnouncementCategoryFilterChange() {
-            selectedAnnouncementCategory = announcementCategoryFilter.value;
-            localStorage.setItem(`selectedAnnouncementCategory_${currentSubject}_${currentYear}`, selectedAnnouncementCategory);
             filterAnnouncements();
         }
         
@@ -3790,7 +3764,7 @@ body.dark-mode .snackbar.hint {
             const title = document.getElementById('reminder-title').value.trim();
             const date = document.getElementById('reminder-date').value;
             const category = document.getElementById('reminder-category').value;
-            if (!title || !date || !category) return alert('Please enter a title, date, and category.');
+            if (!title || !date || !category) return alert('Please enter a title, date, and class.');
             const description = document.getElementById('reminder-description').value.trim();
             const type = document.getElementById('reminder-type').value;
             const location = document.getElementById('reminder-location').value.trim();
@@ -3889,11 +3863,11 @@ body.dark-mode .snackbar.hint {
 
         function renderCategoryManagerList() {
             const listEl = document.getElementById('category-manager-list');
-            if (unifiedCategories.length === 0) {
-                listEl.innerHTML = '<p>No categories created yet.</p>';
+            if (unifiedClasses.length === 0) {
+                listEl.innerHTML = '<p>No classes created yet.</p>';
                 return;
             }
-            listEl.innerHTML = unifiedCategories.map(cat => `
+            listEl.innerHTML = unifiedClasses.map(cat => `
                 <div class="category-manager-item" data-id="${cat.id}">
                     <span>${cat.name}</span>
                     <button onclick="deleteCategory('${cat.id}')"><i class="fas fa-trash-alt"></i></button>
@@ -3908,12 +3882,12 @@ body.dark-mode .snackbar.hint {
             const name = input.value.trim();
             if (!name) return;
 
-            if (unifiedCategories.some(cat => cat.name.toLowerCase() === name.toLowerCase())) {
-                alert('This category name already exists.');
+            if (unifiedClasses.some(cat => cat.name.toLowerCase() === name.toLowerCase())) {
+                alert('This class name already exists.');
                 return;
             }
             if (name.toLowerCase() === 'all' || name.toLowerCase() === 'all_classes'){
-                alert('This is a reserved category name.');
+                alert('This is a reserved class name.');
                 return;
             }
 
@@ -3927,7 +3901,7 @@ body.dark-mode .snackbar.hint {
 
         window.deleteCategory = (id) => {
             if (!isAdmin) return;
-            showConfirmationModal('Are you sure you want to delete this category? Items in this category will no longer be filterable by this name.', () => {
+            showConfirmationModal('Are you sure you want to delete this class? Items in this class will no longer be filterable by this name.', () => {
                  categoriesRef.child(id).remove();
             });
         }
