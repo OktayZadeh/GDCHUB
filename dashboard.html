@@ -1781,6 +1781,12 @@ body.dark-mode .snackbar.hint {
                         <button class="view-toggle-btn active" id="reminders-list-view-btn" title="List View"><i class="fas fa-list-ul"></i></button>
                         <button class="view-toggle-btn" id="reminders-month-view-btn" title="Month View"><i class="fas fa-calendar-alt"></i></button>
                     </div>
+                    <div class="reminder-filter-container">
+                        <label for="class-filter">Class:</label>
+                        <select id="class-filter">
+                            <option value="ALL_CLASSES">All Classes</option>
+                        </select>
+                    </div>
                 </div>
                 
                 <div class="admin-buttons">
@@ -1801,12 +1807,6 @@ body.dark-mode .snackbar.hint {
             <div class="search-container">
                 <input type="text" class="search-input" id="announcement-search" placeholder="Search announcements...">
                 <button class="search-clear" onclick="clearSearch()">×</button>
-            </div>
-            <div class="reminder-filter-container">
-                <label for="class-filter">Class:</label>
-                <select id="class-filter">
-                    <option value="ALL_CLASSES">All Classes</option>
-                </select>
             </div>
         </div>
 
