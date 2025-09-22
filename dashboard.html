@@ -491,8 +491,20 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 }
 .header-content { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 1px solid var(--light-gray); }
 
-/* --- FIXED: Search Bar Styles --- */
-.search-container { position: relative; width: 100%; max-width: 400px; }
+/* --- Search and Filter Bar Styles --- */
+.search-filter-container {
+    display: flex;
+    gap: var(--space-md);
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: var(--space-lg);
+}
+.search-container { 
+    position: relative; 
+    flex-grow: 1;
+    min-width: 250px;
+    max-width: 400px; 
+}
 .search-input {
     width: 100%; 
     height: 38px;
@@ -504,6 +516,7 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
     background-image: none;
     transition: all var(--transition-fast); 
     box-shadow: var(--shadow-sm);
+    margin-bottom: 0; /* Override default margin */
 }
 .search-input::placeholder { color: var(--medium); opacity: 1; }
 .search-input:focus { outline: none; border-color: var(--primary); box-shadow: var(--shadow-primary); }
@@ -515,6 +528,15 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 }
 .search-input:not(:placeholder-shown) + .search-clear { display: flex; align-items: center; justify-content: center; }
 .search-clear:hover { background: var(--light); color: var(--danger); }
+#announcement-category-filter {
+    margin-bottom: 0;
+    font-size: var(--text-sm);
+    padding: var(--space-xs) var(--space-sm);
+    padding-right: var(--space-xl);
+    max-width: 220px;
+    height: 38px;
+    box-shadow: var(--shadow-sm);
+}
 
 /* Profile picture styles */
 #profile-pic {
@@ -1565,7 +1587,9 @@ body.non-admin .reminder-card { cursor: default; }
     .post-card.expanded { padding: var(--space-lg); padding-top: calc(56px + var(--space-lg)); }
     .reminders-list { column-count: 1; }
     .header-content { flex-direction: column; align-items: flex-start; gap: var(--space-md); }
+    .search-filter-container { flex-direction: column; align-items: stretch; }
     .search-container { max-width: 100%; }
+    #announcement-category-filter { max-width: 100%; }
     .modal-content { padding: var(--space-lg); max-width: 90%; }
     .custom-toolbar { flex-wrap: nowrap; overflow-x: auto; }
 
@@ -1769,9 +1793,17 @@ body.dark-mode .snackbar.hint {
             <button class="button" onclick="openAnnouncementEditor()">Create Announcement</button>
         </header>
 
-        <div class="search-container">
-            <input type="text" class="search-input" id="announcement-search" placeholder="Search announcements...">
-            <button class="search-clear" onclick="clearSearch()">×</button>
+        <div class="search-filter-container">
+            <div class="search-container">
+                <input type="text" class="search-input" id="announcement-search" placeholder="Search announcements...">
+                <button class="search-clear" onclick="clearSearch()">×</button>
+            </div>
+            <div class="reminder-filter-container">
+                <label for="announcement-category-filter">Class:</label>
+                <select id="announcement-category-filter">
+                    <option value="ALL_CLASSES">All Classes</option>
+                </select>
+            </div>
         </div>
 
         <div class="classroom-info" id="classroom-info">
@@ -1911,6 +1943,13 @@ body.dark-mode .snackbar.hint {
             </div>
             <div class="editor-main-area">
                 <input type="text" id="announcement-title" placeholder="Announcement Title...">
+                <div class="input-group">
+                     <select id="announcement-category" required>
+                        <option value="" disabled selected>Select a class...</option>
+                        <option value="ALL">ALL (Visible to Everyone)</option>
+                    </select>
+                    <label for="announcement-category">Class</label>
+                </div>
                 <div id="announcement-content" class="custom-editor-area" contenteditable="true"></div>
             </div>
         </div>
@@ -2106,7 +2145,9 @@ body.dark-mode .snackbar.hint {
         const linkModal = document.getElementById('link-modal');
         const categoryManagerModal = document.getElementById('category-manager-modal');
         const reminderCategoryFilter = document.getElementById('reminder-category-filter');
+        const announcementCategoryFilter = document.getElementById('announcement-category-filter');
         const reminderCategoryEditorSelect = document.getElementById('reminder-category');
+        const announcementCategoryEditorSelect = document.getElementById('announcement-category');
         const remindersCalendarView = document.getElementById('reminders-calendar-view');
         const listViewBtn = document.getElementById('reminders-list-view-btn');
         const monthViewBtn = document.getElementById('reminders-month-view-btn');
@@ -2119,6 +2160,7 @@ body.dark-mode .snackbar.hint {
         let reminders = [];
         let reminderCategories = [];
         let selectedReminderCategory = localStorage.getItem(`selectedReminderCategory_${currentSubject}_${currentYear}`) || 'ALL_CLASSES';
+        let selectedAnnouncementCategory = localStorage.getItem(`selectedAnnouncementCategory_${currentSubject}_${currentYear}`) || 'ALL_CLASSES';
         let currentReminderBeingEdited = null;
         let isAdmin = false;
         let currentAnnouncementBeingEdited = null;
@@ -2136,7 +2178,7 @@ body.dark-mode .snackbar.hint {
             setupFirebaseListeners();
             setupGlobalClickHandlers();
             setupConfirmationModal();
-            setupSearch();
+            setupSearchAndFilter();
             setupMobileMenu();
             setupDarkMode();
             setupProfileDropdown();
@@ -2146,7 +2188,7 @@ body.dark-mode .snackbar.hint {
             setupReminderCollapse();
             setupNotificationBell();
             setupAppearanceControls();
-            reminderCategoryFilter.addEventListener('change', handleCategoryFilterChange);
+            
             UndoManager.init();
             if (isAdmin) {
                 setupSidebarDragAndDrop();
@@ -2925,14 +2967,28 @@ body.dark-mode .snackbar.hint {
             darkModeToggle.querySelector('span').textContent = isDarkMode ? 'Light Mode' : 'Dark Mode';
         }
         
-        function setupSearch() { announcementSearchInput.addEventListener('input', filterAnnouncements); searchClearButton.addEventListener('click', clearSearch); }
+        function setupSearchAndFilter() { 
+            announcementSearchInput.addEventListener('input', filterAnnouncements); 
+            searchClearButton.addEventListener('click', clearSearch);
+            reminderCategoryFilter.addEventListener('change', handleReminderCategoryFilterChange);
+            announcementCategoryFilter.addEventListener('change', handleAnnouncementCategoryFilterChange);
+        }
+
         function filterAnnouncements() {
             const searchTerm = announcementSearchInput.value.toLowerCase().trim();
             searchClearButton.style.display = searchTerm ? 'block' : 'none';
-            let announcementsToRender = currentTabAnnouncements;
+            
+            let announcementsToRender = [...currentTabAnnouncements];
+
+            // Filter by category first
+            if (selectedAnnouncementCategory !== 'ALL_CLASSES') {
+                announcementsToRender = announcementsToRender.filter(ann => ann.category === selectedAnnouncementCategory || ann.category === 'ALL');
+            }
+            
+            // Then filter by search term
             if (searchTerm) {
                 const tempDiv = document.createElement('div');
-                announcementsToRender = currentTabAnnouncements.filter(ann => {
+                announcementsToRender = announcementsToRender.filter(ann => {
                     const titleMatch = ann.title.toLowerCase().includes(searchTerm);
                     tempDiv.innerHTML = ann.content;
                     const contentMatch = (tempDiv.textContent || "").toLowerCase().includes(searchTerm);
@@ -3000,10 +3056,10 @@ body.dark-mode .snackbar.hint {
         
         function populateCategoryDropdowns() {
             const validCategories = reminderCategories.filter(cat => cat && cat.name);
-            
-            const filterOptions = validCategories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
-            reminderCategoryFilter.innerHTML = `<option value="ALL_CLASSES">All Classes</option>${filterOptions}`;
+            const optionsHtml = validCategories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
 
+            // Populate Reminder Filter
+            reminderCategoryFilter.innerHTML = `<option value="ALL_CLASSES">All Classes</option>${optionsHtml}`;
             if ([...reminderCategoryFilter.options].some(opt => opt.value === selectedReminderCategory)) {
                 reminderCategoryFilter.value = selectedReminderCategory;
             } else {
@@ -3011,12 +3067,28 @@ body.dark-mode .snackbar.hint {
                 localStorage.setItem(`selectedReminderCategory_${currentSubject}_${currentYear}`, selectedReminderCategory);
                 reminderCategoryFilter.value = selectedReminderCategory;
             }
+            
+            // Populate Announcement Filter
+            announcementCategoryFilter.innerHTML = `<option value="ALL_CLASSES">All Classes</option>${optionsHtml}`;
+            if ([...announcementCategoryFilter.options].some(opt => opt.value === selectedAnnouncementCategory)) {
+                announcementCategoryFilter.value = selectedAnnouncementCategory;
+            } else {
+                selectedAnnouncementCategory = 'ALL_CLASSES';
+                localStorage.setItem(`selectedAnnouncementCategory_${currentSubject}_${currentYear}`, selectedAnnouncementCategory);
+                announcementCategoryFilter.value = selectedAnnouncementCategory;
+            }
 
-            const editorOptions = validCategories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
+            // Populate Reminder Editor
             reminderCategoryEditorSelect.innerHTML = `
                 <option value="" disabled selected>Select a category...</option>
                 <option value="ALL">ALL (Visible to Everyone)</option>
-                ${editorOptions}`;
+                ${optionsHtml}`;
+                
+            // Populate Announcement Editor
+            announcementCategoryEditorSelect.innerHTML = `
+                <option value="" disabled selected>Select a category...</option>
+                <option value="ALL">ALL (Visible to Everyone)</option>
+                ${optionsHtml}`;
         }
 
         function autoEmbed(htmlContent) {
@@ -3038,7 +3110,7 @@ body.dark-mode .snackbar.hint {
             pinnedPostsHeader.style.display = pinned.length > 0 ? 'flex' : 'none';
             pinnedPostsFeed.innerHTML = pinned.map(ann => createPostElement(ann, skipAnimation)).join('');
             unpinnedPostsFeed.innerHTML = unpinned.map(ann => createPostElement(ann, skipAnimation)).join('');
-            if (announcements.length === 0) { unpinnedPostsFeed.innerHTML = '<p>No announcements found for this tab.</p>'; }
+            if (announcements.length === 0) { unpinnedPostsFeed.innerHTML = '<p>No announcements found for the selected class.</p>'; }
             document.querySelectorAll('.post-card').forEach(card => card.addEventListener('click', (e) => { if (!e.target.closest('button, a, iframe')) { expandPost(card); } }));
             document.querySelectorAll('.post-actions button').forEach(button => button.addEventListener('click', e => e.stopPropagation()));
         }
@@ -3047,6 +3119,10 @@ body.dark-mode .snackbar.hint {
             const postDate = new Date(announcement.order).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
             const pinIcon = announcement.pinned ? `<div class="pin-icon"><i class="fas fa-thumbtack"></i></div>` : '';
             const pinBtnClass = announcement.pinned ? 'pinned' : '';
+            const categoryBadge = announcement.category && announcement.category !== 'ALL'
+                ? `<span style="font-size: 10px; background-color: var(--light-gray); color: var(--medium); padding: 2px 6px; border-radius: var(--radius-sm); margin-left: var(--space-sm);">${announcement.category}</span>`
+                : '';
+
             const actionsHtml = isAdmin ? `
                 <div class="post-actions">
                     <button class="post-action-btn pin-btn ${pinBtnClass}" onclick="togglePin(event, '${announcement.id}')">
@@ -3065,7 +3141,7 @@ body.dark-mode .snackbar.hint {
             const collapsedText = tempDiv.textContent || "";
             const animationStyle = skipAnimation ? 'style="animation: none; opacity: 1;"' : '';
             const adminAttrs = isAdmin ? `draggable="true" tabindex="0"` : '';
-            return `<div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" ${adminAttrs} ${animationStyle}>${pinIcon}${actionsHtml}<h3>${announcement.title}</h3><div class="collapsed-content">${collapsedText}</div><div class="post-details"><div class="post-content">${expandedContent}</div><div class="post-meta">Posted on ${postDate}</div></div></div>`;
+            return `<div class="post-card ${announcement.pinned ? 'pinned' : ''}" data-id="${announcement.id}" ${adminAttrs} ${animationStyle}>${pinIcon}${actionsHtml}<h3>${announcement.title}${categoryBadge}</h3><div class="collapsed-content">${collapsedText}</div><div class="post-details"><div class="post-content">${expandedContent}</div><div class="post-meta">Posted on ${postDate}</div></div></div>`;
         }
         
         function saveTabs() {
@@ -3182,17 +3258,21 @@ body.dark-mode .snackbar.hint {
         function openAnnouncementEditor(id = null) {
             if (!isAdmin || !currentTabId) return;
             currentAnnouncementBeingEdited = id; const isEditing = !!id;
-            const titleEl = announcementEditorOverlay.querySelector('#announcement-editor-title');
+            const titleEl = announcementEditorOverlay.querySelector('h2#announcement-editor-title');
             const saveBtn = announcementEditorOverlay.querySelector('#save-announcement-button');
             titleEl.textContent = isEditing ? 'Edit Announcement' : 'Create New Announcement';
             saveBtn.textContent = isEditing ? 'Save Changes' : 'Post Announcement';
-            saveBtn.onclick = isEditing ? () => saveEditedAnnouncement(id) : postAnnouncement;
-            announcementTitleInput.value = ''; announcementContentEditor.innerHTML = '';
+            saveBtn.onclick = () => saveAnnouncement();
+            announcementTitleInput.value = ''; 
+            announcementContentEditor.innerHTML = '';
+            announcementCategoryEditorSelect.value = '';
+
             if (isEditing) {
                 announcementsRef.child(currentTabId).child(id).once('value').then(s => {
                     const ann = s.val(); if(ann) { 
                         announcementTitleInput.value = ann.title; 
                         announcementContentEditor.innerHTML = ann.content || ''; 
+                        announcementCategoryEditorSelect.value = ann.category || '';
                     }
                     updateEditorTheme(); 
                 });
@@ -3204,31 +3284,49 @@ body.dark-mode .snackbar.hint {
         }
         function closeAnnouncementEditor() { announcementEditorOverlay.classList.remove('visible'); document.documentElement.style.overflow = ''; document.body.style.overflow = ''; }
         
-        async function postAnnouncement() {
+        async function saveAnnouncement() {
             if (!isAdmin || !currentTabId) return;
             const title = announcementTitleInput.value.trim();
             const content = announcementContentEditor.innerHTML;
-            if (!title) {
-                alert('Please enter a title.');
+            const category = announcementCategoryEditorSelect.value;
+            
+            if (!title || !category) {
+                alert('Please enter a title and select a class.');
                 return;
             }
-            const newAnnRef = announcementsRef.child(currentTabId).push();
-            const newAnnouncement = {
-                id: newAnnRef.key,
+
+            const announcementData = {
                 title,
                 content,
-                pinned: false,
+                category,
+                pinned: false, // Default value for new, will be preserved on edit
                 order: Date.now()
             };
 
             try {
-                await newAnnRef.set(newAnnouncement);
-                console.log("Announcement saved successfully.");
+                if (currentAnnouncementBeingEdited) {
+                    // Editing existing announcement
+                    const existingAnnRef = announcementsRef.child(currentTabId).child(currentAnnouncementBeingEdited);
+                    const snapshot = await existingAnnRef.once('value');
+                    const existingData = snapshot.val();
+                    
+                    // Preserve existing pinned status and order if not a new post
+                    announcementData.pinned = existingData.pinned;
+                    announcementData.order = existingData.order;
+                    announcementData.id = currentAnnouncementBeingEdited;
+
+                    await existingAnnRef.update({ title, content, category });
+                } else {
+                    // Creating new announcement
+                    const newAnnRef = announcementsRef.child(currentTabId).push();
+                    announcementData.id = newAnnRef.key;
+                    await newAnnRef.set(announcementData);
+                    await sendNotificationsForPost(announcementData);
+                }
                 closeAnnouncementEditor();
-                await sendNotificationsForPost(newAnnouncement);
             } catch (error) {
-                console.error("Error posting announcement or sending notifications: ", error);
-                alert("There was an error posting the announcement.");
+                console.error("Error saving announcement: ", error);
+                alert("There was an error saving the announcement.");
             }
         }
         
@@ -3283,13 +3381,6 @@ body.dark-mode .snackbar.hint {
         }
 
 
-        function saveEditedAnnouncement(id) {
-            if (!isAdmin || !currentTabId) return;
-            const title = announcementTitleInput.value.trim(); const content = announcementContentEditor.innerHTML;
-            if (!title) return alert('Please enter a title.');
-            announcementsRef.child(currentTabId).child(id).update({ title, content }).then(closeAnnouncementEditor);
-        }
-        
         window.togglePin = (event, id) => {
             event.stopPropagation();
             const announcement = currentTabAnnouncements.find(a => a.id === id);
@@ -3446,7 +3537,7 @@ body.dark-mode .snackbar.hint {
                  locationHtml = `<div class="reminder-location"><i class="fas fa-map-marker-alt"></i> ${location}</div>`;
             }
             
-            const categoryBadge = isAdmin && rem.category ? `<span style="font-size: 10px; background-color: var(--light-gray); color: var(--medium); padding: 2px 6px; border-radius: var(--radius-sm); margin-left: var(--space-xs);">${rem.category}</span>` : '';
+            const categoryBadge = isAdmin && rem.category && rem.category !== 'ALL' ? `<span style="font-size: 10px; background-color: var(--light-gray); color: var(--medium); padding: 2px 6px; border-radius: var(--radius-sm); margin-left: var(--space-xs);">${rem.category}</span>` : '';
             const draggableAttr = isAdmin && isDraggable ? 'draggable="true"' : '';
 
             return `
@@ -3587,10 +3678,16 @@ body.dark-mode .snackbar.hint {
             }
         }
         
-        function handleCategoryFilterChange() {
+        function handleReminderCategoryFilterChange() {
             selectedReminderCategory = reminderCategoryFilter.value;
             localStorage.setItem(`selectedReminderCategory_${currentSubject}_${currentYear}`, selectedReminderCategory);
             renderReminders();
+        }
+
+        function handleAnnouncementCategoryFilterChange() {
+            selectedAnnouncementCategory = announcementCategoryFilter.value;
+            localStorage.setItem(`selectedAnnouncementCategory_${currentSubject}_${currentYear}`, selectedAnnouncementCategory);
+            filterAnnouncements();
         }
         
         function formatDateForCalendar(dateStr, format) {
