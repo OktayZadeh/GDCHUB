@@ -1694,9 +1694,19 @@ body.dark-mode .snackbar.hint {
     background-color: var(--dark-secondary);
 }
 
-/* --- NEW: Global Tooltip Styles --- */
-#global-tooltip {
-    position: fixed;
+/* --- NEW: Custom Tooltip Styles --- */
+.tooltip-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+.tooltip-container::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
     background-color: var(--dark-gray);
     color: var(--lighter);
     padding: var(--space-xs) var(--space-sm);
@@ -1704,20 +1714,19 @@ body.dark-mode .snackbar.hint {
     font-size: var(--text-xs);
     font-weight: 500;
     white-space: nowrap;
-    z-index: 9999; /* Ensure it's on top of everything */
+    z-index: 10;
     box-shadow: var(--shadow-md);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
     transition: opacity var(--transition-fast), transform var(--transition-fast);
-    transform: translateY(4px);
 }
-#global-tooltip.visible {
+.tooltip-container:hover::after {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(-4px);
 }
-body.dark-mode #global-tooltip {
+body.dark-mode .tooltip-container::after {
     background-color: var(--dark-light-gray);
     color: #FFFFFF;
 }
@@ -1810,8 +1819,8 @@ body.dark-mode #global-tooltip {
                         <button class="view-toggle-btn active" id="reminders-list-view-btn" title="List View"><i class="fas fa-list-ul"></i></button>
                         <button class="view-toggle-btn" id="reminders-month-view-btn" title="Month View"><i class="fas fa-calendar-alt"></i></button>
                     </div>
-                    <div class="reminder-filter-container">
-                        <label for="class-filter" data-tooltip="Filter both reminders and announcements by class.">Class:</label>
+                    <div class="reminder-filter-container tooltip-container" data-tooltip="Filter both reminders and announcements by class.">
+                        <label for="class-filter">Class:</label>
                         <select id="class-filter">
                             <option value="ALL_CLASSES">All Classes</option>
                         </select>
@@ -2072,8 +2081,6 @@ body.dark-mode #global-tooltip {
         <span>Download started. Tap the file in your browser's downloads to add to Calendar.</span>
     </div>
 
-    <div id="global-tooltip"></div>
-
     <script>
         (function() {
             const USER_INFO_KEY = "googleUserInfo";
@@ -2214,7 +2221,6 @@ body.dark-mode #global-tooltip {
             setupReminderCollapse();
             setupNotificationBell();
             setupAppearanceControls();
-            setupTooltips(); // Initialize the new tooltip system
             
             UndoManager.init();
             if (isAdmin) {
@@ -2231,56 +2237,6 @@ body.dark-mode #global-tooltip {
                 }
             });
         });
-
-        function setupTooltips() {
-            const tooltipEl = document.getElementById('global-tooltip');
-            if (!tooltipEl) return;
-            
-            let tooltipTimeout; // Variable to hold the timeout ID
-
-            document.addEventListener('mouseover', (e) => {
-                const target = e.target.closest('[data-tooltip]');
-                if (target) {
-                    // Clear any existing timeout to prevent multiple tooltips appearing
-                    clearTimeout(tooltipTimeout);
-
-                    // Set a new timeout to show the tooltip after a delay
-                    tooltipTimeout = setTimeout(() => {
-                        const text = target.getAttribute('data-tooltip');
-                        tooltipEl.textContent = text;
-                        
-                        // Make it visible briefly to calculate its dimensions for positioning
-                        tooltipEl.classList.add('visible');
-
-                        const rect = target.getBoundingClientRect();
-                        const tooltipRect = tooltipEl.getBoundingClientRect();
-
-                        const top = rect.top - tooltipRect.height - 8; // 8px gap
-                        let left = rect.left + (target.offsetWidth / 2) - (tooltipRect.width / 2);
-
-                        // Prevent tooltip from going off-screen
-                        if (left < 0) left = var(--space-sm);
-                        if (left + tooltipRect.width > window.innerWidth) {
-                            left = window.innerWidth - tooltipRect.width - var(--space-sm);
-                        }
-
-                        tooltipEl.style.top = `${top}px`;
-                        tooltipEl.style.left = `${left}px`;
-                        
-                    }, 1000); // 1000ms = 1 second delay
-                }
-            });
-
-            document.addEventListener('mouseout', (e) => {
-                const target = e.target.closest('[data-tooltip]');
-                if (target) {
-                    // Clear the timeout if the mouse leaves before the delay is over
-                    clearTimeout(tooltipTimeout);
-                    // Hide the tooltip immediately
-                    tooltipEl.classList.remove('visible');
-                }
-            });
-        }
         
         function formatSubjectName(subject) {
             if (!subject) return '';
@@ -4284,4 +4240,4 @@ body.dark-mode #global-tooltip {
 
     </script>
 </body>
-</html>
+    </html>
