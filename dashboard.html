@@ -1130,7 +1130,7 @@ body.dark-mode .view-toggle-btn { color: var(--dark-medium); }
 body.dark-mode .view-toggle-btn.active { background: var(--dark-primary-light); color: #FFFFFF; }
 body.dark-mode .view-toggle-btn:hover:not(.active) { background: var(--dark-light-gray); }
 
-.reminder-filter-container {
+.class-filter-container {
     display: flex;
     align-items: center;
     gap: var(--space-sm);
@@ -1146,12 +1146,12 @@ body.dark-mode .view-toggle-btn:hover:not(.active) { background: var(--dark-ligh
     padding: var(--space-sm) var(--space-md);
 }
 
-.reminder-filter-container label {
+.class-filter-container label {
     font-size: var(--text-sm);
     font-weight: 500;
     color: var(--medium);
 }
-#reminder-category-filter {
+#class-filter {
     margin-bottom: 0;
     font-size: var(--text-sm);
     padding: var(--space-xs) var(--space-sm);
@@ -1777,9 +1777,20 @@ body.dark-mode .snackbar.hint {
                         <i class="fas fa-chevron-up"></i>
                     </button>
                     <h2>Upcoming Reminders</h2>
-                     <div class="reminders-view-toggle">
+                    <div class="reminders-view-toggle">
                         <button class="view-toggle-btn active" id="reminders-list-view-btn" title="List View"><i class="fas fa-list-ul"></i></button>
                         <button class="view-toggle-btn" id="reminders-month-view-btn" title="Month View"><i class="fas fa-calendar-alt"></i></button>
+                    </div>
+                    <!-- Unified Filter and Search moved here -->
+                    <div class="search-container">
+                        <input type="text" class="search-input" id="announcement-search" placeholder="Search announcements...">
+                        <button class="search-clear" onclick="clearSearch()">×</button>
+                    </div>
+                    <div class="class-filter-container">
+                        <label for="class-filter">Class:</label>
+                        <select id="class-filter">
+                            <option value="ALL_CLASSES">All Classes</option>
+                        </select>
                     </div>
                 </div>
                 
@@ -1796,19 +1807,6 @@ body.dark-mode .snackbar.hint {
             <h1 id="current-tab-title">Classroom</h1>
             <button class="button" onclick="openAnnouncementEditor()">Create Announcement</button>
         </header>
-
-        <div class="search-filter-container">
-            <div class="search-container">
-                <input type="text" class="search-input" id="announcement-search" placeholder="Search announcements...">
-                <button class="search-clear" onclick="clearSearch()">×</button>
-            </div>
-            <div class="reminder-filter-container">
-                <label for="class-filter">Class:</label>
-                <select id="class-filter">
-                    <option value="ALL_CLASSES">All Classes</option>
-                </select>
-            </div>
-        </div>
 
         <div class="classroom-info" id="classroom-info">
             <div id="pinned-posts-header" style="display: none;">
@@ -2114,7 +2112,7 @@ body.dark-mode .snackbar.hint {
         const tabsRef = database.ref(`${basePath}/tabs`);
         const announcementsRef = database.ref(`${basePath}/announcements`);
         const remindersRef = database.ref(`${basePath}/reminders`);
-        const categoriesRef = database.ref(`${basePath}/classes`); // UNIFIED "CLASS" REFERENCE
+        const categoriesRef = database.ref(`${basePath}/classes`); 
         
         // --- DYNAMIC DATA LOGIC END ---
 
@@ -2287,7 +2285,7 @@ body.dark-mode .snackbar.hint {
         }
         
         function rgbToHex(rgb) {
-            if (!rgb || !rgb.includes('(')) return rgb; // Return if not in rgb format
+            if (!rgb || !rgb.includes('(')) return rgb; 
             let sep = rgb.indexOf(",") > -1 ? "," : " ";
             rgb = rgb.substr(4).split(")")[0].split(sep);
             let r = (+rgb[0]).toString(16),
@@ -2955,9 +2953,14 @@ body.dark-mode .snackbar.hint {
         }
         
         function setupSearchAndFilter() { 
-            announcementSearchInput.addEventListener('input', filterAnnouncements); 
+            announcementSearchInput.addEventListener('input', filterContent); 
             searchClearButton.addEventListener('click', clearSearch);
             classFilter.addEventListener('change', handleClassFilterChange);
+        }
+
+        function filterContent() {
+            filterAnnouncements();
+            renderReminders();
         }
 
         function filterAnnouncements() {
@@ -2983,7 +2986,10 @@ body.dark-mode .snackbar.hint {
             suppressPostAnimation = false;
         }
 
-        function clearSearch() { announcementSearchInput.value = ''; filterAnnouncements(); }
+        function clearSearch() { 
+            announcementSearchInput.value = ''; 
+            filterContent();
+        }
 
         function setupFirebaseListeners() {
             tabsRef.on('value', snapshot => {
@@ -3022,8 +3028,7 @@ body.dark-mode .snackbar.hint {
                 unifiedClasses = classesData ? Object.values(classesData).filter(c => c && c.name) : [];
                 unifiedClasses.sort((a, b) => a.name.localeCompare(b.name));
                 populateCategoryDropdowns();
-                renderReminders();
-                filterAnnouncements();
+                filterContent(); 
                 if (categoryManagerModal.style.display === 'flex') {
                     renderCategoryManagerList();
                 }
@@ -3176,7 +3181,7 @@ body.dark-mode .snackbar.hint {
                     announcementsRef.child(tabId).off();
                     announcementsRef.child(tabId).on('value', snapshot => {
                         currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : [];
-                        filterAnnouncements();
+                        filterContent();
                     });
                 }
             }
@@ -3493,7 +3498,7 @@ body.dark-mode .snackbar.hint {
                  locationHtml = `<div class="reminder-location"><i class="fas fa-map-marker-alt"></i> ${location}</div>`;
             }
             
-            const categoryBadge = isAdmin && rem.category && rem.category !== 'ALL' ? `<span style="font-size: 10px; background-color: var(--light-gray); color: var(--medium); padding: 2px 6px; border-radius: var(--radius-sm); margin-left: var(--space-sm);">${rem.category}</span>` : '';
+            const categoryBadge = isAdmin && rem.category && rem.category !== 'ALL' ? `<span style="font-size: 10px; background-color: var(--light-gray); color: var(--medium); padding: 2px 6px; border-radius: var(--radius-sm); margin-left: var(--space-xs);">${rem.category}</span>` : '';
             const draggableAttr = isAdmin && isDraggable ? 'draggable="true"' : '';
 
             return `
@@ -3637,8 +3642,7 @@ body.dark-mode .snackbar.hint {
         function handleClassFilterChange() {
             selectedClass = classFilter.value;
             localStorage.setItem(`selectedClass_${currentSubject}_${currentYear}`, selectedClass);
-            renderReminders();
-            filterAnnouncements();
+            filterContent();
         }
         
         function formatDateForCalendar(dateStr, format) {
