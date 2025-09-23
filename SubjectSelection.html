@@ -932,8 +932,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const video = card.querySelector('.card-media');
                 if (video) {
                     card.addEventListener('mouseenter', () => forceVideoPlay(video));
-                    // *** THIS IS THE CHANGED LOGIC ***
-                    // Instead of resetting the video, we just pause it to "freeze" it.
+                    // When the cursor is moved away, the video is paused, "freezing" it.
                     card.addEventListener('mouseleave', () => { 
                         video.pause(); 
                     });
