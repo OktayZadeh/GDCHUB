@@ -719,15 +719,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
-    function forceVideoPlay(video) {
-        if (video && video.paused) {
-            video.play().catch(() => {
-                video.muted = true;
-                video.play().catch(e => console.error("Video play error:", e));
-            });
-        }
-    }
-
     function handleProfilePicture() {
         try {
             const userInfo = JSON.parse(localStorage.getItem(USER_INFO_KEY));
@@ -921,24 +912,39 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function initializeCardVideos() {
-        if (isMobileDevice()) {
-            document.querySelectorAll('.card-media').forEach(v => {
-                v.setAttribute('autoplay', '');
-                v.setAttribute('playsinline', '');
-                v.muted = true;
-            });
-        } else {
-            document.querySelectorAll('.subject-card').forEach(card => {
-                const video = card.querySelector('.card-media');
-                if (video) {
-                    card.addEventListener('mouseenter', () => forceVideoPlay(video));
-                    // When the cursor is moved away, the video is paused, "freezing" it.
-                    card.addEventListener('mouseleave', () => { 
-                        video.pause(); 
+        const isDesktop = !isMobileDevice();
+        document.querySelectorAll('.subject-card').forEach(card => {
+            const video = card.querySelector('.card-media');
+            if (video) {
+                // Ensure all videos are muted to allow for autoplay/programmatic play.
+                video.muted = true;
+                video.setAttribute('playsinline', ''); // Good practice for all devices
+
+                if (isDesktop) {
+                    // Desktop: Play on hover, pause on leave.
+                    card.addEventListener('mouseenter', () => {
+                        // The play() method returns a promise. It's good practice to handle potential errors.
+                        const playPromise = video.play();
+                        if (playPromise !== undefined) {
+                            playPromise.catch(error => {
+                                // Autoplay was prevented.
+                                console.error("Video play failed:", error);
+                            });
+                        }
+                    });
+
+                    card.addEventListener('mouseleave', () => {
+                        video.pause();
+                    });
+                } else {
+                    // Mobile: Set to autoplay continuously as hover is not a reliable interaction.
+                    video.setAttribute('autoplay', '');
+                    video.play().catch(error => {
+                            console.error("Mobile autoplay failed:", error);
                     });
                 }
-            });
-        }
+            }
+        });
     }
 
     function setupVideoEditorModal() {
@@ -981,7 +987,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     sourceElement.src = newUrl;
                     videoElement.load();
                     if (!isMobileDevice() && card.matches(':hover')) {
-                        forceVideoPlay(videoElement);
+                        videoElement.play().catch(e => console.error("Failed to play video after src change", e));
                     }
                 }
             });
