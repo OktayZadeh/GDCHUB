@@ -656,7 +656,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
     const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
 
-    // --- NEW: Firebase Configuration ---
+    // --- Firebase Configuration ---
     const firebaseConfig = {
         apiKey: "AIzaSyCSTEJ3LevxY2_rlGROzajNnNBrVG3oRR4",
         authDomain: "gdchub-3b40a.firebaseapp.com",
@@ -667,7 +667,7 @@ document.addEventListener('DOMContentLoaded', function() {
         appId: "1:399894468887:web:e3b8669a038fec20d9bf52"
     };
 
-    // --- NEW: Default Video URLs ---
+    // --- Default Video URLs ---
     const DEFAULT_VIDEOS = {
         myp: 'https://i.imgur.com/zw3viPp.mp4',
         pe: 'https://i.imgur.com/DH39YQe.mp4',
@@ -681,7 +681,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const logoutButton = document.getElementById('logout-button');
     const videoEditorModal = document.getElementById('video-editor-modal');
     
-    // NEW: File upload elements
+    // File upload elements
     const fileUploadLabel = document.getElementById('file-upload-label');
     const fileInput = document.getElementById('video-file-input');
     const filePreviewContainer = document.getElementById('file-preview-container');
@@ -694,9 +694,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentEditingSubjectId = null;
     let selectedFile = null;
 
-    // --- NEW: Firebase Initialization ---
+    // --- Firebase Initialization ---
     let database, storage, videoRef;
-
     try {
         const app = firebase.initializeApp(firebaseConfig);
         database = firebase.database();
@@ -704,7 +703,6 @@ document.addEventListener('DOMContentLoaded', function() {
         videoRef = database.ref('subjectSelectionVideos');
     } catch (e) {
         console.error("Firebase initialization failed:", e);
-        alert("Could not connect to the configuration database. Please try again later.");
     }
 
     // --- CORE FUNCTIONS ---
@@ -713,10 +711,6 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.removeItem(USER_INFO_KEY);
         localStorage.removeItem(AUTH_TOKEN_KEY);
         document.cookie = 'gdcAuth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    }
-
-    function isMobileDevice() {
-        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
     function handleProfilePicture() {
@@ -733,13 +727,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function checkAdminStatus() {
         try {
             const userInfo = JSON.parse(localStorage.getItem(USER_INFO_KEY));
-            if (userInfo && userInfo.email) {
-                return ADMIN_EMAILS.includes(userInfo.email.toLowerCase());
-            }
+            return userInfo && ADMIN_EMAILS.includes(userInfo.email?.toLowerCase());
         } catch (e) {
-            console.error("Could not verify user info for admin check.", e);
+            return false;
         }
-        return false;
     }
     
     function setupAdminUI() {
@@ -751,19 +742,35 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // --- NEW, SIMPLIFIED VIDEO HOVER LOGIC ---
+    function initializeCardVideoHover() {
+        document.querySelectorAll('.subject-card').forEach(card => {
+            const video = card.querySelector('video.card-media');
+            if (!video) return;
+
+            // Ensure the video is muted, which is essential for programmatic play
+            video.muted = true;
+
+            card.addEventListener('mouseenter', () => {
+                // Play the video and handle any potential browser blockages
+                video.play().catch(error => {
+                    console.log(`Video play was prevented for ${video.src}: ${error}`);
+                });
+            });
+
+            card.addEventListener('mouseleave', () => {
+                video.pause();
+            });
+        });
+    }
+
     function setupFileUpload() {
-        fileUploadLabel.addEventListener('click', (e) => {
-            if (e.target !== fileInput) {
-                fileInput.click();
-            }
-        });
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            fileUploadLabel.addEventListener(eventName, preventDefaults, false);
+            fileUploadLabel.addEventListener(eventName, e => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
         });
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
         ['dragenter', 'dragover'].forEach(eventName => {
             fileUploadLabel.addEventListener(eventName, () => fileUploadLabel.classList.add('dragover'), false);
         });
@@ -772,35 +779,27 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         fileUploadLabel.addEventListener('drop', (e) => {
             const files = e.dataTransfer.files;
-            if (files.length) {
-                fileInput.files = files;
-                handleFileSelection(files[0]);
-            }
+            if (files.length) handleFileSelection(files[0]);
         }, false);
         fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length) {
-                handleFileSelection(e.target.files[0]);
-            }
+            if (e.target.files.length) handleFileSelection(e.target.files[0]);
         });
     }
 
     function handleFileSelection(file) {
-        if (!file.type.includes('video/mp4')) {
+        if (!file || !file.type.includes('video/mp4')) {
             alert('Please select an MP4 video file.');
-            resetFileInput();
             return;
         }
         if (file.size > MAX_FILE_SIZE) {
-            alert('File size exceeds the 50MB limit. Please choose a smaller file.');
-            resetFileInput();
+            alert('File size exceeds the 50MB limit.');
             return;
         }
         selectedFile = file;
         filePreview.src = URL.createObjectURL(file);
         filePreviewContainer.style.display = 'block';
         saveVideoBtn.disabled = false;
-        fileUploadLabel.querySelector('.file-upload-text').textContent = 'File selected: ' + file.name;
-        fileUploadLabel.querySelector('.file-upload-subtext').textContent = 'Click to choose a different file';
+        fileUploadLabel.querySelector('.file-upload-text').textContent = 'File: ' + file.name;
     }
 
     function resetFileInput() {
@@ -809,74 +808,56 @@ document.addEventListener('DOMContentLoaded', function() {
         filePreviewContainer.style.display = 'none';
         filePreview.src = '';
         saveVideoBtn.disabled = true;
+        uploadProgress.style.display = 'none';
+        uploadProgressBar.style.width = '0%';
         fileUploadLabel.querySelector('.file-upload-text').textContent = 'Click to upload or drag and drop';
-        fileUploadLabel.querySelector('.file-upload-subtext').textContent = 'MP4 files only (max 50MB)';
     }
 
     async function uploadVideoFile() {
         if (!selectedFile || !currentEditingSubjectId) return;
         
-        try {
-            uploadProgress.style.display = 'block';
-            saveVideoBtn.disabled = true;
-            saveVideoBtn.textContent = 'Uploading...';
-            
-            const fileExtension = selectedFile.name.split('.').pop();
-            const fileName = `subject_videos/${currentEditingSubjectId}_${Date.now()}.${fileExtension}`;
-            const storageRef = storage.ref().child(fileName);
-            
-            const uploadTask = storageRef.put(selectedFile);
-            
-            uploadTask.on('state_changed', 
-                (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    uploadProgressBar.style.width = progress + '%';
-                },
-                (error) => {
-                    console.error('Upload failed:', error);
-                    alert('Upload failed: ' + error.message);
-                    uploadProgress.style.display = 'none';
+        uploadProgress.style.display = 'block';
+        saveVideoBtn.disabled = true;
+        saveVideoBtn.textContent = 'Uploading...';
+        
+        const fileName = `subject_videos/${currentEditingSubjectId}_${Date.now()}.mp4`;
+        const storageRef = storage.ref().child(fileName);
+        const uploadTask = storageRef.put(selectedFile);
+        
+        uploadTask.on('state_changed', 
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                uploadProgressBar.style.width = progress + '%';
+            },
+            (error) => {
+                console.error('Upload failed:', error);
+                alert('Upload failed: ' + error.message);
+                saveVideoBtn.disabled = false;
+                saveVideoBtn.textContent = 'Upload & Save';
+            },
+            async () => {
+                try {
+                    const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                    await videoRef.child(currentEditingSubjectId).set(downloadURL);
+                    videoEditorModal.classList.remove('visible');
+                } catch (error) {
+                    alert('Upload completed but failed to save: ' + error.message);
+                } finally {
                     saveVideoBtn.disabled = false;
                     saveVideoBtn.textContent = 'Upload & Save';
-                },
-                async () => {
-                    try {
-                        const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                        await videoRef.child(currentEditingSubjectId).set(downloadURL);
-                        videoEditorModal.classList.remove('visible');
-                    } catch (error) {
-                        console.error('Error getting download URL or saving to DB:', error);
-                        alert('Upload completed but failed to save: ' + error.message);
-                    } finally {
-                        resetFileInput();
-                        saveVideoBtn.disabled = false;
-                        saveVideoBtn.textContent = 'Upload & Save';
-                        uploadProgress.style.display = 'none';
-                    }
                 }
-            );
-        } catch (error) {
-            console.error('Upload error:', error);
-            alert('Upload error: ' + error.message);
-            uploadProgress.style.display = 'none';
-            saveVideoBtn.disabled = false;
-            saveVideoBtn.textContent = 'Upload & Save';
-        }
+            }
+        );
     }
 
     async function revertToDefaultVideo() {
         if (!currentEditingSubjectId) return;
+        if (!confirm("Are you sure you want to revert to the default video?")) return;
         try {
-            revertVideoBtn.disabled = true;
-            revertVideoBtn.textContent = 'Reverting...';
             await videoRef.child(currentEditingSubjectId).remove();
             videoEditorModal.classList.remove('visible');
         } catch (error) {
-            console.error('Error reverting video:', error);
             alert('Error reverting to default video: ' + error.message);
-        } finally {
-            revertVideoBtn.textContent = 'Revert to Default';
-            revertVideoBtn.disabled = false;
         }
     }
 
@@ -890,69 +871,31 @@ document.addEventListener('DOMContentLoaded', function() {
             clearAuthData();
             window.location.href = LOGIN_PAGE;
         });
-        if (isMobileDevice()) {
-            document.querySelectorAll('.year-dropdown').forEach(dropdown => {
-                dropdown.querySelector('.dropdown-toggle').addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const wasOpen = dropdown.classList.contains('show');
-                    document.querySelectorAll('.year-dropdown.show').forEach(d => d.classList.remove('show'));
-                    if (!wasOpen) dropdown.classList.add('show');
-                });
+        document.querySelectorAll('.year-dropdown .dropdown-toggle').forEach(toggle => {
+            toggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                const dropdown = e.target.closest('.year-dropdown');
+                dropdown.classList.toggle('show');
             });
-        }
+        });
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.profile-dropdown')) {
                 dropdownContent.classList.remove('show');
                 profilePicElement.setAttribute('aria-expanded', 'false');
             }
-            if (isMobileDevice() && !e.target.closest('.year-dropdown')) {
+            if (!e.target.closest('.year-dropdown')) {
                 document.querySelectorAll('.year-dropdown.show').forEach(d => d.classList.remove('show'));
             }
         });
     }
     
-    function initializeCardVideos() {
-        const isDesktop = !isMobileDevice();
-        document.querySelectorAll('.subject-card').forEach(card => {
-            const video = card.querySelector('.card-media');
-            if (video) {
-                // Ensure all videos are muted to allow for autoplay/programmatic play.
-                video.muted = true;
-                video.setAttribute('playsinline', ''); // Good practice for all devices
-
-                if (isDesktop) {
-                    // Desktop: Play on hover, pause on leave.
-                    card.addEventListener('mouseenter', () => {
-                        // The play() method returns a promise. It's good practice to handle potential errors.
-                        const playPromise = video.play();
-                        if (playPromise !== undefined) {
-                            playPromise.catch(error => {
-                                // Autoplay was prevented.
-                                console.error("Video play failed:", error);
-                            });
-                        }
-                    });
-
-                    card.addEventListener('mouseleave', () => {
-                        video.pause();
-                    });
-                } else {
-                    // Mobile: Set to autoplay continuously as hover is not a reliable interaction.
-                    video.setAttribute('autoplay', '');
-                    video.play().catch(error => {
-                            console.error("Mobile autoplay failed:", error);
-                    });
-                }
-            }
-        });
-    }
-
     function setupVideoEditorModal() {
         const modal = document.getElementById('video-editor-modal');
         if (!modal) return;
 
         document.querySelectorAll('.edit-video-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 currentEditingSubjectId = e.target.closest('.subject-card').dataset.subjectId;
                 const subjectName = e.target.closest('.subject-card').querySelector('.subject-name').textContent;
@@ -961,10 +904,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 modal.classList.add('visible');
             });
         });
-        const closeModal = () => {
-            modal.classList.remove('visible');
-            resetFileInput();
-        };
+        const closeModal = () => modal.classList.remove('visible');
         modal.querySelector('.modal-close-btn').addEventListener('click', closeModal);
         modal.querySelector('#cancel-video-btn').addEventListener('click', closeModal);
         saveVideoBtn.addEventListener('click', uploadVideoFile);
@@ -978,17 +918,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const customVideos = snapshot.val() || {};
             document.querySelectorAll('.subject-card').forEach(card => {
                 const subjectId = card.dataset.subjectId;
-                const videoElement = card.querySelector('.card-media');
+                const videoElement = card.querySelector('video.card-media');
                 const sourceElement = videoElement.querySelector('source');
-                
                 const newUrl = customVideos[subjectId] || DEFAULT_VIDEOS[subjectId];
                 
                 if (sourceElement.src !== newUrl) {
                     sourceElement.src = newUrl;
                     videoElement.load();
-                    if (!isMobileDevice() && card.matches(':hover')) {
-                        videoElement.play().catch(e => console.error("Failed to play video after src change", e));
-                    }
+                    // IMPORTANT: Re-apply muted state after loading new source
+                    videoElement.muted = true;
                 }
             });
         });
@@ -996,25 +934,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- INITIALIZATION ---
     function initialize() {
-        window.history.replaceState(null, null, window.location.href);
-        window.addEventListener('popstate', () => window.history.forward());
-
         handleProfilePicture();
         setupDropdowns();
         listenForVideoChanges();
 
-        // --- FINAL, ROBUST AUTHENTICATION LOGIC ---
-        firebase.auth().onAuthStateChanged(user => {
-            if (user) {
-                // The user is signed in and the auth state is confirmed.
-                // It is now safe to initialize all interactive and user-specific UI.
-                initializeCardVideos();
-                setupAdminUI();
-            } else {
-                // No user is signed in. Ensure admin UI is hidden.
-                document.body.classList.add('non-admin');
-            }
-        });
+        // ** CORE FIX: Initialize video hover effects immediately **
+        initializeCardVideoHover();
+
+        // Authentication-dependent UI
+        if (firebase.auth()) {
+            firebase.auth().onAuthStateChanged(user => {
+                if (user) {
+                    setupAdminUI();
+                } else {
+                    document.body.classList.add('non-admin');
+                }
+            });
+        }
     }
 
     initialize();
