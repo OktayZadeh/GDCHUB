@@ -1731,12 +1731,10 @@ body.dark-mode #global-tooltip {
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <!-- The Firestore SDK has been removed -->
     
 </head>
 <body class="non-admin">
-    <!-- ... Your entire HTML body from the previous step ... -->
-    <!-- It remains exactly the same. No changes needed here. -->
     <div class="topbar" id="topbar">
         <div class="topbar-content">
             <div class="topbar-left">
@@ -2149,7 +2147,6 @@ body.dark-mode #global-tooltip {
 
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        const firestore = firebase.firestore();
         
         const basePath = `content/${currentSubject}/${currentYear}`;
         const tabsRef = database.ref(`${basePath}/tabs`);
@@ -3349,30 +3346,29 @@ body.dark-mode #global-tooltip {
         }
         
         async function sendNotificationsForPost(post) {
-            console.log("Searching for users with notifications enabled to send EmailJS notifications...");
-            const usersCollection = firestore.collection('users');
-            const q = usersCollection.where("notificationsEnabled", "==", true);
+            console.log("Searching Realtime Database for users with notifications enabled...");
+            const usersRef = database.ref('users');
 
             try {
-                const querySnapshot = await q.get();
-                if (querySnapshot.empty) {
-                    console.log("No users have notifications enabled. No emails sent.");
+                const snapshot = await usersRef.once('value');
+                if (!snapshot.exists()) {
+                    console.log("No users found in the database. No emails sent.");
                     return;
                 }
 
                 const serviceID = 'service_rw8v9aj';
                 const templateID = 'template_8n9w4ip';
-
                 let emailsSent = 0;
                 const emailPromises = [];
 
-                querySnapshot.forEach(userDoc => {
-                    const userData = userDoc.data();
-                    if (userData.email) {
+                snapshot.forEach(userSnapshot => {
+                    const userData = userSnapshot.val();
+                    // Check if the user exists, has notifications enabled, and has an email.
+                    if (userData && userData.notificationsEnabled === true && userData.email) {
                         const templateParams = {
                             to_email: userData.email,
                             post_title: post.title,
-                            post_content: post.content
+                            post_content: post.content // Be mindful of sending raw HTML in emails
                         };
 
                         const sendPromise = emailjs.send(serviceID, templateID, templateParams)
@@ -3979,42 +3975,43 @@ body.dark-mode #global-tooltip {
             });
         }
         
-        // --- THIS IS THE FINAL, CORRECTED NOTIFICATION BELL FUNCTION ---
+        // --- THIS IS THE FINAL, REALTIME DATABASE-COMPATIBLE NOTIFICATION BELL FUNCTION ---
         function setupNotificationBell() {
             const notificationBell = document.getElementById('notification-bell');
             const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
 
-            // Use the Google 'sub' ID if it exists, otherwise fall back to the email.
             const userUniqueID = userInfo?.sub || userInfo?.email; 
 
             if (userUniqueID) {
-                // Since a unique ID is present, we can show the bell.
                 notificationBell.style.display = 'flex';
                 
-                // Create a document ID that's safe for Firestore by replacing invalid characters.
-                const firestoreDocId = userUniqueID.replace(/[^a-zA-Z0-9]/g, "_");
-                const userDocRef = firestore.collection('users').doc(firestoreDocId);
+                // Sanitize the user ID to create a valid path for Realtime Database.
+                // Invalid characters are ., #, $, [, or ]. We replace them with an underscore.
+                const rtdbPathId = userUniqueID.replace(/[.#$[\]]/g, "_");
+                
+                // This now correctly references a path in your Realtime Database.
+                const userRef = database.ref('users/' + rtdbPathId);
 
                 let currentUserNotificationState = false;
 
-                // Listen for real-time changes to the user's notification settings.
-                userDocRef.onSnapshot((doc) => {
-                    if (doc.exists && doc.data().notificationsEnabled !== undefined) {
-                        // If the document exists, update the state and the bell's appearance.
-                        currentUserNotificationState = doc.data().notificationsEnabled;
+                // Listen for changes using the Realtime Database '.on('value', ...)' listener.
+                userRef.on('value', (snapshot) => {
+                    // .exists() and .val() are the methods for Realtime Database.
+                    if (snapshot.exists() && snapshot.val().notificationsEnabled !== undefined) {
+                        currentUserNotificationState = snapshot.val().notificationsEnabled;
                         updateBellIcon(currentUserNotificationState);
                     } else {
-                        // If the document doesn't exist, create it with notifications disabled by default.
-                        userDocRef.set({
+                        // If the user path doesn't exist, create it with default values.
+                        userRef.set({
                             email: userInfo.email,
                             name: userInfo.name || 'Unnamed User',
                             notificationsEnabled: false
-                        }, { merge: true });
+                        });
                         currentUserNotificationState = false;
                         updateBellIcon(false);
                     }
                 }, (error) => {
-                    console.error("Error listening to user doc:", error);
+                    console.error("Error listening to user data in Realtime Database:", error);
                 });
 
                 function updateBellIcon(isEnabled) {
@@ -4032,15 +4029,16 @@ body.dark-mode #global-tooltip {
                     }
                 }
 
-                // Add the click listener to toggle the setting.
+                // The click handler now updates the Realtime Database.
                 notificationBell.addEventListener('click', () => {
                     const newState = !currentUserNotificationState;
-                    userDocRef.set({ notificationsEnabled: newState }, { merge: true })
-                        .catch(error => console.error("Error updating notification preference: ", error));
+                    // Use .update() to change only the 'notificationsEnabled' value.
+                    userRef.update({ notificationsEnabled: newState })
+                        .catch(error => console.error("Error updating notification preference in RTDB: ", error));
                 });
 
             } else {
-                // If no user information is found in localStorage, keep the bell hidden.
+                // If no user information is found, keep the bell hidden.
                 notificationBell.style.display = 'none';
             }
         }
