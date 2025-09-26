@@ -1724,7 +1724,6 @@ body.dark-mode #global-tooltip {
 
     </style>
     
-    <!-- *** CHANGE 1: ADD EMAILJS SDK *** -->
     <script type="text/javascript"
         src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
@@ -2122,9 +2121,7 @@ body.dark-mode #global-tooltip {
 
         // --- DYNAMIC DATA LOGIC START ---
 
-        // --- *** CHANGE 2: INITIALIZE EMAILJS *** ---
         (function(){
-            // IMPORTANT: Replace with your Public Key from your EmailJS account dashboard
             emailjs.init("wXDSIT3e5RRm3LIQU"); 
         })();
 
@@ -3350,7 +3347,6 @@ body.dark-mode #global-tooltip {
             }
         }
         
-        // --- *** CHANGE 3: REPLACED NOTIFICATION FUNCTION *** ---
         async function sendNotificationsForPost(post) {
             console.log("Searching for users with notifications enabled to send EmailJS notifications...");
             const usersCollection = firestore.collection('users');
@@ -3363,7 +3359,6 @@ body.dark-mode #global-tooltip {
                     return;
                 }
 
-                // IMPORTANT: Replace with your Service & Template IDs from EmailJS dashboard
                 const serviceID = 'service_rw8v9aj';
                 const templateID = 'template_8n9w4ip';
 
@@ -3374,14 +3369,11 @@ body.dark-mode #global-tooltip {
                     const userData = userDoc.data();
                     if (userData.email) {
                         const templateParams = {
-                            // These parameters must match the variables in your EmailJS template
-                            // e.g., {{{to_email}}}, {{{post_title}}}, {{{post_content}}}
                             to_email: userData.email,
                             post_title: post.title,
                             post_content: post.content
                         };
 
-                        // emailjs.send() returns a Promise
                         const sendPromise = emailjs.send(serviceID, templateID, templateParams)
                             .then(function(response) {
                                console.log('SUCCESS! Email sent to', userData.email, response.status, response.text);
@@ -3394,7 +3386,6 @@ body.dark-mode #global-tooltip {
                     }
                 });
 
-                // Wait for all email sending attempts to complete
                 await Promise.all(emailPromises);
 
                 console.log(`Finished sending. Successfully sent ${emailsSent} emails.`);
@@ -3987,60 +3978,66 @@ body.dark-mode #global-tooltip {
             });
         }
         
+        // --- THIS IS THE UPDATED FUNCTION ---
         function setupNotificationBell() {
             const notificationBell = document.getElementById('notification-bell');
-            let currentUserNotificationState = false;
+            const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
 
-            firebase.auth().onAuthStateChanged(user => {
-                if (user) {
-                    notificationBell.style.display = 'flex';
-                    const userDocRef = firestore.collection('users').doc(user.uid);
+            // Check if the user is logged in according to your app's logic
+            if (userInfo && userInfo.uid) {
+                const userUID = userInfo.uid;
+                let currentUserNotificationState = false;
 
-                    userDocRef.onSnapshot((doc) => {
-                        if (doc.exists) {
-                            currentUserNotificationState = doc.data().notificationsEnabled === true;
-                            updateBellIcon(currentUserNotificationState);
-                        } else {
-                            userDocRef.set({
-                                email: user.email,
-                                name: user.displayName || 'Unnamed User',
-                                notificationsEnabled: false
-                            }, { merge: true });
-                        }
-                    }, (error) => {
-                        console.error("Error listening to user doc:", error);
-                    });
+                // Make the bell visible immediately
+                notificationBell.style.display = 'flex';
+                
+                const userDocRef = firestore.collection('users').doc(userUID);
 
-                } else {
-                    notificationBell.style.display = 'none';
+                userDocRef.onSnapshot((doc) => {
+                    if (doc.exists) {
+                        currentUserNotificationState = doc.data().notificationsEnabled === true;
+                        updateBellIcon(currentUserNotificationState);
+                    } else {
+                        // If the user's document doesn't exist in Firestore, create it
+                        userDocRef.set({
+                            email: userInfo.email,
+                            name: userInfo.displayName || 'Unnamed User',
+                            notificationsEnabled: false
+                        }, { merge: true });
+                    }
+                }, (error) => {
+                    console.error("Error listening to user doc:", error);
+                });
+
+                // The function to update the bell's appearance
+                function updateBellIcon(isEnabled) {
+                    const icon = notificationBell.querySelector('i');
+                    if (isEnabled) {
+                        notificationBell.classList.add('active');
+                        icon.classList.remove('fa-bell-slash');
+                        icon.classList.add('fa-bell');
+                        notificationBell.title = "Disable Notifications";
+                    } else {
+                        notificationBell.classList.remove('active');
+                        icon.classList.remove('fa-bell');
+                        icon.classList.add('fa-bell-slash');
+                        notificationBell.title = "Enable Notifications";
+                    }
                 }
-            });
 
-            function updateBellIcon(isEnabled) {
-                const icon = notificationBell.querySelector('i');
-                if (isEnabled) {
-                    notificationBell.classList.add('active');
-                    icon.classList.remove('fa-bell-slash');
-                    icon.classList.add('fa-bell');
-                    notificationBell.title = "Disable Notifications";
-                } else {
-                    notificationBell.classList.remove('active');
-                    icon.classList.remove('fa-bell');
-                    icon.classList.add('fa-bell-slash');
-                    notificationBell.title = "Enable Notifications";
-                }
+                // The click event listener to toggle the state
+                notificationBell.addEventListener('click', () => {
+                    if (!userUID) return;
+
+                    const newState = !currentUserNotificationState;
+                    userDocRef.set({ notificationsEnabled: newState }, { merge: true })
+                        .catch(error => console.error("Error updating notification preference: ", error));
+                });
+
+            } else {
+                // If no user info is found, ensure the bell is hidden
+                notificationBell.style.display = 'none';
             }
-
-            notificationBell.addEventListener('click', () => {
-                const user = firebase.auth().currentUser;
-                if (!user) return;
-
-                const newState = !currentUserNotificationState;
-                const userDocRef = firestore.collection('users').doc(user.uid);
-
-                userDocRef.set({ notificationsEnabled: newState }, { merge: true })
-                    .catch(error => console.error("Error updating notification preference: ", error));
-            });
         }
 
         const UndoManager = {
