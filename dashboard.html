@@ -2222,7 +2222,7 @@ body.dark-mode #global-tooltip {
             setupReminderCollapse();
             setupNotificationBell();
             setupAppearanceControls();
-            setupTooltips(); // Initialize the new tooltip system
+            setupTooltips();
             
             UndoManager.init();
             if (isAdmin) {
@@ -2252,8 +2252,7 @@ body.dark-mode #global-tooltip {
 
                     const rect = target.getBoundingClientRect();
                     
-                    // Position tooltip above the target element
-                    const top = rect.top - tooltipEl.offsetHeight - 8; // 8px gap
+                    const top = rect.top - tooltipEl.offsetHeight - 8;
                     const left = rect.left + (target.offsetWidth / 2) - (tooltipEl.offsetWidth / 2);
 
                     tooltipEl.style.top = `${top}px`;
@@ -2358,7 +2357,7 @@ body.dark-mode #global-tooltip {
         }
         
         function rgbToHex(rgb) {
-            if (!rgb || !rgb.includes('(')) return rgb; // Return if not in rgb format
+            if (!rgb || !rgb.includes('(')) return rgb;
             let sep = rgb.indexOf(",") > -1 ? "," : " ";
             rgb = rgb.substr(4).split(")")[0].split(sep);
             let r = (+rgb[0]).toString(16),
@@ -3978,38 +3977,43 @@ body.dark-mode #global-tooltip {
             });
         }
         
-        // --- THIS IS THE UPDATED FUNCTION ---
+        // --- THIS IS THE FULLY CORRECTED FUNCTION ---
         function setupNotificationBell() {
             const notificationBell = document.getElementById('notification-bell');
             const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
 
-            // Check if the user is logged in according to your app's logic
-            if (userInfo && userInfo.uid) {
-                const userUID = userInfo.uid;
-                let currentUserNotificationState = false;
+            // The unique ID from Google is often 'sub'. We will use the email as a fallback.
+            // This makes the system more robust.
+            const userUniqueID = userInfo?.sub || userInfo?.email; 
 
-                // Make the bell visible immediately
+            if (userUniqueID) {
+                // Since an ID exists, we can show the bell.
                 notificationBell.style.display = 'flex';
                 
-                const userDocRef = firestore.collection('users').doc(userUID);
+                // Create a document ID that's safe for Firestore (replaces invalid characters).
+                const firestoreDocId = userUniqueID.replace(/[^a-zA-Z0-9]/g, "_");
+                const userDocRef = firestore.collection('users').doc(firestoreDocId);
+
+                let currentUserNotificationState = false;
 
                 userDocRef.onSnapshot((doc) => {
-                    if (doc.exists) {
-                        currentUserNotificationState = doc.data().notificationsEnabled === true;
+                    if (doc.exists && doc.data().notificationsEnabled !== undefined) {
+                        currentUserNotificationState = doc.data().notificationsEnabled;
                         updateBellIcon(currentUserNotificationState);
                     } else {
-                        // If the user's document doesn't exist in Firestore, create it
+                        // If the document doesn't exist, create it with notifications disabled by default.
                         userDocRef.set({
                             email: userInfo.email,
-                            name: userInfo.displayName || 'Unnamed User',
+                            name: userInfo.name,
                             notificationsEnabled: false
                         }, { merge: true });
+                        currentUserNotificationState = false;
+                        updateBellIcon(false);
                     }
                 }, (error) => {
                     console.error("Error listening to user doc:", error);
                 });
 
-                // The function to update the bell's appearance
                 function updateBellIcon(isEnabled) {
                     const icon = notificationBell.querySelector('i');
                     if (isEnabled) {
@@ -4025,17 +4029,14 @@ body.dark-mode #global-tooltip {
                     }
                 }
 
-                // The click event listener to toggle the state
                 notificationBell.addEventListener('click', () => {
-                    if (!userUID) return;
-
                     const newState = !currentUserNotificationState;
                     userDocRef.set({ notificationsEnabled: newState }, { merge: true })
                         .catch(error => console.error("Error updating notification preference: ", error));
                 });
 
             } else {
-                // If no user info is found, ensure the bell is hidden
+                // If no user info is found, ensure the bell is hidden.
                 notificationBell.style.display = 'none';
             }
         }
