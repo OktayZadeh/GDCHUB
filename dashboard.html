@@ -1735,6 +1735,8 @@ body.dark-mode #global-tooltip {
     
 </head>
 <body class="non-admin">
+    <!-- ... Your entire HTML body from the previous step ... -->
+    <!-- It remains exactly the same. No changes needed here. -->
     <div class="topbar" id="topbar">
         <div class="topbar-content">
             <div class="topbar-left">
@@ -1742,6 +1744,7 @@ body.dark-mode #global-tooltip {
                 <span class="topbar-title">Glendowie College</span>
             </div>
             <div class="topbar-links">
+                <!-- NAVBAR BUTTONS RESTORED TO ORIGINAL -->
                 <a href="https://www.gdc.school.nz/" target="_blank" class="topbar-button">
                     <i class="fas fa-school"></i> <span>College Site</span>
                 </a>
@@ -2029,6 +2032,7 @@ body.dark-mode #global-tooltip {
         </div>
     </div>
 
+    <!-- UPDATED: Link Modal -->
     <div id="link-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeLinkModal()">×</span>
@@ -2117,6 +2121,8 @@ body.dark-mode #global-tooltip {
             });
         })();
 
+        // --- DYNAMIC DATA LOGIC START ---
+
         (function(){
             emailjs.init("wXDSIT3e5RRm3LIQU"); 
         })();
@@ -2149,7 +2155,9 @@ body.dark-mode #global-tooltip {
         const tabsRef = database.ref(`${basePath}/tabs`);
         const announcementsRef = database.ref(`${basePath}/announcements`);
         const remindersRef = database.ref(`${basePath}/reminders`);
-        const categoriesRef = database.ref(`${basePath}/classes`);
+        const categoriesRef = database.ref(`${basePath}/classes`); // UNIFIED "CLASS" REFERENCE
+        
+        // --- DYNAMIC DATA LOGIC END ---
 
         const sidebarMenu = document.getElementById('sidebar-menu');
         const tabEditorModal = document.getElementById('tab-editor-modal');
@@ -2233,9 +2241,6 @@ body.dark-mode #global-tooltip {
                 }
             });
         });
-
-        // --- ALL FUNCTIONS FROM PREVIOUS SCRIPTS ARE HERE ---
-        // (setupTooltips, formatSubjectName, updatePageHeader, etc...)
 
         function setupTooltips() {
             const tooltipEl = document.getElementById('global-tooltip');
@@ -3344,25 +3349,26 @@ body.dark-mode #global-tooltip {
         }
         
         async function sendNotificationsForPost(post) {
-            console.log("Searching for users with notifications enabled in Realtime Database...");
-            const usersRef = database.ref('users');
-            const query = usersRef.orderByChild('notificationsEnabled').equalTo(true);
+            console.log("Searching for users with notifications enabled to send EmailJS notifications...");
+            const usersCollection = firestore.collection('users');
+            const q = usersCollection.where("notificationsEnabled", "==", true);
 
             try {
-                const snapshot = await query.once('value');
-                if (!snapshot.exists()) {
+                const querySnapshot = await q.get();
+                if (querySnapshot.empty) {
                     console.log("No users have notifications enabled. No emails sent.");
                     return;
                 }
 
                 const serviceID = 'service_rw8v9aj';
                 const templateID = 'template_8n9w4ip';
+
                 let emailsSent = 0;
                 const emailPromises = [];
 
-                snapshot.forEach(childSnapshot => {
-                    const userData = childSnapshot.val();
-                    if (userData && userData.email) {
+                querySnapshot.forEach(userDoc => {
+                    const userData = userDoc.data();
+                    if (userData.email) {
                         const templateParams = {
                             to_email: userData.email,
                             post_title: post.title,
@@ -3376,18 +3382,20 @@ body.dark-mode #global-tooltip {
                             }, function(error) {
                                console.log('FAILED to send email to', userData.email, error);
                             });
+
                         emailPromises.push(sendPromise);
                     }
                 });
 
                 await Promise.all(emailPromises);
+
                 console.log(`Finished sending. Successfully sent ${emailsSent} emails.`);
                 if (emailsSent > 0) {
                     UndoManager.show(`${emailsSent} notifications sent.`, () => {});
                 }
 
             } catch (error) {
-                console.error("Error querying users or sending emails:", error);
+                console.error("Error querying users or sending emails via EmailJS:", error);
             }
         }
 
@@ -3971,6 +3979,73 @@ body.dark-mode #global-tooltip {
             });
         }
         
+        // --- THIS IS THE FINAL, CORRECTED NOTIFICATION BELL FUNCTION ---
+        function setupNotificationBell() {
+            const notificationBell = document.getElementById('notification-bell');
+            const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
+
+            // Use the Google 'sub' ID if it exists, otherwise fall back to the email.
+            const userUniqueID = userInfo?.sub || userInfo?.email; 
+
+            if (userUniqueID) {
+                // Since a unique ID is present, we can show the bell.
+                notificationBell.style.display = 'flex';
+                
+                // Create a document ID that's safe for Firestore by replacing invalid characters.
+                const firestoreDocId = userUniqueID.replace(/[^a-zA-Z0-9]/g, "_");
+                const userDocRef = firestore.collection('users').doc(firestoreDocId);
+
+                let currentUserNotificationState = false;
+
+                // Listen for real-time changes to the user's notification settings.
+                userDocRef.onSnapshot((doc) => {
+                    if (doc.exists && doc.data().notificationsEnabled !== undefined) {
+                        // If the document exists, update the state and the bell's appearance.
+                        currentUserNotificationState = doc.data().notificationsEnabled;
+                        updateBellIcon(currentUserNotificationState);
+                    } else {
+                        // If the document doesn't exist, create it with notifications disabled by default.
+                        userDocRef.set({
+                            email: userInfo.email,
+                            name: userInfo.name || 'Unnamed User',
+                            notificationsEnabled: false
+                        }, { merge: true });
+                        currentUserNotificationState = false;
+                        updateBellIcon(false);
+                    }
+                }, (error) => {
+                    console.error("Error listening to user doc:", error);
+                });
+
+                function updateBellIcon(isEnabled) {
+                    const icon = notificationBell.querySelector('i');
+                    if (isEnabled) {
+                        notificationBell.classList.add('active');
+                        icon.classList.remove('fa-bell-slash');
+                        icon.classList.add('fa-bell');
+                        notificationBell.title = "Disable Notifications";
+                    } else {
+                        notificationBell.classList.remove('active');
+                        icon.classList.remove('fa-bell');
+                        icon.classList.add('fa-bell-slash');
+                        notificationBell.title = "Enable Notifications";
+                    }
+                }
+
+                // Add the click listener to toggle the setting.
+                notificationBell.addEventListener('click', () => {
+                    const newState = !currentUserNotificationState;
+                    userDocRef.set({ notificationsEnabled: newState }, { merge: true })
+                        .catch(error => console.error("Error updating notification preference: ", error));
+                });
+
+            } else {
+                // If no user information is found in localStorage, keep the bell hidden.
+                notificationBell.style.display = 'none';
+            }
+        }
+
+
         const UndoManager = {
             queue: [], isShowing: false,
             init() {},
