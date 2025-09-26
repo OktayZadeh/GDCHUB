@@ -1723,6 +1723,11 @@ body.dark-mode #global-tooltip {
 }
 
     </style>
+    
+    <!-- *** CHANGE 1: ADD EMAILJS SDK *** -->
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
@@ -2116,6 +2121,12 @@ body.dark-mode #global-tooltip {
         })();
 
         // --- DYNAMIC DATA LOGIC START ---
+
+        // --- *** CHANGE 2: INITIALIZE EMAILJS *** ---
+        (function(){
+            // IMPORTANT: Replace with your Public Key from your EmailJS account dashboard
+            emailjs.init("YOUR_PUBLIC_KEY"); 
+        })();
 
         const urlParams = new URLSearchParams(window.location.search);
         const currentSubject = urlParams.get('subject');
@@ -3339,13 +3350,12 @@ body.dark-mode #global-tooltip {
             }
         }
         
+        // --- *** CHANGE 3: REPLACED NOTIFICATION FUNCTION *** ---
         async function sendNotificationsForPost(post) {
-            console.log("Searching for users with notifications enabled...");
-            const mailCollection = firestore.collection('mail');
+            console.log("Searching for users with notifications enabled to send EmailJS notifications...");
             const usersCollection = firestore.collection('users');
-
             const q = usersCollection.where("notificationsEnabled", "==", true);
-            
+
             try {
                 const querySnapshot = await q.get();
                 if (querySnapshot.empty) {
@@ -3353,39 +3363,47 @@ body.dark-mode #global-tooltip {
                     return;
                 }
 
+                // IMPORTANT: Replace with your Service & Template IDs from EmailJS dashboard
+                const serviceID = 'YOUR_SERVICE_ID';
+                const templateID = 'YOUR_TEMPLATE_ID';
+
                 let emailsSent = 0;
-                const batch = firestore.batch();
+                const emailPromises = [];
+
                 querySnapshot.forEach(userDoc => {
                     const userData = userDoc.data();
                     if (userData.email) {
-                        const emailDocument = {
-                            to: [userData.email],
-                            message: {
-                                subject: `New Announcement: ${post.title}`,
-                                html: `
-                                    <div style="font-family: sans-serif; padding: 20px; color: #333;">
-                                        <h2>A new announcement has been posted in GDCHUB</h2>
-                                        <hr>
-                                        <h3>${post.title}</h3>
-                                        <div>${post.content}</div>
-                                        <br>
-                                        <p style="font-size: 12px; color: #777;">
-                                            You are receiving this because you enabled notifications. 
-                                            You can disable them in the app.
-                                        </p>
-                                    </div>`
-                            }
+                        const templateParams = {
+                            // These parameters must match the variables in your EmailJS template
+                            // e.g., {{{to_email}}}, {{{post_title}}}, {{{post_content}}}
+                            to_email: userData.email,
+                            post_title: post.title,
+                            post_content: post.content
                         };
-                        const newMailRef = mailCollection.doc();
-                        batch.set(newMailRef, emailDocument);
-                        emailsSent++;
+
+                        // emailjs.send() returns a Promise
+                        const sendPromise = emailjs.send(serviceID, templateID, templateParams)
+                            .then(function(response) {
+                               console.log('SUCCESS! Email sent to', userData.email, response.status, response.text);
+                               emailsSent++;
+                            }, function(error) {
+                               console.log('FAILED to send email to', userData.email, error);
+                            });
+
+                        emailPromises.push(sendPromise);
                     }
                 });
-                await batch.commit();
-                console.log(`Successfully queued ${emailsSent} emails for sending.`);
-                UndoManager.show(`${emailsSent} notifications sent.`, () => {});
+
+                // Wait for all email sending attempts to complete
+                await Promise.all(emailPromises);
+
+                console.log(`Finished sending. Successfully sent ${emailsSent} emails.`);
+                if (emailsSent > 0) {
+                    UndoManager.show(`${emailsSent} notifications sent.`, () => {});
+                }
+
             } catch (error) {
-                console.error("Error querying users or creating email documents:", error);
+                console.error("Error querying users or sending emails via EmailJS:", error);
             }
         }
 
