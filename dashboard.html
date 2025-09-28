@@ -409,6 +409,17 @@ body.dark-mode .upload-btn-label:hover { background-color: var(--dark-light); }
 .button.danger { background-color: var(--danger); }
 .button.danger:hover { background-color: #E53E3E; }
 .button.small { padding: var(--space-xs) var(--space-sm); font-size: var(--text-sm); height: 30px; }
+.button:disabled {
+    cursor: not-allowed;
+    background-color: var(--medium);
+    opacity: 0.7;
+    transform: none;
+    box-shadow: var(--shadow-sm);
+}
+body.dark-mode .button:disabled {
+    background-color: var(--dark-light);
+}
+
 
 /* Input Styles */
 input[type="text"], input[type="date"], textarea, select {
@@ -1678,7 +1689,10 @@ body.non-admin .reminder-card { cursor: default; }
 }
 .loading-spinner {
     display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3);
-    border-radius: var(--radius-full); border-top-color: white; animation: spin 1s ease-in-out infinite; margin-right: var(--space-sm);
+    border-radius: var(--radius-full); border-top-color: white; animation: spin 1s ease-in-out infinite;
+}
+.button .loading-spinner {
+    margin: 0; /* Remove margin when inside a button */
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .snackbar {
@@ -2179,7 +2193,7 @@ body.dark-mode #global-tooltip {
         const currentYear = urlParams.get('year');
         
         if (!currentSubject || !currentYear) {
-            document.body.innerHTML = `<div style="text-align:center; padding-top: 50px; font-family: 'Inter', sans-serif;"><h2>Error: Missing Information</h2><p>The subject and year were not specified. Please return to the subject selection page.</p></div>`;
+            document.body.innerHTML = `<div style="text-align:center; padding-top: 50px; font-family: 'Inter', sans-serif;"><h2>Error: Missing Information</h2><p>The subject and year were not specified in the URL. Please return to the subject selection page.</p></div>`;
             throw new Error("URL parameters for subject and year are required.");
         }
 
@@ -2198,6 +2212,7 @@ body.dark-mode #global-tooltip {
         const database = firebase.database();
         
         const basePath = `content/${currentSubject}/${currentYear}`;
+        console.log(`[GDCHUB] Initializing... Loading data from Firebase path: ${basePath}`); // DEBUG LOG for missing posts
         const tabsRef = database.ref(`${basePath}/tabs`);
         const announcementsRef = database.ref(`${basePath}/announcements`);
         const remindersRef = database.ref(`${basePath}/reminders`);
@@ -2252,6 +2267,7 @@ body.dark-mode #global-tooltip {
         let savedEditorSelection = null;
         let currentCalendarDate = new Date();
         let currentReminderView = localStorage.getItem('reminderView') || 'list';
+        let isSubmitting = false; // Flag to prevent multiple submissions
         
         const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
 
@@ -3292,10 +3308,12 @@ body.dark-mode #global-tooltip {
                 const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
                 if (activeLink) activeLink.classList.add('active');
 
+                // Detach previous listener and attach a new one
                 if (!forceUpdate) {
-                    announcementsRef.child(tabId).off();
+                    announcementsRef.child(tabId).off(); // Make sure to detach old listeners
                     announcementsRef.child(tabId).on('value', snapshot => {
                         currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : [];
+                        console.log(`[GDCHUB] Fetched ${currentTabAnnouncements.length} announcements for tab: ${tab.name}`); // DEBUG LOG for 3-post limit
                         filterAnnouncements();
                     });
                 }
@@ -3339,10 +3357,10 @@ body.dark-mode #global-tooltip {
             if (!isAdmin || !currentTabId) return;
             currentAnnouncementBeingEdited = id; const isEditing = !!id;
             const titleEl = announcementEditorOverlay.querySelector('h2#announcement-editor-title');
-            const saveBtn = announcementEditorOverlay.querySelector('#save-announcement-button');
+            
             titleEl.textContent = isEditing ? 'Edit Announcement' : 'Create New Announcement';
-            saveBtn.textContent = isEditing ? 'Save Changes' : 'Post Announcement';
-            saveBtn.onclick = () => saveAnnouncement();
+            saveAnnouncementButton.textContent = isEditing ? 'Save Changes' : 'Post Announcement';
+            saveAnnouncementButton.onclick = () => saveAnnouncement();
             
             announcementTitleInput.value = ''; 
             announcementContentEditor.innerHTML = '';
@@ -3366,7 +3384,9 @@ body.dark-mode #global-tooltip {
         function closeAnnouncementEditor() { announcementEditorOverlay.classList.remove('visible'); document.documentElement.style.overflow = ''; document.body.style.overflow = ''; }
         
         async function saveAnnouncement() {
+            if (isSubmitting) return; // Prevent multiple clicks
             if (!isAdmin || !currentTabId) return;
+
             const title = announcementTitleInput.value.trim();
             const content = announcementContentEditor.innerHTML;
             const category = announcementCategoryEditorSelect.value;
@@ -3375,6 +3395,11 @@ body.dark-mode #global-tooltip {
                 alert('Please provide a title and select a class.');
                 return;
             }
+            
+            isSubmitting = true; // Set lock
+            const originalButtonText = saveAnnouncementButton.textContent;
+            saveAnnouncementButton.disabled = true;
+            saveAnnouncementButton.innerHTML = `<div class="loading-spinner"></div> Posting...`;
 
             const announcementData = { title, content, category };
 
@@ -3393,6 +3418,10 @@ body.dark-mode #global-tooltip {
             } catch (error) {
                 console.error("Error saving announcement: ", error);
                 alert("There was an error saving the announcement.");
+            } finally {
+                isSubmitting = false; // Release lock
+                saveAnnouncementButton.disabled = false;
+                saveAnnouncementButton.innerHTML = originalButtonText;
             }
         }
         
@@ -3417,15 +3446,9 @@ body.dark-mode #global-tooltip {
                     const userData = userSnapshot.val();
                     const userSettings = userData.notificationSettings?.[subjectYearKey];
 
-                    // CHECK 1: User exists and has settings for this subject
                     if (userData && userData.email && userSettings) {
-                        
-                        // CHECK 2: Main notification bell for this subject is ON
                         if (userSettings.notificationsEnabled === true) {
-
-                            // CHECK 3: Post is for 'ALL' OR user is subscribed to the post's specific class
                             const isSubscribed = post.category === 'ALL' || (userSettings.subscribedClasses && userSettings.subscribedClasses.includes(post.category));
-
                             if (isSubscribed) {
                                 const templateParams = {
                                     to_email: userData.email,
@@ -3448,11 +3471,7 @@ body.dark-mode #global-tooltip {
                 });
 
                 await Promise.all(emailPromises);
-
                 console.log(`Finished sending. Successfully sent ${emailsSent} emails.`);
-                if (emailsSent > 0) {
-                    UndoManager.show(`${emailsSent} notifications sent.`, () => {});
-                }
 
             } catch (error) {
                 console.error("Error querying users or sending emails via EmailJS:", error);
