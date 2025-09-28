@@ -549,7 +549,7 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);
     z-index: 2050; justify-content: center; align-items: center; backdrop-filter: blur(4px); animation: modalFadeIn var(--transition-fast) forwards;
 }
-#embed-modal, #category-manager-modal, #reminder-editor, #tab-editor-modal, #link-modal {
+#embed-modal, #category-manager-modal, #reminder-editor, #tab-editor-modal, #link-modal, #notification-settings-modal {
     z-index: 2100;
 }
 #confirmation-modal {
@@ -569,6 +569,42 @@ body.dark-mode .add-tab-header-button:hover { background-color: var(--dark-light
 .close-button:hover { color: var(--danger); background: var(--light); }
 .modal h2 { margin-top: 0; padding-right: var(--space-lg); color: var(--dark); }
 .modal-buttons { display: flex; justify-content: flex-end; margin-top: var(--space-lg); gap: var(--space-sm); }
+
+/* --- Notification Settings Modal --- */
+#notification-class-list {
+    max-height: 40vh;
+    overflow-y: auto;
+    border: 1px solid var(--light-gray);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+    margin-top: var(--space-md);
+}
+body.dark-mode #notification-class-list {
+    border-color: var(--dark-light);
+}
+.notification-class-item {
+    display: flex;
+    align-items: center;
+    padding: var(--space-sm);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+.notification-class-item:hover {
+    background-color: var(--light);
+}
+body.dark-mode .notification-class-item:hover {
+    background-color: var(--dark-light-gray);
+}
+.notification-class-item input[type="checkbox"] {
+    margin-right: var(--space-md);
+    width: auto;
+    margin-bottom: 0;
+    cursor: pointer;
+}
+.notification-class-item label {
+    cursor: pointer;
+    flex-grow: 1;
+}
 
 /* --- Full-Screen Editor --- */
 #announcement-editor-overlay {
@@ -1731,7 +1767,6 @@ body.dark-mode #global-tooltip {
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
-    <!-- The Firestore SDK has been removed -->
     
 </head>
 <body class="non-admin">
@@ -1742,7 +1777,6 @@ body.dark-mode #global-tooltip {
                 <span class="topbar-title">Glendowie College</span>
             </div>
             <div class="topbar-links">
-                <!-- NAVBAR BUTTONS RESTORED TO ORIGINAL -->
                 <a href="https://www.gdc.school.nz/" target="_blank" class="topbar-button">
                     <i class="fas fa-school"></i> <span>College Site</span>
                 </a>
@@ -1761,6 +1795,9 @@ body.dark-mode #global-tooltip {
                          <div class="profile-dropdown-main">
                             <a href="#" class="dark-mode-toggle">
                                 <i class="fas fa-moon"></i> <span>Dark Mode</span>
+                            </a>
+                            <a href="#" id="notification-settings-btn">
+                                <i class="fas fa-cogs"></i> <span>Notification Settings</span>
                             </a>
                         </div>
                         <div class="appearance-panel">
@@ -2030,7 +2067,6 @@ body.dark-mode #global-tooltip {
         </div>
     </div>
 
-    <!-- UPDATED: Link Modal -->
     <div id="link-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeLinkModal()">×</span>
@@ -2054,13 +2090,26 @@ body.dark-mode #global-tooltip {
             <span class="close-button" onclick="closeCategoryManager()">×</span>
             <h2>Manage Classes</h2>
             <p style="font-size: var(--text-sm); color: var(--medium); margin-bottom: var(--space-md);">Add or remove classes for announcements and reminders.</p>
-            <div class="category-manager-list" id="category-manager-list">
-                <!-- Categories will be dynamically inserted here -->
-            </div>
+            <div class="category-manager-list" id="category-manager-list"></div>
             <form class="add-category-form" onsubmit="addCategory(event)">
                 <input type="text" id="new-category-name" placeholder="e.g., 9Health-A" required>
                 <button type="submit" class="button">Add</button>
             </form>
+        </div>
+    </div>
+
+    <div id="notification-settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeNotificationSettings()">×</span>
+            <h2>Notification Settings</h2>
+            <p style="font-size: var(--text-sm); color: var(--medium); margin-bottom: var(--space-md);">
+                Select which classes you want to receive email notifications for. You will always receive notifications for posts marked "ALL".
+            </p>
+            <div id="notification-class-list"></div>
+            <div class="modal-buttons">
+                <button class="button secondary" onclick="closeNotificationSettings()">Cancel</button>
+                <button class="button" onclick="saveNotificationSettings()">Save Settings</button>
+            </div>
         </div>
     </div>
 
@@ -2152,7 +2201,7 @@ body.dark-mode #global-tooltip {
         const tabsRef = database.ref(`${basePath}/tabs`);
         const announcementsRef = database.ref(`${basePath}/announcements`);
         const remindersRef = database.ref(`${basePath}/reminders`);
-        const categoriesRef = database.ref(`${basePath}/classes`); // UNIFIED "CLASS" REFERENCE
+        const categoriesRef = database.ref(`${basePath}/classes`); 
         
         // --- DYNAMIC DATA LOGIC END ---
 
@@ -2179,6 +2228,7 @@ body.dark-mode #global-tooltip {
         const embedModal = document.getElementById('embed-modal');
         const linkModal = document.getElementById('link-modal');
         const categoryManagerModal = document.getElementById('category-manager-modal');
+        const notificationSettingsModal = document.getElementById('notification-settings-modal');
         const classFilter = document.getElementById('class-filter');
         const reminderCategoryEditorSelect = document.getElementById('reminder-category');
         const announcementCategoryEditorSelect = document.getElementById('announcement-category');
@@ -2248,22 +2298,17 @@ body.dark-mode #global-tooltip {
                 if (target) {
                     const text = target.getAttribute('data-tooltip');
                     tooltipEl.textContent = text;
-
                     const rect = target.getBoundingClientRect();
-                    
                     const top = rect.top - tooltipEl.offsetHeight - 8;
                     const left = rect.left + (target.offsetWidth / 2) - (tooltipEl.offsetWidth / 2);
-
                     tooltipEl.style.top = `${top}px`;
                     tooltipEl.style.left = `${left}px`;
-                    
                     tooltipEl.classList.add('visible');
                 }
             });
 
             document.addEventListener('mouseout', (e) => {
-                const target = e.target.closest('[data-tooltip]');
-                if (target) {
+                if (e.target.closest('[data-tooltip]')) {
                     tooltipEl.classList.remove('visible');
                 }
             });
@@ -2988,11 +3033,19 @@ body.dark-mode #global-tooltip {
         function setupProfileDropdown() {
             let dropdownHoverTimeout;
             const content = document.querySelector('.profile-dropdown-content');
+            const notificationSettingsBtn = document.getElementById('notification-settings-btn');
+
             profileDropdown.addEventListener('mouseenter', () => { clearTimeout(dropdownHoverTimeout); content.style.display = 'block'; setTimeout(() => { content.style.opacity = '1'; content.style.transform = 'translateY(0)'; content.style.pointerEvents = 'auto'; }, 10); });
-            const hideDropdown = () => { dropdownHoverTimeout = setTimeout(() => { content.style.opacity = '0'; content.style.transform = 'translateY(-10px)'; content.style.pointerEvents = 'none'; setTimeout(() => { content.style.display = 'none'; }, 200); }, 300); };
+            const hideDropdown = () => { dropdownHoverTimeout = setTimeout(() => { content.style.opacity = '0'; content.style.transform = 'translateY(-10px)'; content.style.pointerEvents = 'none'; setTimeout(() => { if (content.style.opacity === '0') content.style.display = 'none'; }, 200); }, 300); };
             profileDropdown.addEventListener('mouseleave', hideDropdown);
             content.addEventListener('mouseenter', () => clearTimeout(dropdownHoverTimeout));
             content.addEventListener('mouseleave', hideDropdown);
+            
+            notificationSettingsBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                openNotificationSettings();
+                hideDropdown();
+            });
         }
         
         function setupMobileMenu() { menuToggle.addEventListener('click', () => sidebar.classList.toggle('visible')); }
@@ -3103,7 +3156,6 @@ body.dark-mode #global-tooltip {
             const validClasses = unifiedClasses.filter(c => c && c.name);
             const optionsHtml = validClasses.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
 
-            // Populate Unified Filter
             classFilter.innerHTML = `<option value="ALL_CLASSES">All Classes</option>${optionsHtml}`;
             if ([...classFilter.options].some(opt => opt.value === selectedClass)) {
                 classFilter.value = selectedClass;
@@ -3113,7 +3165,6 @@ body.dark-mode #global-tooltip {
                 classFilter.value = selectedClass;
             }
             
-            // Populate Editors
             const editorOptionsHtml = `<option value="" disabled selected>Select a class...</option><option value="ALL">ALL (Visible to Everyone)</option>${optionsHtml}`;
             reminderCategoryEditorSelect.innerHTML = editorOptionsHtml;
             announcementCategoryEditorSelect.innerHTML = editorOptionsHtml;
@@ -3346,8 +3397,9 @@ body.dark-mode #global-tooltip {
         }
         
         async function sendNotificationsForPost(post) {
-            console.log("Searching Realtime Database for users with notifications enabled...");
+            console.log("Searching Realtime Database for users with notifications enabled for this subject...");
             const usersRef = database.ref('users');
+            const subjectYearKey = `${currentSubject}_${currentYear}`;
 
             try {
                 const snapshot = await usersRef.once('value');
@@ -3363,23 +3415,35 @@ body.dark-mode #global-tooltip {
 
                 snapshot.forEach(userSnapshot => {
                     const userData = userSnapshot.val();
-                    // Check if the user exists, has notifications enabled, and has an email.
-                    if (userData && userData.notificationsEnabled === true && userData.email) {
-                        const templateParams = {
-                            to_email: userData.email,
-                            post_title: post.title,
-                            post_content: post.content // Be mindful of sending raw HTML in emails
-                        };
+                    const userSettings = userData.notificationSettings?.[subjectYearKey];
 
-                        const sendPromise = emailjs.send(serviceID, templateID, templateParams)
-                            .then(function(response) {
-                               console.log('SUCCESS! Email sent to', userData.email, response.status, response.text);
-                               emailsSent++;
-                            }, function(error) {
-                               console.log('FAILED to send email to', userData.email, error);
-                            });
+                    // CHECK 1: User exists and has settings for this subject
+                    if (userData && userData.email && userSettings) {
+                        
+                        // CHECK 2: Main notification bell for this subject is ON
+                        if (userSettings.notificationsEnabled === true) {
 
-                        emailPromises.push(sendPromise);
+                            // CHECK 3: Post is for 'ALL' OR user is subscribed to the post's specific class
+                            const isSubscribed = post.category === 'ALL' || (userSettings.subscribedClasses && userSettings.subscribedClasses.includes(post.category));
+
+                            if (isSubscribed) {
+                                const templateParams = {
+                                    to_email: userData.email,
+                                    post_title: post.title,
+                                    post_content: post.content 
+                                };
+
+                                const sendPromise = emailjs.send(serviceID, templateID, templateParams)
+                                    .then(function(response) {
+                                       console.log('SUCCESS! Email sent to', userData.email, response.status, response.text);
+                                       emailsSent++;
+                                    }, function(error) {
+                                       console.log('FAILED to send email to', userData.email, error);
+                                    });
+
+                                emailPromises.push(sendPromise);
+                            }
+                        }
                     }
                 });
 
@@ -3975,72 +4039,98 @@ body.dark-mode #global-tooltip {
             });
         }
         
-        // --- THIS IS THE FINAL, REALTIME DATABASE-COMPATIBLE NOTIFICATION BELL FUNCTION ---
         function setupNotificationBell() {
             const notificationBell = document.getElementById('notification-bell');
             const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
+            const userUniqueID = userInfo?.sub || userInfo?.email;
+            const subjectYearKey = `${currentSubject}_${currentYear}`;
 
-            const userUniqueID = userInfo?.sub || userInfo?.email; 
-
-            if (userUniqueID) {
-                notificationBell.style.display = 'flex';
-                
-                // Sanitize the user ID to create a valid path for Realtime Database.
-                // Invalid characters are ., #, $, [, or ]. We replace them with an underscore.
-                const rtdbPathId = userUniqueID.replace(/[.#$[\]]/g, "_");
-                
-                // This now correctly references a path in your Realtime Database.
-                const userRef = database.ref('users/' + rtdbPathId);
-
-                let currentUserNotificationState = false;
-
-                // Listen for changes using the Realtime Database '.on('value', ...)' listener.
-                userRef.on('value', (snapshot) => {
-                    // .exists() and .val() are the methods for Realtime Database.
-                    if (snapshot.exists() && snapshot.val().notificationsEnabled !== undefined) {
-                        currentUserNotificationState = snapshot.val().notificationsEnabled;
-                        updateBellIcon(currentUserNotificationState);
-                    } else {
-                        // If the user path doesn't exist, create it with default values.
-                        userRef.set({
-                            email: userInfo.email,
-                            name: userInfo.name || 'Unnamed User',
-                            notificationsEnabled: false
-                        });
-                        currentUserNotificationState = false;
-                        updateBellIcon(false);
-                    }
-                }, (error) => {
-                    console.error("Error listening to user data in Realtime Database:", error);
-                });
-
-                function updateBellIcon(isEnabled) {
-                    const icon = notificationBell.querySelector('i');
-                    if (isEnabled) {
-                        notificationBell.classList.add('active');
-                        icon.classList.remove('fa-bell-slash');
-                        icon.classList.add('fa-bell');
-                        notificationBell.title = "Disable Notifications";
-                    } else {
-                        notificationBell.classList.remove('active');
-                        icon.classList.remove('fa-bell');
-                        icon.classList.add('fa-bell-slash');
-                        notificationBell.title = "Enable Notifications";
-                    }
-                }
-
-                // The click handler now updates the Realtime Database.
-                notificationBell.addEventListener('click', () => {
-                    const newState = !currentUserNotificationState;
-                    // Use .update() to change only the 'notificationsEnabled' value.
-                    userRef.update({ notificationsEnabled: newState })
-                        .catch(error => console.error("Error updating notification preference in RTDB: ", error));
-                });
-
-            } else {
-                // If no user information is found, keep the bell hidden.
+            if (!userUniqueID) {
                 notificationBell.style.display = 'none';
+                return;
             }
+
+            notificationBell.style.display = 'flex';
+            const rtdbPathId = userUniqueID.replace(/[.#$[\]]/g, "_");
+            const userSettingsRef = database.ref(`users/${rtdbPathId}/notificationSettings/${subjectYearKey}`);
+
+            let areNotificationsEnabled = false;
+
+            userSettingsRef.on('value', (snapshot) => {
+                const settings = snapshot.val();
+                areNotificationsEnabled = settings?.notificationsEnabled === true;
+                updateBellIcon(areNotificationsEnabled);
+            }, (error) => {
+                console.error("Error listening to user settings:", error);
+            });
+
+            function updateBellIcon(isEnabled) {
+                const icon = notificationBell.querySelector('i');
+                notificationBell.classList.toggle('active', isEnabled);
+                icon.classList.toggle('fa-bell-slash', !isEnabled);
+                icon.classList.toggle('fa-bell', isEnabled);
+                notificationBell.title = isEnabled ? "Disable Notifications for this Subject" : "Enable Notifications for this Subject";
+            }
+
+            notificationBell.addEventListener('click', () => {
+                const newState = !areNotificationsEnabled;
+                userSettingsRef.update({ notificationsEnabled: newState })
+                    .catch(error => console.error("Error updating notification preference:", error));
+            });
+        }
+
+        function openNotificationSettings() {
+            const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
+            const userUniqueID = userInfo?.sub || userInfo?.email;
+            if (!userUniqueID) return;
+
+            const rtdbPathId = userUniqueID.replace(/[.#$[\]]/g, "_");
+            const subjectYearKey = `${currentSubject}_${currentYear}`;
+            const userSettingsRef = database.ref(`users/${rtdbPathId}/notificationSettings/${subjectYearKey}`);
+            const listEl = document.getElementById('notification-class-list');
+            
+            userSettingsRef.child('subscribedClasses').once('value', snapshot => {
+                const subscribedClasses = snapshot.val() || [];
+                
+                if (unifiedClasses.length === 0) {
+                    listEl.innerHTML = '<p>No specific classes available for notifications in this subject yet.</p>';
+                } else {
+                    listEl.innerHTML = unifiedClasses.map(cls => `
+                        <div class="notification-class-item">
+                            <input type="checkbox" id="notif-class-${cls.id}" value="${cls.name}" ${subscribedClasses.includes(cls.name) ? 'checked' : ''}>
+                            <label for="notif-class-${cls.id}">${cls.name}</label>
+                        </div>
+                    `).join('');
+                }
+                notificationSettingsModal.style.display = 'flex';
+            });
+        }
+
+        function closeNotificationSettings() {
+            notificationSettingsModal.style.display = 'none';
+        }
+
+        function saveNotificationSettings() {
+            const userInfo = JSON.parse(localStorage.getItem('googleUserInfo'));
+            const userUniqueID = userInfo?.sub || userInfo?.email;
+            if (!userUniqueID) return;
+
+            const rtdbPathId = userUniqueID.replace(/[.#$[\]]/g, "_");
+            const subjectYearKey = `${currentSubject}_${currentYear}`;
+            const userSettingsRef = database.ref(`users/${rtdbPathId}/notificationSettings/${subjectYearKey}`);
+            
+            const checkboxes = document.querySelectorAll('#notification-class-list input[type="checkbox"]:checked');
+            const selectedClasses = Array.from(checkboxes).map(cb => cb.value);
+
+            userSettingsRef.update({ subscribedClasses: selectedClasses })
+                .then(() => {
+                    closeNotificationSettings();
+                    UndoManager.show('Notification settings saved.', () => {});
+                })
+                .catch(error => {
+                    console.error("Error saving notification settings:", error);
+                    alert("Could not save settings. Please try again.");
+                });
         }
 
 
