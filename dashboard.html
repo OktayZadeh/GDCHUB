@@ -2142,7 +2142,7 @@ body.dark-mode #global-tooltip {
     <div id="global-tooltip"></div>
 
     <script>
-        (function() {
+       (function() {
             const USER_INFO_KEY = "googleUserInfo";
             const AUTH_TOKEN_KEY = "gdcAuthToken";
             const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
@@ -3450,11 +3450,19 @@ body.dark-mode #global-tooltip {
                         if (userSettings.notificationsEnabled === true) {
                             const isSubscribed = post.category === 'ALL' || (userSettings.subscribedClasses && userSettings.subscribedClasses.includes(post.category));
                             if (isSubscribed) {
+                                
+                                // **MODIFICATION START**
+                                const className = post.category === 'ALL' ? 'All Classes' : post.category;
+                                const hubLink = window.location.href; // Get the current dashboard URL
+
                                 const templateParams = {
                                     to_email: userData.email,
+                                    class_name: className,
                                     post_title: post.title,
-                                    post_content: post.content 
+                                    post_content: post.content,
+                                    hub_link: hubLink
                                 };
+                                // **MODIFICATION END**
 
                                 const sendPromise = emailjs.send(serviceID, templateID, templateParams)
                                     .then(function(response) {
@@ -4390,7 +4398,6 @@ body.dark-mode #global-tooltip {
                 endDrag(e);
             });
         }
-
     </script>
 </body>
 </html>
