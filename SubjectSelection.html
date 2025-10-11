@@ -215,10 +215,39 @@
         .subject-card:hover { transform: translateY(-8px) !important; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15); }
         .subject-card::after { content: ''; position: absolute; left: 0; right: 0; bottom: -8px; height: 8px; }
 
-        .card-media-container { height: var(--card-media-height); position: relative; overflow: hidden; transform: translateZ(0); border-radius: 16px 16px 0 0; }
-        .card-media { width: 100%; height: 100%; object-fit: cover; object-position: center; transition: transform 0.5s ease; transform: translateZ(0); }
+        .card-media-container { 
+            height: var(--card-media-height); 
+            position: relative; 
+            overflow: hidden; 
+            transform: translateZ(0); 
+            border-radius: 16px 16px 0 0; 
+        }
+        .card-media { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            object-position: center; 
+            transition: transform 0.5s ease; 
+            transform: translateZ(0); 
+        }
+        .youtube-video {
+            width: 100%;
+            height: 100%;
+            border: none;
+            pointer-events: none; /* Prevent interaction with YouTube player */
+        }
         .subject-card:hover .card-media { transform: scale(1.05) translateZ(0); }
-        .card-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 100%); opacity: 0; transition: opacity 0.3s ease; z-index: 1; }
+        .card-overlay { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 100%); 
+            opacity: 0; 
+            transition: opacity 0.3s ease; 
+            z-index: 1; 
+        }
         .subject-card:hover .card-overlay { opacity: 1; }
 
         .card-content { padding: 20px; display: flex; flex-direction: column; gap: 16px; flex-grow: 1; height: calc(var(--card-height) - var(--card-media-height)); position: relative; z-index: 1; }
@@ -389,68 +418,32 @@
         .modal-button.danger { background-color: transparent; color: var(--danger); }
         .modal-button.danger:hover { background-color: rgba(245, 101, 101, 0.1); }
 
-        /* NEW: File Upload Styles */
-        .file-upload-container {
+        /* NEW: YouTube URL Input Styles */
+        .url-input-container {
             margin: 20px 0;
-            text-align: center;
         }
-        .file-upload-label {
+        .url-input-container label {
             display: block;
-            padding: 40px 20px;
-            border: 2px dashed #ced4da;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        .file-upload-label:hover, .file-upload-label.dragover {
-            border-color: var(--primary);
-            background-color: rgba(67, 97, 238, 0.05);
-        }
-        .file-upload-icon {
-            font-size: 48px;
-            color: var(--primary);
-            margin-bottom: 12px;
-        }
-        .file-upload-text {
-            font-size: 16px;
-            color: var(--text);
             margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text);
         }
-        .file-upload-subtext {
+        .url-input-container input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .url-input-container input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        .url-help-text {
             font-size: 12px;
             color: var(--text-light);
-        }
-        .file-upload-input {
-            position: absolute;
-            width: 0;
-            height: 0;
-            opacity: 0;
-        }
-        .file-preview-container {
-            margin-top: 20px;
-            display: none;
-        }
-        .file-preview {
-            width: 100%;
-            max-height: 200px;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .upload-progress {
-            margin-top: 16px;
-            width: 100%;
-            height: 8px;
-            background-color: #e2e8f0;
-            border-radius: 4px;
-            overflow: hidden;
-            display: none;
-        }
-        .upload-progress-bar {
-            height: 100%;
-            background-color: var(--primary);
-            width: 0%;
-            transition: width 0.3s ease;
+            margin-top: 6px;
         }
 
         /* Responsive */
@@ -500,9 +493,7 @@
             <div class="subject-card myp-card" data-subject-id="myp">
                 <div class="card-media-container">
                     <div class="admin-video-controls"><button class="edit-video-btn"><i class="fas fa-video"></i></button></div>
-                    <video class="card-media" loop muted playsinline preload="metadata">
-                        <source src="https://i.imgur.com/HbAP2Ka.mp4" type="video/mp4">
-                    </video>
+                    <div class="youtube-video" id="myp-video"></div>
                     <div class="card-overlay"></div>
                 </div>
                 <div class="card-content">
@@ -537,9 +528,7 @@
             <div class="subject-card pe-card" data-subject-id="pe">
                 <div class="card-media-container">
                     <div class="admin-video-controls"><button class="edit-video-btn"><i class="fas fa-video"></i></button></div>
-                    <video class="card-media" loop muted playsinline preload="metadata">
-                        <source src="https://i.imgur.com/e36myJz.mp4" type="video/mp4">
-                    </video>
+                    <div class="youtube-video" id="pe-video"></div>
                     <div class="card-overlay"></div>
                 </div>
                 <div class="card-content">
@@ -563,9 +552,7 @@
             <div class="subject-card outdoor-card" data-subject-id="outdoor">
                 <div class="card-media-container">
                     <div class="admin-video-controls"><button class="edit-video-btn"><i class="fas fa-video"></i></button></div>
-                    <video class="card-media" loop muted playsinline preload="metadata">
-                        <source src="https://i.imgur.com/ghzZRJ9.mp4" type="video/mp4">
-                    </video>
+                    <div class="youtube-video" id="outdoor-video"></div>
                     <div class="card-overlay"></div>
                 </div>
                 <div class="card-content">
@@ -589,9 +576,7 @@
             <div class="subject-card health-card" data-subject-id="health">
                 <div class="card-media-container">
                     <div class="admin-video-controls"><button class="edit-video-btn"><i class="fas fa-video"></i></button></div>
-                    <video class="card-media" loop muted playsinline preload="metadata">
-                        <source src="https://i.imgur.com/1s0hopX.mp4" type="video/mp4">
-                    </video>
+                    <div class="youtube-video" id="health-video"></div>
                     <div class="card-overlay"></div>
                 </div>
                 <div class="card-content">
@@ -616,7 +601,7 @@
     <!-- Copyright Notice -->
     <div class="copyright">© 2025 Glendowie College. All Rights Reserved.</div>
 
-    <!-- NEW: Video Editor Modal -->
+    <!-- NEW: YouTube Video Editor Modal -->
     <div class="modal-overlay" id="video-editor-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -624,25 +609,20 @@
                 <button class="modal-close-btn">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="file-upload-container">
-                    <label for="video-file-input" class="file-upload-label" id="file-upload-label">
-                        <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
-                        <div class="file-upload-text">Click to upload or drag and drop</div>
-                        <div class="file-upload-subtext">MP4 files only (max 50MB)</div>
-                        <input type="file" id="video-file-input" class="file-upload-input" accept="video/mp4">
-                    </label>
-                    <div class="file-preview-container" id="file-preview-container">
-                        <video class="file-preview" id="file-preview" controls></video>
-                    </div>
-                    <div class="upload-progress" id="upload-progress">
-                        <div class="upload-progress-bar" id="upload-progress-bar"></div>
-                    </div>
+                <div class="url-input-container">
+                    <label for="youtube-url-input">YouTube Video URL</label>
+                    <input type="text" id="youtube-url-input" placeholder="https://youtu.be/VIDEO_ID">
+                    <div class="url-help-text">Paste the URL of a YouTube video. It will automatically play on hover and loop.</div>
+                </div>
+                <div class="video-preview-container" id="video-preview-container" style="display: none; margin-top: 20px;">
+                    <h3 style="margin-bottom: 10px;">Preview</h3>
+                    <div id="video-preview"></div>
                 </div>
             </div>
             <div class="modal-buttons">
                 <button class="modal-button danger" id="revert-video-btn" style="margin-right: auto;">Revert to Default</button>
                 <button class="modal-button secondary" id="cancel-video-btn">Cancel</button>
-                <button class="modal-button primary" id="save-video-btn" disabled>Upload & Save</button>
+                <button class="modal-button primary" id="save-video-btn" disabled>Save Video</button>
             </div>
         </div>
     </div>
@@ -654,7 +634,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const AUTH_TOKEN_KEY = "gdcAuthToken";
     const LOGIN_PAGE = "https://oktayzadeh.github.io/GDCHUB/";
     const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
-    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
 
     // --- Firebase Configuration ---
     const firebaseConfig = {
@@ -667,12 +646,12 @@ document.addEventListener('DOMContentLoaded', function() {
         appId: "1:399894468887:web:e3b8669a038fec20d9bf52"
     };
 
-    // --- Default Video URLs ---
+    // --- Default YouTube Video IDs ---
     const DEFAULT_VIDEOS = {
-        myp: 'https://i.imgur.com/HbAP2Ka.mp4',
-        pe: 'https://i.imgur.com/e36myJz.mp4',
-        outdoor: 'https://i.imgur.com/ghzZRJ9.mp4',
-        health: 'https://i.imgur.com/1s0hopX.mp4'
+        myp: 'FIBoucw8pK4',
+        pe: 'v1LnqZqjWSs',
+        outdoor: 'OYpP9RqHS-A',
+        health: 'n_ZgdvTSOCA'
     };
 
     // --- DOM ELEMENTS ---
@@ -681,25 +660,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const logoutButton = document.getElementById('logout-button');
     const videoEditorModal = document.getElementById('video-editor-modal');
     
-    // File upload elements
-    const fileUploadLabel = document.getElementById('file-upload-label');
-    const fileInput = document.getElementById('video-file-input');
-    const filePreviewContainer = document.getElementById('file-preview-container');
-    const filePreview = document.getElementById('file-preview');
-    const uploadProgress = document.getElementById('upload-progress');
-    const uploadProgressBar = document.getElementById('upload-progress-bar');
+    // YouTube URL input elements
+    const youtubeUrlInput = document.getElementById('youtube-url-input');
+    const videoPreviewContainer = document.getElementById('video-preview-container');
+    const videoPreview = document.getElementById('video-preview');
     const saveVideoBtn = document.getElementById('save-video-btn');
     const revertVideoBtn = document.getElementById('revert-video-btn');
     
     let currentEditingSubjectId = null;
-    let selectedFile = null;
+    let currentVideoId = null;
+    let youtubePlayers = {};
+    let youtubePreviewPlayer = null;
 
     // --- Firebase Initialization ---
-    let database, storage, videoRef;
+    let database, videoRef;
     try {
         const app = firebase.initializeApp(firebaseConfig);
         database = firebase.database();
-        storage = firebase.storage();
         videoRef = database.ref('subjectSelectionVideos');
     } catch (e) {
         console.error("Firebase initialization failed:", e);
@@ -742,112 +719,133 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- NEW, SIMPLIFIED VIDEO HOVER LOGIC ---
-    function initializeCardVideoHover() {
-        document.querySelectorAll('.subject-card').forEach(card => {
-            const video = card.querySelector('video.card-media');
-            if (!video) return;
-
-            // Ensure the video is muted, which is essential for programmatic play
-            video.muted = true;
-
-            card.addEventListener('mouseenter', () => {
-                // Play the video and handle any potential browser blockages
-                video.play().catch(error => {
-                    console.log(`Video play was prevented for ${video.src}: ${error}`);
-                });
-            });
-
-            card.addEventListener('mouseleave', () => {
-                video.pause();
-            });
-        });
+    // --- YouTube Video Functions ---
+    
+    // Extract YouTube video ID from URL
+    function extractYouTubeId(url) {
+        const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[7].length === 11) ? match[7] : null;
     }
-
-    function setupFileUpload() {
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            fileUploadLabel.addEventListener(eventName, e => {
-                e.preventDefault();
-                e.stopPropagation();
-            }, false);
-        });
-        ['dragenter', 'dragover'].forEach(eventName => {
-            fileUploadLabel.addEventListener(eventName, () => fileUploadLabel.classList.add('dragover'), false);
-        });
-        ['dragleave', 'drop'].forEach(eventName => {
-            fileUploadLabel.addEventListener(eventName, () => fileUploadLabel.classList.remove('dragover'), false);
-        });
-        fileUploadLabel.addEventListener('drop', (e) => {
-            const files = e.dataTransfer.files;
-            if (files.length) handleFileSelection(files[0]);
-        }, false);
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length) handleFileSelection(e.target.files[0]);
-        });
-    }
-
-    function handleFileSelection(file) {
-        if (!file || !file.type.includes('video/mp4')) {
-            alert('Please select an MP4 video file.');
-            return;
-        }
-        if (file.size > MAX_FILE_SIZE) {
-            alert('File size exceeds the 50MB limit.');
-            return;
-        }
-        selectedFile = file;
-        filePreview.src = URL.createObjectURL(file);
-        filePreviewContainer.style.display = 'block';
-        saveVideoBtn.disabled = false;
-        fileUploadLabel.querySelector('.file-upload-text').textContent = 'File: ' + file.name;
-    }
-
-    function resetFileInput() {
-        fileInput.value = '';
-        selectedFile = null;
-        filePreviewContainer.style.display = 'none';
-        filePreview.src = '';
-        saveVideoBtn.disabled = true;
-        uploadProgress.style.display = 'none';
-        uploadProgressBar.style.width = '0%';
-        fileUploadLabel.querySelector('.file-upload-text').textContent = 'Click to upload or drag and drop';
-    }
-
-    async function uploadVideoFile() {
-        if (!selectedFile || !currentEditingSubjectId) return;
+    
+    // Initialize YouTube player for a subject card
+    function initializeYouTubePlayer(subjectId, videoId) {
+        const playerElement = document.getElementById(`${subjectId}-video`);
+        if (!playerElement) return;
         
-        uploadProgress.style.display = 'block';
-        saveVideoBtn.disabled = true;
-        saveVideoBtn.textContent = 'Uploading...';
-        
-        const fileName = `subject_videos/${currentEditingSubjectId}_${Date.now()}.mp4`;
-        const storageRef = storage.ref().child(fileName);
-        const uploadTask = storageRef.put(selectedFile);
-        
-        uploadTask.on('state_changed', 
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                uploadProgressBar.style.width = progress + '%';
+        // Create YouTube player
+        youtubePlayers[subjectId] = new YT.Player(playerElement, {
+            videoId: videoId,
+            playerVars: {
+                'autoplay': 0,
+                'controls': 0,
+                'disablekb': 1,
+                'enablejsapi': 1,
+                'fs': 0,
+                'iv_load_policy': 3,
+                'loop': 1,
+                'modestbranding': 1,
+                'playsinline': 1,
+                'rel': 0,
+                'showinfo': 0
             },
-            (error) => {
-                console.error('Upload failed:', error);
-                alert('Upload failed: ' + error.message);
-                saveVideoBtn.disabled = false;
-                saveVideoBtn.textContent = 'Upload & Save';
-            },
-            async () => {
-                try {
-                    const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                    await videoRef.child(currentEditingSubjectId).set(downloadURL);
-                    videoEditorModal.classList.remove('visible');
-                } catch (error) {
-                    alert('Upload completed but failed to save: ' + error.message);
-                } finally {
-                    saveVideoBtn.disabled = false;
-                    saveVideoBtn.textContent = 'Upload & Save';
-                }
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange
             }
-        );
+        });
+    }
+    
+    function onPlayerReady(event) {
+        // Player is ready, but we don't need to do anything here
+    }
+    
+    function onPlayerStateChange(event) {
+        // Loop the video when it ends
+        if (event.data === YT.PlayerState.ENDED) {
+            event.target.playVideo();
+        }
+    }
+    
+    // Initialize YouTube preview player
+    function initializeYouTubePreview(videoId) {
+        if (youtubePreviewPlayer) {
+            youtubePreviewPlayer.destroy();
+        }
+        
+        youtubePreviewPlayer = new YT.Player(videoPreview, {
+            videoId: videoId,
+            playerVars: {
+                'autoplay': 0,
+                'controls': 1,
+                'disablekb': 0,
+                'enablejsapi': 1,
+                'fs': 1,
+                'iv_load_policy': 3,
+                'loop': 0,
+                'modestbranding': 1,
+                'playsinline': 1,
+                'rel': 0,
+                'showinfo': 0
+            }
+        });
+    }
+    
+    // Initialize all YouTube players
+    function initializeAllYouTubePlayers() {
+        // Load default videos initially
+        for (const [subjectId, videoId] of Object.entries(DEFAULT_VIDEOS)) {
+            initializeYouTubePlayer(subjectId, videoId);
+        }
+    }
+    
+    // Setup video hover effects
+    function setupVideoHoverEffects() {
+        document.querySelectorAll('.subject-card').forEach(card => {
+            const subjectId = card.dataset.subjectId;
+            const player = youtubePlayers[subjectId];
+            
+            if (!player) return;
+            
+            card.addEventListener('mouseenter', () => {
+                player.playVideo();
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                player.pauseVideo();
+            });
+        });
+    }
+
+    // --- YouTube URL Input Handling ---
+    function setupYouTubeUrlInput() {
+        youtubeUrlInput.addEventListener('input', function() {
+            const url = this.value.trim();
+            const videoId = extractYouTubeId(url);
+            
+            if (videoId) {
+                currentVideoId = videoId;
+                saveVideoBtn.disabled = false;
+                videoPreviewContainer.style.display = 'block';
+                initializeYouTubePreview(videoId);
+            } else {
+                currentVideoId = null;
+                saveVideoBtn.disabled = true;
+                videoPreviewContainer.style.display = 'none';
+            }
+        });
+    }
+
+    // --- Video Management Functions ---
+    async function saveYouTubeVideo() {
+        if (!currentVideoId || !currentEditingSubjectId) return;
+        
+        try {
+            await videoRef.child(currentEditingSubjectId).set(currentVideoId);
+            videoEditorModal.classList.remove('visible');
+        } catch (error) {
+            alert('Error saving video: ' + error.message);
+        }
     }
 
     async function revertToDefaultVideo() {
@@ -861,6 +859,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function resetVideoInput() {
+        youtubeUrlInput.value = '';
+        currentVideoId = null;
+        videoPreviewContainer.style.display = 'none';
+        saveVideoBtn.disabled = true;
+    }
+
+    // --- Dropdown and Modal Functions ---
     function setupDropdowns() {
         profilePicElement.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -900,16 +906,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentEditingSubjectId = e.target.closest('.subject-card').dataset.subjectId;
                 const subjectName = e.target.closest('.subject-card').querySelector('.subject-name').textContent;
                 modal.querySelector('#modal-title').textContent = `Edit "${subjectName}" Video`;
-                resetFileInput();
+                resetVideoInput();
                 modal.classList.add('visible');
             });
         });
         const closeModal = () => modal.classList.remove('visible');
         modal.querySelector('.modal-close-btn').addEventListener('click', closeModal);
         modal.querySelector('#cancel-video-btn').addEventListener('click', closeModal);
-        saveVideoBtn.addEventListener('click', uploadVideoFile);
+        saveVideoBtn.addEventListener('click', saveYouTubeVideo);
         revertVideoBtn.addEventListener('click', revertToDefaultVideo);
-        setupFileUpload();
+        setupYouTubeUrlInput();
     }
 
     function listenForVideoChanges() {
@@ -918,15 +924,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const customVideos = snapshot.val() || {};
             document.querySelectorAll('.subject-card').forEach(card => {
                 const subjectId = card.dataset.subjectId;
-                const videoElement = card.querySelector('video.card-media');
-                const sourceElement = videoElement.querySelector('source');
-                const newUrl = customVideos[subjectId] || DEFAULT_VIDEOS[subjectId];
+                const videoId = customVideos[subjectId] || DEFAULT_VIDEOS[subjectId];
                 
-                if (sourceElement.src !== newUrl) {
-                    sourceElement.src = newUrl;
-                    videoElement.load();
-                    // IMPORTANT: Re-apply muted state after loading new source
-                    videoElement.muted = true;
+                // If player exists, load new video
+                if (youtubePlayers[subjectId]) {
+                    youtubePlayers[subjectId].loadVideoById(videoId);
+                } else {
+                    // Otherwise create new player
+                    initializeYouTubePlayer(subjectId, videoId);
                 }
             });
         });
@@ -936,10 +941,19 @@ document.addEventListener('DOMContentLoaded', function() {
     function initialize() {
         handleProfilePicture();
         setupDropdowns();
-        listenForVideoChanges();
-
-        // ** CORE FIX: Initialize video hover effects immediately **
-        initializeCardVideoHover();
+        
+        // Load YouTube API and initialize players
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        
+        // YouTube API callback
+        window.onYouTubeIframeAPIReady = function() {
+            initializeAllYouTubePlayers();
+            listenForVideoChanges();
+            setTimeout(setupVideoHoverEffects, 1000); // Wait for players to initialize
+        };
 
         // Authentication-dependent UI
         if (firebase.auth()) {
