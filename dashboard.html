@@ -1627,6 +1627,75 @@ body.non-admin .reminder-card { cursor: default; }
 ::-webkit-scrollbar-thumb { background: var(--medium); border-radius: var(--radius-full); }
 ::-webkit-scrollbar-thumb:hover { background: var(--dark); }
 
+/* --- NEW: Convert to Link Button --- */
+.convert-link-btn {
+    position: absolute;
+    top: var(--space-sm);
+    right: var(--space-sm);
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(4px);
+    border: 1px solid var(--light-gray);
+    color: var(--medium);
+    border-radius: var(--radius-full);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0;
+    transition: all var(--transition-fast);
+}
+body:not(.non-admin) .embed-container:hover .convert-link-btn {
+    opacity: 1;
+}
+.convert-link-btn:hover {
+    background-color: var(--lighter);
+    color: var(--primary);
+    transform: scale(1.1);
+}
+body.dark-mode .convert-link-btn {
+    background-color: rgba(45, 55, 72, 0.8);
+    border-color: var(--dark-light);
+    color: var(--dark-medium);
+}
+body.dark-mode .convert-link-btn:hover {
+    background-color: var(--dark-lighter);
+    color: var(--dark-primary);
+}
+.embedded-link-fallback {
+    display: block;
+    padding: var(--space-lg);
+    border: 1px solid var(--light-gray);
+    border-radius: var(--radius-md);
+    background-color: var(--light);
+    text-decoration: none;
+    margin: var(--space-lg) 0;
+    transition: all var(--transition-fast);
+}
+.embedded-link-fallback:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+.embedded-link-fallback i {
+    margin-right: var(--space-sm);
+    color: var(--primary);
+}
+.embedded-link-fallback span {
+    font-weight: 500;
+    color: var(--dark);
+}
+body.dark-mode .embedded-link-fallback {
+    background-color: var(--dark-light-gray);
+    border-color: var(--dark-light);
+}
+body.dark-mode .embedded-link-fallback span {
+    color: var(--dark-medium);
+}
+
 /* Responsive Adjustments */
 @media (max-width: 1024px) {
     .sidebar { width: 240px; }
@@ -2303,7 +2372,56 @@ body.dark-mode #global-tooltip {
                     saveTab();
                 }
             });
+            
+            // Event listener for the new "Convert to Link" button
+            mainContent.addEventListener('click', function(event) {
+                const convertBtn = event.target.closest('.convert-link-btn');
+                if (convertBtn) {
+                    event.stopPropagation();
+                    const embedContainer = convertBtn.closest('.embed-container');
+                    const iframe = embedContainer ? embedContainer.querySelector('iframe') : null;
+                    if (iframe && iframe.src) {
+                        convertToLink(embedContainer, iframe.src);
+                    }
+                }
+            });
         });
+
+        function convertToLink(embedContainer, url) {
+            if (!isAdmin) return;
+
+            const postCard = embedContainer.closest('.post-card');
+            const postId = postCard.dataset.id;
+            const currentContent = postCard.querySelector('.post-content').innerHTML;
+
+            const linkFallbackHTML = `
+                <a href="${url}" target="_blank" rel="noopener noreferrer" class="embedded-link-fallback">
+                    <i class="fas fa-external-link-alt"></i>
+                    <span>View Content: ${url}</span>
+                </a>
+            `;
+
+            // Create a temporary div to manipulate the HTML string
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = currentContent;
+            
+            // Find the specific embed container in the cloned content and replace it
+            const allEmbeds = tempDiv.querySelectorAll('.embed-container');
+            allEmbeds.forEach(embed => {
+                const iframe = embed.querySelector('iframe');
+                if (iframe && iframe.src === url) {
+                    const linkNode = document.createElement('div');
+                    linkNode.innerHTML = linkFallbackHTML;
+                    embed.parentNode.replaceChild(linkNode.firstChild, embed);
+                }
+            });
+            
+            const newContent = tempDiv.innerHTML;
+
+            // Update Firebase
+            announcementsRef.child(currentTabId).child(postId).update({ content: newContent })
+                .catch(error => console.error("Error converting embed to link:", error));
+        }
 
         function setupTooltips() {
             const tooltipEl = document.getElementById('global-tooltip');
@@ -3021,7 +3139,6 @@ body.dark-mode #global-tooltip {
 
             let embedUrl = '';
 
-            // Ensure the URL has a protocol like http or https
             if (!/^https?:\/\//i.test(url)) {
                 url = 'https://' + url;
             }
@@ -3036,7 +3153,6 @@ body.dark-mode #global-tooltip {
             } else if (url.includes('docs.google.com/document/d/')) {
                 embedUrl = url.replace('/edit', '/pub?embedded=true');
             } else {
-                // Fallback for any other valid URL
                 embedUrl = url;
             }
 
@@ -3207,12 +3323,26 @@ body.dark-mode #global-tooltip {
 
         function autoEmbed(htmlContent) {
             if (!htmlContent) return '';
-            const tempDiv = document.createElement('div'); tempDiv.innerHTML = htmlContent;
+            const tempDiv = document.createElement('div'); 
+            tempDiv.innerHTML = htmlContent;
+            
             const iframes = tempDiv.querySelectorAll('iframe');
             iframes.forEach(iframe => {
                 if (!iframe.parentElement.classList.contains('embed-container')) {
-                    const wrapper = document.createElement('div'); wrapper.className = 'embed-container';
-                    iframe.parentNode.insertBefore(wrapper, iframe); wrapper.appendChild(iframe);
+                    const wrapper = document.createElement('div'); 
+                    wrapper.className = 'embed-container';
+                    
+                    // Add the new "Convert to Link" button for admins
+                    if (isAdmin) {
+                        const convertBtn = document.createElement('button');
+                        convertBtn.className = 'convert-link-btn';
+                        convertBtn.title = 'If embed fails, convert to a link';
+                        convertBtn.innerHTML = `<i class="fas fa-external-link-alt"></i>`;
+                        wrapper.appendChild(convertBtn);
+                    }
+                    
+                    iframe.parentNode.insertBefore(wrapper, iframe); 
+                    wrapper.appendChild(iframe);
                 }
             });
             return tempDiv.innerHTML;
