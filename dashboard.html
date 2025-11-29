@@ -1645,6 +1645,7 @@ body.non-admin .reminder-card { cursor: default; }
     cursor: pointer;
     font-size: 14px;
     opacity: 0;
+    z-index: 10;
     transition: all var(--transition-fast);
 }
 body:not(.non-admin) .embed-container:hover .convert-link-btn {
@@ -2373,7 +2374,6 @@ body.dark-mode #global-tooltip {
                 }
             });
             
-            // Event listener for the new "Convert to Link" button
             mainContent.addEventListener('click', function(event) {
                 const convertBtn = event.target.closest('.convert-link-btn');
                 if (convertBtn) {
@@ -2388,11 +2388,13 @@ body.dark-mode #global-tooltip {
         });
 
         function convertToLink(embedContainer, url) {
-            if (!isAdmin) return;
+            if (!isAdmin || !embedContainer) return;
 
             const postCard = embedContainer.closest('.post-card');
+            if (!postCard) return;
+
             const postId = postCard.dataset.id;
-            const currentContent = postCard.querySelector('.post-content').innerHTML;
+            const postContentElement = postCard.querySelector('.post-content');
 
             const linkFallbackHTML = `
                 <a href="${url}" target="_blank" rel="noopener noreferrer" class="embedded-link-fallback">
@@ -2401,24 +2403,9 @@ body.dark-mode #global-tooltip {
                 </a>
             `;
 
-            // Create a temporary div to manipulate the HTML string
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = currentContent;
-            
-            // Find the specific embed container in the cloned content and replace it
-            const allEmbeds = tempDiv.querySelectorAll('.embed-container');
-            allEmbeds.forEach(embed => {
-                const iframe = embed.querySelector('iframe');
-                if (iframe && iframe.src === url) {
-                    const linkNode = document.createElement('div');
-                    linkNode.innerHTML = linkFallbackHTML;
-                    embed.parentNode.replaceChild(linkNode.firstChild, embed);
-                }
-            });
-            
-            const newContent = tempDiv.innerHTML;
+            embedContainer.outerHTML = linkFallbackHTML;
+            const newContent = postContentElement.innerHTML;
 
-            // Update Firebase
             announcementsRef.child(currentTabId).child(postId).update({ content: newContent })
                 .catch(error => console.error("Error converting embed to link:", error));
         }
@@ -3320,33 +3307,39 @@ body.dark-mode #global-tooltip {
             announcementCategoryEditorSelect.innerHTML = editorOptionsHtml;
         }
 
-
         function autoEmbed(htmlContent) {
             if (!htmlContent) return '';
-            const tempDiv = document.createElement('div'); 
+            const tempDiv = document.createElement('div');
             tempDiv.innerHTML = htmlContent;
-            
+
+            // Ensure all iframes are properly wrapped first.
             const iframes = tempDiv.querySelectorAll('iframe');
             iframes.forEach(iframe => {
-                if (!iframe.parentElement.classList.contains('embed-container')) {
-                    const wrapper = document.createElement('div'); 
+                if (!iframe.closest('.embed-container')) {
+                    const wrapper = document.createElement('div');
                     wrapper.className = 'embed-container';
-                    
-                    // Add the new "Convert to Link" button for admins
-                    if (isAdmin) {
+                    iframe.parentNode.insertBefore(wrapper, iframe);
+                    wrapper.appendChild(iframe);
+                }
+            });
+
+            // If the user is an admin, iterate over all embed containers and add the button if it's missing.
+            if (isAdmin) {
+                const embedContainers = tempDiv.querySelectorAll('.embed-container');
+                embedContainers.forEach(container => {
+                    if (!container.querySelector('.convert-link-btn')) {
                         const convertBtn = document.createElement('button');
                         convertBtn.className = 'convert-link-btn';
                         convertBtn.title = 'If embed fails, convert to a link';
                         convertBtn.innerHTML = `<i class="fas fa-external-link-alt"></i>`;
-                        wrapper.appendChild(convertBtn);
+                        container.prepend(convertBtn);
                     }
-                    
-                    iframe.parentNode.insertBefore(wrapper, iframe); 
-                    wrapper.appendChild(iframe);
-                }
-            });
+                });
+            }
+
             return tempDiv.innerHTML;
         }
+
 
         function renderAnnouncements(announcements, skipAnimation = false) {
             const pinned = announcements.filter(a => a.pinned).sort((a, b) => (a.order || 0) - (b.order || 0));
