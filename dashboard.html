@@ -618,12 +618,13 @@ body.dark-mode .notification-class-item:hover {
 }
 
 /* --- Full-Screen Editor --- */
-#announcement-editor-overlay {
+#announcement-editor-overlay, #collection-view-overlay {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: var(--light); z-index: 2000;
     display: flex; flex-direction: column; transform: translateY(100%); visibility: hidden;
     transition: transform var(--transition-normal), visibility var(--transition-normal), background-color var(--transition-normal);
 }
-#announcement-editor-overlay.visible { transform: translateY(0); visibility: visible; }
+#announcement-editor-overlay.visible, #collection-view-overlay.visible { transform: translateY(0); visibility: visible; }
+
 .editor-header {
     flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; padding: var(--space-sm) var(--space-xl);
     background-color: var(--lighter); border-bottom: 1px solid var(--light-gray); z-index: 10;
@@ -1589,9 +1590,10 @@ body.dark-mode .category-manager-list { border-color: var(--dark-light); }
 
 
 /* General UI & Layout */
-body.non-admin .add-tab-header-button, body.non-admin .button[onclick="openAnnouncementEditor()"],
+body.non-admin .add-tab-header-button, body.non-admin .button[onclick*="open"],
 body.non-admin .tab-actions, body.non-admin .post-actions, body.non-admin #add-reminder-btn,
 body.non-admin .move-handle, body.non-admin #manage-categories-btn, body.non-admin .appearance-panel { display: none !important; }
+
 body.non-admin .sidebar-title { padding-right: var(--space-sm); }
 body.non-admin .reminder-card { cursor: default; }
 
@@ -1620,82 +1622,118 @@ body.non-admin .reminder-card { cursor: default; }
 }
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.post-card:nth-child(1) { animation-delay: 0.1s; }
-.post-card:nth-child(2) { animation-delay: 0.2s; }
+.post-card:nth-child(1), .collection-card:nth-child(1) { animation-delay: 0.1s; }
+.post-card:nth-child(2), .collection-card:nth-child(2) { animation-delay: 0.2s; }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--light); }
 ::-webkit-scrollbar-thumb { background: var(--medium); border-radius: var(--radius-full); }
 ::-webkit-scrollbar-thumb:hover { background: var(--dark); }
 
-/* --- NEW: Convert to Link Button --- */
-.convert-link-btn {
-    position: absolute;
-    top: var(--space-sm);
-    right: var(--space-sm);
-    background-color: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(4px);
+/* --- NEW: Collection Styles --- */
+.collection-card {
+    background: var(--light);
     border: 1px solid var(--light-gray);
-    color: var(--medium);
-    border-radius: var(--radius-full);
-    width: 32px;
-    height: 32px;
+    border-left: 4px solid var(--secondary);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    animation: fadeIn var(--transition-normal) forwards;
+    opacity: 0;
+    position: relative;
+}
+.collection-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: var(--secondary);
+}
+.collection-card-header {
     display: flex;
     align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 14px;
-    opacity: 0;
-    z-index: 10;
-    transition: all var(--transition-fast);
+    gap: var(--space-md);
+    margin-bottom: var(--space-xs);
 }
-body:not(.non-admin) .embed-container:hover .convert-link-btn {
-    opacity: 1;
+.collection-card-header i {
+    font-size: var(--text-xl);
+    color: var(--secondary);
 }
-.convert-link-btn:hover {
-    background-color: var(--lighter);
-    color: var(--primary);
-    transform: scale(1.1);
+.collection-card-header h3 {
+    margin: 0;
 }
-body.dark-mode .convert-link-btn {
-    background-color: rgba(45, 55, 72, 0.8);
-    border-color: var(--dark-light);
-    color: var(--dark-medium);
+.collection-card-meta {
+    font-size: var(--text-sm);
+    color: var(--medium);
+    margin-left: calc(var(--text-xl) + var(--space-md));
 }
-body.dark-mode .convert-link-btn:hover {
-    background-color: var(--dark-lighter);
-    color: var(--dark-primary);
+.collection-card.drop-target {
+    border-style: dashed;
+    border-color: var(--secondary);
+    background-color: var(--primary-light);
+    transform: scale(1.02);
 }
-.embedded-link-fallback {
-    display: block;
-    padding: var(--space-lg);
+#collection-view-overlay .post-card {
+    cursor: default; /* Posts inside collection view are not clickable to expand */
+}
+#collection-view-overlay .post-card .remove-from-collection-btn {
+    position: absolute;
+    top: var(--space-md);
+    right: var(--space-md);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.7);
     border: 1px solid var(--light-gray);
-    border-radius: var(--radius-md);
-    background-color: var(--light);
-    text-decoration: none;
-    margin: var(--space-lg) 0;
-    transition: all var(--transition-fast);
+    color: var(--medium);
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
 }
-.embedded-link-fallback:hover {
-    border-color: var(--primary);
-    box-shadow: var(--shadow-sm);
-    transform: translateY(-2px);
-    text-decoration: none;
+#collection-view-overlay .post-card:hover .remove-from-collection-btn {
+    display: flex;
 }
-.embedded-link-fallback i {
-    margin-right: var(--space-sm);
-    color: var(--primary);
+#collection-view-overlay .post-card .remove-from-collection-btn:hover {
+    color: var(--danger);
+    background: var(--light);
 }
-.embedded-link-fallback span {
-    font-weight: 500;
-    color: var(--dark);
+.collection-view-feed {
+    padding: var(--space-md) var(--space-xl) var(--space-2xl);
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
 }
-body.dark-mode .embedded-link-fallback {
-    background-color: var(--dark-light-gray);
+
+body.dark-mode .collection-card {
+    background: var(--dark-light-gray);
     border-color: var(--dark-light);
+    border-left-color: var(--dark-secondary);
 }
-body.dark-mode .embedded-link-fallback span {
+body.dark-mode .collection-card:hover {
+    border-color: var(--dark-secondary);
+}
+body.dark-mode .collection-card.drop-target {
+    background-color: var(--dark-primary-light);
+    border-color: var(--dark-secondary);
+}
+body.dark-mode #collection-view-overlay {
+    background-color: var(--dark-dark-gray);
+}
+body.dark-mode #collection-view-overlay .editor-header {
+    background-color: var(--dark-lighter);
+    border-bottom-color: var(--dark-light);
+}
+body.dark-mode #collection-view-overlay .post-card .remove-from-collection-btn {
+    background: rgba(45, 55, 72, 0.7);
+    border-color: var(--dark-light);
     color: var(--dark-medium);
 }
+body.dark-mode #collection-view-overlay .post-card .remove-from-collection-btn:hover {
+    color: var(--dark-danger);
+    background: var(--dark-light);
+}
+
 
 /* Responsive Adjustments */
 @media (max-width: 1024px) {
@@ -1954,12 +1992,15 @@ body.dark-mode #global-tooltip {
         
         <header class="header-content">
             <h1 id="current-tab-title">Classroom</h1>
-            <button class="button" onclick="openAnnouncementEditor()">Create Announcement</button>
+            <div class="header-actions" style="display: flex; gap: var(--space-sm);">
+                <button class="button secondary" onclick="openCollectionEditor()">Create Collection</button>
+                <button class="button" onclick="openAnnouncementEditor()">Create Announcement</button>
+            </div>
         </header>
 
         <div class="search-filter-container">
             <div class="search-container">
-                <input type="text" class="search-input" id="announcement-search" placeholder="Search announcements...">
+                <input type="text" class="search-input" id="announcement-search" placeholder="Search announcements and collections...">
                 <button class="search-clear" onclick="clearSearch()">×</button>
             </div>
         </div>
@@ -2109,6 +2150,18 @@ body.dark-mode #global-tooltip {
             </div>
         </div>
     </div>
+    
+    <!-- NEW: Collection View Overlay -->
+    <div id="collection-view-overlay">
+        <div class="editor-header">
+            <button id="collection-back-btn" class="button secondary"><i class="fas fa-chevron-left"></i> Back</button>
+            <h2 id="collection-view-title"></h2>
+            <div class="editor-header-actions"></div>
+        </div>
+        <div class="editor-content">
+            <div class="collection-view-feed" id="collection-view-feed"></div>
+        </div>
+    </div>
 
     <div id="tab-editor-modal" class="modal">
         <div class="modal-content">
@@ -2124,6 +2177,23 @@ body.dark-mode #global-tooltip {
             </div>
         </div>
     </div>
+    
+    <!-- NEW: Collection Editor Modal -->
+    <div id="collection-editor-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeCollectionEditor()">×</span>
+            <h2 id="collection-editor-title">Create New Collection</h2>
+            <div class="input-group">
+                <input type="text" id="collection-name-input" placeholder=" ">
+                <label>Collection Title</label>
+            </div>
+            <div class="modal-buttons">
+                <button class="button secondary" onclick="closeCollectionEditor()">Cancel</button>
+                <button class="button" id="save-collection-button" onclick="saveCollection()">Save</button>
+            </div>
+        </div>
+    </div>
+
 
     <div id="confirmation-modal" class="modal">
         <div class="modal-content" style="max-width: 420px; text-align: center;">
@@ -2286,7 +2356,8 @@ body.dark-mode #global-tooltip {
         const tabsRef = database.ref(`${basePath}/tabs`);
         const announcementsRef = database.ref(`${basePath}/announcements`);
         const remindersRef = database.ref(`${basePath}/reminders`);
-        const categoriesRef = database.ref(`${basePath}/classes`); 
+        const categoriesRef = database.ref(`${basePath}/classes`);
+        const collectionsRef = database.ref(`${basePath}/collections`);
         
         // --- DYNAMIC DATA LOGIC END ---
 
@@ -2321,6 +2392,10 @@ body.dark-mode #global-tooltip {
         const listViewBtn = document.getElementById('reminders-list-view-btn');
         const monthViewBtn = document.getElementById('reminders-month-view-btn');
         const mainContent = document.getElementById('main-content');
+        const collectionEditorModal = document.getElementById('collection-editor-modal');
+        const collectionNameInput = document.getElementById('collection-name-input');
+        const collectionViewOverlay = document.getElementById('collection-view-overlay');
+
 
         let tabs = [];
         let currentTabId = null;
@@ -2333,11 +2408,13 @@ body.dark-mode #global-tooltip {
         let isAdmin = false;
         let currentAnnouncementBeingEdited = null;
         let currentTabAnnouncements = [];
+        let collections = [];
+        let currentCollectionBeingEdited = null;
         let suppressPostAnimation = false;
         let savedEditorSelection = null;
         let currentCalendarDate = new Date();
         let currentReminderView = localStorage.getItem('reminderView') || 'list';
-        let isSubmitting = false; // Flag to prevent multiple submissions
+        let isSubmitting = false; 
         
         const ADMIN_EMAILS = ['fadekeyvids@gmail.com', 'rwt1972@gmail.com', 'thr@gdc.school.nz'];
 
@@ -2359,6 +2436,8 @@ body.dark-mode #global-tooltip {
             setupAppearanceControls();
             setupTooltips();
             
+            document.getElementById('collection-back-btn').addEventListener('click', closeCollectionView);
+            
             UndoManager.init();
             if (isAdmin) {
                 setupSidebarDragAndDrop();
@@ -2374,41 +2453,7 @@ body.dark-mode #global-tooltip {
                 }
             });
             
-            mainContent.addEventListener('click', function(event) {
-                const convertBtn = event.target.closest('.convert-link-btn');
-                if (convertBtn) {
-                    event.stopPropagation();
-                    const embedContainer = convertBtn.closest('.embed-container');
-                    const iframe = embedContainer ? embedContainer.querySelector('iframe') : null;
-                    if (iframe && iframe.src) {
-                        convertToLink(embedContainer, iframe.src);
-                    }
-                }
-            });
         });
-
-        function convertToLink(embedContainer, url) {
-            if (!isAdmin || !embedContainer) return;
-
-            const postCard = embedContainer.closest('.post-card');
-            if (!postCard) return;
-
-            const postId = postCard.dataset.id;
-            const postContentElement = postCard.querySelector('.post-content');
-
-            const linkFallbackHTML = `
-                <a href="${url}" target="_blank" rel="noopener noreferrer" class="embedded-link-fallback">
-                    <i class="fas fa-external-link-alt"></i>
-                    <span>View Content: ${url}</span>
-                </a>
-            `;
-
-            embedContainer.outerHTML = linkFallbackHTML;
-            const newContent = postContentElement.innerHTML;
-
-            announcementsRef.child(currentTabId).child(postId).update({ content: newContent })
-                .catch(error => console.error("Error converting embed to link:", error));
-        }
 
         function setupTooltips() {
             const tooltipEl = document.getElementById('global-tooltip');
@@ -3224,9 +3269,11 @@ body.dark-mode #global-tooltip {
             searchClearButton.style.display = searchTerm ? 'block' : 'none';
             
             let announcementsToRender = [...currentTabAnnouncements];
+            let collectionsToRender = [...collections];
 
             if (selectedClass !== 'ALL_CLASSES') {
                 announcementsToRender = announcementsToRender.filter(ann => ann.category === selectedClass || ann.category === 'ALL');
+                collectionsToRender = []; // Hide collections when a class is selected for simplicity
             }
             
             if (searchTerm) {
@@ -3237,8 +3284,9 @@ body.dark-mode #global-tooltip {
                     const contentMatch = (tempDiv.textContent || "").toLowerCase().includes(searchTerm);
                     return titleMatch || contentMatch;
                 });
+                collectionsToRender = collectionsToRender.filter(col => col.title.toLowerCase().includes(searchTerm));
             }
-            renderAnnouncements(announcementsToRender, suppressPostAnimation);
+            renderAnnouncements(announcementsToRender, collectionsToRender, suppressPostAnimation);
             suppressPostAnimation = false;
         }
 
@@ -3253,9 +3301,7 @@ body.dark-mode #global-tooltip {
 
                 if (tabs.length > 0) {
                     const savedTabId = localStorage.getItem(`lastActiveTabId_${currentSubject}_${currentYear}`);
-                    const targetTabId = (savedTabId && tabs.some(t => t.id === savedTabId))
-                        ? savedTabId
-                        : tabs[0].id;
+                    const targetTabId = (savedTabId && tabs.some(t => t.id === savedTabId)) ? savedTabId : tabs[0].id;
 
                     if (currentTabId !== targetTabId || currentTabId === null) {
                          setActiveTab(targetTabId);
@@ -3287,6 +3333,7 @@ body.dark-mode #global-tooltip {
                     renderCategoryManagerList();
                 }
             });
+            
         }
         
         function populateCategoryDropdowns() {
@@ -3307,12 +3354,12 @@ body.dark-mode #global-tooltip {
             announcementCategoryEditorSelect.innerHTML = editorOptionsHtml;
         }
 
+
         function autoEmbed(htmlContent) {
             if (!htmlContent) return '';
-            const tempDiv = document.createElement('div');
+            const tempDiv = document.createElement('div'); 
             tempDiv.innerHTML = htmlContent;
 
-            // Ensure all iframes are properly wrapped first.
             const iframes = tempDiv.querySelectorAll('iframe');
             iframes.forEach(iframe => {
                 if (!iframe.closest('.embed-container')) {
@@ -3322,33 +3369,25 @@ body.dark-mode #global-tooltip {
                     wrapper.appendChild(iframe);
                 }
             });
-
-            // If the user is an admin, iterate over all embed containers and add the button if it's missing.
-            if (isAdmin) {
-                const embedContainers = tempDiv.querySelectorAll('.embed-container');
-                embedContainers.forEach(container => {
-                    if (!container.querySelector('.convert-link-btn')) {
-                        const convertBtn = document.createElement('button');
-                        convertBtn.className = 'convert-link-btn';
-                        convertBtn.title = 'If embed fails, convert to a link';
-                        convertBtn.innerHTML = `<i class="fas fa-external-link-alt"></i>`;
-                        container.prepend(convertBtn);
-                    }
-                });
-            }
-
             return tempDiv.innerHTML;
         }
 
-
-        function renderAnnouncements(announcements, skipAnimation = false) {
-            const pinned = announcements.filter(a => a.pinned).sort((a, b) => (a.order || 0) - (b.order || 0));
-            const unpinned = announcements.filter(a => !a.pinned).sort((a, b) => (b.order || 0) - (a.order || 0));
+        function renderAnnouncements(announcements, collections, skipAnimation = false) {
+            const allItems = [...announcements, ...collections];
+            const pinned = allItems.filter(a => a.pinned).sort((a, b) => (a.order || 0) - (b.order || 0));
+            const unpinned = allItems.filter(a => !a.pinned).sort((a, b) => (b.order || 0) - (a.order || 0));
+            
             pinnedPostsHeader.style.display = pinned.length > 0 ? 'flex' : 'none';
-            pinnedPostsFeed.innerHTML = pinned.map(ann => createPostElement(ann, skipAnimation)).join('');
-            unpinnedPostsFeed.innerHTML = unpinned.map(ann => createPostElement(ann, skipAnimation)).join('');
-            if (announcements.length === 0) { unpinnedPostsFeed.innerHTML = '<p>No announcements found for this class.</p>'; }
+            
+            const renderItem = (item) => item.postIds ? createCollectionElement(item, skipAnimation) : createPostElement(item, skipAnimation);
+
+            pinnedPostsFeed.innerHTML = pinned.map(renderItem).join('');
+            unpinnedPostsFeed.innerHTML = unpinned.map(renderItem).join('');
+
+            if (allItems.length === 0) { unpinnedPostsFeed.innerHTML = '<p>No announcements or collections found for this class.</p>'; }
+            
             document.querySelectorAll('.post-card').forEach(card => card.addEventListener('click', (e) => { if (!e.target.closest('button, a, iframe')) { expandPost(card); } }));
+            document.querySelectorAll('.collection-card').forEach(card => card.addEventListener('click', (e) => { if (!e.target.closest('.post-actions button')) { openCollectionView(card.dataset.id); } }));
             document.querySelectorAll('.post-actions button').forEach(button => button.addEventListener('click', e => e.stopPropagation()));
         }
 
@@ -3427,8 +3466,9 @@ body.dark-mode #global-tooltip {
         }
 
         function setActiveTab(tabId, forceUpdate = false) {
-            if (!forceUpdate && expandedPost) {
+            if (!forceUpdate && (expandedPost || collectionViewOverlay.classList.contains('visible'))) {
                 collapsePost(expandedPost);
+                closeCollectionView();
             }
             currentTabId = tabId;
             localStorage.setItem(`lastActiveTabId_${currentSubject}_${currentYear}`, tabId);
@@ -3449,12 +3489,16 @@ body.dark-mode #global-tooltip {
                 const activeLink = document.querySelector(`.sidebar-item[data-tab-id="${tabId}"] .sidebar-link`);
                 if (activeLink) activeLink.classList.add('active');
 
-                // Detach previous listener and attach a new one
                 if (!forceUpdate) {
-                    announcementsRef.child(tabId).off(); // Make sure to detach old listeners
+                    announcementsRef.child(tabId).off();
+                    collectionsRef.child(tabId).off();
+                    
                     announcementsRef.child(tabId).on('value', snapshot => {
                         currentTabAnnouncements = snapshot.val() ? Object.values(snapshot.val()) : [];
-                        console.log(`[GDCHUB] Fetched ${currentTabAnnouncements.length} announcements for tab: ${tab.name}`); // DEBUG LOG for 3-post limit
+                        filterAnnouncements();
+                    });
+                    collectionsRef.child(tabId).on('value', snapshot => {
+                        collections = snapshot.val() ? Object.values(snapshot.val()) : [];
                         filterAnnouncements();
                     });
                 }
@@ -3592,9 +3636,8 @@ body.dark-mode #global-tooltip {
                             const isSubscribed = post.category === 'ALL' || (userSettings.subscribedClasses && userSettings.subscribedClasses.includes(post.category));
                             if (isSubscribed) {
                                 
-                                // **MODIFICATION START**
                                 const className = post.category === 'ALL' ? 'All Classes' : post.category;
-                                const hubLink = window.location.href; // Get the current dashboard URL
+                                const hubLink = window.location.href; 
 
                                 const templateParams = {
                                     to_email: userData.email,
@@ -3603,7 +3646,6 @@ body.dark-mode #global-tooltip {
                                     post_content: post.content,
                                     hub_link: hubLink
                                 };
-                                // **MODIFICATION END**
 
                                 const sendPromise = emailjs.send(serviceID, templateID, templateParams)
                                     .then(function(response) {
@@ -3630,9 +3672,10 @@ body.dark-mode #global-tooltip {
 
         window.togglePin = (event, id) => {
             event.stopPropagation();
-            const announcement = currentTabAnnouncements.find(a => a.id === id);
-            if (!announcement) return;
-            announcementsRef.child(currentTabId).child(id).update({ pinned: !announcement.pinned });
+            const item = [...currentTabAnnouncements, ...collections].find(a => a.id === id);
+            if (!item) return;
+            const ref = item.postIds ? collectionsRef : announcementsRef;
+            ref.child(currentTabId).child(id).update({ pinned: !item.pinned });
             
             if (expandedPost) {
                 collapsePost(expandedPost);
@@ -3700,33 +3743,84 @@ body.dark-mode #global-tooltip {
         function setupPostsDragAndDrop() {
             let draggedPost = null, postPlaceholder = null, sourceContainer = null;
             classroomInfo.addEventListener('dragstart', e => {
-                draggedPost = e.target.closest('.post-card[draggable="true"]'); if (!draggedPost) return;
-                sourceContainer = draggedPost.parentElement; e.dataTransfer.effectAllowed = 'move';
+                const target = e.target.closest('[draggable="true"]');
+                if (!target || !target.classList.contains('post-card')) return;
+
+                draggedPost = target; 
+                sourceContainer = draggedPost.parentElement; 
+                e.dataTransfer.effectAllowed = 'move';
                 postPlaceholder = document.createElement('div'); postPlaceholder.className = 'post-placeholder';
                 postPlaceholder.style.height = `${draggedPost.offsetHeight}px`;
                 setTimeout(() => { if (draggedPost) draggedPost.classList.add('dragging'); }, 0);
             });
+
             classroomInfo.addEventListener('dragover', e => {
+                e.preventDefault();
+                const overElement = e.target.closest('.post-card, .collection-card');
+                
+                if (draggedPost && overElement && overElement.classList.contains('collection-card')) {
+                    document.querySelectorAll('.collection-card.drop-target').forEach(el => el.classList.remove('drop-target'));
+                    overElement.classList.add('drop-target');
+                    if (postPlaceholder.parentNode) postPlaceholder.remove();
+                    return;
+                } else {
+                    document.querySelectorAll('.collection-card.drop-target').forEach(el => el.classList.remove('drop-target'));
+                }
+
                 if (!draggedPost || !sourceContainer) return;
-                const currentContainer = e.target.closest('.posts-feed'); if (currentContainer !== sourceContainer) return;
-                e.preventDefault(); const overElement = e.target.closest('.post-card');
+                const currentContainer = e.target.closest('.posts-feed');
+                if (currentContainer !== sourceContainer) return;
+
                 if (overElement && overElement !== draggedPost) {
                     const rect = overElement.getBoundingClientRect(); const isBefore = e.clientY < rect.top + rect.height / 2;
                     if (isBefore) { sourceContainer.insertBefore(postPlaceholder, overElement); } else { sourceContainer.insertBefore(postPlaceholder, overElement.nextSibling); }
-                } else if (!overElement && !sourceContainer.contains(postPlaceholder)) { sourceContainer.appendChild(postPlaceholder); }
+                } else if (!overElement && !sourceContainer.contains(postPlaceholder)) {
+                    sourceContainer.appendChild(postPlaceholder);
+                }
             });
-            const endDrag = () => { if(draggedPost) draggedPost.classList.remove('dragging'); if(postPlaceholder) postPlaceholder.remove(); draggedPost = null; postPlaceholder = null; sourceContainer = null; };
+
+            const endDrag = () => {
+                if(draggedPost) draggedPost.classList.remove('dragging');
+                if(postPlaceholder) postPlaceholder.remove();
+                document.querySelectorAll('.collection-card.drop-target').forEach(el => el.classList.remove('drop-target'));
+                draggedPost = null; postPlaceholder = null; sourceContainer = null;
+            };
+
             classroomInfo.addEventListener('dragend', endDrag);
+
             classroomInfo.addEventListener('drop', e => {
-                e.preventDefault(); if (!postPlaceholder || !postPlaceholder.parentNode || !draggedPost || !sourceContainer) { endDrag(); return; }
-                postPlaceholder.parentNode.insertBefore(draggedPost, postPlaceholder);
-                const updates = {}; const isPinnedList = sourceContainer.id === 'pinned-posts-feed';
-                const orderedIds = Array.from(sourceContainer.querySelectorAll('.post-card')).map(p => p.dataset.id);
-                if (isPinnedList) { orderedIds.forEach((id, index) => { updates[`${id}/order`] = index; }); } else { orderedIds.forEach((id, index) => { updates[`${id}/order`] = Date.now() - index; }); }
-                if (Object.keys(updates).length > 0) { suppressPostAnimation = true; announcementsRef.child(currentTabId).update(updates); }
+                e.preventDefault();
+                const dropTarget = e.target.closest('.collection-card.drop-target');
+
+                if (draggedPost && dropTarget) {
+                    const postId = draggedPost.dataset.id;
+                    const collectionId = dropTarget.dataset.id;
+                    const collection = collections.find(c => c.id === collectionId);
+                    if (collection && (!collection.postIds || !collection.postIds.includes(postId))) {
+                        const updatedPostIds = [...(collection.postIds || []), postId];
+                        collectionsRef.child(currentTabId).child(collectionId).child('postIds').set(updatedPostIds);
+                        announcementsRef.child(currentTabId).child(postId).remove();
+                    }
+                } else if (postPlaceholder?.parentNode && draggedPost && sourceContainer) {
+                    postPlaceholder.parentNode.insertBefore(draggedPost, postPlaceholder);
+                    const updates = {}; const isPinnedList = sourceContainer.id === 'pinned-posts-feed';
+                    const orderedIds = Array.from(sourceContainer.querySelectorAll('.post-card, .collection-card')).map(p => p.dataset.id);
+
+                    orderedIds.forEach((id, index) => {
+                        const item = [...currentTabAnnouncements, ...collections].find(i => i.id === id);
+                        const ref = item.postIds ? collectionsRef : announcementsRef;
+                        updates[`${ref.path.toString()}/${id}/order`] = isPinnedList ? index : (Date.now() - index);
+                    });
+
+                    if (Object.keys(updates).length > 0) {
+                        suppressPostAnimation = true;
+                        database.ref().update(updates);
+                    }
+                }
                 endDrag();
             });
         }
+        
         
         function getFilteredReminders() {
             if (selectedClass !== 'ALL_CLASSES') {
@@ -4539,6 +4633,153 @@ body.dark-mode #global-tooltip {
                 endDrag(e);
             });
         }
+        
+        // --- NEW: Collection Functions ---
+        function openCollectionEditor(id = null) {
+            if (!isAdmin) return;
+            currentCollectionBeingEdited = id;
+            const isEditing = !!id;
+            const collection = isEditing ? collections.find(c => c.id === id) : null;
+            
+            collectionNameInput.value = isEditing ? collection.title : '';
+            document.getElementById('collection-editor-title').textContent = isEditing ? 'Edit Collection' : 'Create New Collection';
+            collectionEditorModal.style.display = 'flex';
+            setTimeout(() => collectionNameInput.focus(), 100);
+        }
+
+        function closeCollectionEditor() {
+            collectionEditorModal.style.display = 'none';
+        }
+
+        function saveCollection() {
+            if (!isAdmin) return;
+            const title = collectionNameInput.value.trim();
+            if (!title) return alert('Please enter a collection title.');
+
+            if (currentCollectionBeingEdited) {
+                collectionsRef.child(currentTabId).child(currentCollectionBeingEdited).update({ title });
+            } else {
+                const newCollectionRef = collectionsRef.child(currentTabId).push();
+                const newCollection = {
+                    id: newCollectionRef.key,
+                    title,
+                    order: Date.now(),
+                    postIds: [],
+                    pinned: false
+                };
+                newCollectionRef.set(newCollection);
+            }
+            closeCollectionEditor();
+        }
+        
+        function createCollectionElement(collection, skipAnimation = false) {
+            const postCount = collection.postIds ? collection.postIds.length : 0;
+            const animationStyle = skipAnimation ? 'style="animation: none; opacity: 1;"' : '';
+            const actionsHtml = isAdmin ? `
+                <div class="post-actions">
+                    <button class="post-action-btn pin-btn ${collection.pinned ? 'pinned' : ''}" onclick="togglePin(event, '${collection.id}')"><i class="fas fa-thumbtack"></i></button>
+                    <button class="post-action-btn edit-btn" onclick="openCollectionEditor('${collection.id}')"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="post-action-btn delete-btn" onclick="deleteCollection(event, '${collection.id}')"><i class="fas fa-trash-alt"></i></button>
+                </div>` : '';
+
+            return `
+                <div class="collection-card" data-id="${collection.id}" ${animationStyle}>
+                    ${actionsHtml}
+                    <div class="collection-card-header">
+                        <i class="fas fa-layer-group"></i>
+                        <h3>${collection.title}</h3>
+                    </div>
+                    <div class="collection-card-meta">
+                        ${postCount} item${postCount !== 1 ? 's' : ''}
+                    </div>
+                </div>`;
+        }
+        
+        function openCollectionView(collectionId) {
+            const collection = collections.find(c => c.id === collectionId);
+            if (!collection) return;
+
+            document.getElementById('collection-view-title').textContent = collection.title;
+            const feed = document.getElementById('collection-view-feed');
+            feed.innerHTML = '<p>Loading posts...</p>';
+            
+            collectionViewOverlay.classList.add('visible');
+            document.body.classList.add('post-expanded');
+            
+            const postIds = collection.postIds || [];
+            if (postIds.length === 0) {
+                feed.innerHTML = '<p>This collection is empty.</p>';
+                return;
+            }
+            
+            const fetchPromises = postIds.map(id => announcementsRef.child(currentTabId).child(id).once('value'));
+            Promise.all(fetchPromises).then(snapshots => {
+                const posts = snapshots.map(snap => snap.val()).filter(Boolean);
+                feed.innerHTML = posts.map(post => createPostElementForCollectionView(post, collectionId)).join('');
+            });
+        }
+        
+        function closeCollectionView() {
+            collectionViewOverlay.classList.remove('visible');
+            document.body.classList.remove('post-expanded');
+        }
+
+        function createPostElementForCollectionView(post, collectionId) {
+            const postDate = new Date(post.order).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
+            const removeBtn = isAdmin ? `<button class="remove-from-collection-btn" onclick="removeFromCollection(event, '${post.id}', '${collectionId}')"><i class="fas fa-times"></i></button>` : '';
+
+            return `
+                <div class="post-card" data-id="${post.id}" style="opacity: 1; cursor: default;">
+                    ${removeBtn}
+                    <h3>${post.title}</h3>
+                    <div class="post-details" style="display: block;">
+                        <div class="post-content">${autoEmbed(post.content)}</div>
+                        <div class="post-meta">Posted on ${postDate}</div>
+                    </div>
+                </div>`;
+        }
+        
+        function removeFromCollection(event, postId, collectionId) {
+            event.stopPropagation();
+            if (!isAdmin) return;
+
+            const collection = collections.find(c => c.id === collectionId);
+            if (collection) {
+                const updatedPostIds = (collection.postIds || []).filter(id => id !== postId);
+                collectionsRef.child(currentTabId).child(collectionId).update({ postIds: updatedPostIds });
+                
+                // Move post back to the main announcements feed
+                announcementsRef.child(currentTabId).child(postId).once('value').then(snapshot => {
+                    if (!snapshot.exists()) { // Only add it back if it doesn't already exist
+                        const postData = currentTabAnnouncements.find(p => p.id === postId); // A fallback, though less likely needed
+                        if(postData) announcementsRef.child(currentTabId).child(postId).set(postData);
+                    }
+                });
+                
+                // Visually remove from the collection view
+                event.target.closest('.post-card').remove();
+            }
+        }
+        
+        function deleteCollection(event, collectionId) {
+            event.stopPropagation();
+            if (!isAdmin) return;
+            showConfirmationModal('This will delete the collection, but the posts inside will be returned to the main feed.', () => {
+                const collection = collections.find(c => c.id === collectionId);
+                const postIds = collection.postIds || [];
+                
+                const updates = {};
+                postIds.forEach(id => {
+                    updates[`${announcementsRef.path.toString()}/${currentTabId}/${id}/order`] = Date.now();
+                });
+                
+                database.ref().update(updates).then(() => {
+                    collectionsRef.child(currentTabId).child(collectionId).remove();
+                });
+            });
+        }
+
+
     </script>
 </body>
 </html>
