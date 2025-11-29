@@ -2070,7 +2070,7 @@ body.dark-mode #global-tooltip {
         <div class="modal-content">
             <span class="close-button" onclick="closeEmbedModal()">×</span>
             <h2>Embed Media</h2>
-            <p style="font-size: var(--text-sm); color: var(--medium); margin-bottom: var(--space-md);">Paste a YouTube, Google Docs, or Google Slides share URL.</p>
+            <p style="font-size: var(--text-sm); color: var(--medium); margin-bottom: var(--space-md);">Paste a URL from YouTube, Google Docs, a website, or another source.</p>
             <div class="input-group">
                 <input type="text" id="embed-url-input" placeholder=" ">
                 <label>Share URL</label>
@@ -3016,14 +3016,30 @@ body.dark-mode #global-tooltip {
 
         function saveEmbed() {
             const urlInput = document.getElementById('embed-url-input');
-            const url = urlInput.value.trim();
+            let url = urlInput.value.trim();
             if (!url) return;
+
             let embedUrl = '';
+
+            // Ensure the URL has a protocol like http or https
+            if (!/^https?:\/\//i.test(url)) {
+                url = 'https://' + url;
+            }
+
             const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
             const youtubeMatch = url.match(youtubeRegex);
-            if (youtubeMatch) embedUrl = `https://www.youtube.com/embed/${youtubeMatch[1]}`;
-            else if (url.includes('docs.google.com/presentation/d/')) embedUrl = url.replace('/edit', '/embed').replace(/\/pub\?/, '/embed?');
-            else if (url.includes('docs.google.com/document/d/')) embedUrl = url.replace('/edit', '/pub?embedded=true');
+            
+            if (youtubeMatch) {
+                embedUrl = `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+            } else if (url.includes('docs.google.com/presentation/d/')) {
+                embedUrl = url.replace('/edit', '/embed').replace(/\/pub\?/, '/embed?');
+            } else if (url.includes('docs.google.com/document/d/')) {
+                embedUrl = url.replace('/edit', '/pub?embedded=true');
+            } else {
+                // Fallback for any other valid URL
+                embedUrl = url;
+            }
+
             if (embedUrl) {
                 announcementContentEditor.focus();
                 if (savedEditorSelection) { const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(savedEditorSelection); }
@@ -3031,7 +3047,9 @@ body.dark-mode #global-tooltip {
                 document.execCommand('insertHTML', false, embedHtml);
                 updateEditorTheme();
                 closeEmbedModal();
-            } else { alert('Invalid URL. Please use a valid share URL from YouTube, Google Docs, or Google Slides.'); }
+            } else { 
+                alert('Invalid URL. Please enter a valid link.'); 
+            }
         }
 
         function checkUserProfile() {
