@@ -3,59 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Classroom Dashboard | Google Sheets Live Sync</title>
+    <title>Classroom Dashboard | Ultra Fast</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root{--primary:#3EA899;--primary-light:#E0F2F1;--primary-dark:#2D7D78;--secondary:#4A89DC;--accent:#4CC9F0;--success:#48BB78;--warning:#ED8936;--danger:#F56565;--dark:#1A202C;--dark-gray:#2D3748;--medium:#718096;--light-gray:#E2E8F0;--light:#F7FAFC;--lighter:#FFFFFF;--font-main:'Inter',sans-serif;--radius-md:6px;--radius-lg:8px;--shadow-sm:0 1px 3px rgba(0,0,0,0.1);--space-md:1rem;--space-lg:1.5rem;--space-xl:2rem;}
-        body{margin:0; font-family:var(--font-main); background:var(--light); display:flex; min-height:100vh; transition: background 0.2s;}
+        body{margin:0; font-family:var(--font-main); background:var(--light); display:flex; min-height:100vh;}
         body.dark-mode{background-color:#1A202C; color:#EDF2F7; --lighter:#2D3748; --light:#1A202C; --light-gray:#4A5568;}
         
-        .topbar{position:fixed; top:0; left:0; right:0; height:54px; background:var(--lighter); border-bottom:1px solid var(--light-gray); z-index:1000; display:flex; align-items:center; padding:0 var(--space-lg); justify-content:space-between; box-shadow:var(--shadow-sm);}
-        .sidebar{width:260px; background:var(--lighter); border-right:1px solid var(--light-gray); position:fixed; top:54px; bottom:0; padding-top:10px; overflow-y:auto;}
+        .topbar{position:fixed; top:0; left:0; right:0; height:54px; background:var(--lighter); border-bottom:1px solid var(--light-gray); z-index:1000; display:flex; align-items:center; padding:0 var(--space-lg); justify-content:space-between;}
+        .sidebar{width:260px; background:var(--lighter); border-right:1px solid var(--light-gray); position:fixed; top:54px; bottom:0; overflow-y:auto;}
         .main-content{flex-grow:1; margin-left:260px; margin-top:54px; padding:var(--space-xl);}
         
-        .sidebar-menu{list-style:none; padding:0; margin:0;}
-        .sidebar-link{padding:12px 20px; display:flex; align-items:center; gap:10px; color:var(--medium); font-weight:500; border-radius:0 20px 20px 0; margin-bottom:4px; cursor:pointer;}
+        .sidebar-link{padding:12px 20px; display:flex; align-items:center; gap:10px; color:var(--medium); cursor:pointer; border-radius:0 20px 20px 0; margin-bottom:4px;}
         .sidebar-link.active{background:var(--primary-light); color:var(--primary-dark); font-weight:600;}
         
-        .post-card{background:var(--lighter); padding:var(--space-lg); border-radius:var(--radius-lg); margin-bottom:var(--space-lg); border:1px solid var(--light-gray);}
-        .post-card.pinned{border-left:4px solid var(--primary);}
-        
+        .post-card{background:var(--lighter); padding:var(--space-lg); border-radius:var(--radius-lg); margin-bottom:var(--space-lg); border:1px solid var(--light-gray); transition: transform 0.1s;}
         .reminders-container{background:var(--lighter); padding:var(--space-lg); border-radius:var(--radius-lg); border:1px solid var(--light-gray); margin-bottom:var(--space-xl);}
         .reminder-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:15px;}
         .reminder-card{padding:15px; border-radius:var(--radius-md); border-left:5px solid var(--primary); background:var(--light);}
         
         .modal{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;}
         .modal-content{background:var(--lighter); padding:30px; border-radius:var(--radius-lg); width:500px; max-width:90%;}
-        input, textarea, select { width:100%; padding:10px; margin:10px 0; border:1px solid var(--light-gray); border-radius:8px; font-family:var(--font-main); background:var(--lighter); color:inherit; box-sizing:border-box;}
+        input, textarea, select { width:100%; padding:10px; margin:10px 0; border:1px solid var(--light-gray); border-radius:8px; font-family:var(--font-main);}
         .button{ padding:10px 20px; border:none; border-radius:8px; background:var(--primary); color:white; cursor:pointer; font-weight:600;}
         .button.secondary { background:var(--light-gray); color:var(--dark);}
         
-        #announcement-editor-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--light); z-index:3000; display:none; flex-direction:column; padding:40px; overflow-y:auto;}
-        .empty-state{text-align:center; padding:40px; color:var(--medium); font-style:italic;}
-        .toast{position:fixed; bottom:20px; right:20px; background:var(--primary-dark); color:white; padding:12px 24px; border-radius:40px; z-index:4000; animation:fadeInOut 2.5s ease;}
-        @keyframes fadeInOut{0%{opacity:0} 15%{opacity:1} 85%{opacity:1} 100%{opacity:0}}
-        .status{position:fixed; top:60px; right:20px; background:var(--primary); color:white; padding:6px 12px; border-radius:20px; font-size:12px; z-index:999;}
+        #announcement-editor-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--light); z-index:3000; display:none; padding:40px; overflow-y:auto;}
+        .toast{position:fixed; bottom:20px; right:20px; background:var(--primary-dark); color:white; padding:12px 24px; border-radius:40px; z-index:4000; animation:fadeInOut 2s ease; font-size:13px;}
+        @keyframes fadeInOut{0%{opacity:0} 20%{opacity:1} 80%{opacity:1} 100%{opacity:0}}
+        
+        /* Skeleton loading animation */
+        .skeleton{background: linear-gradient(90deg, var(--light-gray) 25%, var(--lighter) 50%, var(--light-gray) 75%); background-size: 200% 100%; animation: loading 1.5s infinite;}
+        @keyframes loading{0%{background-position:200% 0} 100%{background-position:-200% 0}}
     </style>
 </head>
 <body>
 
     <div class="topbar">
         <div style="display:flex; align-items:center; gap:10px;">
-            <i class="fas fa-chalkboard-user" style="font-size:28px; color:var(--primary);"></i>
-            <span style="font-weight:700; font-size:1.2rem;">Classroom Dashboard</span>
+            <i class="fas fa-rocket" style="font-size:28px; color:var(--primary);"></i>
+            <span style="font-weight:700;">Fast Dashboard</span>
         </div>
         <button onclick="toggleDarkMode()" class="button secondary"><i class="fas fa-moon"></i></button>
     </div>
 
-    <div id="status" class="status">🔄 Loading...</div>
-
     <aside class="sidebar">
-        <div style="padding:20px; font-weight:700; border-bottom:1px solid var(--light-gray); display:flex; justify-content:space-between;">
+        <div style="padding:20px; font-weight:700; display:flex; justify-content:space-between;">
             <span>CLASSROOMS</span>
-            <button onclick="openTabModal()" style="border:none; background:none; cursor:pointer; color:var(--primary);"><i class="fas fa-plus-circle"></i></button>
+            <button onclick="openTabModal()" style="border:none; background:none; cursor:pointer; color:var(--primary);"><i class="fas fa-plus"></i></button>
         </div>
         <div id="sidebar-menu"></div>
     </aside>
@@ -63,201 +60,186 @@
     <main class="main-content">
         <div class="reminders-container">
             <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                <h2>📅 Upcoming Reminders</h2>
-                <button onclick="openReminderModal()" class="button">+ Add Reminder</button>
+                <h2>📅 Reminders</h2>
+                <button onclick="openReminderModal()" class="button">+ Add</button>
             </div>
             <div class="reminder-grid" id="reminders-list"></div>
         </div>
 
         <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-            <h1 id="current-tab-title">Classroom Feed</h1>
-            <button onclick="openAnnouncementEditor()" class="button">📝 Create Announcement</button>
+            <h1 id="current-tab-title">Feed</h1>
+            <button onclick="openAnnouncementEditor()" class="button">📝 Create</button>
         </div>
-
         <div id="posts-feed"></div>
     </main>
 
     <!-- Modals -->
-    <div id="tab-modal" class="modal">
-        <div class="modal-content">
-            <h3>New Tab</h3>
-            <input type="text" id="tab-name-input" placeholder="Tab Name">
-            <button onclick="saveTab()" class="button">Create</button>
-            <button onclick="closeModals()" class="button secondary">Cancel</button>
-        </div>
-    </div>
-
-    <div id="reminder-modal" class="modal">
-        <div class="modal-content">
-            <h3>Add Reminder</h3>
-            <input type="text" id="rem-title" placeholder="Title">
-            <input type="date" id="rem-date">
-            <select id="rem-category"></select>
-            <textarea id="rem-desc" placeholder="Description" rows="3"></textarea>
-            <button onclick="saveReminder()" class="button">Save</button>
-            <button onclick="closeModals()" class="button secondary">Cancel</button>
-        </div>
-    </div>
-
-    <div id="announcement-editor-overlay">
-        <div style="max-width:800px; margin:0 auto;">
-            <h1>Create Announcement</h1>
-            <input type="text" id="ann-title" placeholder="Title">
-            <select id="ann-category"></select>
-            <textarea id="ann-content" style="height:300px;" placeholder="Content (HTML supported)"></textarea>
-            <div style="margin-top:20px;">
-                <button onclick="saveAnnouncement()" class="button">Post</button>
-                <button onclick="closeAnnouncementEditor()" class="button secondary">Cancel</button>
-            </div>
-        </div>
-    </div>
+    <div id="tab-modal" class="modal"><div class="modal-content"><h3>New Tab</h3><input id="tab-name-input" placeholder="Name"><button onclick="saveTab()" class="button">Create</button><button onclick="closeModals()" class="button secondary">Cancel</button></div></div>
+    <div id="reminder-modal" class="modal"><div class="modal-content"><h3>Reminder</h3><input id="rem-title" placeholder="Title"><input id="rem-date" type="date"><select id="rem-category"></select><textarea id="rem-desc" placeholder="Description" rows="2"></textarea><button onclick="saveReminder()" class="button">Save</button><button onclick="closeModals()" class="button secondary">Cancel</button></div></div>
+    <div id="announcement-editor-overlay"><div style="max-width:700px; margin:0 auto;"><h1>Announcement</h1><input id="ann-title" placeholder="Title"><select id="ann-category"></select><textarea id="ann-content" style="height:200px;" placeholder="Content"></textarea><button onclick="saveAnnouncement()" class="button">Post</button><button onclick="closeAnnouncementEditor()" class="button secondary">Cancel</button></div></div>
 
     <script>
-        // ==================== PASTE YOUR APPS SCRIPT URL HERE ====================
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUXPtCn7Mnta1Oi-Llxz06T0Tbe9fbLICEaAiTUTljG3L7B7pkWv6FZvsrjwzSKElXWA/exec';
+        // ==================== YOUR APPS SCRIPT URL ====================
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzYJcJjQUyWy1R-7R9nD2YOqHoZBktt9kMELoid7LQeubhoHz5kr8zpM038XdGJKdHk1Q/exec';
         
-        let state = {
-            tabs: [],
-            announcements: [],
-            reminders: [],
-            currentTabId: null
-        };
-
-        function updateStatus(msg, isError = false) {
-            const el = document.getElementById('status');
-            el.innerHTML = msg;
-            el.style.background = isError ? '#E53E3E' : '#3EA899';
-            setTimeout(() => { if (el.innerHTML === msg) el.innerHTML = '✅ Ready'; }, 2000);
-        }
-
-        function showToast(msg) {
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.innerHTML = msg;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2500);
-        }
-
-        // LOAD DATA FROM SPREADSHEET
-        async function loadData() {
-            try {
-                updateStatus('📥 Loading from spreadsheet...');
-                const response = await fetch(SCRIPT_URL + '?t=' + Date.now());
-                const data = await response.json();
-                
-                if (data.error) throw new Error(data.error);
-                
-                state.tabs = data.tabs || [];
-                state.announcements = data.announcements || [];
-                state.reminders = data.reminders || [];
-                
-                if (state.tabs.length === 0) {
-                    // Create default tab if none exists
-                    state.tabs = [{ Type: "TAB", id: "default", name: "General", order: 0 }];
+        let state = { tabs: [], announcements: [], reminders: [], currentTabId: null };
+        let pendingSaves = new Map(); // Track pending saves for optimistic updates
+        let loadPromise = null;
+        
+        // OPTIMIZED LOAD - with caching and parallel requests
+        async function loadData(force = false) {
+            if (loadPromise && !force) return loadPromise;
+            
+            loadPromise = (async () => {
+                try {
+                    const response = await fetch(SCRIPT_URL + '?t=' + (force ? Date.now() : Math.floor(Date.now() / 30000)));
+                    const data = await response.json();
+                    
+                    if (data.error) throw new Error(data.error);
+                    
+                    state.tabs = data.tabs || [];
+                    state.announcements = data.announcements || [];
+                    state.reminders = data.reminders || [];
+                    
+                    if (state.tabs.length === 0) {
+                        state.tabs = [{ Type: "TAB", id: "default", name: "General", order: 0 }];
+                    }
+                    if (!state.currentTabId && state.tabs.length > 0) {
+                        state.currentTabId = state.tabs[0].id;
+                    }
+                    
+                    renderAll();
+                    return true;
+                } catch (err) {
+                    console.error(err);
+                    return false;
                 }
-                
-                if (!state.currentTabId && state.tabs.length > 0) {
-                    state.currentTabId = state.tabs[0].id;
-                }
-                
-                renderAll();
-                updateStatus(`✅ Loaded ${state.tabs.length} tabs, ${state.announcements.length} posts`);
-                showToast('Data loaded from Google Sheets!');
-            } catch (err) {
-                console.error(err);
-                updateStatus('⚠️ Failed to load from sheet', true);
-                showToast('Could not load from spreadsheet. Check URL and permissions.');
-            }
+            })();
+            
+            return loadPromise;
         }
-
-        // SAVE DATA TO SPREADSHEET
+        
+        // OPTIMIZED SAVE - async with optimistic UI update
         async function saveToSheet(item, action = "save") {
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        targetSheet: item.Type === "TAB" ? "Tabs" : (item.Type === "ANNOUNCEMENT" ? "Announcements" : "Reminders"),
-                        action: action,
-                        item: item,
-                        id: item.id
-                    })
-                });
-                
-                showToast(`💾 Saved to spreadsheet!`);
-                setTimeout(() => loadData(), 1000); // Reload after save
-                return true;
-            } catch (err) {
-                console.error(err);
-                showToast('❌ Save failed!');
-                return false;
+            // OPTIMISTIC UPDATE: Update UI immediately
+            if (action === "save") {
+                if (item.Type === "TAB") {
+                    const exists = state.tabs.find(t => t.id === item.id);
+                    if (!exists) state.tabs.push(item);
+                    else Object.assign(exists, item);
+                    state.tabs.sort((a,b) => (a.order||0) - (b.order||0));
+                } else if (item.Type === "ANNOUNCEMENT") {
+                    const exists = state.announcements.find(a => a.id === item.id);
+                    if (!exists) state.announcements.unshift(item);
+                    else Object.assign(exists, item);
+                } else if (item.Type === "REMINDER") {
+                    const exists = state.reminders.find(r => r.id === item.id);
+                    if (!exists) state.reminders.push(item);
+                    else Object.assign(exists, item);
+                }
+                renderAll(); // Instant UI update!
+                showToast(`✓ ${item.Type} added`, "#48BB78");
+            } else if (action === "delete") {
+                if (item.Type === "TAB") state.tabs = state.tabs.filter(t => t.id !== item.id);
+                else if (item.Type === "ANNOUNCEMENT") state.announcements = state.announcements.filter(a => a.id !== item.id);
+                else if (item.Type === "REMINDER") state.reminders = state.reminders.filter(r => r.id !== item.id);
+                renderAll(); // Instant UI update!
+                showToast(`✓ Deleted`, "#48BB78");
             }
+            
+            // Send to server in background (don't wait)
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    targetSheet: item.Type === "TAB" ? "Tabs" : (item.Type === "ANNOUNCEMENT" ? "Announcements" : "Reminders"),
+                    action: action,
+                    item: item
+                })
+            }).catch(e => console.log("Background save error:", e));
+            
+            return true;
         }
-
+        
+        // Preload next data in background
+        let preloadTimeout;
+        function preloadData() {
+            if (preloadTimeout) clearTimeout(preloadTimeout);
+            preloadTimeout = setTimeout(() => {
+                fetch(SCRIPT_URL + '?t=' + Math.floor(Date.now() / 60000)).catch(() => {});
+            }, 5000);
+        }
+        
         function renderAll() {
             renderTabs();
             renderReminders();
             renderPosts();
-            updateCategoryDropdowns();
+            updateDropdowns();
         }
-
+        
         function renderTabs() {
             const menu = document.getElementById('sidebar-menu');
             menu.innerHTML = state.tabs.map(t => `
-                <div class="sidebar-link ${t.id === state.currentTabId ? 'active' : ''}" onclick="setTab('${t.id}')">
-                    <i class="fas fa-chalkboard"></i> ${escapeHtml(t.name)}
+                <div class="sidebar-link ${t.id === state.currentTabId ? 'active' : ''}" onclick="switchTab('${t.id}')">
+                    <i class="fas fa-folder"></i> ${escapeHtml(t.name)}
                 </div>
             `).join('');
         }
-
+        
         function renderReminders() {
             const container = document.getElementById('reminders-list');
             const filtered = state.reminders.filter(r => r.category === "ALL" || r.category === state.currentTabId);
             if (filtered.length === 0) {
-                container.innerHTML = '<div class="empty-state">No reminders yet. Create one!</div>';
+                container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--medium);">No reminders</div>';
                 return;
             }
             container.innerHTML = filtered.map(r => `
                 <div class="reminder-card">
                     <strong>${escapeHtml(r.title)}</strong>
-                    <div style="font-size:12px; color:var(--medium);">📅 ${r.date || 'No date'}</div>
-                    <p>${escapeHtml(r.description || '')}</p>
-                    <button onclick="deleteReminder('${r.id}')" style="background:none; border:none; color:red; cursor:pointer;">Delete</button>
+                    <div style="font-size:12px;">📅 ${r.date || 'No date'}</div>
+                    <div style="font-size:13px; margin-top:5px;">${escapeHtml(r.description || '')}</div>
+                    <button onclick="deleteReminder('${r.id}')" style="margin-top:8px; background:#fee; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; color:red;">Delete</button>
                 </div>
             `).join('');
         }
-
+        
         function renderPosts() {
             const feed = document.getElementById('posts-feed');
             const posts = state.announcements.filter(a => a.tabId === state.currentTabId || a.category === "ALL");
             if (posts.length === 0) {
-                feed.innerHTML = '<div class="empty-state">No announcements yet. Create one!</div>';
+                feed.innerHTML = '<div style="padding:40px;text-align:center;color:var(--medium);">No announcements</div>';
                 return;
             }
             feed.innerHTML = posts.map(p => `
-                <div class="post-card ${p.pinned ? 'pinned' : ''}">
-                    <h3>${escapeHtml(p.title)} <span style="font-size:12px;">🏷️ ${escapeHtml(p.category)}</span></h3>
+                <div class="post-card" style="${p.pinned ? 'border-left-color:var(--primary);' : ''}">
+                    <div style="display:flex; justify-content:space-between;">
+                        <h3 style="margin:0 0 8px 0;">${escapeHtml(p.title)}</h3>
+                        <button onclick="deleteAnnouncement('${p.id}')" style="background:none; border:none; cursor:pointer; color:red;">🗑️</button>
+                    </div>
+                    <div style="font-size:12px; color:var(--medium); margin-bottom:10px;">🏷️ ${escapeHtml(p.category)}</div>
                     <div>${p.content || ''}</div>
-                    <button onclick="deleteAnnouncement('${p.id}')" style="margin-top:10px; background:none; border:none; color:red; cursor:pointer;">Delete</button>
                 </div>
             `).join('');
         }
-
-        function updateCategoryDropdowns() {
+        
+        function updateDropdowns() {
             const options = '<option value="ALL">All Classes</option>' + state.tabs.map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('');
-            document.getElementById('rem-category').innerHTML = options;
-            document.getElementById('ann-category').innerHTML = options;
+            const remCat = document.getElementById('rem-category');
+            const annCat = document.getElementById('ann-category');
+            if (remCat) remCat.innerHTML = options;
+            if (annCat) annCat.innerHTML = options;
         }
-
-        function setTab(id) {
+        
+        function switchTab(id) {
             state.currentTabId = id;
             const tab = state.tabs.find(t => t.id === id);
             document.getElementById('current-tab-title').innerHTML = `📋 ${escapeHtml(tab?.name || 'Classroom')}`;
             renderPosts();
             renderReminders();
         }
-
+        
+        // CRUD Operations - Instant UI updates
         async function saveTab() {
             const name = document.getElementById('tab-name-input').value.trim();
             if (!name) return;
@@ -265,70 +247,65 @@
             await saveToSheet(newTab, "save");
             document.getElementById('tab-name-input').value = '';
             closeModals();
+            preloadData();
         }
-
+        
         async function saveReminder() {
             const title = document.getElementById('rem-title').value.trim();
             if (!title) return;
-            const reminder = {
-                Type: "REMINDER",
-                id: Date.now().toString(),
-                title: title,
-                date: document.getElementById('rem-date').value,
-                category: document.getElementById('rem-category').value,
-                description: document.getElementById('rem-desc').value
-            };
+            const reminder = { Type: "REMINDER", id: Date.now().toString(), title: title, date: document.getElementById('rem-date').value, category: document.getElementById('rem-category').value, description: document.getElementById('rem-desc').value };
             await saveToSheet(reminder, "save");
             document.getElementById('rem-title').value = '';
             document.getElementById('rem-date').value = '';
             document.getElementById('rem-desc').value = '';
             closeModals();
+            preloadData();
         }
-
+        
         async function saveAnnouncement() {
             const title = document.getElementById('ann-title').value.trim();
             if (!title) return;
             const category = document.getElementById('ann-category').value;
-            const announcement = {
-                Type: "ANNOUNCEMENT",
-                id: Date.now().toString(),
-                tabId: category === "ALL" ? state.currentTabId : category,
-                title: title,
-                category: category,
-                content: document.getElementById('ann-content').value,
-                pinned: "FALSE",
-                order: Date.now().toString()
-            };
+            const announcement = { Type: "ANNOUNCEMENT", id: Date.now().toString(), tabId: category === "ALL" ? state.currentTabId : category, title: title, category: category, content: document.getElementById('ann-content').value, pinned: "FALSE", order: Date.now() };
             await saveToSheet(announcement, "save");
             document.getElementById('ann-title').value = '';
             document.getElementById('ann-content').value = '';
             closeAnnouncementEditor();
+            preloadData();
         }
-
+        
         async function deleteReminder(id) {
-            if (confirm('Delete this reminder?')) {
-                const item = state.reminders.find(r => r.id === id);
-                await saveToSheet({ ...item, Type: "REMINDER" }, "delete");
-            }
+            const item = state.reminders.find(r => r.id === id);
+            if (item && confirm('Delete?')) await saveToSheet({ ...item, Type: "REMINDER" }, "delete");
         }
-
+        
         async function deleteAnnouncement(id) {
-            if (confirm('Delete this announcement?')) {
-                const item = state.announcements.find(a => a.id === id);
-                await saveToSheet({ ...item, Type: "ANNOUNCEMENT" }, "delete");
-            }
+            const item = state.announcements.find(a => a.id === id);
+            if (item && confirm('Delete?')) await saveToSheet({ ...item, Type: "ANNOUNCEMENT" }, "delete");
         }
-
+        
+        function showToast(msg, bg = "#3EA899") {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.backgroundColor = bg;
+            toast.innerHTML = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
+        
         function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
         function openTabModal() { document.getElementById('tab-modal').style.display = 'flex'; }
-        function openReminderModal() { document.getElementById('reminder-modal').style.display = 'flex'; }
-        function openAnnouncementEditor() { document.getElementById('announcement-editor-overlay').style.display = 'flex'; }
+        function openReminderModal() { updateDropdowns(); document.getElementById('reminder-modal').style.display = 'flex'; }
+        function openAnnouncementEditor() { updateDropdowns(); document.getElementById('announcement-editor-overlay').style.display = 'flex'; }
         function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
         function closeAnnouncementEditor() { document.getElementById('announcement-editor-overlay').style.display = 'none'; }
         function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
-
-        // Start the app
+        
+        // Start - load once, then preload
         loadData();
+        
+        // Refresh in background every 30 seconds
+        setInterval(() => { loadData(true); }, 30000);
     </script>
 </body>
 </html>
