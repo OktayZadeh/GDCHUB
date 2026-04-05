@@ -3,280 +3,477 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Classroom Dashboard | Spreadsheet Powered</title>
+    <title>GDCHUB Classroom Dashboard | Live Spreadsheet Sync</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* CSS remains identical to your original UI for consistency */
         :root{--primary:#3EA899;--primary-light:#E0F2F1;--primary-dark:#2D7D78;--secondary:#4A89DC;--accent:#4CC9F0;--success:#48BB78;--warning:#ED8936;--danger:#F56565;--dark:#1A202C;--dark-gray:#2D3748;--medium:#718096;--light-gray:#E2E8F0;--light:#F7FAFC;--lighter:#FFFFFF;--font-main:'Inter',sans-serif;--radius-md:6px;--radius-lg:8px;--shadow-sm:0 1px 3px rgba(0,0,0,0.1);--space-md:1rem;--space-lg:1.5rem;--space-xl:2rem;}
-        body{margin:0; font-family:var(--font-main); background:var(--light); display:flex; min-height:100vh;}
-        body.dark-mode{background-color:#1A202C; color:white; --lighter:#2D3748; --light:#1A202C; --light-gray:#4A5568;}
+        body{margin:0; font-family:var(--font-main); background:var(--light); display:flex; min-height:100vh; transition: background 0.2s;}
+        body.dark-mode{background-color:#1A202C; color:#EDF2F7; --lighter:#2D3748; --light:#1A202C; --light-gray:#4A5568;}
         
-        .topbar{position:fixed; top:0; left:0; right:0; height:54px; background:var(--lighter); border-bottom:1px solid var(--light-gray); z-index:1000; display:flex; align-items:center; padding:0 var(--space-lg); justify-content:space-between;}
-        .sidebar{width:260px; background:var(--lighter); border-right:1px solid var(--light-gray); position:fixed; top:54px; bottom:0; padding-top:10px;}
+        .topbar{position:fixed; top:0; left:0; right:0; height:54px; background:var(--lighter); border-bottom:1px solid var(--light-gray); z-index:1000; display:flex; align-items:center; padding:0 var(--space-lg); justify-content:space-between; box-shadow:var(--shadow-sm);}
+        .sidebar{width:260px; background:var(--lighter); border-right:1px solid var(--light-gray); position:fixed; top:54px; bottom:0; padding-top:10px; overflow-y:auto;}
         .main-content{flex-grow:1; margin-left:260px; margin-top:54px; padding:var(--space-xl);}
         
-        .sidebar-menu{list-style:none; padding:0;}
-        .sidebar-link{padding:12px 20px; display:block; color:var(--medium); text-decoration:none; font-weight:500; border-radius:0 20px 20px 0; margin-bottom:4px;}
-        .sidebar-link.active{background:var(--primary-light); color:var(--primary-dark);}
+        .sidebar-menu{list-style:none; padding:0; margin:0;}
+        .sidebar-link{padding:12px 20px; display:flex; align-items:center; gap:10px; color:var(--medium); text-decoration:none; font-weight:500; border-radius:0 20px 20px 0; margin-bottom:4px; transition: all 0.2s;}
+        .sidebar-link.active{background:var(--primary-light); color:var(--primary-dark); font-weight:600;}
+        .sidebar-link i{width:24px;}
         
-        .post-card{background:var(--lighter); padding:var(--space-lg); border-radius:var(--radius-lg); margin-bottom:var(--space-lg); border:1px solid var(--light-gray); cursor:pointer;}
-        .post-card.pinned{border-left:4px solid var(--primary);}
+        .post-card{background:var(--lighter); padding:var(--space-lg); border-radius:var(--radius-lg); margin-bottom:var(--space-lg); border:1px solid var(--light-gray); cursor:pointer; transition: transform 0.1s, box-shadow 0.2s;}
+        .post-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.05);}
+        .post-card.pinned{border-left:4px solid var(--primary); background:var(--primary-light);}
         
         .reminders-container{background:var(--lighter); padding:var(--space-lg); border-radius:var(--radius-lg); border:1px solid var(--light-gray); margin-bottom:var(--space-xl);}
         .reminder-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:15px;}
-        .reminder-card{padding:15px; border-radius:var(--radius-md); border-left:5px solid var(--primary); background:var(--light);}
-
-        /* Modal Styles */
-        .modal{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; justify-content:center; align-items:center;}
-        .modal-content{background:var(--lighter); padding:30px; border-radius:var(--radius-lg); width:500px; max-width:90%; position:relative;}
-        input, textarea, select { width:100%; padding:10px; margin:10px 0; border:1px solid var(--light-gray); border-radius:4px; }
-        .button{ padding:10px 20px; border:none; border-radius:4px; background:var(--primary); color:white; cursor:pointer; font-weight:600;}
-        .button.secondary { background:var(--light-gray); color:var(--dark); }
+        .reminder-card{padding:15px; border-radius:var(--radius-md); border-left:5px solid var(--primary); background:var(--light); transition: all 0.2s;}
+        .reminder-card strong{color:var(--primary-dark);}
+        
+        .modal{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;}
+        .modal-content{background:var(--lighter); padding:30px; border-radius:var(--radius-lg); width:500px; max-width:90%; position:relative; box-shadow:0 20px 35px rgba(0,0,0,0.2);}
+        input, textarea, select { width:100%; padding:10px; margin:10px 0; border:1px solid var(--light-gray); border-radius:8px; font-family:var(--font-main); background:var(--lighter); color:inherit;}
+        .button{ padding:10px 20px; border:none; border-radius:8px; background:var(--primary); color:white; cursor:pointer; font-weight:600; transition:0.2s;}
+        .button:hover{background:var(--primary-dark);}
+        .button.secondary { background:var(--light-gray); color:var(--dark);}
         
         .admin-controls { display:flex; gap:10px; margin-bottom:20px; }
-        #announcement-editor-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--light); z-index:3000; display:none; flex-direction:column; padding:40px; }
+        #announcement-editor-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--light); z-index:3000; display:none; flex-direction:column; padding:40px; overflow-y:auto; box-sizing:border-box;}
+        .empty-state{text-align:center; padding:40px; color:var(--medium); font-style:italic;}
+        .post-meta{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; color:var(--medium); font-size:0.85rem;}
+        .badge{background:var(--primary-light); color:var(--primary-dark); padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:600;}
+        .delete-btn{background:none; border:none; color:var(--danger); cursor:pointer; font-size:0.9rem; opacity:0.6; transition:0.2s;}
+        .delete-btn:hover{opacity:1;}
+        .loading-spinner{text-align:center; padding:30px; color:var(--primary);}
+        .toast{position:fixed; bottom:20px; right:20px; background:var(--primary-dark); color:white; padding:12px 24px; border-radius:40px; z-index:4000; animation:fadeInOut 2.5s ease;}
+        @keyframes fadeInOut{0%{opacity:0; transform:translateY(20px)} 15%{opacity:1; transform:translateY(0)} 85%{opacity:1} 100%{opacity:0; transform:translateY(20px)}}
     </style>
 </head>
 <body>
 
     <div class="topbar">
         <div style="display:flex; align-items:center; gap:10px;">
-            <img src="https://i.imgur.com/AYocV6k.png" height="30">
+            <i class="fas fa-chalkboard-user" style="font-size:28px; color:var(--primary);"></i>
             <span style="font-weight:700; font-size:1.2rem;">GDCHUB Dashboard</span>
         </div>
-        <button onclick="toggleDarkMode()" class="button secondary"><i class="fas fa-moon"></i></button>
+        <div>
+            <button onclick="toggleDarkMode()" class="button secondary" style="margin-right:8px;"><i class="fas fa-moon"></i></button>
+            <button onclick="forceRefresh()" class="button secondary"><i class="fas fa-sync-alt"></i></button>
+        </div>
     </div>
 
     <aside class="sidebar">
-        <div style="padding:20px; font-weight:700; border-bottom:1px solid var(--light-gray);">
-            TABS <button onclick="openTabModal()" style="float:right; border:none; background:none; cursor:pointer;"><i class="fas fa-plus"></i></button>
+        <div style="padding:20px; font-weight:700; border-bottom:1px solid var(--light-gray); display:flex; justify-content:space-between;">
+            <span><i class="fas fa-folder-open"></i> CLASSROOMS</span>
+            <button onclick="openTabModal()" style="border:none; background:none; cursor:pointer; color:var(--primary);"><i class="fas fa-plus-circle"></i></button>
         </div>
         <div id="sidebar-menu"></div>
     </aside>
 
     <main class="main-content">
         <div class="reminders-container">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2>Upcoming Reminders</h2>
-                <button onclick="openReminderModal()" class="button">+ Add Reminder</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap;">
+                <h2><i class="fas fa-bell"></i> Upcoming Reminders</h2>
+                <button onclick="openReminderModal()" class="button"><i class="fas fa-plus"></i> Add Reminder</button>
             </div>
             <div class="reminder-grid" id="reminders-list"></div>
         </div>
 
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h1 id="current-tab-title">Classroom</h1>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap;">
+            <h1 id="current-tab-title"><i class="fas fa-newspaper"></i> Classroom Feed</h1>
             <div class="admin-controls">
-                <button onclick="openAnnouncementEditor()" class="button">Create Announcement</button>
+                <button onclick="openAnnouncementEditor()" class="button"><i class="fas fa-pen-alt"></i> Create Announcement</button>
             </div>
         </div>
 
         <div id="posts-feed"></div>
     </main>
 
-    <!-- Modals (Simplified versions of your original ones) -->
+    <!-- Tab Modal -->
     <div id="tab-modal" class="modal">
         <div class="modal-content">
-            <h3>Add New Tab</h3>
-            <input type="text" id="tab-name-input" placeholder="Tab Name">
-            <button onclick="saveTab()" class="button">Save Tab</button>
+            <h3><i class="fas fa-layer-group"></i> New Classroom Tab</h3>
+            <input type="text" id="tab-name-input" placeholder="e.g., Mathematics, Science, General" autocomplete="off">
+            <button onclick="saveTab()" class="button">Create Tab</button>
             <button onclick="closeModals()" class="button secondary">Cancel</button>
         </div>
     </div>
 
+    <!-- Reminder Modal -->
     <div id="reminder-modal" class="modal">
         <div class="modal-content">
-            <h3>Add Reminder</h3>
-            <input type="text" id="rem-title" placeholder="Title">
+            <h3><i class="fas fa-calendar-plus"></i> Add Reminder</h3>
+            <input type="text" id="rem-title" placeholder="Reminder Title">
             <input type="date" id="rem-date">
-            <select id="rem-category">
-                <option value="ALL">All Classes</option>
-            </select>
-            <textarea id="rem-desc" placeholder="Description"></textarea>
+            <select id="rem-category"></select>
+            <textarea id="rem-desc" placeholder="Description" rows="3"></textarea>
             <button onclick="saveReminder()" class="button">Save Reminder</button>
             <button onclick="closeModals()" class="button secondary">Cancel</button>
         </div>
     </div>
 
+    <!-- Announcement Editor Overlay -->
     <div id="announcement-editor-overlay">
-        <h1>Create Announcement</h1>
-        <input type="text" id="ann-title" placeholder="Announcement Title">
-        <select id="ann-category">
-            <option value="ALL">All Classes</option>
-        </select>
-        <textarea id="ann-content" style="height:300px;" placeholder="Content (HTML allowed)"></textarea>
-        <div style="margin-top:20px;">
-            <button onclick="saveAnnouncement()" class="button">Post Announcement</button>
-            <button onclick="closeAnnouncementEditor()" class="button secondary">Cancel</button>
+        <div style="max-width:800px; margin:0 auto; width:100%;">
+            <h1><i class="fas fa-bullhorn"></i> Create Announcement</h1>
+            <input type="text" id="ann-title" placeholder="Announcement Title" style="font-size:1.2rem;">
+            <select id="ann-category"></select>
+            <textarea id="ann-content" style="height:300px;" placeholder="Write your announcement content here... Supports HTML formatting (bold, lists, etc.)"></textarea>
+            <div style="margin-top:20px; display:flex; gap:12px;">
+                <button onclick="saveAnnouncement()" class="button"><i class="fas fa-paper-plane"></i> Post Announcement</button>
+                <button onclick="closeAnnouncementEditor()" class="button secondary">Cancel</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // --- CONFIGURATION ---
-        // 1. Paste your Web App URL from Step 2 here:
+        // ======================== CONFIGURATION ========================
+        // IMPORTANT: Replace with your actual Google Apps Script Web App URL and CSV export URL
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwQ4fv9hqqxVL7UGuO4xbFQ2Os8JZDikswGOepyBzaj5RGrtuUm3K6BO_BkBjFraNIMCA/exec';
-        // 2. Your CSV Read URL:
         const CSV_READ_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQv4EEYyNwNfUYlOHoKDT_75OLg5uFWkcBXXa4Rf2Z-oIR6nUnExJRarKhvWuaDjXMT_Ht32aehSWZT/pub?output=csv';
 
         let state = {
             tabs: [],
             announcements: [],
             reminders: [],
-            currentTabId: null
+            currentTabId: null,
+            loading: false
         };
 
-        // --- DATA HANDLING ---
+        // Helper: Show temporary notification
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.backgroundColor = isError ? '#E53E3E' : 'var(--primary-dark)';
+            toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2600);
+        }
 
+        // Load data from Google Sheets CSV (live)
         async function loadData() {
+            if (state.loading) return;
+            state.loading = true;
             try {
-                const response = await fetch(CSV_READ_URL);
+                const response = await fetch(CSV_READ_URL + '?t=' + new Date().getTime());
+                if (!response.ok) throw new Error('Network error');
                 const csvText = await response.text();
                 const rows = csvToObjects(csvText);
                 
-                // Sort the objects from the spreadsheet into state
-                state.tabs = rows.filter(r => r.Type === "TAB");
-                state.announcements = rows.filter(r => r.Type === "ANNOUNCEMENT");
-                state.reminders = rows.filter(r => r.Type === "REMINDER");
-
+                // Clear and refill state
+                state.tabs = [];
+                state.announcements = [];
+                state.reminders = [];
+                
+                rows.forEach(row => {
+                    if (row.Type === "TAB" && row.id) {
+                        state.tabs.push({ Type: "TAB", id: row.id, name: row.name || "Unnamed", order: parseInt(row.order) || 0 });
+                    } else if (row.Type === "ANNOUNCEMENT" && row.id) {
+                        state.announcements.push({
+                            Type: "ANNOUNCEMENT", id: row.id, tabId: row.tabId || "general",
+                            title: row.title || "No Title", category: row.category || "ALL",
+                            content: row.content || "", pinned: row.pinned === "TRUE", order: row.order || Date.now()
+                        });
+                    } else if (row.Type === "REMINDER" && row.id) {
+                        state.reminders.push({
+                            Type: "REMINDER", id: row.id, title: row.title || "Reminder",
+                            date: row.date || "", category: row.category || "ALL",
+                            description: row.description || ""
+                        });
+                    }
+                });
+                
+                // Sort tabs by order
+                state.tabs.sort((a,b) => (a.order || 0) - (b.order || 0));
+                // Sort announcements by pinned first then order (newest first)
+                state.announcements.sort((a,b) => {
+                    if (a.pinned && !b.pinned) return -1;
+                    if (!a.pinned && b.pinned) return 1;
+                    return (b.order || 0) - (a.order || 0);
+                });
+                
+                // Set default currentTab if none selected but tabs exist
                 if (state.tabs.length > 0 && !state.currentTabId) {
                     state.currentTabId = state.tabs[0].id;
+                } else if (state.tabs.length === 0) {
+                    // Create a default tab if none exists (optional but helps demo)
+                    if(state.tabs.length === 0) {
+                        const defaultTab = { Type: "TAB", id: "default_general", name: "General", order: 0 };
+                        state.tabs.push(defaultTab);
+                        state.currentTabId = defaultTab.id;
+                        // Optionally save default to sheet? Not required for rendering.
+                    }
                 }
-
+                
                 renderAll();
+                state.loading = false;
             } catch (e) {
                 console.error("Load Error:", e);
+                showToast("Failed to load data from spreadsheet. Check CORS/URL or network.", true);
+                state.loading = false;
+                // Render fallback empty state
+                renderAll();
             }
         }
 
+        // Convert CSV to array of objects robustly (handles quoted commas basic)
         function csvToObjects(csv) {
-            const lines = csv.split('\n');
-            const headers = lines[0].split(',').map(h => h.trim());
-            return lines.slice(1).map(line => {
-                const values = line.split(',');
+            if (!csv.trim()) return [];
+            const lines = csv.split(/\r?\n/);
+            if (lines.length < 2) return [];
+            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+            const objects = [];
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                let values = [];
+                let inQuote = false;
+                let current = '';
+                for (let ch of lines[i]) {
+                    if (ch === '"') inQuote = !inQuote;
+                    else if (ch === ',' && !inQuote) {
+                        values.push(current.trim());
+                        current = '';
+                    } else current += ch;
+                }
+                values.push(current.trim());
+                // Clean quotes from each value
+                values = values.map(v => v.replace(/^"|"$/g, ''));
                 let obj = {};
-                headers.forEach((h, i) => obj[h] = values[i] ? values[i].trim() : "");
-                return obj;
-            });
+                headers.forEach((h, idx) => {
+                    obj[h] = values[idx] !== undefined ? values[idx] : "";
+                });
+                objects.push(obj);
+            }
+            return objects;
         }
 
-        async function saveToSpreadsheet(sheetName, item, action = "save") {
-            const body = {
-                targetSheet: sheetName,
-                action: action,
-                item: item,
-                id: item.id // for deletes
-            };
-
-            // Use 'no-cors' mode because Apps Script doesn't return CORS headers,
-            // but the data will still be sent successfully.
-            await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                cache: 'no-cache',
-                body: JSON.stringify(body)
-            });
-
-            // Reload data after a short delay to allow Google to update
-            setTimeout(loadData, 1500);
+        // Save data to Google Sheets via POST to Apps Script
+        async function saveToSpreadsheet(item, action = "save") {
+            try {
+                // Determine target sheet based on Type
+                let sheetName = "Data";
+                if (item.Type === "TAB") sheetName = "Tabs";
+                else if (item.Type === "ANNOUNCEMENT") sheetName = "Announcements";
+                else if (item.Type === "REMINDER") sheetName = "Reminders";
+                
+                const payload = {
+                    targetSheet: sheetName,
+                    action: action,
+                    item: item,
+                    id: item.id
+                };
+                
+                // Use fetch with no-cors, but still we'll trust the backend works.
+                // Important: Because of no-cors we can't read response but data is saved.
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                showToast(`${item.Type} saved successfully! Syncing...`);
+                // Wait a bit then reload to reflect changes
+                setTimeout(() => loadData(), 1500);
+                return true;
+            } catch (err) {
+                console.error("Save error:", err);
+                showToast("Error saving to spreadsheet. Check script URL.", true);
+                return false;
+            }
         }
 
-        // --- UI RENDERING ---
-
+        // ---- RENDER ENGINE - ensures everything shows up ----
         function renderAll() {
             renderTabs();
             renderReminders();
             renderPosts();
+            updateCategoryDropdowns();
         }
 
         function renderTabs() {
             const menu = document.getElementById('sidebar-menu');
+            if (!state.tabs.length) {
+                menu.innerHTML = '<div style="padding:20px;text-align:center;color:var(--medium);">No tabs yet. Click + to add</div>';
+                return;
+            }
             menu.innerHTML = state.tabs.map(t => `
-                <a href="#" class="sidebar-link ${t.id === state.currentTabId ? 'active' : ''}" 
-                   onclick="setTab('${t.id}')">${t.name}</a>
+                <a href="#" class="sidebar-link ${t.id === state.currentTabId ? 'active' : ''}" onclick="setTab('${t.id}')">
+                    <i class="fas fa-chalkboard"></i> ${escapeHtml(t.name)}
+                </a>
             `).join('');
         }
 
         function renderReminders() {
-            const list = document.getElementById('reminders-list');
-            list.innerHTML = state.reminders.map(r => `
+            const container = document.getElementById('reminders-list');
+            const activeReminders = state.reminders.filter(r => r.category === "ALL" || r.category === state.currentTabId);
+            if (activeReminders.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-day"></i> No reminders. Create one!</div>';
+                return;
+            }
+            container.innerHTML = activeReminders.map(r => `
                 <div class="reminder-card">
-                    <strong>${r.title}</strong>
-                    <div style="font-size:12px; color:var(--medium)">${r.date}</div>
-                    <p>${r.description}</p>
+                    <div style="display:flex; justify-content:space-between;">
+                        <strong><i class="far fa-clock"></i> ${escapeHtml(r.title)}</strong>
+                        <button class="delete-btn" onclick="deleteReminder('${r.id}')" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                    <div style="font-size:12px; color:var(--medium); margin:5px 0;"><i class="far fa-calendar-alt"></i> ${escapeHtml(r.date || 'No date')}</div>
+                    <p style="margin-top:8px;">${escapeHtml(r.description || '')}</p>
                 </div>
             `).join('');
         }
 
         function renderPosts() {
             const feed = document.getElementById('posts-feed');
-            const posts = state.announcements.filter(a => a.tabId === state.currentTabId);
-            
-            feed.innerHTML = posts.map(p => `
-                <div class="post-card">
-                    <h3>${p.title} <span style="font-size:10px; background:#eee; padding:2px 5px;">${p.category}</span></h3>
-                    <div>${p.content}</div>
+            if (!state.currentTabId) {
+                feed.innerHTML = '<div class="empty-state">Select a classroom tab to view announcements.</div>';
+                return;
+            }
+            const tabPosts = state.announcements.filter(a => a.tabId === state.currentTabId || a.category === "ALL");
+            if (tabPosts.length === 0) {
+                feed.innerHTML = '<div class="empty-state"><i class="fas fa-comment-dots"></i> No announcements yet. Click "Create Announcement" to post.</div>';
+                return;
+            }
+            feed.innerHTML = tabPosts.map(post => `
+                <div class="post-card ${post.pinned ? 'pinned' : ''}">
+                    <div class="post-meta">
+                        <span class="badge"><i class="fas ${post.pinned ? 'fa-thumbtack' : 'fa-hashtag'}"></i> ${escapeHtml(post.category)}</span>
+                        <button class="delete-btn" onclick="deleteAnnouncement('${post.id}')"><i class="fas fa-trash-alt"></i> Delete</button>
+                    </div>
+                    <h3 style="margin-top:0;">${escapeHtml(post.title)}</h3>
+                    <div>${post.content || ''}</div>
                 </div>
             `).join('');
+        }
+
+        function updateCategoryDropdowns() {
+            const categorySelectRem = document.getElementById('rem-category');
+            const categorySelectAnn = document.getElementById('ann-category');
+            if (categorySelectRem) {
+                let options = '<option value="ALL">All Classes</option>';
+                state.tabs.forEach(t => { options += `<option value="${t.id}">${escapeHtml(t.name)}</option>`; });
+                categorySelectRem.innerHTML = options;
+            }
+            if (categorySelectAnn) {
+                let options = '<option value="ALL">All Classes</option>';
+                state.tabs.forEach(t => { options += `<option value="${t.id}">${escapeHtml(t.name)}</option>`; });
+                categorySelectAnn.innerHTML = options;
+            }
         }
 
         function setTab(id) {
             state.currentTabId = id;
             const tab = state.tabs.find(t => t.id === id);
-            document.getElementById('current-tab-title').innerText = tab.name;
-            renderAll();
+            if (tab) document.getElementById('current-tab-title').innerHTML = `<i class="fas fa-chalkboard-user"></i> ${escapeHtml(tab.name)}`;
+            renderPosts();
+            renderReminders(); // reminders also filter per tab
         }
 
-        // --- ACTIONS ---
-
-        function openTabModal() { document.getElementById('tab-modal').style.display = 'flex'; }
-        function openReminderModal() { document.getElementById('reminder-modal').style.display = 'flex'; }
-        function openAnnouncementEditor() { document.getElementById('announcement-editor-overlay').style.display = 'flex'; }
-        function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
-        function closeAnnouncementEditor() { document.getElementById('announcement-editor-overlay').style.display = 'none'; }
-
+        // ---- CRUD Actions ----
         function saveTab() {
-            const name = document.getElementById('tab-name-input').value;
+            const name = document.getElementById('tab-name-input').value.trim();
+            if (!name) { showToast("Tab name required", true); return; }
             const newTab = { Type: "TAB", id: Date.now().toString(), name: name, order: state.tabs.length };
-            saveToSpreadsheet("Tabs", newTab);
+            saveToSpreadsheet(newTab, "save");
+            document.getElementById('tab-name-input').value = '';
             closeModals();
         }
 
         function saveReminder() {
-            const rem = {
+            const title = document.getElementById('rem-title').value.trim();
+            const date = document.getElementById('rem-date').value;
+            const category = document.getElementById('rem-category').value;
+            const desc = document.getElementById('rem-desc').value;
+            if (!title) { showToast("Reminder title required", true); return; }
+            const newReminder = {
                 Type: "REMINDER",
                 id: Date.now().toString(),
-                title: document.getElementById('rem-title').value,
-                date: document.getElementById('rem-date').value,
-                category: document.getElementById('rem-category').value,
-                description: document.getElementById('rem-desc').value
+                title: title,
+                date: date,
+                category: category,
+                description: desc
             };
-            saveToSpreadsheet("Reminders", rem);
+            saveToSpreadsheet(newReminder, "save");
+            document.getElementById('rem-title').value = '';
+            document.getElementById('rem-date').value = '';
+            document.getElementById('rem-desc').value = '';
             closeModals();
         }
 
         function saveAnnouncement() {
-            const ann = {
+            const title = document.getElementById('ann-title').value.trim();
+            const category = document.getElementById('ann-category').value;
+            const content = document.getElementById('ann-content').value;
+            if (!title) { showToast("Announcement title required", true); return; }
+            if (!state.currentTabId && category === "ALL") {
+                // if no current tab but category ALL is fine
+            }
+            const targetTab = (category === "ALL") ? (state.currentTabId || "general") : category;
+            const newAnnouncement = {
                 Type: "ANNOUNCEMENT",
                 id: Date.now().toString(),
-                tabId: state.currentTabId,
-                title: document.getElementById('ann-title').value,
-                category: document.getElementById('ann-category').value,
-                content: document.getElementById('ann-content').value,
+                tabId: targetTab,
+                title: title,
+                category: category,
+                content: content || "",
                 pinned: "FALSE",
                 order: Date.now().toString()
             };
-            saveToSpreadsheet("Announcements", ann);
+            saveToSpreadsheet(newAnnouncement, "save");
+            document.getElementById('ann-title').value = '';
+            document.getElementById('ann-content').value = '';
             closeAnnouncementEditor();
         }
 
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
+        async function deleteReminder(id) {
+            if (confirm("Delete this reminder?")) {
+                const reminder = state.reminders.find(r => r.id === id);
+                if (reminder) {
+                    await saveToSpreadsheet({ ...reminder, Type: "REMINDER", id: id }, "delete");
+                }
+            }
         }
 
-        // Initial Load
-        loadData();
+        async function deleteAnnouncement(id) {
+            if (confirm("Delete this announcement permanently?")) {
+                const ann = state.announcements.find(a => a.id === id);
+                if (ann) {
+                    await saveToSpreadsheet({ ...ann, Type: "ANNOUNCEMENT", id: id }, "delete");
+                }
+            }
+        }
 
+        // ---- UI Helpers ----
+        function openTabModal() { document.getElementById('tab-modal').style.display = 'flex'; }
+        function openReminderModal() { 
+            updateCategoryDropdowns();
+            document.getElementById('reminder-modal').style.display = 'flex'; 
+        }
+        function openAnnouncementEditor() { 
+            updateCategoryDropdowns();
+            document.getElementById('announcement-editor-overlay').style.display = 'flex'; 
+        }
+        function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+        function closeAnnouncementEditor() { document.getElementById('announcement-editor-overlay').style.display = 'none'; }
+        
+        function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
+        function forceRefresh() { loadData(); showToast("Refreshing data from spreadsheet..."); }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+                return c;
+            });
+        }
+
+        // initial load and set periodic refresh (every 30 secs)
+        loadData();
+        setInterval(() => { loadData(); }, 30000);
     </script>
 </body>
 </html>
