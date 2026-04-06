@@ -4,146 +4,503 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classroom Dashboard</title>
-    <!-- Keep all original fonts and icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* [ORIGINAL CSS THEME - RESTORED FULLY] */
         :root {
-            --primary: #3EA899; --primary-light: #E0F2F1; --primary-dark: #2D7D78;
-            --secondary: #4A89DC; --accent: #4CC9F0; --success: #48BB78;
-            --warning: #ED8936; --danger: #F56565; --dark: #1A202C;
-            --dark-gray: #2D3748; --medium: #718096; --light-gray: #E2E8F0;
-            --light: #F7FAFC; --lighter: #FFFFFF;
+            --primary: #3EA899;
+            --primary-light: #E0F2F1;
+            --primary-dark: #2D7D78;
+            --secondary: #4A89DC;
+            --accent: #4CC9F0;
+            --success: #48BB78;
+            --warning: #ED8936;
+            --danger: #F56565;
+            --dark: #1A202C;
+            --dark-gray: #2D3748;
+            --medium: #718096;
+            --light-gray: #E2E8F0;
+            --light: #F7FAFC;
+            --lighter: #FFFFFF;
             --font-main: 'Inter', sans-serif;
             --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
             --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
             --radius-md: 8px;
-            --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Dark Mode Overrides */
-        body.dark-mode { --light: #1A202C; --lighter: #2D3748; --dark: #F7FAFC; --medium: #A0AEC0; background: var(--light); color: var(--dark); }
-        body.dark-mode .topbar, body.dark-mode .sidebar, body.dark-mode .post-card, body.dark-mode .reminders-container { background: var(--lighter); border-color: #4A5568; }
-
-        body { margin: 0; font-family: var(--font-main); display: flex; min-height: 100vh; background: var(--light); transition: background 0.3s; }
+        body.dark-mode {
+            --light: #1A202C;
+            --lighter: #2D3748;
+            --dark: #F7FAFC;
+            --medium: #A0AEC0;
+            background: var(--light);
+            color: var(--dark);
+        }
         
-        /* Topbar */
-        .topbar { position: fixed; top: 0; left: 0; right: 0; height: 56px; background: var(--lighter); border-bottom: 1px solid var(--light-gray); z-index: 1000; display: flex; align-items: center; padding: 0 20px; box-shadow: var(--shadow-sm); }
-        .topbar-logo { height: 38px; margin-right: 12px; }
-        .topbar-title { font-weight: 700; color: var(--primary); font-size: 1.2rem; }
+        body.dark-mode .topbar, 
+        body.dark-mode .sidebar, 
+        body.dark-mode .post-card, 
+        body.dark-mode .reminders-container,
+        body.dark-mode .modal-content {
+            background: var(--lighter);
+            border-color: #4A5568;
+        }
 
-        /* Sidebar */
-        .sidebar { width: 260px; background: var(--lighter); border-right: 1px solid var(--light-gray); position: fixed; top: 56px; bottom: 0; z-index: 100; transition: transform 0.3s; }
-        .sidebar-header { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--light-gray); }
-        .sidebar-menu { list-style: none; padding: 10px 0; }
-        .sidebar-link { display: flex; align-items: center; padding: 12px 20px; color: var(--medium); text-decoration: none; transition: 0.2s; font-weight: 500; }
-        .sidebar-link:hover { background: var(--primary-light); color: var(--primary); }
-        .sidebar-link.active { background: var(--primary-light); color: var(--primary); border-right: 4px solid var(--primary); }
-
-        /* Main Content */
-        .main-content { flex-grow: 1; margin-left: 260px; margin-top: 56px; padding: 40px; max-width: 1200px; }
+        body {
+            margin: 0;
+            font-family: var(--font-main);
+            display: flex;
+            min-height: 100vh;
+            background: var(--light);
+            transition: background 0.3s;
+        }
         
-        /* Reminders Section */
-        .reminders-container { background: var(--lighter); border-radius: var(--radius-md); padding: 24px; border: 1px solid var(--light-gray); margin-bottom: 30px; }
-        .reminders-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .reminders-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-        .reminder-card { background: var(--light); border-left: 4px solid var(--primary); padding: 16px; border-radius: 6px; position: relative; box-shadow: var(--shadow-sm); }
-        .reminder-card.test { border-left-color: var(--danger); }
-        .reminder-card.trip { border-left-color: var(--success); }
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            background: var(--lighter);
+            border-bottom: 1px solid var(--light-gray);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .topbar-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .topbar-logo {
+            height: 38px;
+            width: 38px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .topbar-title {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
 
-        /* Posts */
-        .post-card { background: var(--lighter); border-radius: 12px; padding: 24px; border: 1px solid var(--light-gray); margin-bottom: 20px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; position: relative; overflow: hidden; }
-        .post-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-        .post-card h3 { margin-bottom: 10px; color: var(--primary); }
-        .post-content-preview { color: var(--medium); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .sidebar {
+            width: 260px;
+            background: var(--lighter);
+            border-right: 1px solid var(--light-gray);
+            position: fixed;
+            top: 56px;
+            bottom: 0;
+            z-index: 100;
+            transition: transform 0.3s;
+            overflow-y: auto;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 10px 0;
+            margin: 0;
+        }
+        
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--medium);
+            text-decoration: none;
+            transition: 0.2s;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .sidebar-link:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+        
+        .sidebar-link.active {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-right: 4px solid var(--primary);
+        }
+        
+        .delete-tab-btn {
+            margin-left: auto;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .sidebar-link:hover .delete-tab-btn {
+            opacity: 1;
+        }
 
-        /* Expansion Logic */
-        .post-card.expanded { position: fixed; top: 56px; left: 260px; right: 0; bottom: 0; z-index: 500; background: var(--lighter); border-radius: 0; cursor: default; padding: 60px; overflow-y: auto; }
-        .expanded-controls { position: fixed; top: 56px; left: 260px; right: 0; height: 50px; background: var(--lighter); border-bottom: 1px solid var(--light-gray); display: none; align-items: center; padding: 0 20px; z-index: 600; }
+        .main-content {
+            flex-grow: 1;
+            margin-left: 260px;
+            margin-top: 56px;
+            padding: 40px;
+            max-width: 1200px;
+        }
+        
+        .reminders-container {
+            background: var(--lighter);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            border: 1px solid var(--light-gray);
+            margin-bottom: 30px;
+        }
+        
+        .reminders-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .reminders-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        
+        .reminder-card {
+            background: var(--light);
+            border-left: 4px solid var(--primary);
+            padding: 16px;
+            border-radius: 6px;
+            position: relative;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .reminder-card.test {
+            border-left-color: var(--danger);
+        }
+        
+        .reminder-card.trip {
+            border-left-color: var(--success);
+        }
+        
+        .delete-reminder {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        
+        .delete-reminder:hover {
+            opacity: 1;
+        }
 
-        /* WYSIWYG Editor Overlay */
-        #editor-overlay { position: fixed; inset: 0; background: var(--light); z-index: 2000; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1); display: flex; flex-direction: column; }
-        #editor-overlay.visible { transform: translateY(0); }
-        .editor-header { padding: 10px 40px; background: var(--lighter); border-bottom: 1px solid var(--light-gray); display: flex; justify-content: space-between; align-items: center; }
-        .editor-toolbar { background: #f8f9fa; padding: 8px; display: flex; gap: 5px; border-bottom: 1px solid #ddd; justify-content: center; flex-wrap: wrap; }
-        .editor-area { flex-grow: 1; background: white; width: 100%; max-width: 850px; margin: 20px auto; padding: 50px; outline: none; box-shadow: 0 0 10px rgba(0,0,0,0.05); color: #1a1a1a; font-size: 1.1rem; line-height: 1.6; overflow-y: auto; }
+        .post-card {
+            background: var(--lighter);
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid var(--light-gray);
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .post-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .post-card h3 {
+            margin-bottom: 10px;
+            color: var(--primary);
+            margin-top: 0;
+        }
+        
+        .post-content-preview {
+            color: var(--medium);
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .post-actions {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: none;
+            gap: 10px;
+        }
+        
+        .post-card:hover .post-actions {
+            display: flex;
+        }
+        
+        .post-actions i {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        
+        .post-actions i:hover {
+            opacity: 1;
+        }
 
-        /* Buttons & Inputs */
-        .btn { padding: 10px 18px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-secondary { background: var(--light-gray); color: var(--dark-gray); }
-        .btn-danger { background: var(--danger); color: white; }
-        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--light-gray); border-radius: 6px; background: var(--lighter); color: var(--dark); }
+        .post-card.expanded {
+            position: fixed;
+            top: 56px;
+            left: 260px;
+            right: 0;
+            bottom: 0;
+            z-index: 500;
+            background: var(--lighter);
+            border-radius: 0;
+            cursor: default;
+            padding: 60px;
+            overflow-y: auto;
+        }
+        
+        .post-card.expanded .post-actions {
+            display: flex;
+        }
+        
+        .expanded-controls {
+            position: fixed;
+            top: 56px;
+            left: 260px;
+            right: 0;
+            height: 50px;
+            background: var(--lighter);
+            border-bottom: 1px solid var(--light-gray);
+            display: none;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 600;
+        }
 
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3000; align-items: center; justify-content: center; }
-        .modal-content { background: var(--lighter); padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: var(--shadow-md); }
+        #editor-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--light);
+            z-index: 2000;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #editor-overlay.visible {
+            transform: translateY(0);
+        }
+        
+        .editor-header {
+            padding: 10px 40px;
+            background: var(--lighter);
+            border-bottom: 1px solid var(--light-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .editor-toolbar {
+            background: #f8f9fa;
+            padding: 8px;
+            display: flex;
+            gap: 5px;
+            border-bottom: 1px solid #ddd;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        body.dark-mode .editor-toolbar {
+            background: #2D3748;
+            border-color: #4A5568;
+        }
+        
+        .editor-area {
+            flex-grow: 1;
+            background: white;
+            width: 100%;
+            max-width: 850px;
+            margin: 20px auto;
+            padding: 50px;
+            outline: none;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            color: #1a1a1a;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            overflow-y: auto;
+        }
+        
+        body.dark-mode .editor-area {
+            background: #1A202C;
+            color: #F7FAFC;
+        }
 
-        /* Calendar View Specifics */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; background: var(--light-gray); border: 1px solid var(--light-gray); }
-        .calendar-day { background: var(--lighter); height: 80px; padding: 5px; font-size: 0.8rem; }
-        .calendar-day.today { background: var(--primary-light); }
+        .btn {
+            padding: 10px 18px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-secondary {
+            background: var(--light-gray);
+            color: var(--dark-gray);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--light-gray);
+            border-radius: 6px;
+            background: var(--lighter);
+            color: var(--dark);
+            box-sizing: border-box;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: var(--lighter);
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--medium);
+        }
+        
+        .subject-selector {
+            display: flex;
+            gap: 10px;
+            margin-left: 20px;
+        }
+        
+        .subject-selector input {
+            width: auto;
+            margin-bottom: 0;
+            padding: 6px 12px;
+        }
 
         @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .main-content { margin-left: 0; }
-            .post-card.expanded, .expanded-controls { left: 0; }
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .post-card.expanded, .expanded-controls {
+                left: 0;
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- TOPBAR -->
     <div class="topbar">
         <div class="topbar-content">
-            <img src="https://i.imgur.com/AYocV6k.png" class="topbar-logo">
-            <span class="topbar-title" id="page-title">GDCHUB Classroom</span>
+            <div class="topbar-logo">
+                <i class="fas fa-chalkboard"></i>
+            </div>
+            <span class="topbar-title" id="page-title">Classroom Dashboard</span>
+        </div>
+        <div class="subject-selector">
+            <input type="text" id="subject-input" placeholder="Subject" value="General">
+            <input type="text" id="year-input" placeholder="Year" value="2024">
+            <button class="btn btn-primary" onclick="changeSubject()">Go</button>
         </div>
         <div style="margin-left: auto; display: flex; gap: 10px;">
             <button class="btn btn-secondary" onclick="toggleDarkMode()"><i class="fas fa-moon"></i></button>
         </div>
     </div>
 
-    <!-- SIDEBAR -->
     <aside class="sidebar">
         <div class="sidebar-header">
             <span style="font-weight: 800; color: var(--primary)">DASHBOARD</span>
             <button class="btn btn-primary" style="padding: 2px 8px;" onclick="openTabModal()">+</button>
         </div>
         <ul class="sidebar-menu" id="sidebar-menu">
-            <!-- Tabs injected here -->
+            <div class="loading">Loading tabs...</div>
         </ul>
     </aside>
 
-    <!-- MAIN CONTENT -->
     <main class="main-content">
-        <!-- Reminders -->
         <div class="reminders-container">
             <div class="reminders-header">
                 <h2><i class="fas fa-bell"></i> Upcoming Reminders</h2>
                 <button class="btn btn-primary" onclick="openReminderModal()">+ New Reminder</button>
             </div>
-            <div class="reminders-list" id="reminders-list"></div>
+            <div class="reminders-list" id="reminders-list">
+                <div class="loading">Loading reminders...</div>
+            </div>
         </div>
 
-        <!-- Announcements -->
-        <div class="header-content" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <div class="header-content" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
             <h1 id="tab-heading">Classroom</h1>
             <button class="btn btn-primary" onclick="openEditor()">+ Create Announcement</button>
         </div>
 
         <div id="posts-feed">
-            <!-- Posts injected here -->
+            <div class="loading">Loading announcements...</div>
         </div>
     </main>
 
-    <!-- EXPANDED POST CONTROLS -->
     <div class="expanded-controls" id="expanded-controls">
         <button class="btn btn-secondary" onclick="collapsePost()"><i class="fas fa-arrow-left"></i> Back to Feed</button>
     </div>
 
-    <!-- FULL SCREEN EDITOR -->
     <div id="editor-overlay">
         <div class="editor-header">
             <h2 id="editor-mode-title">New Announcement</h2>
@@ -162,12 +519,11 @@
             <button class="btn btn-secondary" onclick="exec('formatBlock', 'h3')">H2</button>
         </div>
         <div style="flex-grow:1; display:flex; flex-direction:column; background:#eee;">
-            <input type="text" id="ann-title" placeholder="Title of Announcement..." style="font-size: 2.2rem; font-weight: 700; border: none; padding: 30px 40px; margin: 0 auto; max-width: 850px; width: 100%; border-bottom: 1px solid #ddd; border-radius: 0;">
+            <input type="text" id="ann-title" placeholder="Title of Announcement..." style="font-size: 2.2rem; font-weight: 700; border: none; padding: 30px 40px; margin: 0 auto; max-width: 850px; width: 100%; border-bottom: 1px solid #ddd; border-radius: 0; background: white;">
             <div id="ann-content" class="editor-area" contenteditable="true"></div>
         </div>
     </div>
 
-    <!-- TAB MODAL -->
     <div id="tab-modal" class="modal">
         <div class="modal-content">
             <h2>Add New Tab</h2>
@@ -179,7 +535,6 @@
         </div>
     </div>
 
-    <!-- REMINDER MODAL -->
     <div id="reminder-modal" class="modal">
         <div class="modal-content">
             <h2>New Reminder</h2>
@@ -197,230 +552,353 @@
         </div>
     </div>
 
-  <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzWBdPz7YMcRxAUlALeToRPCfCaMHftO8uOc9VxaAZ-xau5y7u-hzYw7QKy_IGU0-ZIUQ/exec";
-
-const urlParams = new URLSearchParams(window.location.search);
-const CURRENT_SUBJECT = urlParams.get('subject') || 'General';
-const CURRENT_YEAR = urlParams.get('year') || '2024';
-
-let appState = {
-    tabs: [],
-    announcements: [],
-    reminders: [],
-    activeTabId: null,
-    editingAnnouncementId: null
-};
-
-// INIT
-window.onload = async () => {
-    document.getElementById('page-title').textContent = `${CURRENT_SUBJECT} - Year ${CURRENT_YEAR}`;
-    await refreshData();
-};
-
-async function refreshData() {
-    try {
-        const res = await fetch(`${WEB_APP_URL}?subject=${CURRENT_SUBJECT}&year=${CURRENT_YEAR}`);
-        const data = await res.json();
-
-        appState.tabs = data.tabs || [];
-        appState.announcements = data.announcements || [];
-        appState.reminders = data.reminders || [];
-
-        if (!appState.activeTabId && appState.tabs.length > 0) {
-            appState.activeTabId = appState.tabs[0].id;
+    <script>
+        // REPLACE THIS WITH YOUR ACTUAL DEPLOYMENT URL
+        const WEB_APP_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
+        
+        let appState = {
+            tabs: [],
+            announcements: [],
+            reminders: [],
+            activeTabId: null,
+            editingAnnouncementId: null
+        };
+        
+        let currentSubject = localStorage.getItem('classroom_subject') || 'General';
+        let currentYear = localStorage.getItem('classroom_year') || '2024';
+        
+        document.getElementById('subject-input').value = currentSubject;
+        document.getElementById('year-input').value = currentYear;
+        
+        async function changeSubject() {
+            currentSubject = document.getElementById('subject-input').value;
+            currentYear = document.getElementById('year-input').value;
+            localStorage.setItem('classroom_subject', currentSubject);
+            localStorage.setItem('classroom_year', currentYear);
+            document.getElementById('page-title').textContent = currentSubject + ' - Year ' + currentYear;
+            await refreshData();
         }
-
-        renderAll();
-    } catch (err) {
-        console.error("LOAD ERROR:", err);
-    }
-}
-
-// API CALL (FIXED)
-async function apiCall(type, action, data) {
-    data.subject = CURRENT_SUBJECT;
-    data.year = CURRENT_YEAR;
-
-    try {
-        await fetch(WEB_APP_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ type, action, data })
-        });
-
-        setTimeout(refreshData, 500);
-    } catch (err) {
-        console.error("API ERROR:", err);
-    }
-}
-
-// RENDER
-function renderAll() {
-    renderTabs();
-    renderAnnouncements();
-    renderReminders();
-}
-
-function renderTabs() {
-    const menu = document.getElementById('sidebar-menu');
-
-    menu.innerHTML = appState.tabs.map(tab => `
-        <li>
-            <a href="#" class="sidebar-link ${appState.activeTabId === tab.id ? 'active' : ''}" 
-               onclick="switchTab('${tab.id}')">
-                <i class="fas fa-folder" style="margin-right:10px"></i> ${tab.name}
-                <i class="fas fa-trash" style="margin-left:auto; font-size:10px"
-                   onclick="event.stopPropagation(); deleteTab('${tab.id}')"></i>
-            </a>
-        </li>
-    `).join('');
-
-    const activeTab = appState.tabs.find(t => t.id === appState.activeTabId);
-    document.getElementById('tab-heading').textContent = activeTab ? activeTab.name : 'Dashboard';
-}
-
-function renderAnnouncements() {
-    const feed = document.getElementById('posts-feed');
-
-    const filtered = appState.announcements.filter(a => a.tabId === appState.activeTabId);
-
-    feed.innerHTML = filtered.map(ann => `
-        <div class="post-card" onclick="expandPost(this)">
-            <div style="display:flex; justify-content:space-between;">
-                <h3>${ann.title}</h3>
-                <div>
-                    <i class="fas fa-edit" onclick="event.stopPropagation(); editAnnouncement('${ann.id}')"></i>
-                    <i class="fas fa-trash" onclick="event.stopPropagation(); deleteAnnouncement('${ann.id}')"></i>
-                </div>
-            </div>
-            <div class="post-content-preview">${ann.content}</div>
-        </div>
-    `).join('');
-}
-
-function renderReminders() {
-    const list = document.getElementById('reminders-list');
-
-    list.innerHTML = appState.reminders.map(rem => `
-        <div class="reminder-card ${rem.type}">
-            <div style="display:flex; justify-content:space-between">
-                <strong>${rem.title}</strong>
-                <i class="fas fa-times" onclick="deleteReminder('${rem.id}')"></i>
-            </div>
-            <div style="font-size:0.85rem;">
-                ${new Date(rem.date).toLocaleDateString()}
-            </div>
-        </div>
-    `).join('');
-}
-
-// TAB
-function switchTab(id) {
-    appState.activeTabId = id;
-    renderAll();
-}
-
-function saveTab() {
-    const name = document.getElementById('tab-name-input').value;
-    if (!name) return;
-
-    apiCall('Tabs', 'save', {
-        id: 't_' + Date.now(),
-        name
-    });
-
-    closeModals();
-}
-
-function deleteTab(id) {
-    if (confirm("Delete tab?")) {
-        apiCall('Tabs', 'delete', { id });
-    }
-}
-
-// ANNOUNCEMENTS
-function openEditor() {
-    appState.editingAnnouncementId = null;
-    document.getElementById('ann-title').value = '';
-    document.getElementById('ann-content').innerHTML = '';
-    document.getElementById('editor-overlay').classList.add('visible');
-}
-
-function editAnnouncement(id) {
-    const ann = appState.announcements.find(a => a.id === id);
-    if (!ann) return;
-
-    appState.editingAnnouncementId = id;
-    document.getElementById('ann-title').value = ann.title;
-    document.getElementById('ann-content').innerHTML = ann.content;
-
-    document.getElementById('editor-overlay').classList.add('visible');
-}
-
-function saveAnnouncement() {
-    const title = document.getElementById('ann-title').value;
-    const content = document.getElementById('ann-content').innerHTML;
-
-    if (!title) return alert("Title required");
-
-    apiCall('Announcements', 'save', {
-        id: appState.editingAnnouncementId || 'ann_' + Date.now(),
-        tabId: appState.activeTabId,
-        title,
-        content,
-        date: new Date().toISOString()
-    });
-
-    closeEditor();
-}
-
-function deleteAnnouncement(id) {
-    apiCall('Announcements', 'delete', { id });
-}
-
-// REMINDERS
-function saveReminder() {
-    const title = document.getElementById('rem-title').value;
-    const date = document.getElementById('rem-date').value;
-    const type = document.getElementById('rem-type').value;
-
-    if (!title || !date) return;
-
-    apiCall('Reminders', 'save', {
-        id: 'rem_' + Date.now(),
-        title,
-        date,
-        type
-    });
-
-    closeModals();
-}
-
-function deleteReminder(id) {
-    apiCall('Reminders', 'delete', { id });
-}
-
-// UI
-function closeModals() {
-    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-}
-
-function expandPost(card) {
-    card.classList.add('expanded');
-    document.getElementById('expanded-controls').style.display = 'flex';
-}
-
-function collapsePost() {
-    document.querySelectorAll('.expanded').forEach(c => c.classList.remove('expanded'));
-    document.getElementById('expanded-controls').style.display = 'none';
-}
-
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-}
-</script>
+        
+        async function refreshData() {
+            showLoading();
+            try {
+                const url = WEB_APP_URL + '?subject=' + encodeURIComponent(currentSubject) + '&year=' + encodeURIComponent(currentYear) + '&action=getData';
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                appState.tabs = data.tabs || [];
+                appState.announcements = data.announcements || [];
+                appState.reminders = data.reminders || [];
+                
+                if (appState.tabs.length > 0 && !appState.activeTabId) {
+                    appState.activeTabId = appState.tabs[0].id;
+                } else if (appState.tabs.length === 0) {
+                    await createDefaultTab();
+                    return;
+                }
+                
+                renderAll();
+            } catch (e) {
+                console.error("Failed to load data", e);
+                document.getElementById('posts-feed').innerHTML = '<div class="loading">Error loading data. Make sure the Apps Script is deployed correctly.</div>';
+            }
+        }
+        
+        async function createDefaultTab() {
+            await apiCall('Tabs', 'save', { 
+                id: 'tab_' + Date.now(), 
+                name: 'General' 
+            });
+            setTimeout(refreshData, 500);
+        }
+        
+        async function apiCall(type, action, data) {
+            try {
+                const payload = {
+                    type: type,
+                    action: action,
+                    data: data,
+                    subject: currentSubject,
+                    year: currentYear
+                };
+                
+                await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify(payload)
+                });
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+                await refreshData();
+            } catch (e) {
+                console.error("API call failed", e);
+                alert("Failed to save. Check your internet connection and Apps Script URL.");
+            }
+        }
+        
+        function showLoading() {
+            document.getElementById('sidebar-menu').innerHTML = '<div class="loading">Loading tabs...</div>';
+            document.getElementById('posts-feed').innerHTML = '<div class="loading">Loading announcements...</div>';
+            document.getElementById('reminders-list').innerHTML = '<div class="loading">Loading reminders...</div>';
+        }
+        
+        function renderAll() {
+            renderTabs();
+            renderAnnouncements();
+            renderReminders();
+        }
+        
+        function renderTabs() {
+            const menu = document.getElementById('sidebar-menu');
+            if (appState.tabs.length === 0) {
+                menu.innerHTML = '<div class="loading">No tabs. Click + to create one.</div>';
+                return;
+            }
+            
+            let html = '';
+            for (let i = 0; i < appState.tabs.length; i++) {
+                const tab = appState.tabs[i];
+                const activeClass = (appState.activeTabId === tab.id) ? 'active' : '';
+                html += '<li>' +
+                    '<a href="#" class="sidebar-link ' + activeClass + '" onclick="switchTab(\'' + tab.id + '\')">' +
+                    '<i class="fas fa-folder" style="margin-right:10px"></i> ' +
+                    escapeHtml(tab.name) +
+                    '<i class="fas fa-trash delete-tab-btn" style="margin-left:auto;" onclick="event.stopPropagation(); deleteTab(\'' + tab.id + '\')"></i>' +
+                    '</a>' +
+                    '</li>';
+            }
+            menu.innerHTML = html;
+            
+            const activeTab = appState.tabs.find(function(t) { return t.id === appState.activeTabId; });
+            document.getElementById('tab-heading').textContent = activeTab ? activeTab.name : 'Dashboard';
+        }
+        
+        function renderReminders() {
+            const list = document.getElementById('reminders-list');
+            if (appState.reminders.length === 0) {
+                list.innerHTML = '<div class="loading">No reminders. Create one to see it here.</div>';
+                return;
+            }
+            
+            const sorted = [...appState.reminders].sort(function(a, b) {
+                return new Date(a.date) - new Date(b.date);
+            });
+            
+            let html = '';
+            for (let i = 0; i < sorted.length; i++) {
+                const rem = sorted[i];
+                html += '<div class="reminder-card ' + rem.type + '">' +
+                    '<div style="display:flex; justify-content:space-between; align-items:center">' +
+                    '<strong>' + escapeHtml(rem.title) + '</strong>' +
+                    '<i class="fas fa-times delete-reminder" onclick="deleteReminder(\'' + rem.id + '\')"></i>' +
+                    '</div>' +
+                    '<div style="font-size:0.85rem; margin-top:5px; color:var(--medium)">' +
+                    '<i class="fas fa-calendar-day"></i> ' + new Date(rem.date).toLocaleDateString() +
+                    '</div>' +
+                    '</div>';
+            }
+            list.innerHTML = html;
+        }
+        
+        function renderAnnouncements() {
+            const feed = document.getElementById('posts-feed');
+            const filtered = appState.announcements.filter(function(a) {
+                return a.tabId === appState.activeTabId;
+            });
+            
+            if (filtered.length === 0) {
+                feed.innerHTML = '<div class="loading">No announcements in this tab. Create one to get started!</div>';
+                return;
+            }
+            
+            let html = '';
+            for (let i = 0; i < filtered.length; i++) {
+                const ann = filtered[i];
+                html += '<div class="post-card" onclick="expandPost(this)">' +
+                    '<div class="post-actions">' +
+                    '<i class="fas fa-edit" onclick="event.stopPropagation(); editAnnouncement(\'' + ann.id + '\')"></i>' +
+                    '<i class="fas fa-trash" onclick="event.stopPropagation(); deleteAnnouncement(\'' + ann.id + '\')"></i>' +
+                    '</div>' +
+                    '<h3>' + escapeHtml(ann.title) + '</h3>' +
+                    '<div class="post-content-preview">' + ann.content + '</div>' +
+                    '<div style="font-size:0.75rem; color:var(--medium); margin-top:10px;">' +
+                    '<i class="far fa-clock"></i> ' + new Date(ann.date).toLocaleDateString() +
+                    '</div>' +
+                    '</div>';
+            }
+            feed.innerHTML = html;
+        }
+        
+        function switchTab(id) {
+            appState.activeTabId = id;
+            renderAll();
+        }
+        
+        function openTabModal() { 
+            document.getElementById('tab-modal').style.display = 'flex'; 
+            document.getElementById('tab-name-input').value = '';
+        }
+        
+        async function saveTab() {
+            const name = document.getElementById('tab-name-input').value.trim();
+            if (!name) {
+                alert("Please enter a tab name");
+                return;
+            }
+            await apiCall('Tabs', 'save', { id: 'tab_' + Date.now(), name: name });
+            closeModals();
+        }
+        
+        async function deleteTab(id) {
+            if (confirm("Delete this tab and all its announcements?")) {
+                await apiCall('Tabs', 'delete', { id: id });
+            }
+        }
+        
+        function openEditor() {
+            appState.editingAnnouncementId = null;
+            document.getElementById('ann-title').value = '';
+            document.getElementById('ann-content').innerHTML = '';
+            document.getElementById('editor-overlay').classList.add('visible');
+            document.getElementById('editor-mode-title').textContent = "New Announcement";
+        }
+        
+        function closeEditor() {
+            document.getElementById('editor-overlay').classList.remove('visible');
+        }
+        
+        function editAnnouncement(id) {
+            const ann = appState.announcements.find(function(a) { return a.id === id; });
+            if (!ann) return;
+            appState.editingAnnouncementId = id;
+            document.getElementById('ann-title').value = ann.title;
+            document.getElementById('ann-content').innerHTML = ann.content;
+            document.getElementById('editor-mode-title').textContent = "Edit Announcement";
+            document.getElementById('editor-overlay').classList.add('visible');
+            collapsePost();
+        }
+        
+        async function saveAnnouncement() {
+            const title = document.getElementById('ann-title').value.trim();
+            const content = document.getElementById('ann-content').innerHTML;
+            if (!title) {
+                alert("Title is required");
+                return;
+            }
+            if (!appState.activeTabId) {
+                alert("Please select a tab first");
+                return;
+            }
+            
+            const data = {
+                id: appState.editingAnnouncementId || 'ann_' + Date.now(),
+                tabId: appState.activeTabId,
+                title: title,
+                content: content,
+                date: new Date().toISOString()
+            };
+            
+            await apiCall('Announcements', 'save', data);
+            closeEditor();
+        }
+        
+        async function deleteAnnouncement(id) {
+            if (confirm("Delete this announcement?")) {
+                await apiCall('Announcements', 'delete', { id: id });
+            }
+        }
+        
+        function openReminderModal() { 
+            document.getElementById('reminder-modal').style.display = 'flex';
+            document.getElementById('rem-title').value = '';
+            document.getElementById('rem-date').value = new Date().toISOString().split('T')[0];
+        }
+        
+        async function saveReminder() {
+            const title = document.getElementById('rem-title').value.trim();
+            const date = document.getElementById('rem-date').value;
+            const type = document.getElementById('rem-type').value;
+            if (!title || !date) {
+                alert("Please fill in all fields");
+                return;
+            }
+            
+            await apiCall('Reminders', 'save', { 
+                id: 'rem_' + Date.now(), 
+                title: title, 
+                date: date, 
+                type: type 
+            });
+            closeModals();
+        }
+        
+        async function deleteReminder(id) {
+            if (confirm("Delete this reminder?")) {
+                await apiCall('Reminders', 'delete', { id: id });
+            }
+        }
+        
+        function expandPost(card) {
+            if (card.classList.contains('expanded')) return;
+            const expanded = document.querySelectorAll('.post-card.expanded');
+            for (let i = 0; i < expanded.length; i++) {
+                expanded[i].classList.remove('expanded');
+            }
+            card.classList.add('expanded');
+            document.getElementById('expanded-controls').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function collapsePost() {
+            const expanded = document.querySelectorAll('.post-card.expanded');
+            for (let i = 0; i < expanded.length; i++) {
+                expanded[i].classList.remove('expanded');
+            }
+            document.getElementById('expanded-controls').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        function closeModals() {
+            const modals = document.querySelectorAll('.modal');
+            for (let i = 0; i < modals.length; i++) {
+                modals[i].style.display = 'none';
+            }
+        }
+        
+        function exec(cmd, val) {
+            if (val === undefined) val = null;
+            document.execCommand(cmd, false, val);
+            document.getElementById('ann-content').focus();
+        }
+        
+        function promptLink() {
+            const url = prompt("https://script.google.com/macros/s/AKfycbz4-DKUW9IzE1figUAWO101qDLe_MEqpG7eWNQovt0VYCoP8r1NuM76tXG4jps_zcqmUQ/exec");
+            if (url) exec('createLink', url);
+        }
+        
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+        
+        document.getElementById('page-title').textContent = currentSubject + ' - Year ' + currentYear;
+        refreshData();
+        
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>
