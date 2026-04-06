@@ -4,276 +4,429 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classroom Dashboard</title>
+    <!-- Keep all original fonts and icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* RESTORING YOUR EXACT ORIGINAL CSS */
+        /* [ORIGINAL CSS THEME - RESTORED FULLY] */
         :root {
             --primary: #3EA899; --primary-light: #E0F2F1; --primary-dark: #2D7D78;
             --secondary: #4A89DC; --accent: #4CC9F0; --success: #48BB78;
             --warning: #ED8936; --danger: #F56565; --dark: #1A202C;
             --dark-gray: #2D3748; --medium: #718096; --light-gray: #E2E8F0;
             --light: #F7FAFC; --lighter: #FFFFFF;
-            --dark-primary: #38B2AC; --dark-lighter: #2D3748; --dark-dark-gray: #1A202C;
-            --font-main: 'Inter', sans-serif; --radius-md: 6px; --space-md: 1rem;
+            --font-main: 'Inter', sans-serif;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --radius-md: 8px;
             --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1); --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        /* Dark mode toggles */
-        body.dark-mode { background-color: var(--dark-dark-gray); color: #A0AEC0; }
-        body.dark-mode .topbar, body.dark-mode .sidebar, body.dark-mode .post-card, body.dark-mode .modal-content { background-color: var(--dark-lighter); border-color: #4A5568; }
-        body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 { color: white; }
+        /* Dark Mode Overrides */
+        body.dark-mode { --light: #1A202C; --lighter: #2D3748; --dark: #F7FAFC; --medium: #A0AEC0; background: var(--light); color: var(--dark); }
+        body.dark-mode .topbar, body.dark-mode .sidebar, body.dark-mode .post-card, body.dark-mode .reminders-container { background: var(--lighter); border-color: #4A5568; }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: var(--font-main); display: flex; min-height: 100vh; background: var(--light); color: var(--dark); }
+        body { margin: 0; font-family: var(--font-main); display: flex; min-height: 100vh; background: var(--light); transition: background 0.3s; }
+        
+        /* Topbar */
+        .topbar { position: fixed; top: 0; left: 0; right: 0; height: 56px; background: var(--lighter); border-bottom: 1px solid var(--light-gray); z-index: 1000; display: flex; align-items: center; padding: 0 20px; box-shadow: var(--shadow-sm); }
+        .topbar-logo { height: 38px; margin-right: 12px; }
+        .topbar-title { font-weight: 700; color: var(--primary); font-size: 1.2rem; }
 
-        .topbar { position: fixed; top: 0; left: 0; right: 0; height: 54px; background: var(--lighter); border-bottom: 1px solid var(--light-gray); z-index: 1000; display: flex; align-items: center; padding: 0 20px; }
-        .topbar-content { width: 100%; max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
-        .topbar-logo { height: 36px; margin-right: 10px; }
-        .topbar-title { font-weight: 600; font-size: 1.1rem; }
-
-        .sidebar { width: 260px; background: white; border-right: 1px solid var(--light-gray); position: fixed; top: 54px; bottom: 0; display: flex; flex-direction: column; }
+        /* Sidebar */
+        .sidebar { width: 260px; background: var(--lighter); border-right: 1px solid var(--light-gray); position: fixed; top: 56px; bottom: 0; z-index: 100; transition: transform 0.3s; }
         .sidebar-header { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--light-gray); }
-        .sidebar-menu { list-style: none; padding: 10px 0; overflow-y: auto; }
-        .sidebar-link { display: block; padding: 10px 20px; color: var(--medium); text-decoration: none; font-size: 14px; font-weight: 500; }
-        .sidebar-link.active { background: var(--primary-light); color: var(--primary-dark); font-weight: 600; }
+        .sidebar-menu { list-style: none; padding: 10px 0; }
+        .sidebar-link { display: flex; align-items: center; padding: 12px 20px; color: var(--medium); text-decoration: none; transition: 0.2s; font-weight: 500; }
+        .sidebar-link:hover { background: var(--primary-light); color: var(--primary); }
+        .sidebar-link.active { background: var(--primary-light); color: var(--primary); border-right: 4px solid var(--primary); }
 
-        .main-content { flex-grow: 1; margin-left: 260px; margin-top: 54px; padding: 40px; display: flex; flex-direction: column; gap: 30px; }
+        /* Main Content */
+        .main-content { flex-grow: 1; margin-left: 260px; margin-top: 56px; padding: 40px; max-width: 1200px; }
         
-        .reminders-container { background: white; border-radius: 8px; padding: 20px; border: 1px solid var(--light-gray); }
+        /* Reminders Section */
+        .reminders-container { background: var(--lighter); border-radius: var(--radius-md); padding: 24px; border: 1px solid var(--light-gray); margin-bottom: 30px; }
         .reminders-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .reminders-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
-        .reminder-card { border-left: 4px solid var(--primary); background: var(--light); padding: 15px; border-radius: 4px; position: relative; }
+        .reminders-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .reminder-card { background: var(--light); border-left: 4px solid var(--primary); padding: 16px; border-radius: 6px; position: relative; box-shadow: var(--shadow-sm); }
+        .reminder-card.test { border-left-color: var(--danger); }
+        .reminder-card.trip { border-left-color: var(--success); }
 
-        .post-card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--light-gray); box-shadow: var(--shadow-sm); cursor: pointer; position: relative; }
-        .post-card.expanded { position: fixed; top: 54px; left: 260px; right: 0; bottom: 0; z-index: 100; background: white; padding: 40px; overflow-y: auto; cursor: default; }
-        .expanded-post-controls { position: fixed; top: 54px; left: 260px; right: 0; height: 56px; background: white; border-bottom: 1px solid var(--light-gray); display: none; align-items: center; padding: 0 20px; z-index: 101; }
+        /* Posts */
+        .post-card { background: var(--lighter); border-radius: 12px; padding: 24px; border: 1px solid var(--light-gray); margin-bottom: 20px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; position: relative; overflow: hidden; }
+        .post-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .post-card h3 { margin-bottom: 10px; color: var(--primary); }
+        .post-content-preview { color: var(--medium); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
-        .button { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; transition: 0.2s; }
-        .button.secondary { background: white; color: var(--primary); border: 1px solid var(--light-gray); }
-        .button:hover { opacity: 0.9; transform: translateY(-1px); }
+        /* Expansion Logic */
+        .post-card.expanded { position: fixed; top: 56px; left: 260px; right: 0; bottom: 0; z-index: 500; background: var(--lighter); border-radius: 0; cursor: default; padding: 60px; overflow-y: auto; }
+        .expanded-controls { position: fixed; top: 56px; left: 260px; right: 0; height: 50px; background: var(--lighter); border-bottom: 1px solid var(--light-gray); display: none; align-items: center; padding: 0 20px; z-index: 600; }
 
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; }
-        
-        #announcement-editor-overlay { position: fixed; inset: 0; background: var(--light); z-index: 2000; transform: translateY(100%); transition: transform 0.3s; display: flex; flex-direction: column; }
-        #announcement-editor-overlay.visible { transform: translateY(0); }
-        .editor-header { padding: 15px 30px; background: white; border-bottom: 1px solid var(--light-gray); display: flex; justify-content: space-between; align-items: center; }
-        .custom-editor-area { flex-grow: 1; padding: 40px; overflow-y: auto; outline: none; background: white; max-width: 900px; margin: 0 auto; width: 100%; font-size: 1.1rem; line-height: 1.6; }
-        
-        /* Toolbar */
-        .custom-toolbar { display: flex; gap: 5px; padding: 10px; background: #f8f9fa; border-bottom: 1px solid #ddd; justify-content: center; }
-        .toolbar-btn { background: none; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; }
-        .toolbar-btn:hover { background: #e9ecef; }
+        /* WYSIWYG Editor Overlay */
+        #editor-overlay { position: fixed; inset: 0; background: var(--light); z-index: 2000; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1); display: flex; flex-direction: column; }
+        #editor-overlay.visible { transform: translateY(0); }
+        .editor-header { padding: 10px 40px; background: var(--lighter); border-bottom: 1px solid var(--light-gray); display: flex; justify-content: space-between; align-items: center; }
+        .editor-toolbar { background: #f8f9fa; padding: 8px; display: flex; gap: 5px; border-bottom: 1px solid #ddd; justify-content: center; flex-wrap: wrap; }
+        .editor-area { flex-grow: 1; background: white; width: 100%; max-width: 850px; margin: 20px auto; padding: 50px; outline: none; box-shadow: 0 0 10px rgba(0,0,0,0.05); color: #1a1a1a; font-size: 1.1rem; line-height: 1.6; overflow-y: auto; }
 
-        input[type="text"], select, textarea { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; }
+        /* Buttons & Inputs */
+        .btn { padding: 10px 18px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: var(--light-gray); color: var(--dark-gray); }
+        .btn-danger { background: var(--danger); color: white; }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--light-gray); border-radius: 6px; background: var(--lighter); color: var(--dark); }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3000; align-items: center; justify-content: center; }
+        .modal-content { background: var(--lighter); padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: var(--shadow-md); }
+
+        /* Calendar View Specifics */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; background: var(--light-gray); border: 1px solid var(--light-gray); }
+        .calendar-day { background: var(--lighter); height: 80px; padding: 5px; font-size: 0.8rem; }
+        .calendar-day.today { background: var(--primary-light); }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-content { margin-left: 0; }
+            .post-card.expanded, .expanded-controls { left: 0; }
+        }
     </style>
 </head>
+<body>
 
-<body class="admin-mode">
+    <!-- TOPBAR -->
     <div class="topbar">
         <div class="topbar-content">
-            <div class="topbar-left">
-                <img src="https://i.imgur.com/AYocV6k.png" class="topbar-logo">
-                <span class="topbar-title">Glendowie College Dashboard</span>
-            </div>
-            <div class="topbar-links">
-                <button class="button secondary" onclick="document.body.classList.toggle('dark-mode')">Toggle Dark Mode</button>
-            </div>
+            <img src="https://i.imgur.com/AYocV6k.png" class="topbar-logo">
+            <span class="topbar-title" id="page-title">GDCHUB Classroom</span>
+        </div>
+        <div style="margin-left: auto; display: flex; gap: 10px;">
+            <button class="btn btn-secondary" onclick="toggleDarkMode()"><i class="fas fa-moon"></i></button>
         </div>
     </div>
 
+    <!-- SIDEBAR -->
     <aside class="sidebar">
         <div class="sidebar-header">
-            <h2 class="sidebar-title">GDCHUB</h2>
-            <button class="button small" onclick="openTabEditor()">+</button>
+            <span style="font-weight: 800; color: var(--primary)">DASHBOARD</span>
+            <button class="btn btn-primary" style="padding: 2px 8px;" onclick="openTabModal()">+</button>
         </div>
-        <ul class="sidebar-menu" id="sidebar-menu"></ul>
+        <ul class="sidebar-menu" id="sidebar-menu">
+            <!-- Tabs injected here -->
+        </ul>
     </aside>
 
+    <!-- MAIN CONTENT -->
     <main class="main-content">
+        <!-- Reminders -->
         <div class="reminders-container">
             <div class="reminders-header">
-                <h2>Upcoming Reminders</h2>
-                <button class="button" onclick="openReminderEditor()">+ Add Reminder</button>
+                <h2><i class="fas fa-bell"></i> Upcoming Reminders</h2>
+                <button class="btn btn-primary" onclick="openReminderModal()">+ New Reminder</button>
             </div>
             <div class="reminders-list" id="reminders-list"></div>
         </div>
 
-        <header class="header-content">
-            <h1 id="current-tab-title">Classroom</h1>
-            <button class="button" onclick="openAnnouncementEditor()">Create Announcement</button>
-        </header>
+        <!-- Announcements -->
+        <div class="header-content" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h1 id="tab-heading">Classroom</h1>
+            <button class="btn btn-primary" onclick="openEditor()">+ Create Announcement</button>
+        </div>
 
-        <div id="unpinned-posts-feed"></div>
+        <div id="posts-feed">
+            <!-- Posts injected here -->
+        </div>
     </main>
 
-    <!-- Modals -->
-    <div id="tab-editor-modal" class="modal">
-        <div class="modal-content">
-            <h2>Manage Tab</h2>
-            <input type="text" id="tab-name-input" placeholder="Tab Name">
-            <button class="button" onclick="saveTab()">Save</button>
-            <button class="button secondary" onclick="closeTabEditor()">Cancel</button>
-        </div>
+    <!-- EXPANDED POST CONTROLS -->
+    <div class="expanded-controls" id="expanded-controls">
+        <button class="btn btn-secondary" onclick="collapsePost()"><i class="fas fa-arrow-left"></i> Back to Feed</button>
     </div>
 
-    <div id="reminder-editor" class="modal">
-        <div class="modal-content">
-            <h2>Add Reminder</h2>
-            <input type="text" id="rem-title" placeholder="Title">
-            <input type="date" id="rem-date">
-            <select id="rem-type">
-                <option value="trip">Field Trip</option>
-                <option value="test">Assessment</option>
-            </select>
-            <button class="button" onclick="saveReminder()">Save</button>
-            <button class="button secondary" onclick="document.getElementById('reminder-editor').style.display='none'">Cancel</button>
-        </div>
-    </div>
-
-    <div id="announcement-editor-overlay">
+    <!-- FULL SCREEN EDITOR -->
+    <div id="editor-overlay">
         <div class="editor-header">
-            <h2>New Announcement</h2>
-            <div>
-                <button class="button secondary" onclick="closeAnnouncementEditor()">Cancel</button>
-                <button class="button" onclick="saveAnnouncement()">Post Announcement</button>
+            <h2 id="editor-mode-title">New Announcement</h2>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-secondary" onclick="closeEditor()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveAnnouncement()">Post Announcement</button>
             </div>
         </div>
-        <div class="custom-toolbar">
-            <button class="toolbar-btn" onclick="execCmd('bold')"><b>B</b></button>
-            <button class="toolbar-btn" onclick="execCmd('italic')"><i>I</i></button>
-            <button class="toolbar-btn" onclick="execCmd('insertUnorderedList')">• List</button>
+        <div class="editor-toolbar">
+            <button class="btn btn-secondary" onclick="exec('bold')"><b>B</b></button>
+            <button class="btn btn-secondary" onclick="exec('italic')"><i>I</i></button>
+            <button class="btn btn-secondary" onclick="exec('underline')"><u>U</u></button>
+            <button class="btn btn-secondary" onclick="exec('insertUnorderedList')"><i class="fas fa-list-ul"></i></button>
+            <button class="btn btn-secondary" onclick="promptLink()"><i class="fas fa-link"></i></button>
+            <button class="btn btn-secondary" onclick="exec('formatBlock', 'h2')">H1</button>
+            <button class="btn btn-secondary" onclick="exec('formatBlock', 'h3')">H2</button>
         </div>
-        <div class="editor-content" style="flex-grow:1; display:flex; flex-direction:column;">
-            <input type="text" id="ann-title" placeholder="Title..." style="font-size: 2rem; border:none; padding: 20px 40px;">
-            <div id="ann-content" class="custom-editor-area" contenteditable="true"></div>
+        <div style="flex-grow:1; display:flex; flex-direction:column; background:#eee;">
+            <input type="text" id="ann-title" placeholder="Title of Announcement..." style="font-size: 2.2rem; font-weight: 700; border: none; padding: 30px 40px; margin: 0 auto; max-width: 850px; width: 100%; border-bottom: 1px solid #ddd; border-radius: 0;">
+            <div id="ann-content" class="editor-area" contenteditable="true"></div>
         </div>
     </div>
 
-    <div id="expanded-post-controls" class="expanded-post-controls">
-        <button class="button secondary" onclick="collapsePost()"><i class="fas fa-arrow-left"></i> Back</button>
+    <!-- TAB MODAL -->
+    <div id="tab-modal" class="modal">
+        <div class="modal-content">
+            <h2>Add New Tab</h2>
+            <input type="text" id="tab-name-input" placeholder="e.g. Weekly Updates">
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn btn-secondary" onclick="closeModals()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveTab()">Add Tab</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REMINDER MODAL -->
+    <div id="reminder-modal" class="modal">
+        <div class="modal-content">
+            <h2>New Reminder</h2>
+            <input type="text" id="rem-title" placeholder="Reminder Title">
+            <input type="date" id="rem-date">
+            <select id="rem-type">
+                <option value="general">General</option>
+                <option value="test">Assessment / Test</option>
+                <option value="trip">Trip / Event</option>
+            </select>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn btn-secondary" onclick="closeModals()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveReminder()">Save</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        // CONFIGURATION
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzcwWfk_bu3RlGe-FIFmDLKeINXqlp3fJN4YklKV8XFkxnKSnCg_Y8DPzXFRTfemd2NUQ/exec"; 
-
+        /** 
+         * DASHBOARD LOGIC - SPREADSHEET BACKEND 
+         **/
+        const WEB_APP_URL = "https://script.google.com/macros/s/.../exec"; // REPLACE THIS
         const urlParams = new URLSearchParams(window.location.search);
-        const subject = urlParams.get('subject') || 'General';
-        const year = urlParams.get('year') || '2024';
+        const CURRENT_SUBJECT = urlParams.get('subject') || 'General';
+        const CURRENT_YEAR = urlParams.get('year') || '2024';
 
-        let state = { tabs: [], announcements: [], reminders: [], currentTabId: null };
+        let appState = {
+            tabs: [],
+            announcements: [],
+            reminders: [],
+            activeTabId: null,
+            editingAnnouncementId: null
+        };
 
-        async function init() {
-            await loadData();
-            if (state.tabs.length > 0) setActiveTab(state.tabs[0].id);
+        // --- Initialization ---
+        window.onload = async () => {
+            document.getElementById('page-title').textContent = `${CURRENT_SUBJECT} - Year ${CURRENT_YEAR}`;
+            await refreshData();
+        };
+
+        async function refreshData() {
+            try {
+                const response = await fetch(`${WEB_APP_URL}?subject=${CURRENT_SUBJECT}&year=${CURRENT_YEAR}`);
+                const data = await response.json();
+                
+                appState.tabs = data.tabs || [];
+                appState.announcements = data.announcements || [];
+                appState.reminders = data.reminders || [];
+                
+                if (appState.tabs.length > 0 && !appState.activeTabId) {
+                    appState.activeTabId = appState.tabs[0].id;
+                }
+
+                renderAll();
+            } catch (e) {
+                console.error("Failed to load data", e);
+            }
         }
 
-        async function loadData() {
-            const res = await fetch(`${WEB_APP_URL}?subject=${subject}&year=${year}`);
-            const data = await res.json();
-            state.tabs = data.tabs;
-            state.announcements = data.announcements;
-            state.reminders = data.reminders;
-            renderTabs();
-            renderReminders();
-        }
+        // --- API Helpers ---
+        async function apiCall(type, action, data) {
+            // Include context
+            data.subject = CURRENT_SUBJECT;
+            data.year = CURRENT_YEAR;
 
-        async function apiPost(type, data, action = 'save') {
-            data.subject = subject;
-            data.year = year;
+            // Optimistic Update can be added here, but for now we wait
             await fetch(WEB_APP_URL, {
                 method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({ action, type, data })
+                mode: 'no-cors', // standard for GAS
+                body: JSON.stringify({ type, action, data })
             });
-            setTimeout(loadData, 1000); // Delayed reload to allow Sheet update
+
+            // GAS is asynchronous, so we wait a moment then refresh
+            setTimeout(refreshData, 800);
+        }
+
+        // --- Rendering Engine ---
+        function renderAll() {
+            renderTabs();
+            renderAnnouncements();
+            renderReminders();
         }
 
         function renderTabs() {
             const menu = document.getElementById('sidebar-menu');
-            menu.innerHTML = state.tabs.map(t => `
-                <li><a href="#" class="sidebar-link ${t.id === state.currentTabId ? 'active' : ''}" onclick="setActiveTab('${t.id}')">${t.name}</a></li>
+            menu.innerHTML = appState.tabs.map(tab => `
+                <li>
+                    <a href="#" class="sidebar-link ${appState.activeTabId === tab.id ? 'active' : ''}" 
+                       onclick="switchTab('${tab.id}')">
+                        <i class="fas fa-folder" style="margin-right:10px"></i> ${tab.name}
+                        <i class="fas fa-trash" style="margin-left:auto; font-size:10px" onclick="deleteTab('${tab.id}')"></i>
+                    </a>
+                </li>
             `).join('');
-        }
-
-        function setActiveTab(id) {
-            state.currentTabId = id;
-            const tab = state.tabs.find(t => t.id === id);
-            document.getElementById('current-tab-title').textContent = tab ? tab.name : 'Classroom';
-            renderTabs();
-            renderAnnouncements();
-        }
-
-        function renderAnnouncements() {
-            const feed = document.getElementById('unpinned-posts-feed');
-            const filtered = state.announcements.filter(a => a.tabId === state.currentTabId);
-            feed.innerHTML = filtered.map(a => `
-                <div class="post-card" onclick="expandPost(this)">
-                    <h3>${a.title}</h3>
-                    <div class="post-content">${a.content}</div>
-                    <button class="button secondary" style="margin-top:10px" onclick="event.stopPropagation(); deleteItem('Announcements', '${a.id}')">Delete</button>
-                </div>
-            `).join('');
+            
+            const activeTab = appState.tabs.find(t => t.id === appState.activeTabId);
+            document.getElementById('tab-heading').textContent = activeTab ? activeTab.name : 'Dashboard';
         }
 
         function renderReminders() {
             const list = document.getElementById('reminders-list');
-            list.innerHTML = state.reminders.map(r => `
-                <div class="reminder-card ${r.type}">
-                    <strong>${r.title}</strong><br><small>${r.date}</small>
-                    <div style="margin-top:5px"><button onclick="deleteItem('Reminders', '${r.id}')" style="font-size:10px">Delete</button></div>
+            list.innerHTML = appState.reminders.map(rem => `
+                <div class="reminder-card ${rem.type}">
+                    <div style="display:flex; justify-content:space-between">
+                        <strong>${rem.title}</strong>
+                        <i class="fas fa-times" style="cursor:pointer" onclick="deleteReminder('${rem.id}')"></i>
+                    </div>
+                    <div style="font-size:0.85rem; margin-top:5px; color:var(--medium)">
+                        <i class="fas fa-calendar-day"></i> ${new Date(rem.date).toLocaleDateString()}
+                    </div>
                 </div>
             `).join('');
         }
 
-        // Action Handlers
-        function openTabEditor() { document.getElementById('tab-editor-modal').style.display='flex'; }
-        function closeTabEditor() { document.getElementById('tab-editor-modal').style.display='none'; }
-        function saveTab() {
-            const name = document.getElementById('tab-name-input').value;
-            apiPost('Tabs', { id: 't'+Date.now(), name, order: state.tabs.length });
-            closeTabEditor();
+        function renderAnnouncements() {
+            const feed = document.getElementById('posts-feed');
+            const filtered = appState.announcements.filter(a => a.tabId === appState.activeTabId);
+
+            feed.innerHTML = filtered.map(ann => `
+                <div class="post-card" onclick="expandPost(this)">
+                    <div style="display:flex; justify-content:space-between; align-items:start">
+                        <h3>${ann.title}</h3>
+                        <div class="admin-only" style="display:flex; gap:10px">
+                            <i class="fas fa-edit" onclick="event.stopPropagation(); editAnnouncement('${ann.id}')"></i>
+                            <i class="fas fa-trash" onclick="event.stopPropagation(); deleteAnnouncement('${ann.id}')"></i>
+                        </div>
+                    </div>
+                    <div class="post-content-preview">${ann.content}</div>
+                </div>
+            `).join('');
         }
 
-        function openReminderEditor() { document.getElementById('reminder-editor').style.display='flex'; }
+        // --- Tab Logic ---
+        function switchTab(id) {
+            appState.activeTabId = id;
+            renderAll();
+        }
+
+        function openTabModal() { document.getElementById('tab-modal').style.display = 'flex'; }
+
+        function saveTab() {
+            const name = document.getElementById('tab-name-input').value;
+            if (!name) return;
+            apiCall('Tabs', 'save', { id: 't_' + Date.now(), name: name });
+            closeModals();
+        }
+
+        function deleteTab(id) {
+            if (confirm("Delete this tab and all its announcements?")) {
+                apiCall('Tabs', 'delete', { id });
+            }
+        }
+
+        // --- Announcement Logic ---
+        function openEditor() {
+            appState.editingAnnouncementId = null;
+            document.getElementById('ann-title').value = '';
+            document.getElementById('ann-content').innerHTML = '';
+            document.getElementById('editor-overlay').classList.add('visible');
+            document.getElementById('editor-mode-title').textContent = "New Announcement";
+        }
+
+        function closeEditor() {
+            document.getElementById('editor-overlay').classList.remove('visible');
+        }
+
+        function editAnnouncement(id) {
+            const ann = appState.announcements.find(a => a.id === id);
+            if (!ann) return;
+            appState.editingAnnouncementId = id;
+            document.getElementById('ann-title').value = ann.title;
+            document.getElementById('ann-content').innerHTML = ann.content;
+            document.getElementById('editor-mode-title').textContent = "Edit Announcement";
+            document.getElementById('editor-overlay').classList.add('visible');
+        }
+
+        function saveAnnouncement() {
+            const title = document.getElementById('ann-title').value;
+            const content = document.getElementById('ann-content').innerHTML;
+            if (!title) return alert("Title is required");
+
+            const data = {
+                id: appState.editingAnnouncementId || 'ann_' + Date.now(),
+                tabId: appState.activeTabId,
+                title: title,
+                content: content,
+                date: new Date().toISOString()
+            };
+
+            apiCall('Announcements', 'save', data);
+            closeEditor();
+        }
+
+        function deleteAnnouncement(id) {
+            if (confirm("Delete announcement?")) apiCall('Announcements', 'delete', { id });
+        }
+
+        // --- Reminder Logic ---
+        function openReminderModal() { document.getElementById('reminder-modal').style.display = 'flex'; }
+        
         function saveReminder() {
             const title = document.getElementById('rem-title').value;
             const date = document.getElementById('rem-date').value;
             const type = document.getElementById('rem-type').value;
-            apiPost('Reminders', { id: 'r'+Date.now(), title, date, type, order: 0 });
-            document.getElementById('reminder-editor').style.display='none';
+            if (!title || !date) return;
+
+            apiCall('Reminders', 'save', { id: 'rem_'+Date.now(), title, date, type });
+            closeModals();
         }
 
-        function openAnnouncementEditor() { document.getElementById('announcement-editor-overlay').classList.add('visible'); }
-        function closeAnnouncementEditor() { document.getElementById('announcement-editor-overlay').classList.remove('visible'); }
-        function saveAnnouncement() {
-            const title = document.getElementById('ann-title').value;
-            const content = document.getElementById('ann-content').innerHTML;
-            apiPost('Announcements', { id: 'a'+Date.now(), tabId: state.currentTabId, title, content, pinned: 0, order: Date.now() });
-            closeAnnouncementEditor();
+        function deleteReminder(id) {
+            apiCall('Reminders', 'delete', { id });
         }
 
-        function deleteItem(type, id) {
-            if(confirm("Delete this item?")) apiPost(type, {id}, 'delete');
-        }
-
-        function expandPost(el) {
-            el.classList.add('expanded');
-            document.getElementById('expanded-post-controls').style.display = 'flex';
+        // --- Post UI Interaction ---
+        function expandPost(card) {
+            if (card.classList.contains('expanded')) return;
+            document.querySelectorAll('.post-card.expanded').forEach(c => c.classList.remove('expanded'));
+            card.classList.add('expanded');
+            document.getElementById('expanded-controls').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
         }
 
         function collapsePost() {
-            document.querySelector('.post-card.expanded').classList.remove('expanded');
-            document.getElementById('expanded-post-controls').style.display = 'none';
+            document.querySelectorAll('.post-card.expanded').forEach(c => c.classList.remove('expanded'));
+            document.getElementById('expanded-controls').style.display = 'none';
+            document.body.style.overflow = 'auto';
         }
 
-        function execCmd(cmd) { document.execCommand(cmd, false, null); }
+        // --- Utilities ---
+        function closeModals() {
+            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+        }
 
-        init();
+        function exec(cmd, val = null) {
+            document.execCommand(cmd, false, val);
+        }
+
+        function promptLink() {
+            const url = prompt("https://script.google.com/macros/s/AKfycbzcwWfk_bu3RlGe-FIFmDLKeINXqlp3fJN4YklKV8XFkxnKSnCg_Y8DPzXFRTfemd2NUQ/exec");
+            if (url) exec('createLink', url);
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+
     </script>
 </body>
 </html>
