@@ -553,7 +553,7 @@
     </div>
 
     <script>
-        // REPLACE THIS WITH YOUR ACTUAL DEPLOYMENT URL
+        // IMPORTANT: REPLACE THIS WITH YOUR ACTUAL DEPLOYMENT URL
         const WEB_APP_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
         
         let appState = {
@@ -583,8 +583,10 @@
             showLoading();
             try {
                 const url = WEB_APP_URL + '?subject=' + encodeURIComponent(currentSubject) + '&year=' + encodeURIComponent(currentYear) + '&action=getData';
+                console.log('Fetching data from:', url);
                 const response = await fetch(url);
                 const data = await response.json();
+                console.log('Data received:', data);
                 
                 appState.tabs = data.tabs || [];
                 appState.announcements = data.announcements || [];
@@ -600,16 +602,17 @@
                 renderAll();
             } catch (e) {
                 console.error("Failed to load data", e);
-                document.getElementById('posts-feed').innerHTML = '<div class="loading">Error loading data. Make sure the Apps Script is deployed correctly.</div>';
+                document.getElementById('posts-feed').innerHTML = '<div class="loading">Error loading data: ' + e.message + '<br><br>Make sure the Apps Script is deployed correctly and the URL is set.</div>';
             }
         }
         
         async function createDefaultTab() {
+            console.log('Creating default tab...');
             await apiCall('Tabs', 'save', { 
                 id: 'tab_' + Date.now(), 
                 name: 'General' 
             });
-            setTimeout(refreshData, 500);
+            setTimeout(refreshData, 1000);
         }
         
         async function apiCall(type, action, data) {
@@ -622,17 +625,27 @@
                     year: currentYear
                 };
                 
-                await fetch(WEB_APP_URL, {
+                console.log('Saving:', payload);
+                
+                const response = await fetch(WEB_APP_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                     body: JSON.stringify(payload)
                 });
                 
-                await new Promise(resolve => setTimeout(resolve, 500));
+                const result = await response.json();
+                console.log('Save result:', result);
+                
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+                
                 await refreshData();
             } catch (e) {
                 console.error("API call failed", e);
-                alert("Failed to save. Check your internet connection and Apps Script URL.");
+                alert("Failed to save: " + e.message + "\n\nCheck that your Apps Script URL is correct and the script is deployed.");
             }
         }
         
@@ -872,7 +885,7 @@
         }
         
         function promptLink() {
-            const url = prompt("https://script.google.com/macros/s/AKfycbz4-DKUW9IzE1figUAWO101qDLe_MEqpG7eWNQovt0VYCoP8r1NuM76tXG4jps_zcqmUQ/exec");
+            const url = prompt("https://script.google.com/macros/s/AKfycbw5YCEB5dtvbEvbm06i7pEkvNYJzquVV2m9-Z3734Q40OqFVgOJKLmvRVxl-dh1x1y4tw/exec");
             if (url) exec('createLink', url);
         }
         
@@ -882,6 +895,7 @@
         }
         
         function escapeHtml(text) {
+            if (!text) return '';
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
