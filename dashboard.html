@@ -197,236 +197,230 @@
         </div>
     </div>
 
-    <script>
-        /** 
-         * DASHBOARD LOGIC - SPREADSHEET BACKEND 
-         **/
-        const WEB_APP_URL = "https://script.google.com/macros/s/.../exec"; // REPLACE THIS
-        const urlParams = new URLSearchParams(window.location.search);
-        const CURRENT_SUBJECT = urlParams.get('subject') || 'General';
-        const CURRENT_YEAR = urlParams.get('year') || '2024';
+  <script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzWBdPz7YMcRxAUlALeToRPCfCaMHftO8uOc9VxaAZ-xau5y7u-hzYw7QKy_IGU0-ZIUQ/exec";
 
-        let appState = {
-            tabs: [],
-            announcements: [],
-            reminders: [],
-            activeTabId: null,
-            editingAnnouncementId: null
-        };
+const urlParams = new URLSearchParams(window.location.search);
+const CURRENT_SUBJECT = urlParams.get('subject') || 'General';
+const CURRENT_YEAR = urlParams.get('year') || '2024';
 
-        // --- Initialization ---
-        window.onload = async () => {
-            document.getElementById('page-title').textContent = `${CURRENT_SUBJECT} - Year ${CURRENT_YEAR}`;
-            await refreshData();
-        };
+let appState = {
+    tabs: [],
+    announcements: [],
+    reminders: [],
+    activeTabId: null,
+    editingAnnouncementId: null
+};
 
-        async function refreshData() {
-            try {
-                const response = await fetch(`${WEB_APP_URL}?subject=${CURRENT_SUBJECT}&year=${CURRENT_YEAR}`);
-                const data = await response.json();
-                
-                appState.tabs = data.tabs || [];
-                appState.announcements = data.announcements || [];
-                appState.reminders = data.reminders || [];
-                
-                if (appState.tabs.length > 0 && !appState.activeTabId) {
-                    appState.activeTabId = appState.tabs[0].id;
-                }
+// INIT
+window.onload = async () => {
+    document.getElementById('page-title').textContent = `${CURRENT_SUBJECT} - Year ${CURRENT_YEAR}`;
+    await refreshData();
+};
 
-                renderAll();
-            } catch (e) {
-                console.error("Failed to load data", e);
-            }
+async function refreshData() {
+    try {
+        const res = await fetch(`${WEB_APP_URL}?subject=${CURRENT_SUBJECT}&year=${CURRENT_YEAR}`);
+        const data = await res.json();
+
+        appState.tabs = data.tabs || [];
+        appState.announcements = data.announcements || [];
+        appState.reminders = data.reminders || [];
+
+        if (!appState.activeTabId && appState.tabs.length > 0) {
+            appState.activeTabId = appState.tabs[0].id;
         }
 
-        // --- API Helpers ---
-        async function apiCall(type, action, data) {
-            // Include context
-            data.subject = CURRENT_SUBJECT;
-            data.year = CURRENT_YEAR;
+        renderAll();
+    } catch (err) {
+        console.error("LOAD ERROR:", err);
+    }
+}
 
-            // Optimistic Update can be added here, but for now we wait
-            await fetch(WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors', // standard for GAS
-                body: JSON.stringify({ type, action, data })
-            });
+// API CALL (FIXED)
+async function apiCall(type, action, data) {
+    data.subject = CURRENT_SUBJECT;
+    data.year = CURRENT_YEAR;
 
-            // GAS is asynchronous, so we wait a moment then refresh
-            setTimeout(refreshData, 800);
-        }
+    try {
+        await fetch(WEB_APP_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ type, action, data })
+        });
 
-        // --- Rendering Engine ---
-        function renderAll() {
-            renderTabs();
-            renderAnnouncements();
-            renderReminders();
-        }
+        setTimeout(refreshData, 500);
+    } catch (err) {
+        console.error("API ERROR:", err);
+    }
+}
 
-        function renderTabs() {
-            const menu = document.getElementById('sidebar-menu');
-            menu.innerHTML = appState.tabs.map(tab => `
-                <li>
-                    <a href="#" class="sidebar-link ${appState.activeTabId === tab.id ? 'active' : ''}" 
-                       onclick="switchTab('${tab.id}')">
-                        <i class="fas fa-folder" style="margin-right:10px"></i> ${tab.name}
-                        <i class="fas fa-trash" style="margin-left:auto; font-size:10px" onclick="deleteTab('${tab.id}')"></i>
-                    </a>
-                </li>
-            `).join('');
-            
-            const activeTab = appState.tabs.find(t => t.id === appState.activeTabId);
-            document.getElementById('tab-heading').textContent = activeTab ? activeTab.name : 'Dashboard';
-        }
+// RENDER
+function renderAll() {
+    renderTabs();
+    renderAnnouncements();
+    renderReminders();
+}
 
-        function renderReminders() {
-            const list = document.getElementById('reminders-list');
-            list.innerHTML = appState.reminders.map(rem => `
-                <div class="reminder-card ${rem.type}">
-                    <div style="display:flex; justify-content:space-between">
-                        <strong>${rem.title}</strong>
-                        <i class="fas fa-times" style="cursor:pointer" onclick="deleteReminder('${rem.id}')"></i>
-                    </div>
-                    <div style="font-size:0.85rem; margin-top:5px; color:var(--medium)">
-                        <i class="fas fa-calendar-day"></i> ${new Date(rem.date).toLocaleDateString()}
-                    </div>
+function renderTabs() {
+    const menu = document.getElementById('sidebar-menu');
+
+    menu.innerHTML = appState.tabs.map(tab => `
+        <li>
+            <a href="#" class="sidebar-link ${appState.activeTabId === tab.id ? 'active' : ''}" 
+               onclick="switchTab('${tab.id}')">
+                <i class="fas fa-folder" style="margin-right:10px"></i> ${tab.name}
+                <i class="fas fa-trash" style="margin-left:auto; font-size:10px"
+                   onclick="event.stopPropagation(); deleteTab('${tab.id}')"></i>
+            </a>
+        </li>
+    `).join('');
+
+    const activeTab = appState.tabs.find(t => t.id === appState.activeTabId);
+    document.getElementById('tab-heading').textContent = activeTab ? activeTab.name : 'Dashboard';
+}
+
+function renderAnnouncements() {
+    const feed = document.getElementById('posts-feed');
+
+    const filtered = appState.announcements.filter(a => a.tabId === appState.activeTabId);
+
+    feed.innerHTML = filtered.map(ann => `
+        <div class="post-card" onclick="expandPost(this)">
+            <div style="display:flex; justify-content:space-between;">
+                <h3>${ann.title}</h3>
+                <div>
+                    <i class="fas fa-edit" onclick="event.stopPropagation(); editAnnouncement('${ann.id}')"></i>
+                    <i class="fas fa-trash" onclick="event.stopPropagation(); deleteAnnouncement('${ann.id}')"></i>
                 </div>
-            `).join('');
-        }
+            </div>
+            <div class="post-content-preview">${ann.content}</div>
+        </div>
+    `).join('');
+}
 
-        function renderAnnouncements() {
-            const feed = document.getElementById('posts-feed');
-            const filtered = appState.announcements.filter(a => a.tabId === appState.activeTabId);
+function renderReminders() {
+    const list = document.getElementById('reminders-list');
 
-            feed.innerHTML = filtered.map(ann => `
-                <div class="post-card" onclick="expandPost(this)">
-                    <div style="display:flex; justify-content:space-between; align-items:start">
-                        <h3>${ann.title}</h3>
-                        <div class="admin-only" style="display:flex; gap:10px">
-                            <i class="fas fa-edit" onclick="event.stopPropagation(); editAnnouncement('${ann.id}')"></i>
-                            <i class="fas fa-trash" onclick="event.stopPropagation(); deleteAnnouncement('${ann.id}')"></i>
-                        </div>
-                    </div>
-                    <div class="post-content-preview">${ann.content}</div>
-                </div>
-            `).join('');
-        }
+    list.innerHTML = appState.reminders.map(rem => `
+        <div class="reminder-card ${rem.type}">
+            <div style="display:flex; justify-content:space-between">
+                <strong>${rem.title}</strong>
+                <i class="fas fa-times" onclick="deleteReminder('${rem.id}')"></i>
+            </div>
+            <div style="font-size:0.85rem;">
+                ${new Date(rem.date).toLocaleDateString()}
+            </div>
+        </div>
+    `).join('');
+}
 
-        // --- Tab Logic ---
-        function switchTab(id) {
-            appState.activeTabId = id;
-            renderAll();
-        }
+// TAB
+function switchTab(id) {
+    appState.activeTabId = id;
+    renderAll();
+}
 
-        function openTabModal() { document.getElementById('tab-modal').style.display = 'flex'; }
+function saveTab() {
+    const name = document.getElementById('tab-name-input').value;
+    if (!name) return;
 
-        function saveTab() {
-            const name = document.getElementById('tab-name-input').value;
-            if (!name) return;
-            apiCall('Tabs', 'save', { id: 't_' + Date.now(), name: name });
-            closeModals();
-        }
+    apiCall('Tabs', 'save', {
+        id: 't_' + Date.now(),
+        name
+    });
 
-        function deleteTab(id) {
-            if (confirm("Delete this tab and all its announcements?")) {
-                apiCall('Tabs', 'delete', { id });
-            }
-        }
+    closeModals();
+}
 
-        // --- Announcement Logic ---
-        function openEditor() {
-            appState.editingAnnouncementId = null;
-            document.getElementById('ann-title').value = '';
-            document.getElementById('ann-content').innerHTML = '';
-            document.getElementById('editor-overlay').classList.add('visible');
-            document.getElementById('editor-mode-title').textContent = "New Announcement";
-        }
+function deleteTab(id) {
+    if (confirm("Delete tab?")) {
+        apiCall('Tabs', 'delete', { id });
+    }
+}
 
-        function closeEditor() {
-            document.getElementById('editor-overlay').classList.remove('visible');
-        }
+// ANNOUNCEMENTS
+function openEditor() {
+    appState.editingAnnouncementId = null;
+    document.getElementById('ann-title').value = '';
+    document.getElementById('ann-content').innerHTML = '';
+    document.getElementById('editor-overlay').classList.add('visible');
+}
 
-        function editAnnouncement(id) {
-            const ann = appState.announcements.find(a => a.id === id);
-            if (!ann) return;
-            appState.editingAnnouncementId = id;
-            document.getElementById('ann-title').value = ann.title;
-            document.getElementById('ann-content').innerHTML = ann.content;
-            document.getElementById('editor-mode-title').textContent = "Edit Announcement";
-            document.getElementById('editor-overlay').classList.add('visible');
-        }
+function editAnnouncement(id) {
+    const ann = appState.announcements.find(a => a.id === id);
+    if (!ann) return;
 
-        function saveAnnouncement() {
-            const title = document.getElementById('ann-title').value;
-            const content = document.getElementById('ann-content').innerHTML;
-            if (!title) return alert("Title is required");
+    appState.editingAnnouncementId = id;
+    document.getElementById('ann-title').value = ann.title;
+    document.getElementById('ann-content').innerHTML = ann.content;
 
-            const data = {
-                id: appState.editingAnnouncementId || 'ann_' + Date.now(),
-                tabId: appState.activeTabId,
-                title: title,
-                content: content,
-                date: new Date().toISOString()
-            };
+    document.getElementById('editor-overlay').classList.add('visible');
+}
 
-            apiCall('Announcements', 'save', data);
-            closeEditor();
-        }
+function saveAnnouncement() {
+    const title = document.getElementById('ann-title').value;
+    const content = document.getElementById('ann-content').innerHTML;
 
-        function deleteAnnouncement(id) {
-            if (confirm("Delete announcement?")) apiCall('Announcements', 'delete', { id });
-        }
+    if (!title) return alert("Title required");
 
-        // --- Reminder Logic ---
-        function openReminderModal() { document.getElementById('reminder-modal').style.display = 'flex'; }
-        
-        function saveReminder() {
-            const title = document.getElementById('rem-title').value;
-            const date = document.getElementById('rem-date').value;
-            const type = document.getElementById('rem-type').value;
-            if (!title || !date) return;
+    apiCall('Announcements', 'save', {
+        id: appState.editingAnnouncementId || 'ann_' + Date.now(),
+        tabId: appState.activeTabId,
+        title,
+        content,
+        date: new Date().toISOString()
+    });
 
-            apiCall('Reminders', 'save', { id: 'rem_'+Date.now(), title, date, type });
-            closeModals();
-        }
+    closeEditor();
+}
 
-        function deleteReminder(id) {
-            apiCall('Reminders', 'delete', { id });
-        }
+function deleteAnnouncement(id) {
+    apiCall('Announcements', 'delete', { id });
+}
 
-        // --- Post UI Interaction ---
-        function expandPost(card) {
-            if (card.classList.contains('expanded')) return;
-            document.querySelectorAll('.post-card.expanded').forEach(c => c.classList.remove('expanded'));
-            card.classList.add('expanded');
-            document.getElementById('expanded-controls').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
+// REMINDERS
+function saveReminder() {
+    const title = document.getElementById('rem-title').value;
+    const date = document.getElementById('rem-date').value;
+    const type = document.getElementById('rem-type').value;
 
-        function collapsePost() {
-            document.querySelectorAll('.post-card.expanded').forEach(c => c.classList.remove('expanded'));
-            document.getElementById('expanded-controls').style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
+    if (!title || !date) return;
 
-        // --- Utilities ---
-        function closeModals() {
-            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-        }
+    apiCall('Reminders', 'save', {
+        id: 'rem_' + Date.now(),
+        title,
+        date,
+        type
+    });
 
-        function exec(cmd, val = null) {
-            document.execCommand(cmd, false, val);
-        }
+    closeModals();
+}
 
-        function promptLink() {
-            const url = prompt("https://script.google.com/macros/s/AKfycbzcwWfk_bu3RlGe-FIFmDLKeINXqlp3fJN4YklKV8XFkxnKSnCg_Y8DPzXFRTfemd2NUQ/exec");
-            if (url) exec('createLink', url);
-        }
+function deleteReminder(id) {
+    apiCall('Reminders', 'delete', { id });
+}
 
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-        }
+// UI
+function closeModals() {
+    document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+}
 
-    </script>
+function expandPost(card) {
+    card.classList.add('expanded');
+    document.getElementById('expanded-controls').style.display = 'flex';
+}
+
+function collapsePost() {
+    document.querySelectorAll('.expanded').forEach(c => c.classList.remove('expanded'));
+    document.getElementById('expanded-controls').style.display = 'none';
+}
+
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+}
+</script>
 </body>
 </html>
