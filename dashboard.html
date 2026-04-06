@@ -50,7 +50,7 @@
         body {
             margin: 0;
             font-family: var(--font-main);
-            display: flex;e
+            display: flex;
             min-height: 100vh;
             background: var(--light);
             transition: background 0.3s;
@@ -635,6 +635,10 @@
                     body: JSON.stringify(payload)
                 });
                 
+                if (!response.ok) {
+                    throw new Error('HTTP error! status: ' + response.status);
+                }
+                
                 const result = await response.json();
                 console.log('Save result:', result);
                 
@@ -645,7 +649,7 @@
                 await refreshData();
             } catch (e) {
                 console.error("API call failed", e);
-                alert("Failed to save: " + e.message + "\n\nCheck that your Apps Script URL is correct and the script is deployed.");
+                alert("Failed to save: " + e.message + "\n\nCheck that your Apps Script URL is correct and the script is deployed.\n\nMake sure you've authorized the script by opening the URL in a browser first.");
             }
         }
         
@@ -885,8 +889,10 @@
         }
         
         function promptLink() {
-            const url = prompt("https://script.google.com/macros/s/AKfycbw5YCEB5dtvbEvbm06i7pEkvNYJzquVV2m9-Z3734Q40OqFVgOJKLmvRVxl-dh1x1y4tw/exec");
-            if (url) exec('createLink', url);
+            const url = prompt("Enter the URL:");
+            if (url && url !== "") {
+                exec('createLink', url);
+            }
         }
         
         function toggleDarkMode() {
