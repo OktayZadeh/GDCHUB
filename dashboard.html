@@ -1,924 +1,1105 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Classroom Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        :root {
-            --primary: #3EA899;
-            --primary-light: #E0F2F1;
-            --primary-dark: #2D7D78;
-            --secondary: #4A89DC;
-            --accent: #4CC9F0;
-            --success: #48BB78;
-            --warning: #ED8936;
-            --danger: #F56565;
-            --dark: #1A202C;
-            --dark-gray: #2D3748;
-            --medium: #718096;
-            --light-gray: #E2E8F0;
-            --light: #F7FAFC;
-            --lighter: #FFFFFF;
-            --font-main: 'Inter', sans-serif;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-            --radius-md: 8px;
-        }
+<html lang="en" class="dark"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduSpace — Classroom Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root {
+  --primary:#0d9488;--primary-light:#ccfbf1;--primary-dark:#0f766e;--accent:#f59e0b;
+  --bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;--border:#e2e8f0;
+  --text:#0f172a;--text-muted:#64748b;--text-light:#94a3b8;
+  --danger:#ef4444;--danger-light:#fee2e2;--success:#22c55e;
+  --shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 6px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.05);
+  --shadow-lg:0 10px 15px rgba(0,0,0,0.1),0 4px 6px rgba(0,0,0,0.05);
+  --radius:10px;--radius-sm:6px;--radius-lg:16px;
+  --nav-h:56px;--sidebar-w:240px;--font:'DM Sans',sans-serif;--transition:0.2s ease;
+}
+.dark{
+  --bg:#0f172a;--surface:#1e293b;--surface2:#334155;--border:#334155;
+  --text:#f1f5f9;--text-muted:#94a3b8;--text-light:#64748b;
+  --shadow:0 1px 3px rgba(0,0,0,0.3);--shadow-md:0 4px 6px rgba(0,0,0,0.25);
+  --shadow-lg:0 10px 15px rgba(0,0,0,0.35);--primary-light:#0f2e2a;
+  --danger-light:#3b1010;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);transition:background var(--transition),color var(--transition)}
+button{font-family:var(--font);cursor:pointer;border:none;background:none}
+input,textarea,select{font-family:var(--font)}
+a{color:var(--primary);text-decoration:none}
 
-        body.dark-mode {
-            --light: #1A202C;
-            --lighter: #2D3748;
-            --dark: #F7FAFC;
-            --medium: #A0AEC0;
-            background: var(--light);
-            color: var(--dark);
-        }
-        
-        body.dark-mode .topbar, 
-        body.dark-mode .sidebar, 
-        body.dark-mode .post-card, 
-        body.dark-mode .reminders-container,
-        body.dark-mode .modal-content {
-            background: var(--lighter);
-            border-color: #4A5568;
-        }
+/* ── Loading overlay ── */
+#loading-overlay{position:fixed;inset:0;background:var(--bg);z-index:9998;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .4s ease}
+#loading-overlay.hidden{opacity:0;pointer-events:none}
+.loading-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:var(--text-muted)}
+.loading-error{display:none;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:0 24px}
+.loading-error i{font-size:32px;color:var(--danger)}
+.loading-error p{font-size:14px;color:var(--text-muted);max-width:320px;line-height:1.6}
+.loading-error .btn{margin-top:4px}
 
-        body {
-            margin: 0;
-            font-family: var(--font-main);
-            display: flex;
-            min-height: 100vh;
-            background: var(--light);
-            transition: background 0.3s;
-        }
-        
-        .topbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 56px;
-            background: var(--lighter);
-            border-bottom: 1px solid var(--light-gray);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            box-shadow: var(--shadow-sm);
-        }
-        
-        .topbar-content {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .topbar-logo {
-            height: 38px;
-            width: 38px;
-            background: var(--primary);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-        
-        .topbar-title {
-            font-weight: 700;
-            color: var(--primary);
-            font-size: 1.2rem;
-        }
+#topnav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px;z-index:1000;box-shadow:var(--shadow)}
+#topnav .logo{display:flex;align-items:center;gap:8px;font-weight:600;font-size:17px;color:var(--primary)}
+#topnav .logo i{font-size:20px}
+#nav-title{flex:1;font-size:14px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--radius-sm);font-size:13px;color:var(--text-muted);transition:all var(--transition)}
+.nav-btn:hover{background:var(--surface2);color:var(--text)}
+#hamburger{display:none;padding:6px 10px}
+.sync-pill{display:none;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);transition:all .3s}
+.sync-pill.show{display:inline-flex}
+.sync-pill.syncing{color:var(--accent);border-color:var(--accent)}
+.sync-pill.ok{color:var(--success);border-color:var(--success)}
+.sync-pill.err{color:var(--danger);border-color:var(--danger)}
+.sync-pill i{font-size:7px}
 
-        .sidebar {
-            width: 260px;
-            background: var(--lighter);
-            border-right: 1px solid var(--light-gray);
-            position: fixed;
-            top: 56px;
-            bottom: 0;
-            z-index: 100;
-            transition: transform 0.3s;
-            overflow-y: auto;
-        }
-        
-        .sidebar-header {
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--light-gray);
-        }
-        
-        .sidebar-menu {
-            list-style: none;
-            padding: 10px 0;
-            margin: 0;
-        }
-        
-        .sidebar-link {
-            display: flex;
-            align-items: center;
-            padding: 12px 20px;
-            color: var(--medium);
-            text-decoration: none;
-            transition: 0.2s;
-            font-weight: 500;
-            cursor: pointer;
-        }
-        
-        .sidebar-link:hover {
-            background: var(--primary-light);
-            color: var(--primary);
-        }
-        
-        .sidebar-link.active {
-            background: var(--primary-light);
-            color: var(--primary);
-            border-right: 4px solid var(--primary);
-        }
-        
-        .delete-tab-btn {
-            margin-left: auto;
-            font-size: 12px;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        
-        .sidebar-link:hover .delete-tab-btn {
-            opacity: 1;
-        }
+#sidebar{position:fixed;top:var(--nav-h);left:0;bottom:0;width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:900;transition:transform var(--transition);overflow:hidden}
+#sidebar.collapsed{transform:translateX(-100%)}
+#sidebar-header{padding:14px 16px 8px;display:flex;align-items:center;justify-content:space-between}
+#sidebar-header span{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}
+#add-tab-btn{width:26px;height:26px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;transition:transform var(--transition)}
+#add-tab-btn:hover{transform:scale(1.1)}
+#tabs-list{flex:1;overflow-y:auto;padding:4px 8px}
+.tab-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:var(--radius-sm);cursor:pointer;color:var(--text-muted);font-size:14px;font-weight:500;transition:all var(--transition);margin-bottom:2px;user-select:none}
+.tab-item:hover{background:var(--surface2);color:var(--text)}
+.tab-item.active{background:var(--primary-light);color:var(--primary)}
+.tab-item .tab-drag{cursor:grab;opacity:.4;font-size:12px;margin-right:2px}
+.tab-item .tab-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tab-item .tab-actions{display:none;gap:2px}
+.tab-item:hover .tab-actions{display:flex}
+.tab-action-btn{width:22px;height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-muted);transition:all var(--transition)}
+.tab-action-btn:hover{background:var(--border);color:var(--text)}
+.tab-action-btn.del:hover{background:var(--danger-light);color:var(--danger)}
+#sidebar-footer{padding:12px 16px;border-top:1px solid var(--border)}
+.sidebar-nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius-sm);font-size:14px;color:var(--text-muted);cursor:pointer;transition:all var(--transition)}
+.sidebar-nav-item:hover{background:var(--surface2);color:var(--text)}
+.sidebar-nav-item.active{color:var(--primary)}
 
-        .main-content {
-            flex-grow: 1;
-            margin-left: 260px;
-            margin-top: 56px;
-            padding: 40px;
-            max-width: 1200px;
-        }
-        
-        .reminders-container {
-            background: var(--lighter);
-            border-radius: var(--radius-md);
-            padding: 24px;
-            border: 1px solid var(--light-gray);
-            margin-bottom: 30px;
-        }
-        
-        .reminders-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        .reminders-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 16px;
-        }
-        
-        .reminder-card {
-            background: var(--light);
-            border-left: 4px solid var(--primary);
-            padding: 16px;
-            border-radius: 6px;
-            position: relative;
-            box-shadow: var(--shadow-sm);
-        }
-        
-        .reminder-card.test {
-            border-left-color: var(--danger);
-        }
-        
-        .reminder-card.trip {
-            border-left-color: var(--success);
-        }
-        
-        .delete-reminder {
-            cursor: pointer;
-            opacity: 0.6;
-            transition: opacity 0.2s;
-        }
-        
-        .delete-reminder:hover {
-            opacity: 1;
-        }
+#main{margin-left:var(--sidebar-w);margin-top:var(--nav-h);min-height:calc(100vh - var(--nav-h));transition:margin-left var(--transition)}
+#main.sidebar-hidden{margin-left:0}
+#tab-bg{min-height:calc(100vh - var(--nav-h));transition:background var(--transition)}
+.view{display:none;padding:24px}
+.view.active{display:block}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.section-header h2{font-size:20px;font-weight:600;flex:1}
+.section-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
-        .post-card {
-            background: var(--lighter);
-            border-radius: 12px;
-            padding: 24px;
-            border: 1px solid var(--light-gray);
-            margin-bottom: 20px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .post-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-        
-        .post-card h3 {
-            margin-bottom: 10px;
-            color: var(--primary);
-            margin-top: 0;
-        }
-        
-        .post-content-preview {
-            color: var(--medium);
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        
-        .post-actions {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: none;
-            gap: 10px;
-        }
-        
-        .post-card:hover .post-actions {
-            display: flex;
-        }
-        
-        .post-actions i {
-            cursor: pointer;
-            opacity: 0.6;
-            transition: opacity 0.2s;
-        }
-        
-        .post-actions i:hover {
-            opacity: 1;
-        }
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;transition:all var(--transition);white-space:nowrap}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--border)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{filter:brightness(0.9)}
+.btn-sm{padding:5px 10px;font-size:12px}
 
-        .post-card.expanded {
-            position: fixed;
-            top: 56px;
-            left: 260px;
-            right: 0;
-            bottom: 0;
-            z-index: 500;
-            background: var(--lighter);
-            border-radius: 0;
-            cursor: default;
-            padding: 60px;
-            overflow-y: auto;
-        }
-        
-        .post-card.expanded .post-actions {
-            display: flex;
-        }
-        
-        .expanded-controls {
-            position: fixed;
-            top: 56px;
-            left: 260px;
-            right: 0;
-            height: 50px;
-            background: var(--lighter);
-            border-bottom: 1px solid var(--light-gray);
-            display: none;
-            align-items: center;
-            padding: 0 20px;
-            z-index: 600;
-        }
+.search-box{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;transition:border var(--transition)}
+.search-box:focus-within{border-color:var(--primary)}
+.search-box i{color:var(--text-muted);font-size:13px}
+.search-box input{border:none;background:none;outline:none;font-size:13px;color:var(--text);width:160px}
 
-        #editor-overlay {
-            position: fixed;
-            inset: 0;
-            background: var(--light);
-            z-index: 2000;
-            transform: translateY(100%);
-            transition: transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1);
-            display: flex;
-            flex-direction: column;
-        }
-        
-        #editor-overlay.visible {
-            transform: translateY(0);
-        }
-        
-        .editor-header {
-            padding: 10px 40px;
-            background: var(--lighter);
-            border-bottom: 1px solid var(--light-gray);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        .editor-toolbar {
-            background: #f8f9fa;
-            padding: 8px;
-            display: flex;
-            gap: 5px;
-            border-bottom: 1px solid #ddd;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        
-        body.dark-mode .editor-toolbar {
-            background: #2D3748;
-            border-color: #4A5568;
-        }
-        
-        .editor-area {
-            flex-grow: 1;
-            background: white;
-            width: 100%;
-            max-width: 850px;
-            margin: 20px auto;
-            padding: 50px;
-            outline: none;
-            box-shadow: 0 0 10px rgba(0,0,0,0.05);
-            color: #1a1a1a;
-            font-size: 1.1rem;
-            line-height: 1.6;
-            overflow-y: auto;
-        }
-        
-        body.dark-mode .editor-area {
-            background: #1A202C;
-            color: #F7FAFC;
-        }
+.pinned-section,.unpinned-section{margin-bottom:20px}
+.section-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.post-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden;transition:box-shadow var(--transition),transform var(--transition);cursor:pointer}
+.post-card:hover{box-shadow:var(--shadow-md)}
+.post-card.dragging{opacity:.5;transform:scale(0.98)}
+.post-card.drag-over{border-color:var(--primary);border-style:dashed}
+.post-card-header{display:flex;align-items:flex-start;gap:10px;padding:14px 14px 0}
+.post-drag-handle{color:var(--text-light);font-size:13px;margin-top:2px;cursor:grab}
+.post-pin{color:var(--accent);font-size:13px;margin-top:2px}
+.post-title{font-size:15px;font-weight:600;flex:1;line-height:1.4}
+.post-actions{display:flex;gap:4px;opacity:0;transition:opacity var(--transition)}
+.post-card:hover .post-actions{opacity:1}
+.post-action{width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-muted);transition:all var(--transition)}
+.post-action:hover{background:var(--surface2)}
+.post-action.pin-active{color:var(--accent)}
+.post-action.danger:hover{background:var(--danger-light);color:var(--danger)}
+.post-preview{padding:8px 14px 14px;font-size:13px;color:var(--text-muted);line-height:1.6;max-height:80px;overflow:hidden}
+.post-footer{padding:0 14px 12px;display:flex;align-items:center;gap:10px;font-size:11px;color:var(--text-light)}
+.post-footer .post-time{display:flex;align-items:center;gap:4px}
 
-        .btn {
-            padding: 10px 18px;
-            border-radius: 6px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: var(--primary-dark);
-        }
-        
-        .btn-secondary {
-            background: var(--light-gray);
-            color: var(--dark-gray);
-        }
-        
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-        
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 1px solid var(--light-gray);
-            border-radius: 6px;
-            background: var(--lighter);
-            color: var(--dark);
-            box-sizing: border-box;
-        }
+#expanded-overlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:2000;overflow-y:auto;padding:24px}
+#expanded-overlay.open{display:block}
+#expanded-back{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-muted);margin-bottom:20px;cursor:pointer;transition:color var(--transition)}
+#expanded-back:hover{color:var(--primary)}
+#expanded-content{max-width:800px;margin:0 auto}
+#expanded-content h1{font-size:28px;font-weight:700;margin-bottom:8px}
+#expanded-content .meta{font-size:13px;color:var(--text-muted);margin-bottom:24px}
+#expanded-body{font-size:15px;line-height:1.8;color:var(--text)}
+#expanded-body img{max-width:100%;border-radius:var(--radius-sm)}
+#expanded-body iframe{max-width:100%;border-radius:var(--radius-sm)}
 
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 3000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-content {
-            background: var(--lighter);
-            padding: 30px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: var(--shadow-md);
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: var(--medium);
-        }
-        
-        .subject-selector {
-            display: flex;
-            gap: 10px;
-            margin-left: 20px;
-        }
-        
-        .subject-selector input {
-            width: auto;
-            margin-bottom: 0;
-            padding: 6px 12px;
-        }
+.reminders-list{column-count:3;column-gap:14px}
+@media(max-width:900px){.reminders-list{column-count:2}}
+@media(max-width:600px){.reminders-list{column-count:1}}
+.reminder-card{break-inside:avoid;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:14px;margin-bottom:14px;transition:all var(--transition)}
+.reminder-card:hover{box-shadow:var(--shadow-md)}
+.reminder-card.dragging{opacity:.5}
+.reminder-type-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:10px;margin-bottom:8px}
+.type-fieldtrip{background:#fef3c7;color:#d97706}
+.type-internal{background:#dbeafe;color:#1d4ed8}
+.type-external{background:#f3e8ff;color:#7c3aed}
+.type-deadline{background:#fee2e2;color:#dc2626}
+.reminder-title{font-size:14px;font-weight:600;margin-bottom:6px}
+.reminder-date{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-muted);margin-bottom:4px}
+.reminder-desc{font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:8px}
+.reminder-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.reminder-meta a{font-size:11px;display:flex;align-items:center;gap:3px}
+.reminder-actions{display:flex;gap:4px;margin-top:8px;opacity:0;transition:opacity var(--transition)}
+.reminder-card:hover .reminder-actions{opacity:1}
+.export-btn{font-size:11px;display:flex;align-items:center;gap:3px;padding:3px 6px;border-radius:4px;border:1px solid var(--border);color:var(--text-muted);transition:all var(--transition)}
+.export-btn:hover{border-color:var(--primary);color:var(--primary)}
+.reminder-view-toggle{display:flex;background:var(--surface2);border-radius:var(--radius-sm);padding:2px;width:fit-content}
+.reminder-view-btn{padding:5px 12px;border-radius:5px;font-size:12px;font-weight:500;color:var(--text-muted);transition:all var(--transition)}
+.reminder-view-btn.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
 
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-            .main-content {
-                margin-left: 0;
-            }
-            .post-card.expanded, .expanded-controls {
-                left: 0;
-            }
-        }
-    </style>
+#calendar-view{display:none}
+.cal-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.cal-header h3{flex:1;text-align:center;font-size:16px;font-weight:600}
+.cal-nav-btn{width:32px;height:32px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all var(--transition)}
+.cal-nav-btn:hover{background:var(--surface2)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-day-label{text-align:center;font-size:11px;font-weight:600;color:var(--text-muted);padding:6px 0;text-transform:uppercase}
+.cal-day{min-height:80px;background:var(--surface);border-radius:var(--radius-sm);border:1px solid var(--border);padding:6px;cursor:pointer;transition:all var(--transition)}
+.cal-day:hover{border-color:var(--primary)}
+.cal-day.other-month{opacity:.4}
+.cal-day.today{border-color:var(--primary);background:var(--primary-light)}
+.cal-day.drag-over{border-color:var(--primary);border-style:dashed;background:var(--primary-light)}
+.cal-day-num{font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:4px}
+.cal-event-dot{font-size:10px;padding:1px 5px;border-radius:3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:100%;max-width:560px;max-height:90vh;overflow-y:auto;animation:modal-in .2s ease}
+@keyframes modal-in{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.modal-header{display:flex;align-items:center;gap:12px;padding:18px 20px 0}
+.modal-header h3{flex:1;font-size:16px;font-weight:600}
+.modal-close{width:30px;height:30px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all var(--transition)}
+.modal-close:hover{background:var(--surface2)}
+.modal-body{padding:16px 20px}
+.modal-footer{padding:0 20px 18px;display:flex;justify-content:flex-end;gap:8px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.form-control{width:100%;padding:8px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:14px;outline:none;transition:border var(--transition)}
+.form-control:focus{border-color:var(--primary)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.editor-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:2px;padding:8px;background:var(--surface2);border-radius:var(--radius-sm) var(--radius-sm) 0 0;border:1px solid var(--border);border-bottom:none}
+.toolbar-btn{width:28px;height:28px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-muted);transition:all var(--transition);cursor:pointer}
+.toolbar-btn:hover{background:var(--border);color:var(--text)}
+.toolbar-sep{width:1px;height:18px;background:var(--border);margin:0 4px}
+.toolbar-select{padding:3px 6px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;outline:none;cursor:pointer;height:28px}
+.color-btn-wrap{position:relative}
+.color-btn-wrap input[type=color]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+#editor-content{min-height:200px;padding:12px;border:1px solid var(--border);border-radius:0 0 var(--radius-sm) var(--radius-sm);background:var(--surface);color:var(--text);outline:none;font-size:14px;line-height:1.7}
+#editor-content:empty::before{content:attr(data-placeholder);color:var(--text-light)}
+
+#snackbar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1e293b;color:#fff;padding:12px 18px;border-radius:var(--radius);font-size:13px;display:flex;align-items:center;gap:12px;z-index:9999;transition:transform .3s ease;box-shadow:var(--shadow-lg);max-width:400px}
+.dark #snackbar{background:#f1f5f9;color:#0f172a}
+#snackbar.show{transform:translateX(-50%) translateY(0)}
+#snackbar-undo{color:var(--accent);font-weight:600;cursor:pointer;background:none;border:none;font-size:13px;font-family:var(--font)}
+
+#confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:4000;align-items:center;justify-content:center}
+#confirm-overlay.open{display:flex}
+#confirm-box{background:var(--surface);border-radius:var(--radius-lg);padding:24px;max-width:360px;width:100%;box-shadow:var(--shadow-lg);animation:modal-in .2s ease}
+#confirm-box h3{font-size:16px;font-weight:600;margin-bottom:8px}
+#confirm-box p{font-size:14px;color:var(--text-muted);margin-bottom:20px}
+#confirm-box .actions{display:flex;justify-content:flex-end;gap:8px}
+
+.tooltip{position:relative}
+.tooltip::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;font-size:11px;padding:4px 8px;border-radius:4px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:999}
+.dark .tooltip::after{background:#f1f5f9;color:#0f172a}
+.tooltip:hover::after{opacity:1}
+
+.bg-options{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.color-swatch{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform var(--transition)}
+.color-swatch:hover,.color-swatch.active{transform:scale(1.15);border-color:var(--text)}
+
+.drag-ghost{opacity:.3!important}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-muted)}
+.empty-state i{font-size:32px;margin-bottom:12px;display:block;color:var(--text-light)}
+.empty-state p{font-size:14px}
+
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%)}
+  #sidebar.mobile-open{transform:translateX(0)}
+  #main{margin-left:0}
+  #hamburger{display:flex}
+  .form-row{grid-template-columns:1fr}
+  .view{padding:16px}
+}
+@media(max-width:500px){
+  .section-header{flex-direction:column;align-items:flex-start}
+  .section-actions{width:100%}
+}
+</style>
 </head>
 <body>
 
-    <div class="topbar">
-        <div class="topbar-content">
-            <div class="topbar-logo">
-                <i class="fas fa-chalkboard"></i>
-            </div>
-            <span class="topbar-title" id="page-title">Classroom Dashboard</span>
+<!-- Loading overlay shown on startup while fetching from Sheets -->
+<div id="loading-overlay">
+  <div id="loading-spinner-wrap" style="display:flex;flex-direction:column;align-items:center;gap:12px">
+    <div class="loading-spinner"></div>
+    <span class="loading-text">Loading from Google Sheets…</span>
+  </div>
+  <div class="loading-error" id="loading-error">
+    <i class="fas fa-exclamation-circle"></i>
+    <p id="loading-error-msg">Could not reach Google Sheets. Check your SHEETS_URL and try again.</p>
+    <button class="btn btn-primary btn-sm" onclick="retryLoad()"><i class="fas fa-redo"></i> Retry</button>
+    <button class="btn btn-secondary btn-sm" onclick="loadFromLocalFallback()"><i class="fas fa-database"></i> Load local cache</button>
+  </div>
+</div>
+
+<nav id="topnav">
+  <button id="hamburger" class="nav-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+  <div class="logo"><i class="fas fa-chalkboard-teacher"></i>EduSpace</div>
+  <span id="nav-title"></span>
+  <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+    <span id="sync-pill" class="sync-pill"><i class="fas fa-circle"></i><span id="sync-text">Synced</span></span>
+    <button class="nav-btn tooltip" data-tip="Refresh from Sheets" onclick="loadFromSheets(true)"><i class="fas fa-sync-alt"></i></button>
+    <button class="nav-btn tooltip" data-tip="Toggle Dark Mode" onclick="toggleDark()"><i id="dark-icon" class="fas fa-sun"></i></button>
+    <button class="nav-btn tooltip" data-tip="Settings" onclick="openSettings()"><i class="fas fa-cog"></i></button>
+  </div>
+</nav>
+
+<aside id="sidebar">
+  <div id="sidebar-header">
+    <span>Classrooms</span>
+    <button id="add-tab-btn" class="tooltip" data-tip="New Classroom" onclick="openAddTab()"><i class="fas fa-plus"></i></button>
+  </div>
+  <div id="tabs-list"></div>
+  <div id="sidebar-footer">
+    <div class="sidebar-nav-item" id="nav-announcements" onclick="switchView('announcements')">
+      <i class="fas fa-bullhorn" style="width:16px;text-align:center"></i> Announcements
+    </div>
+    <div class="sidebar-nav-item" id="nav-reminders" onclick="switchView('reminders')">
+      <i class="fas fa-calendar-alt" style="width:16px;text-align:center"></i> Events
+    </div>
+  </div>
+</aside>
+
+<div id="main">
+  <div id="tab-bg">
+
+    <div class="view active" id="view-announcements">
+      <div class="section-header">
+        <h2>Announcements</h2>
+        <div class="section-actions">
+          <div class="search-box"><i class="fas fa-search"></i><input id="post-search" placeholder="Search..." oninput="renderPosts()"></div>
+          <button class="btn btn-primary" onclick="openPostModal()"><i class="fas fa-plus"></i> New Post</button>
         </div>
-        <div class="subject-selector">
-            <input type="text" id="subject-input" placeholder="Subject" value="General">
-            <input type="text" id="year-input" placeholder="Year" value="2024">
-            <button class="btn btn-primary" onclick="changeSubject()">Go</button>
-        </div>
-        <div style="margin-left: auto; display: flex; gap: 10px;">
-            <button class="btn btn-secondary" onclick="toggleDarkMode()"><i class="fas fa-moon"></i></button>
-        </div>
+      </div>
+      <div id="posts-area"></div>
     </div>
 
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <span style="font-weight: 800; color: var(--primary)">DASHBOARD</span>
-            <button class="btn btn-primary" style="padding: 2px 8px;" onclick="openTabModal()">+</button>
+    <div class="view" id="view-reminders">
+      <div class="section-header">
+        <h2>Events &amp; Reminders</h2>
+        <div class="section-actions">
+          <div class="reminder-view-toggle">
+            <button class="reminder-view-btn active" id="list-view-btn" onclick="setReminderView('list')"><i class="fas fa-list"></i> List</button>
+            <button class="reminder-view-btn" id="cal-view-btn" onclick="setReminderView('month')"><i class="fas fa-calendar"></i> Calendar</button>
+          </div>
+          <button class="btn btn-primary" onclick="openReminderModal()"><i class="fas fa-plus"></i> New Event</button>
         </div>
-        <ul class="sidebar-menu" id="sidebar-menu">
-            <div class="loading">Loading tabs...</div>
-        </ul>
-    </aside>
-
-    <main class="main-content">
-        <div class="reminders-container">
-            <div class="reminders-header">
-                <h2><i class="fas fa-bell"></i> Upcoming Reminders</h2>
-                <button class="btn btn-primary" onclick="openReminderModal()">+ New Reminder</button>
-            </div>
-            <div class="reminders-list" id="reminders-list">
-                <div class="loading">Loading reminders...</div>
-            </div>
+      </div>
+      <div id="reminders-list-view" style="display:block">
+        <div id="reminders-list-container" class="reminders-list"></div>
+      </div>
+      <div id="calendar-view" style="display:none">
+        <div class="cal-header">
+          <button class="cal-nav-btn" onclick="calNav(-1)"><i class="fas fa-chevron-left"></i></button>
+          <h3 id="cal-title"></h3>
+          <button class="cal-nav-btn" onclick="calNav(1)"><i class="fas fa-chevron-right"></i></button>
         </div>
-
-        <div class="header-content" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
-            <h1 id="tab-heading">Classroom</h1>
-            <button class="btn btn-primary" onclick="openEditor()">+ Create Announcement</button>
-        </div>
-
-        <div id="posts-feed">
-            <div class="loading">Loading announcements...</div>
-        </div>
-    </main>
-
-    <div class="expanded-controls" id="expanded-controls">
-        <button class="btn btn-secondary" onclick="collapsePost()"><i class="fas fa-arrow-left"></i> Back to Feed</button>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
     </div>
 
-    <div id="editor-overlay">
-        <div class="editor-header">
-            <h2 id="editor-mode-title">New Announcement</h2>
-            <div style="display:flex; gap:10px;">
-                <button class="btn btn-secondary" onclick="closeEditor()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveAnnouncement()">Post Announcement</button>
-            </div>
+    <div class="view" id="view-settings">
+      <div class="section-header"><h2>Settings</h2></div>
+      <div style="padding:0 4px">
+        <div class="form-group">
+          <label>Tab Background Color</label>
+          <div class="bg-options" id="bg-color-options">
+            <div class="color-swatch" style="background:#f8fafc" data-color="#f8fafc" onclick="setTabBg(this)"></div>
+            <div class="color-swatch" style="background:#e0f2fe" data-color="#e0f2fe" onclick="setTabBg(this)"></div>
+            <div class="color-swatch" style="background:#dcfce7" data-color="#dcfce7" onclick="setTabBg(this)"></div>
+            <div class="color-swatch" style="background:#fef3c7" data-color="#fef3c7" onclick="setTabBg(this)"></div>
+            <div class="color-swatch" style="background:#fce7f3" data-color="#fce7f3" onclick="setTabBg(this)"></div>
+            <div class="color-swatch" style="background:#ede9fe" data-color="#ede9fe" onclick="setTabBg(this)"></div>
+            <div class="color-swatch" style="background:#1e293b" data-color="#1e293b" onclick="setTabBg(this)"></div>
+            <input type="color" id="custom-bg-color" style="width:28px;height:28px;border-radius:50%;border:2px solid var(--border);cursor:pointer;padding:2px" onchange="setTabBgCustom(this.value)">
+          </div>
         </div>
+        <div class="form-group">
+          <label>Tab Background Image</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer"><i class="fas fa-image"></i> Upload Image<input type="file" accept="image/*" style="display:none" onchange="uploadBgImage(event)"></label>
+            <button class="btn btn-secondary btn-sm" onclick="revertBg()"><i class="fas fa-undo"></i> Revert</button>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:24px">
+          <label>App Theme</label>
+          <button class="btn btn-secondary" onclick="toggleDark()"><i class="fas fa-adjust"></i> Toggle Dark/Light Mode</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="expanded-overlay">
+  <div onclick="closeExpanded()" id="expanded-back"><i class="fas fa-arrow-left"></i> Back to announcements</div>
+  <div id="expanded-content">
+    <h1 id="expanded-title"></h1>
+    <div class="meta" id="expanded-meta"></div>
+    <div id="expanded-body"></div>
+  </div>
+</div>
+
+<!-- Modals (unchanged structure) -->
+<div class="modal-overlay" id="post-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="post-modal-title">New Announcement</h3>
+      <button class="modal-close" onclick="closePostModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Title</label>
+        <input class="form-control" id="post-title-input" placeholder="Post title...">
+      </div>
+      <div class="form-group">
+        <label>Content</label>
         <div class="editor-toolbar">
-            <button class="btn btn-secondary" onclick="exec('bold')"><b>B</b></button>
-            <button class="btn btn-secondary" onclick="exec('italic')"><i>I</i></button>
-            <button class="btn btn-secondary" onclick="exec('underline')"><u>U</u></button>
-            <button class="btn btn-secondary" onclick="exec('insertUnorderedList')"><i class="fas fa-list-ul"></i></button>
-            <button class="btn btn-secondary" onclick="promptLink()"><i class="fas fa-link"></i></button>
-            <button class="btn btn-secondary" onclick="exec('formatBlock', 'h2')">H1</button>
-            <button class="btn btn-secondary" onclick="exec('formatBlock', 'h3')">H2</button>
+          <select class="toolbar-select" onchange="execFormat('formatBlock',this.value);this.value=''">
+            <option value="">Paragraph</option><option value="h1">H1</option><option value="h2">H2</option><option value="h3">H3</option><option value="blockquote">Quote</option>
+          </select>
+          <select class="toolbar-select" onchange="execFormat('fontName',this.value)">
+            <option value="DM Sans">DM Sans</option><option value="Georgia">Georgia</option><option value="Courier New">Courier New</option><option value="Arial">Arial</option>
+          </select>
+          <div class="toolbar-sep"></div>
+          <button class="toolbar-btn tooltip" data-tip="Bold" onclick="execFormat('bold')"><i class="fas fa-bold"></i></button>
+          <button class="toolbar-btn tooltip" data-tip="Italic" onclick="execFormat('italic')"><i class="fas fa-italic"></i></button>
+          <button class="toolbar-btn tooltip" data-tip="Underline" onclick="execFormat('underline')"><i class="fas fa-underline"></i></button>
+          <div class="toolbar-sep"></div>
+          <button class="toolbar-btn tooltip" data-tip="Bullet List" onclick="execFormat('insertUnorderedList')"><i class="fas fa-list-ul"></i></button>
+          <button class="toolbar-btn tooltip" data-tip="Numbered List" onclick="execFormat('insertOrderedList')"><i class="fas fa-list-ol"></i></button>
+          <div class="toolbar-sep"></div>
+          <button class="toolbar-btn tooltip" data-tip="Align Left" onclick="execFormat('justifyLeft')"><i class="fas fa-align-left"></i></button>
+          <button class="toolbar-btn tooltip" data-tip="Align Center" onclick="execFormat('justifyCenter')"><i class="fas fa-align-center"></i></button>
+          <button class="toolbar-btn tooltip" data-tip="Align Right" onclick="execFormat('justifyRight')"><i class="fas fa-align-right"></i></button>
+          <div class="toolbar-sep"></div>
+          <div class="color-btn-wrap toolbar-btn tooltip" data-tip="Text Color"><i class="fas fa-font"></i><input type="color" onchange="execFormat('foreColor',this.value)"></div>
+          <div class="color-btn-wrap toolbar-btn tooltip" data-tip="Highlight"><i class="fas fa-highlighter"></i><input type="color" onchange="execFormat('hiliteColor',this.value)"></div>
+          <div class="toolbar-sep"></div>
+          <button class="toolbar-btn tooltip" data-tip="Insert Link" onclick="insertLink()"><i class="fas fa-link"></i></button>
+          <button class="toolbar-btn tooltip" data-tip="Embed Media" onclick="insertEmbed()"><i class="fas fa-film"></i></button>
+          <div class="toolbar-sep"></div>
+          <button class="toolbar-btn tooltip" data-tip="Undo" onclick="execFormat('undo')"><i class="fas fa-undo"></i></button>
+          <button class="toolbar-btn tooltip" data-tip="Redo" onclick="execFormat('redo')"><i class="fas fa-redo"></i></button>
         </div>
-        <div style="flex-grow:1; display:flex; flex-direction:column; background:#eee;">
-            <input type="text" id="ann-title" placeholder="Title of Announcement..." style="font-size: 2.2rem; font-weight: 700; border: none; padding: 30px 40px; margin: 0 auto; max-width: 850px; width: 100%; border-bottom: 1px solid #ddd; border-radius: 0; background: white;">
-            <div id="ann-content" class="editor-area" contenteditable="true"></div>
-        </div>
+        <div id="editor-content" contenteditable="true" data-placeholder="Write your announcement..."></div>
+      </div>
     </div>
-
-    <div id="tab-modal" class="modal">
-        <div class="modal-content">
-            <h2>Add New Tab</h2>
-            <input type="text" id="tab-name-input" placeholder="e.g. Weekly Updates">
-            <div style="display:flex; justify-content:flex-end; gap:10px;">
-                <button class="btn btn-secondary" onclick="closeModals()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveTab()">Add Tab</button>
-            </div>
-        </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closePostModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePost()"><i class="fas fa-save"></i> Save</button>
     </div>
+  </div>
+</div>
 
-    <div id="reminder-modal" class="modal">
-        <div class="modal-content">
-            <h2>New Reminder</h2>
-            <input type="text" id="rem-title" placeholder="Reminder Title">
-            <input type="date" id="rem-date">
-            <select id="rem-type">
-                <option value="general">General</option>
-                <option value="test">Assessment / Test</option>
-                <option value="trip">Trip / Event</option>
-            </select>
-            <div style="display:flex; justify-content:flex-end; gap:10px;">
-                <button class="btn btn-secondary" onclick="closeModals()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveReminder()">Save</button>
-            </div>
-        </div>
+<div class="modal-overlay" id="reminder-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="reminder-modal-title">New Event</h3>
+      <button class="modal-close" onclick="closeReminderModal()"><i class="fas fa-times"></i></button>
     </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>Title</label><input class="form-control" id="reminder-title-input" placeholder="Event title..."></div>
+        <div class="form-group"><label>Type</label>
+          <select class="form-control" id="reminder-type-input">
+            <option value="internal">Internal</option><option value="external">External</option><option value="fieldtrip">Field Trip</option><option value="deadline">Deadline</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Date</label><input class="form-control" id="reminder-date-input" type="date"></div>
+      <div class="form-group"><label>Description</label><textarea class="form-control" id="reminder-desc-input" rows="3" placeholder="Details..."></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Location</label><input class="form-control" id="reminder-location-input" placeholder="Optional location"></div>
+        <div class="form-group"><label>Link</label><input class="form-control" id="reminder-link-input" placeholder="https://..."></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeReminderModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveReminder()"><i class="fas fa-save"></i> Save</button>
+    </div>
+  </div>
+</div>
 
-    <script>
-        // IMPORTANT: REPLACE THIS WITH YOUR ACTUAL DEPLOYMENT URL
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwjDJdrQKhuN_4lSScQyX_SNHLPVUJt4yHWOIvSTkr3AKmCM_klYpaVnrIXWs8tGJrjiA/exec";
-        
-        let appState = {
-            tabs: [],
-            announcements: [],
-            reminders: [],
-            activeTabId: null,
-            editingAnnouncementId: null
-        };
-        
-        let currentSubject = localStorage.getItem('classroom_subject') || 'General';
-        let currentYear = localStorage.getItem('classroom_year') || '2024';
-        
-        document.getElementById('subject-input').value = currentSubject;
-        document.getElementById('year-input').value = currentYear;
-        
-        async function changeSubject() {
-            currentSubject = document.getElementById('subject-input').value;
-            currentYear = document.getElementById('year-input').value;
-            localStorage.setItem('classroom_subject', currentSubject);
-            localStorage.setItem('classroom_year', currentYear);
-            document.getElementById('page-title').textContent = currentSubject + ' - Year ' + currentYear;
-            await refreshData();
-        }
-        
-        async function refreshData() {
-            showLoading();
-            try {
-                const url = WEB_APP_URL + '?subject=' + encodeURIComponent(currentSubject) + '&year=' + encodeURIComponent(currentYear) + '&action=getData';
-                console.log('Fetching data from:', url);
-                const response = await fetch(url);
-                const data = await response.json();
-                console.log('Data received:', data);
-                
-                appState.tabs = data.tabs || [];
-                appState.announcements = data.announcements || [];
-                appState.reminders = data.reminders || [];
-                
-                if (appState.tabs.length > 0 && !appState.activeTabId) {
-                    appState.activeTabId = appState.tabs[0].id;
-                } else if (appState.tabs.length === 0) {
-                    await createDefaultTab();
-                    return;
-                }
-                
-                renderAll();
-            } catch (e) {
-                console.error("Failed to load data", e);
-                document.getElementById('posts-feed').innerHTML = '<div class="loading">Error loading data: ' + e.message + '<br><br>Make sure the Apps Script is deployed correctly and the URL is set.</div>';
-            }
-        }
-        
-        async function createDefaultTab() {
-            console.log('Creating default tab...');
-            await apiCall('Tabs', 'save', { 
-                id: 'tab_' + Date.now(), 
-                name: 'General' 
-            });
-            setTimeout(refreshData, 1000);
-        }
-        
-        async function apiCall(type, action, data) {
-            try {
-                const payload = {
-                    type: type,
-                    action: action,
-                    data: data,
-                    subject: currentSubject,
-                    year: currentYear
-                };
-                
-                console.log('Saving:', payload);
-                
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload)
-                });
-                
-                if (!response.ok) {
-                    throw new Error('HTTP error! status: ' + response.status);
-                }
-                
-                const result = await response.json();
-                console.log('Save result:', result);
-                
-                if (result.error) {
-                    throw new Error(result.error);
-                }
-                
-                await refreshData();
-            } catch (e) {
-                console.error("API call failed", e);
-                alert("Failed to save: " + e.message + "\n\nCheck that your Apps Script URL is correct and the script is deployed.\n\nMake sure you've authorized the script by opening the URL in a browser first.");
-            }
-        }
-        
-        function showLoading() {
-            document.getElementById('sidebar-menu').innerHTML = '<div class="loading">Loading tabs...</div>';
-            document.getElementById('posts-feed').innerHTML = '<div class="loading">Loading announcements...</div>';
-            document.getElementById('reminders-list').innerHTML = '<div class="loading">Loading reminders...</div>';
-        }
-        
-        function renderAll() {
-            renderTabs();
-            renderAnnouncements();
-            renderReminders();
-        }
-        
-        function renderTabs() {
-            const menu = document.getElementById('sidebar-menu');
-            if (appState.tabs.length === 0) {
-                menu.innerHTML = '<div class="loading">No tabs. Click + to create one.</div>';
-                return;
-            }
-            
-            let html = '';
-            for (let i = 0; i < appState.tabs.length; i++) {
-                const tab = appState.tabs[i];
-                const activeClass = (appState.activeTabId === tab.id) ? 'active' : '';
-                html += '<li>' +
-                    '<a href="#" class="sidebar-link ' + activeClass + '" onclick="switchTab(\'' + tab.id + '\')">' +
-                    '<i class="fas fa-folder" style="margin-right:10px"></i> ' +
-                    escapeHtml(tab.name) +
-                    '<i class="fas fa-trash delete-tab-btn" style="margin-left:auto;" onclick="event.stopPropagation(); deleteTab(\'' + tab.id + '\')"></i>' +
-                    '</a>' +
-                    '</li>';
-            }
-            menu.innerHTML = html;
-            
-            const activeTab = appState.tabs.find(function(t) { return t.id === appState.activeTabId; });
-            document.getElementById('tab-heading').textContent = activeTab ? activeTab.name : 'Dashboard';
-        }
-        
-        function renderReminders() {
-            const list = document.getElementById('reminders-list');
-            if (appState.reminders.length === 0) {
-                list.innerHTML = '<div class="loading">No reminders. Create one to see it here.</div>';
-                return;
-            }
-            
-            const sorted = [...appState.reminders].sort(function(a, b) {
-                return new Date(a.date) - new Date(b.date);
-            });
-            
-            let html = '';
-            for (let i = 0; i < sorted.length; i++) {
-                const rem = sorted[i];
-                html += '<div class="reminder-card ' + rem.type + '">' +
-                    '<div style="display:flex; justify-content:space-between; align-items:center">' +
-                    '<strong>' + escapeHtml(rem.title) + '</strong>' +
-                    '<i class="fas fa-times delete-reminder" onclick="deleteReminder(\'' + rem.id + '\')"></i>' +
-                    '</div>' +
-                    '<div style="font-size:0.85rem; margin-top:5px; color:var(--medium)">' +
-                    '<i class="fas fa-calendar-day"></i> ' + new Date(rem.date).toLocaleDateString() +
-                    '</div>' +
-                    '</div>';
-            }
-            list.innerHTML = html;
-        }
-        
-        function renderAnnouncements() {
-            const feed = document.getElementById('posts-feed');
-            const filtered = appState.announcements.filter(function(a) {
-                return a.tabId === appState.activeTabId;
-            });
-            
-            if (filtered.length === 0) {
-                feed.innerHTML = '<div class="loading">No announcements in this tab. Create one to get started!</div>';
-                return;
-            }
-            
-            let html = '';
-            for (let i = 0; i < filtered.length; i++) {
-                const ann = filtered[i];
-                html += '<div class="post-card" onclick="expandPost(this)">' +
-                    '<div class="post-actions">' +
-                    '<i class="fas fa-edit" onclick="event.stopPropagation(); editAnnouncement(\'' + ann.id + '\')"></i>' +
-                    '<i class="fas fa-trash" onclick="event.stopPropagation(); deleteAnnouncement(\'' + ann.id + '\')"></i>' +
-                    '</div>' +
-                    '<h3>' + escapeHtml(ann.title) + '</h3>' +
-                    '<div class="post-content-preview">' + ann.content + '</div>' +
-                    '<div style="font-size:0.75rem; color:var(--medium); margin-top:10px;">' +
-                    '<i class="far fa-clock"></i> ' + new Date(ann.date).toLocaleDateString() +
-                    '</div>' +
-                    '</div>';
-            }
-            feed.innerHTML = html;
-        }
-        
-        function switchTab(id) {
-            appState.activeTabId = id;
-            renderAll();
-        }
-        
-        function openTabModal() { 
-            document.getElementById('tab-modal').style.display = 'flex'; 
-            document.getElementById('tab-name-input').value = '';
-        }
-        
-        async function saveTab() {
-            const name = document.getElementById('tab-name-input').value.trim();
-            if (!name) {
-                alert("Please enter a tab name");
-                return;
-            }
-            await apiCall('Tabs', 'save', { id: 'tab_' + Date.now(), name: name });
-            closeModals();
-        }
-        
-        async function deleteTab(id) {
-            if (confirm("Delete this tab and all its announcements?")) {
-                await apiCall('Tabs', 'delete', { id: id });
-            }
-        }
-        
-        function openEditor() {
-            appState.editingAnnouncementId = null;
-            document.getElementById('ann-title').value = '';
-            document.getElementById('ann-content').innerHTML = '';
-            document.getElementById('editor-overlay').classList.add('visible');
-            document.getElementById('editor-mode-title').textContent = "New Announcement";
-        }
-        
-        function closeEditor() {
-            document.getElementById('editor-overlay').classList.remove('visible');
-        }
-        
-        function editAnnouncement(id) {
-            const ann = appState.announcements.find(function(a) { return a.id === id; });
-            if (!ann) return;
-            appState.editingAnnouncementId = id;
-            document.getElementById('ann-title').value = ann.title;
-            document.getElementById('ann-content').innerHTML = ann.content;
-            document.getElementById('editor-mode-title').textContent = "Edit Announcement";
-            document.getElementById('editor-overlay').classList.add('visible');
-            collapsePost();
-        }
-        
-        async function saveAnnouncement() {
-            const title = document.getElementById('ann-title').value.trim();
-            const content = document.getElementById('ann-content').innerHTML;
-            if (!title) {
-                alert("Title is required");
-                return;
-            }
-            if (!appState.activeTabId) {
-                alert("Please select a tab first");
-                return;
-            }
-            
-            const data = {
-                id: appState.editingAnnouncementId || 'ann_' + Date.now(),
-                tabId: appState.activeTabId,
-                title: title,
-                content: content,
-                date: new Date().toISOString()
-            };
-            
-            await apiCall('Announcements', 'save', data);
-            closeEditor();
-        }
-        
-        async function deleteAnnouncement(id) {
-            if (confirm("Delete this announcement?")) {
-                await apiCall('Announcements', 'delete', { id: id });
-            }
-        }
-        
-        function openReminderModal() { 
-            document.getElementById('reminder-modal').style.display = 'flex';
-            document.getElementById('rem-title').value = '';
-            document.getElementById('rem-date').value = new Date().toISOString().split('T')[0];
-        }
-        
-        async function saveReminder() {
-            const title = document.getElementById('rem-title').value.trim();
-            const date = document.getElementById('rem-date').value;
-            const type = document.getElementById('rem-type').value;
-            if (!title || !date) {
-                alert("Please fill in all fields");
-                return;
-            }
-            
-            await apiCall('Reminders', 'save', { 
-                id: 'rem_' + Date.now(), 
-                title: title, 
-                date: date, 
-                type: type 
-            });
-            closeModals();
-        }
-        
-        async function deleteReminder(id) {
-            if (confirm("Delete this reminder?")) {
-                await apiCall('Reminders', 'delete', { id: id });
-            }
-        }
-        
-        function expandPost(card) {
-            if (card.classList.contains('expanded')) return;
-            const expanded = document.querySelectorAll('.post-card.expanded');
-            for (let i = 0; i < expanded.length; i++) {
-                expanded[i].classList.remove('expanded');
-            }
-            card.classList.add('expanded');
-            document.getElementById('expanded-controls').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-        
-        function collapsePost() {
-            const expanded = document.querySelectorAll('.post-card.expanded');
-            for (let i = 0; i < expanded.length; i++) {
-                expanded[i].classList.remove('expanded');
-            }
-            document.getElementById('expanded-controls').style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-        
-        function closeModals() {
-            const modals = document.querySelectorAll('.modal');
-            for (let i = 0; i < modals.length; i++) {
-                modals[i].style.display = 'none';
-            }
-        }
-        
-        function exec(cmd, val) {
-            if (val === undefined) val = null;
-            document.execCommand(cmd, false, val);
-            document.getElementById('ann-content').focus();
-        }
-        
-        function promptLink() {
-            const url = prompt("Enter the URL:");
-            if (url && url !== "") {
-                exec('createLink', url);
-            }
-        }
-        
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
-        }
-        
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        if (localStorage.getItem('darkMode') === 'true') {
-            document.body.classList.add('dark-mode');
-        }
-        
-        document.getElementById('page-title').textContent = currentSubject + ' - Year ' + currentYear;
-        refreshData();
-        
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = 'none';
-            }
-        }
-    </script>
-</body>
-</html>
+<div class="modal-overlay" id="tab-modal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <h3 id="tab-modal-title">New Classroom</h3>
+      <button class="modal-close" onclick="closeTabModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Classroom Name</label><input class="form-control" id="tab-name-input" placeholder="e.g. Math 101"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeTabModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTab()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="link-modal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><h3>Insert Link</h3><button class="modal-close" onclick="closeModal('link-modal')"><i class="fas fa-times"></i></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Display Text</label><input class="form-control" id="link-text-input" placeholder="Link text"></div>
+      <div class="form-group"><label>URL</label><input class="form-control" id="link-url-input" placeholder="https://..."></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('link-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="doInsertLink()">Insert</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="embed-modal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><h3>Embed Media</h3><button class="modal-close" onclick="closeModal('embed-modal')"><i class="fas fa-times"></i></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>URL (YouTube, Google Docs, etc.)</label><input class="form-control" id="embed-url-input" placeholder="https://..."></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('embed-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="doInsertEmbed()">Embed</button>
+    </div>
+  </div>
+</div>
+
+<div id="confirm-overlay">
+  <div id="confirm-box">
+    <h3>Confirm</h3>
+    <p id="confirm-msg">Are you sure?</p>
+    <div class="actions">
+      <button class="btn btn-secondary" id="confirm-cancel">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="snackbar"><span id="snackbar-msg">Done</span><button id="snackbar-undo" style="display:none">Undo</button></div>
+
+<script>
+// ==================== CONFIG ====================
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzZXSVGX2Qn88Wh1tC4g_h6qFfFUHa-nFld6DWxNo3SQ1NWdV7rKieiHwVZCIA6YqOR/exec';
+
+// ==================== STATE ====================
+// state holds the in-memory working copy. Google Sheets is the source of truth.
+// localStorage is only used as an offline fallback cache — never written to on startup.
+let state = {
+  tabs: [], activeTabId: null,
+  announcements: {}, reminders: [],
+  darkMode: false, reminderView: 'list', activeView: 'announcements',
+  calMonth: new Date().getMonth(), calYear: new Date().getFullYear(),
+  editingPostId: null, editingReminderId: null, editingTabId: null,
+  savedSelection: null,
+};
+let snackbarTimer = null, undoAction = null, syncDebounce = null;
+
+// ==================== INIT — always load from Sheets first ====================
+async function init() {
+  // Apply dark mode preference before any content renders (local-only pref, not data)
+  state.darkMode = JSON.parse(localStorage.getItem('darkMode') || 'false');
+  state.reminderView = localStorage.getItem('reminderView') || 'list';
+  if (state.darkMode) document.documentElement.classList.add('dark');
+  updateDarkIcon();
+
+  await loadFromSheets(false); // false = initial load, shows full-screen loader
+}
+
+// ==================== SHEETS: LOAD (source of truth) ====================
+async function loadFromSheets(isRefresh) {
+  if (!isRefresh) showLoader(true);
+  else setSyncStatus('syncing', 'Refreshing…');
+
+  try {
+    const resp = await fetch(SHEETS_URL + '?action=getAll&t=' + Date.now());
+    const text = await resp.text();
+    let data;
+    try { data = JSON.parse(text); } catch(e) {
+      throw new Error('Invalid JSON from Sheets: ' + text.slice(0, 200));
+    }
+
+    if (data.status !== 'ok') throw new Error(data.message || 'Sheets returned an error');
+
+    // Hydrate state from Sheets response
+    applySheetData(data);
+
+    // Cache a copy in localStorage as offline fallback
+    cacheToLocalStorage();
+
+    if (!isRefresh) {
+      showLoader(false);
+      bootUI();
+    } else {
+      setSyncStatus('ok', 'Refreshed');
+      renderSidebar();
+      renderPosts();
+      renderReminders();
+      applyTabBg();
+      updateNavTitle();
+    }
+  } catch(err) {
+    console.error('loadFromSheets error:', err);
+    if (!isRefresh) {
+      showLoaderError('Could not load data from Google Sheets: ' + err.message);
+    } else {
+      setSyncStatus('err', 'Refresh failed');
+      showSnackbar('Refresh failed — showing cached data');
+    }
+  }
+}
+
+function applySheetData(data) {
+  // Tabs
+  if (Array.isArray(data.tabs) && data.tabs.length) {
+    state.tabs = data.tabs;
+  } else if (!state.tabs.length) {
+    // Sheets returned empty tabs — initialise a default
+    const id = uid();
+    state.tabs = [{ id, name: 'General', order: 0, bgColor: '', bgImage: '' }];
+  }
+
+  // Announcements: keyed by tab id
+  state.announcements = {};
+  state.tabs.forEach(t => {
+    state.announcements[t.id] = (data.announcements && data.announcements[t.id]) || [];
+  });
+
+  // Reminders
+  state.reminders = Array.isArray(data.reminders) ? data.reminders : [];
+
+  // Restore last-used tab (from localStorage preference only — not data)
+  const savedActiveTab = localStorage.getItem('activeTabId');
+  if (savedActiveTab && state.tabs.find(t => t.id === savedActiveTab)) {
+    state.activeTabId = savedActiveTab;
+  } else {
+    state.activeTabId = state.tabs[0]?.id || null;
+  }
+}
+
+function bootUI() {
+  renderSidebar();
+  renderPosts();
+  renderReminders();
+  applyTabBg();
+  updateNavTitle();
+  switchView('announcements');
+}
+
+// ==================== LOADER UI ====================
+function showLoader(visible) {
+  const overlay = document.getElementById('loading-overlay');
+  const spinnerWrap = document.getElementById('loading-spinner-wrap');
+  const errorWrap = document.getElementById('loading-error');
+  if (visible) {
+    overlay.classList.remove('hidden');
+    spinnerWrap.style.display = 'flex';
+    errorWrap.style.display = 'none';
+  } else {
+    overlay.classList.add('hidden');
+    setTimeout(() => { overlay.style.display = 'none'; }, 450);
+  }
+}
+
+function showLoaderError(msg) {
+  const spinnerWrap = document.getElementById('loading-spinner-wrap');
+  const errorWrap = document.getElementById('loading-error');
+  const msgEl = document.getElementById('loading-error-msg');
+  spinnerWrap.style.display = 'none';
+  errorWrap.style.display = 'flex';
+  msgEl.textContent = msg;
+}
+
+function retryLoad() {
+  const spinnerWrap = document.getElementById('loading-spinner-wrap');
+  const errorWrap = document.getElementById('loading-error');
+  spinnerWrap.style.display = 'flex';
+  errorWrap.style.display = 'none';
+  loadFromSheets(false);
+}
+
+// Load from localStorage cache when Sheets is unreachable
+function loadFromLocalFallback() {
+  try {
+    const tabs = JSON.parse(localStorage.getItem('tabs') || '[]');
+    if (!tabs.length) { showLoaderError('No local cache found. Please check your internet connection and retry.'); return; }
+    state.tabs = tabs;
+    state.tabs.forEach(t => {
+      state.announcements[t.id] = JSON.parse(localStorage.getItem('ann_' + t.id) || '[]');
+    });
+    state.reminders = JSON.parse(localStorage.getItem('reminders') || '[]');
+    const savedActiveTab = localStorage.getItem('activeTabId');
+    state.activeTabId = (savedActiveTab && state.tabs.find(t => t.id === savedActiveTab))
+      ? savedActiveTab : state.tabs[0]?.id;
+    showLoader(false);
+    bootUI();
+    showSnackbar('Loaded from local cache — changes may not sync until Sheets is reachable');
+  } catch(e) {
+    showLoaderError('Local cache is corrupted. Please check your connection and retry.');
+  }
+}
+
+// ==================== CACHE (localStorage as write-through backup only) ====================
+function cacheToLocalStorage() {
+  try {
+    localStorage.setItem('tabs', JSON.stringify(state.tabs));
+    state.tabs.forEach(t => {
+      localStorage.setItem('ann_' + t.id, JSON.stringify(state.announcements[t.id] || []));
+    });
+    localStorage.setItem('reminders', JSON.stringify(state.reminders));
+    localStorage.setItem('activeTabId', state.activeTabId);
+  } catch(e) { /* quota exceeded — ignore */ }
+}
+
+// ==================== SHEETS: WRITE ====================
+function setSyncStatus(status, msg) {
+  const pill = document.getElementById('sync-pill');
+  const txt  = document.getElementById('sync-text');
+  pill.className = 'sync-pill show ' + status;
+  txt.textContent = msg;
+  if (status === 'ok') setTimeout(() => { pill.classList.remove('show'); }, 3000);
+}
+
+async function sheetPost(payload) {
+  setSyncStatus('syncing', 'Saving…');
+  try {
+    const resp = await fetch(SHEETS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    const text = await resp.text();
+    let data;
+    try { data = JSON.parse(text); } catch(e) { data = { status: 'error', message: text }; }
+    if (data.status === 'ok') { setSyncStatus('ok', 'Saved'); return true; }
+    setSyncStatus('err', 'Save error');
+    console.error('Sheets error:', data.message);
+    return false;
+  } catch(err) {
+    setSyncStatus('err', 'Save failed');
+    console.error('Sheets fetch failed:', err);
+    return false;
+  }
+}
+
+// Single debounced full-sync — only fires after all rapid changes settle
+function syncAll() {
+  clearTimeout(syncDebounce);
+  syncDebounce = setTimeout(async () => {
+    const payload = {
+      action: 'syncAll',
+      tabs: state.tabs,
+      announcements: buildAnnouncementsPayload(),
+      reminders: state.reminders
+    };
+    const ok = await sheetPost(payload);
+    // Always update local cache after syncing so fallback stays fresh
+    if (ok) cacheToLocalStorage();
+  }, 800);
+}
+
+function buildAnnouncementsPayload() {
+  const out = {};
+  state.tabs.forEach(t => {
+    out[t.id] = (state.announcements[t.id] || []).map(p => ({
+      ...p, contentText: stripHtml(p.content)
+    }));
+  });
+  return out;
+}
+
+// ==================== SIDEBAR ====================
+function updateNavTitle() {
+  const tab = state.tabs.find(t => t.id === state.activeTabId);
+  document.getElementById('nav-title').textContent = tab ? tab.name : '';
+}
+
+function renderSidebar() {
+  const list = document.getElementById('tabs-list');
+  list.innerHTML = '';
+  [...state.tabs].sort((a, b) => a.order - b.order).forEach(tab => {
+    const div = document.createElement('div');
+    div.className = 'tab-item' + (tab.id === state.activeTabId ? ' active' : '');
+    div.dataset.id = tab.id;
+    div.draggable = true;
+    div.innerHTML = `
+      <i class="fas fa-grip-vertical tab-drag"></i>
+      <span class="tab-name">${escHtml(tab.name)}</span>
+      <div class="tab-actions">
+        <button class="tab-action-btn tooltip" data-tip="Rename" onclick="openEditTab('${tab.id}',event)"><i class="fas fa-pen"></i></button>
+        <button class="tab-action-btn del tooltip" data-tip="Delete" onclick="deleteTab('${tab.id}',event)"><i class="fas fa-trash"></i></button>
+      </div>`;
+    div.addEventListener('click', e => { if (!e.target.closest('.tab-actions')) selectTab(tab.id); });
+    div.addEventListener('dragstart', onTabDragStart);
+    div.addEventListener('dragover', onTabDragOver);
+    div.addEventListener('drop', onTabDrop);
+    div.addEventListener('dragend', onTabDragEnd);
+    list.appendChild(div);
+  });
+}
+
+function selectTab(id) {
+  state.activeTabId = id;
+  localStorage.setItem('activeTabId', id); // preference only, not data
+  renderSidebar(); renderPosts(); applyTabBg(); updateNavTitle();
+}
+
+function applyTabBg() {
+  const tab = state.tabs.find(t => t.id === state.activeTabId);
+  const bg = document.getElementById('tab-bg');
+  if (!tab) return;
+  if (tab.bgImage) { bg.style.backgroundImage = `url(${tab.bgImage})`; bg.style.backgroundSize = 'cover'; bg.style.backgroundPosition = 'center'; bg.style.backgroundColor = ''; }
+  else if (tab.bgColor) { bg.style.backgroundColor = tab.bgColor; bg.style.backgroundImage = ''; }
+  else { bg.style.backgroundColor = ''; bg.style.backgroundImage = ''; }
+}
+
+let dragTabId = null;
+function onTabDragStart(e) { dragTabId = e.currentTarget.dataset.id; e.currentTarget.classList.add('drag-ghost'); }
+function onTabDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+function onTabDrop(e) {
+  e.preventDefault(); const tid = e.currentTarget.dataset.id; e.currentTarget.classList.remove('drag-over');
+  if (dragTabId && dragTabId !== tid) {
+    const arr = [...state.tabs].sort((a, b) => a.order - b.order);
+    const from = arr.findIndex(t => t.id === dragTabId), to = arr.findIndex(t => t.id === tid);
+    arr.splice(to, 0, arr.splice(from, 1)[0]);
+    arr.forEach((t, i) => { state.tabs.find(x => x.id === t.id).order = i; });
+    renderSidebar(); syncAll();
+  }
+}
+function onTabDragEnd(e) { e.currentTarget.classList.remove('drag-ghost'); dragTabId = null; }
+
+function openAddTab() { state.editingTabId = null; document.getElementById('tab-modal-title').textContent = 'New Classroom'; document.getElementById('tab-name-input').value = ''; openModal('tab-modal'); setTimeout(() => document.getElementById('tab-name-input').focus(), 100); }
+function openEditTab(id, e) { e.stopPropagation(); state.editingTabId = id; const tab = state.tabs.find(t => t.id === id); document.getElementById('tab-modal-title').textContent = 'Rename Classroom'; document.getElementById('tab-name-input').value = tab.name; openModal('tab-modal'); setTimeout(() => document.getElementById('tab-name-input').focus(), 100); }
+function closeTabModal() { closeModal('tab-modal'); }
+function saveTab() {
+  const name = document.getElementById('tab-name-input').value.trim(); if (!name) return;
+  if (state.editingTabId) {
+    const tab = state.tabs.find(t => t.id === state.editingTabId); if (tab) tab.name = name;
+  } else {
+    const id = uid();
+    state.tabs.push({ id, name, order: state.tabs.length, bgColor: '', bgImage: '' });
+    state.announcements[id] = [];
+    state.activeTabId = id;
+  }
+  renderSidebar(); updateNavTitle(); closeTabModal(); syncAll();
+}
+function deleteTab(id, e) {
+  e.stopPropagation();
+  confirmDo('Delete this classroom and all its posts?', () => {
+    const tab = state.tabs.find(t => t.id === id);
+    const snap = { tab, ann: state.announcements[id] };
+    state.tabs = state.tabs.filter(t => t.id !== id);
+    delete state.announcements[id];
+    if (state.activeTabId === id) state.activeTabId = state.tabs[0]?.id;
+    renderSidebar(); renderPosts(); applyTabBg(); updateNavTitle();
+    syncAll();
+    showSnackbar('Classroom deleted', () => {
+      state.tabs.push(snap.tab); state.announcements[snap.tab.id] = snap.ann; state.activeTabId = snap.tab.id;
+      renderSidebar(); renderPosts(); updateNavTitle(); syncAll();
+    });
+  });
+}
+
+// ==================== VIEWS ====================
+function switchView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.sidebar-nav-item').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name)?.classList.add('active');
+  document.getElementById('nav-' + name)?.classList.add('active');
+  state.activeView = name;
+  if (name === 'reminders') setReminderView(state.reminderView);
+}
+function openSettings() { switchView('settings'); }
+function toggleSidebar() {
+  const s = document.getElementById('sidebar');
+  if (window.innerWidth > 768) { s.classList.toggle('collapsed'); document.getElementById('main').classList.toggle('sidebar-hidden', s.classList.contains('collapsed')); }
+  else s.classList.toggle('mobile-open');
+}
+
+// ==================== POSTS ====================
+function getAnn() { return state.announcements[state.activeTabId] || []; }
+function setAnn(arr) { state.announcements[state.activeTabId] = arr; }
+
+function renderPosts() {
+  const area = document.getElementById('posts-area');
+  const search = document.getElementById('post-search')?.value.toLowerCase() || '';
+  let posts = getAnn();
+  if (search) posts = posts.filter(p => p.title.toLowerCase().includes(search) || stripHtml(p.content).toLowerCase().includes(search));
+  const pinned = posts.filter(p => p.pinned).sort((a, b) => a.order - b.order);
+  const unpinned = posts.filter(p => !p.pinned).sort((a, b) => a.order - b.order);
+  if (!posts.length) { area.innerHTML = '<div class="empty-state"><i class="fas fa-bullhorn"></i><p>No announcements yet.</p></div>'; return; }
+  area.innerHTML = '';
+  if (pinned.length) { const s = document.createElement('div'); s.className = 'pinned-section'; s.innerHTML = '<div class="section-label"><i class="fas fa-thumbtack"></i> Pinned</div>'; pinned.forEach(p => s.appendChild(createPostCard(p))); area.appendChild(s); }
+  if (unpinned.length) { const s = document.createElement('div'); s.className = 'unpinned-section'; if (pinned.length) s.innerHTML = '<div class="section-label">Posts</div>'; unpinned.forEach(p => s.appendChild(createPostCard(p))); area.appendChild(s); }
+}
+
+function createPostCard(post) {
+  const card = document.createElement('div');
+  card.className = 'post-card'; card.dataset.id = post.id; card.draggable = true;
+  const pinIcon = post.pinned ? '<i class="fas fa-thumbtack post-pin"></i>' : '';
+  const preview = stripHtml(post.content).slice(0, 150);
+  card.innerHTML = `
+    <div class="post-card-header">
+      <i class="fas fa-grip-dots-vertical post-drag-handle"></i>${pinIcon}
+      <span class="post-title">${escHtml(post.title)}</span>
+      <div class="post-actions">
+        <button class="post-action tooltip" data-tip="${post.pinned ? 'Unpin' : 'Pin'}" onclick="togglePin('${post.id}',event)"><i class="fas fa-thumbtack${post.pinned ? ' pin-active' : ''}"></i></button>
+        <button class="post-action tooltip" data-tip="Edit" onclick="openEditPost('${post.id}',event)"><i class="fas fa-pen"></i></button>
+        <button class="post-action danger tooltip" data-tip="Delete" onclick="deletePost('${post.id}',event)"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>
+    ${preview ? `<div class="post-preview">${escHtml(preview)}</div>` : ''}
+    <div class="post-footer"><span class="post-time"><i class="fas fa-clock"></i> ${formatDate(post.timestamp)}</span></div>`;
+  card.addEventListener('click', e => { if (!e.target.closest('.post-actions') && !e.target.closest('.post-drag-handle')) expandPost(post.id); });
+  card.addEventListener('dragstart', onPostDragStart); card.addEventListener('dragover', onPostDragOver); card.addEventListener('drop', onPostDrop); card.addEventListener('dragend', onPostDragEnd);
+  return card;
+}
+
+let dragPostId = null;
+function onPostDragStart(e) { dragPostId = e.currentTarget.dataset.id; e.currentTarget.classList.add('dragging'); }
+function onPostDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+function onPostDrop(e) {
+  e.preventDefault(); const tid = e.currentTarget.dataset.id; e.currentTarget.classList.remove('drag-over');
+  if (dragPostId && dragPostId !== tid) {
+    const posts = getAnn(); const from = posts.findIndex(p => p.id === dragPostId), to = posts.findIndex(p => p.id === tid);
+    posts.splice(to, 0, posts.splice(from, 1)[0]); posts.forEach((p, i) => p.order = i);
+    setAnn(posts); renderPosts(); syncAll();
+  }
+}
+function onPostDragEnd(e) { e.currentTarget.classList.remove('dragging'); dragPostId = null; }
+
+function expandPost(id) {
+  const post = getAnn().find(p => p.id === id); if (!post) return;
+  document.getElementById('expanded-title').textContent = post.title;
+  document.getElementById('expanded-meta').textContent = formatDate(post.timestamp);
+  document.getElementById('expanded-body').innerHTML = post.content;
+  document.getElementById('expanded-overlay').classList.add('open');
+}
+function closeExpanded() { document.getElementById('expanded-overlay').classList.remove('open'); }
+
+function togglePin(id, e) {
+  e.stopPropagation();
+  const posts = getAnn(); const post = posts.find(p => p.id === id);
+  if (post) post.pinned = !post.pinned;
+  setAnn(posts); renderPosts(); syncAll();
+}
+
+function deletePost(id, e) {
+  e.stopPropagation();
+  confirmDo('Delete this post?', () => {
+    const posts = getAnn(); const post = posts.find(p => p.id === id);
+    setAnn(posts.filter(p => p.id !== id)); renderPosts();
+    // Immediately push delete to Sheets; undo will re-sync if triggered
+    sheetPost({ action: 'deletePost', id }).then(() => cacheToLocalStorage());
+    showSnackbar('Post deleted', () => {
+      const cur = getAnn(); cur.push(post); setAnn(cur); renderPosts(); syncAll();
+    });
+  });
+}
+
+function openPostModal(editId) {
+  state.editingPostId = editId || null;
+  if (editId) { const post = getAnn().find(p => p.id === editId); document.getElementById('post-modal-title').textContent = 'Edit Post'; document.getElementById('post-title-input').value = post.title; document.getElementById('editor-content').innerHTML = post.content; }
+  else { document.getElementById('post-modal-title').textContent = 'New Announcement'; document.getElementById('post-title-input').value = ''; document.getElementById('editor-content').innerHTML = ''; }
+  openModal('post-modal');
+}
+function openEditPost(id, e) { e.stopPropagation(); openPostModal(id); }
+function closePostModal() { closeModal('post-modal'); }
+
+function savePost() {
+  const title = document.getElementById('post-title-input').value.trim();
+  const content = document.getElementById('editor-content').innerHTML;
+  if (!title) { alert('Please enter a title.'); return; }
+  const posts = getAnn(); let post;
+  if (state.editingPostId) {
+    post = posts.find(p => p.id === state.editingPostId);
+    if (post) { post.title = title; post.content = content; }
+  } else {
+    post = { id: uid(), title, content, pinned: false, order: posts.length, timestamp: Date.now() };
+    posts.push(post);
+  }
+  setAnn(posts); renderPosts(); closePostModal(); syncAll();
+}
+
+function execFormat(cmd, val) { document.getElementById('editor-content').focus(); document.execCommand(cmd, false, val || null); }
+function insertLink() { state.savedSelection = saveSelection(); const sel = window.getSelection(); document.getElementById('link-text-input').value = sel && sel.toString() ? sel.toString() : ''; document.getElementById('link-url-input').value = ''; openModal('link-modal'); }
+function doInsertLink() { const text = document.getElementById('link-text-input').value, url = document.getElementById('link-url-input').value; if (!url) return; restoreSelection(state.savedSelection); document.getElementById('editor-content').focus(); document.execCommand('insertHTML', false, `<a href="${url}" target="_blank">${escHtml(text || url)}</a>`); closeModal('link-modal'); }
+function insertEmbed() { document.getElementById('embed-url-input').value = ''; openModal('embed-modal'); }
+function doInsertEmbed() { let url = document.getElementById('embed-url-input').value.trim(); if (!url) return; let src = url; if (url.includes('youtube.com/watch?v=')) src = 'https://www.youtube.com/embed/' + new URLSearchParams(url.split('?')[1]).get('v'); else if (url.includes('youtu.be/')) src = 'https://www.youtube.com/embed/' + url.split('youtu.be/')[1]; else if (url.includes('docs.google.com')) src = url.replace('/edit', '/preview').replace('/pub', '/preview'); document.getElementById('editor-content').focus(); document.execCommand('insertHTML', false, `<iframe src="${src}" width="100%" height="360" frameborder="0" allowfullscreen style="border-radius:8px;margin:8px 0"></iframe>`); closeModal('embed-modal'); }
+function saveSelection() { const sel = window.getSelection(); return sel && sel.rangeCount > 0 ? sel.getRangeAt(0) : null; }
+function restoreSelection(range) { if (!range) return; const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); }
+
+// ==================== REMINDERS ====================
+function renderReminders() {
+  const container = document.getElementById('reminders-list-container');
+  const reminders = [...state.reminders].sort((a, b) => new Date(a.date) - new Date(b.date));
+  container.innerHTML = '';
+  if (!reminders.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-times"></i><p>No events yet.</p></div>'; return; }
+  reminders.forEach(r => container.appendChild(createReminderCard(r)));
+}
+
+function createReminderCard(r) {
+  const card = document.createElement('div'); card.className = 'reminder-card'; card.dataset.id = r.id; card.draggable = true;
+  const labels = { fieldtrip: 'Field Trip', internal: 'Internal', external: 'External', deadline: 'Deadline' };
+  card.innerHTML = `
+    <div class="reminder-type-badge type-${r.type}"><i class="fas fa-circle" style="font-size:6px"></i> ${labels[r.type] || r.type}</div>
+    <div class="reminder-title">${escHtml(r.title)}</div>
+    <div class="reminder-date"><i class="fas fa-calendar" style="font-size:11px"></i> ${r.date ? formatDateStr(r.date) : 'No date'}</div>
+    ${r.description ? `<div class="reminder-desc">${escHtml(r.description)}</div>` : ''}
+    <div class="reminder-meta">
+      ${r.location ? `<span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:3px"><i class="fas fa-map-marker-alt" style="font-size:10px"></i>${escHtml(r.location)}</span>` : ''}
+      ${r.link ? `<a href="${r.link}" target="_blank" style="font-size:11px;display:flex;align-items:center;gap:3px"><i class="fas fa-external-link-alt" style="font-size:10px"></i>Link</a>` : ''}
+    </div>
+    <div class="reminder-actions">
+      <button class="export-btn tooltip" data-tip="Google Calendar" onclick="exportGCal('${r.id}')"><i class="fab fa-google"></i></button>
+      <button class="export-btn tooltip" data-tip="iCal (.ics)" onclick="exportICS('${r.id}')"><i class="fas fa-apple-alt"></i></button>
+      <button class="export-btn tooltip" data-tip="Outlook (.ics)" onclick="exportICS('${r.id}')"><i class="fab fa-microsoft"></i></button>
+      <button class="post-action tooltip" data-tip="Edit" onclick="openEditReminder('${r.id}')"><i class="fas fa-pen"></i></button>
+      <button class="post-action danger tooltip" data-tip="Delete" onclick="deleteReminder('${r.id}')"><i class="fas fa-trash"></i></button>
+    </div>`;
+  card.addEventListener('dragstart', e => { dragPostId = r.id; e.dataTransfer.setData('reminderId', r.id); card.classList.add('dragging'); });
+  card.addEventListener('dragend', () => card.classList.remove('dragging'));
+  return card;
+}
+
+function setReminderView(mode) {
+  state.reminderView = mode; localStorage.setItem('reminderView', mode);
+  document.getElementById('list-view-btn').classList.toggle('active', mode === 'list');
+  document.getElementById('cal-view-btn').classList.toggle('active', mode === 'month');
+  document.getElementById('reminders-list-view').style.display = mode === 'list' ? 'block' : 'none';
+  document.getElementById('calendar-view').style.display = mode === 'month' ? 'block' : 'none';
+  if (mode === 'month') renderCalendar();
+}
+
+function renderCalendar() {
+  const year = state.calYear, month = state.calMonth;
+  document.getElementById('cal-title').textContent = new Date(year, month, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+  const grid = document.getElementById('cal-grid'); grid.innerHTML = '';
+  ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(d => { const l = document.createElement('div'); l.className = 'cal-day-label'; l.textContent = d; grid.appendChild(l); });
+  const firstDay = new Date(year, month, 1).getDay(), daysInMonth = new Date(year, month + 1, 0).getDate(), prevDays = new Date(year, month, 0).getDate();
+  const today = new Date();
+  for (let i = firstDay - 1; i >= 0; i--) grid.appendChild(createCalCell(year, month - 1, prevDays - i, true));
+  for (let d = 1; d <= daysInMonth; d++) grid.appendChild(createCalCell(year, month, d, false, today.getFullYear() === year && today.getMonth() === month && today.getDate() === d));
+  const total = firstDay + daysInMonth, remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let d = 1; d <= remaining; d++) grid.appendChild(createCalCell(year, month + 1, d, true));
+}
+
+function createCalCell(year, month, day, other, isToday) {
+  const cell = document.createElement('div');
+  cell.className = 'cal-day' + (other ? ' other-month' : '') + (isToday ? ' today' : '');
+  const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  cell.dataset.date = dateStr; cell.innerHTML = `<div class="cal-day-num">${day}</div>`;
+  state.reminders.filter(r => r.date === dateStr).slice(0, 3).forEach(r => { const dot = document.createElement('div'); dot.className = `cal-event-dot type-${r.type}`; dot.textContent = r.title; dot.onclick = e => { e.stopPropagation(); openEditReminder(r.id); }; cell.appendChild(dot); });
+  cell.addEventListener('dragover', e => { e.preventDefault(); cell.classList.add('drag-over'); });
+  cell.addEventListener('dragleave', () => cell.classList.remove('drag-over'));
+  cell.addEventListener('drop', e => { e.preventDefault(); cell.classList.remove('drag-over'); const rid = e.dataTransfer.getData('reminderId'); if (rid) { const r = state.reminders.find(x => x.id === rid); if (r) { r.date = dateStr; renderCalendar(); renderReminders(); syncAll(); } } });
+  cell.onclick = () => { if (!other) { document.getElementById('reminder-date-input').value = dateStr; openReminderModal(); } };
+  return cell;
+}
+
+function calNav(dir) { state.calMonth += dir; if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; } if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; } renderCalendar(); }
+
+function openReminderModal(editId) {
+  state.editingReminderId = editId || null;
+  if (editId) { const r = state.reminders.find(x => x.id === editId); document.getElementById('reminder-modal-title').textContent = 'Edit Event'; document.getElementById('reminder-title-input').value = r.title; document.getElementById('reminder-type-input').value = r.type; document.getElementById('reminder-date-input').value = r.date; document.getElementById('reminder-desc-input').value = r.description || ''; document.getElementById('reminder-location-input').value = r.location || ''; document.getElementById('reminder-link-input').value = r.link || ''; }
+  else { document.getElementById('reminder-modal-title').textContent = 'New Event'; ['reminder-title-input', 'reminder-desc-input', 'reminder-location-input', 'reminder-link-input'].forEach(id => document.getElementById(id).value = ''); document.getElementById('reminder-type-input').value = 'internal'; document.getElementById('reminder-date-input').value = ''; }
+  openModal('reminder-modal');
+}
+function openEditReminder(id) { openReminderModal(id); }
+function closeReminderModal() { closeModal('reminder-modal'); }
+function saveReminder() {
+  const title = document.getElementById('reminder-title-input').value.trim(); if (!title) { alert('Enter a title'); return; }
+  const r = { id: state.editingReminderId || uid(), title, type: document.getElementById('reminder-type-input').value, date: document.getElementById('reminder-date-input').value, description: document.getElementById('reminder-desc-input').value, location: document.getElementById('reminder-location-input').value, link: document.getElementById('reminder-link-input').value, order: state.editingReminderId ? state.reminders.find(x => x.id === state.editingReminderId)?.order : state.reminders.length };
+  if (state.editingReminderId) { const idx = state.reminders.findIndex(x => x.id === state.editingReminderId); if (idx >= 0) state.reminders[idx] = r; } else state.reminders.push(r);
+  renderReminders(); closeReminderModal(); syncAll();
+}
+function deleteReminder(id) {
+  confirmDo('Delete this event?', () => {
+    const r = state.reminders.find(x => x.id === id);
+    state.reminders = state.reminders.filter(x => x.id !== id);
+    renderReminders();
+    sheetPost({ action: 'deleteReminder', id }).then(() => cacheToLocalStorage());
+    showSnackbar('Event deleted', () => { state.reminders.push(r); renderReminders(); syncAll(); });
+  });
+}
+
+function exportGCal(id) { const r = state.reminders.find(x => x.id === id); if (!r || !r.date) { showSnackbar('No date set'); return; } const d = r.date.replace(/-/g, ''); window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(r.title)}&dates=${d}/${d}&details=${encodeURIComponent(r.description || '')}${r.location ? '&location=' + encodeURIComponent(r.location) : ''}`); }
+function exportICS(id) { const r = state.reminders.find(x => x.id === id); if (!r) return; const d = (r.date || '').replace(/-/g, ''); const ics = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART:${d || '20240101'}\nDTEND:${d || '20240101'}\nSUMMARY:${r.title}\nDESCRIPTION:${r.description || ''}\nLOCATION:${r.location || ''}\nEND:VEVENT\nEND:VCALENDAR`; const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' })); a.download = r.title.replace(/\s+/g, '_') + '.ics'; a.click(); }
+
+// ==================== DARK / BG ====================
+function toggleDark() {
+  state.darkMode = !state.darkMode;
+  document.documentElement.classList.toggle('dark', state.darkMode);
+  updateDarkIcon();
+  localStorage.setItem('darkMode', JSON.stringify(state.darkMode)); // preference only
+}
+function updateDarkIcon() { document.getElementById('dark-icon').className = state.darkMode ? 'fas fa-sun' : 'fas fa-moon'; }
+function setTabBg(el) { document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active')); el.classList.add('active'); const tab = state.tabs.find(t => t.id === state.activeTabId); if (tab) { tab.bgColor = el.dataset.color; tab.bgImage = ''; } applyTabBg(); syncAll(); }
+function setTabBgCustom(color) { const tab = state.tabs.find(t => t.id === state.activeTabId); if (tab) { tab.bgColor = color; tab.bgImage = ''; } applyTabBg(); syncAll(); }
+function uploadBgImage(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = ev => { const tab = state.tabs.find(t => t.id === state.activeTabId); if (tab) { tab.bgImage = ev.target.result; tab.bgColor = ''; } applyTabBg(); syncAll(); }; reader.readAsDataURL(file); }
+function revertBg() { const tab = state.tabs.find(t => t.id === state.activeTabId); if (tab) { tab.bgColor = ''; tab.bgImage = ''; } document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active')); applyTabBg(); syncAll(); }
+
+// ==================== MODALS ====================
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+
+let confirmCb = null;
+function confirmDo(msg, cb) { document.getElementById('confirm-msg').textContent = msg; confirmCb = cb; document.getElementById('confirm-overlay').classList.add('open'); }
+document.getElementById('confirm-ok').addEventListener('click', () => { document.getElementById('confirm-overlay').classList.remove('open'); if (confirmCb) { confirmCb(); confirmCb = null; } });
+document.getElementById('confirm-cancel').addEventListener('click', () => { document.getElementById('confirm-overlay').classList.remove('open'); confirmCb = null; });
+
+function showSnackbar(msg, undoCb) {
+  clearTimeout(snackbarTimer); undoAction = undoCb || null;
+  document.getElementById('snackbar-msg').textContent = msg;
+  document.getElementById('snackbar-undo').style.display = undoCb ? 'inline' : 'none';
+  document.getElementById('snackbar').classList.add('show');
+  snackbarTimer = setTimeout(() => document.getElementById('snackbar').classList.remove('show'), 3500);
+}
+document.getElementById('snackbar-undo').addEventListener('click', () => { document.getElementById('snackbar').classList.remove('show'); if (undoAction) { undoAction(); undoAction = null; } });
+
+// ==================== HELPERS ====================
+function escHtml(str) { return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function stripHtml(html) { const d = document.createElement('div'); d.innerHTML = html || ''; return d.textContent || ''; }
+function formatDate(ts) { if (!ts) return ''; return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+function formatDateStr(str) { if (!str) return ''; const [y, m, d] = str.split('-'); return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open')); document.getElementById('confirm-overlay').classList.remove('open'); closeExpanded(); }
+});
+document.getElementById('editor-content').addEventListener('paste', e => {
+  const text = e.clipboardData.getData('text/plain');
+  if (/^https?:\/\//.test(text.trim())) { e.preventDefault(); document.execCommand('insertHTML', false, `<a href="${text.trim()}" target="_blank">${escHtml(text.trim())}</a>`); }
+});
+document.addEventListener('click', e => {
+  const sidebar = document.getElementById('sidebar');
+  if (window.innerWidth <= 768 && sidebar.classList.contains('mobile-open') && !sidebar.contains(e.target) && !document.getElementById('hamburger').contains(e.target)) sidebar.classList.remove('mobile-open');
+});
+
+// ==================== BOOT ====================
+// Your Google Apps Script must support a GET ?action=getAll request that returns:
+// { status: "ok", tabs: [...], announcements: { tabId: [...] }, reminders: [...] }
+init();
+</script>
+</body></html>
